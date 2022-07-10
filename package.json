@@ -4,14 +4,10 @@
 	"type": "commonjs",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
-	"exports2": {
-		".": "./dist/index.js",
-		"./module/v0": "./dist/module-api/v0/index.js",
-		"./host": "./dist/host-api"
-	},
 	"license": "MIT",
 	"scripts": {
-		"build": "tsc -p tsconfig.build.json"
+		"build": "tsc -p tsconfig.build.json",
+		"docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/index.ts --excludePrivate --theme default --out docs"
 	},
 	"files": [
 		"README.md",
@@ -28,6 +24,7 @@
 	"devDependencies": {
 		"@tsconfig/node14": "^1.0.3",
 		"@types/node": "^14",
+		"typedoc": "^0.23.7",
 		"typescript": "~4.7.4"
 	}
 }

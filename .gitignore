@@ -12,6 +12,7 @@ db
 /bundle-*.zip
 .vscode
 
+docs
 dist
 *.log
 node_modules

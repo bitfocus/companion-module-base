@@ -1,0 +1,69 @@
+name: Node CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Prepare Environment
+        run: |
+          yarn install
+          yarn build
+        env:
+          CI: true
+      # - name: Run typecheck and linter
+      #   run: |
+      #     yarn lint
+      #   env:
+      #     CI: true
+
+  # test:
+  #   name: Test
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 15
+
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       node-version: [14.x, 16.x]
+
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Use Node.js ${{ matrix.node-version }}
+  #       uses: actions/setup-node@v1
+  #       with:
+  #         node-version: ${{ matrix.node-version }}
+  #     - name: Prepare Environment
+  #       run: |
+  #         yarn install
+  #       env:
+  #         CI: true
+  #     - name: Run tests
+  #       run: |
+  #         yarn unit
+  #       env:
+  #         CI: true
+  #     - name: Send coverage
+  #       uses: codecov/codecov-action@v2
+  #       if: matrix.node-version == '14.x'
+  #       with:
+  #         fail_ci_if_error: true
+  #         # name: codecov-umbrella
+  #     - name: Check docs generation
+  #       if: matrix.node-version == '14.x'
+  #       run: |
+  #         yarn docs:test
+  #       env:
+  #         CI: true
