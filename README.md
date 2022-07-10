@@ -1,6 +1,6 @@
 # @companion-module/base
 
-If you have found this without being directed here, then this is not for you. 
+If you have found this without being directed here, then this is not for you.
 Companion 3.0 is not ready for users yet, so you should not be targetting a module to it yet. We will make some announcements when we are ready
 
 This module provides the base class and framework needed to write a module for [Companion 3.0](https://github.com/bitfocus/companion) and later in NodeJS.
