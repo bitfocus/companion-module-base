@@ -13,6 +13,8 @@ jobs:
         with:
           release-type: node
           package-name: release-please-action
+      - uses: actions/checkout@v2
+        if: ${{ steps.release.outputs.release_created }}
       - uses: actions/setup-node@v1
         with:
           node-version: 14
@@ -46,9 +48,11 @@ jobs:
             then
               echo "Publishing latest"
               echo ::set-output name=tag::"latest"
+              echo ::set-output name=docs::"1"
             else
               echo "Publishing hotfix"
               echo ::set-output name=tag::"hotfix"
+              echo ::set-output name=docs::"0"
             fi
 
           fi
@@ -67,12 +71,12 @@ jobs:
           CI: true
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Generate docs
-        if: ${{ steps.do-publish.outputs.tag } && ${{ steps.do-publish.outputs.tag }} == 'latest'
+        if: ${{ steps.do-publish.outputs.docs }}
         run: |
           yarn docs:html
       - name: Publish docs
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ steps.do-publish.outputs.tag } && ${{ steps.do-publish.outputs.tag }} == 'latest'
+        if: ${{ steps.do-publish.outputs.docs }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
