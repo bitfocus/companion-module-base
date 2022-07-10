@@ -1,0 +1,17 @@
+BUILD
+SENTRY
+.DS_Store
+*-x64/*
+package-lock.json
+.cache
+/build/
+out/
+config
+db
+/module-tmp
+/bundle-*.zip
+.vscode
+
+dist
+*.log
+node_modules
