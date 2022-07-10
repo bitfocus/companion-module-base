@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.2](https://github.com/bitfocus/companion-module-base/compare/v0.0.1...v0.0.2) (2022-07-10)
+
+
+### Bug Fixes
+
+* npm-publish workflow ([0147cd2](https://github.com/bitfocus/companion-module-base/commit/0147cd2f8c30b22edf287dba2f3038f88b522c34))
+
 ## 0.0.1 (2022-07-10)
 
 
