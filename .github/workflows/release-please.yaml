@@ -67,12 +67,12 @@ jobs:
           CI: true
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Generate docs
-        if: ${{ steps.do-publish.outputs.tag }} == 'latest'
+        if: ${{ steps.do-publish.outputs.tag } && ${{ steps.do-publish.outputs.tag }} == 'latest'
         run: |
           yarn docs:html
       - name: Publish docs
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ steps.do-publish.outputs.tag }} == 'latest'
+        if: ${{ steps.do-publish.outputs.tag } && ${{ steps.do-publish.outputs.tag }} == 'latest'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
