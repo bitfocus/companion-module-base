@@ -9,6 +9,7 @@ import { literal } from './util.js'
 import { InstanceBaseProps } from './internal/base.js'
 import { init, configureScope } from '@sentry/node'
 import '@sentry/tracing'
+import path from 'path'
 
 let hasEntrypoint = false
 
@@ -39,7 +40,7 @@ export function runEntrypoint<TConfig>(
 ): void {
 	Promise.resolve().then(async () => {
 		try {
-			const pkgJsonStr = (await fs.readFile('../package.json')).toString()
+			const pkgJsonStr = (await fs.readFile(path.join(__dirname, '../package.json'))).toString()
 			const pkgJson = JSON.parse(pkgJsonStr)
 			if (!pkgJson || pkgJson.name !== '@companion-module/base')
 				throw new Error('Failed to find the package.json for @companion-module/base')
