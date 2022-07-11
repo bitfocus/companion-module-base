@@ -398,7 +398,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Set the action definitions for this instance
 	 * @param actions The action definitions
 	 */
-	setActionDefinitions(actions: CompanionActionDefinitions): Promise<void> {
+	setActionDefinitions(actions: CompanionActionDefinitions): void {
 		const hostActions: SetActionDefinitionsMessage['actions'] = []
 
 		this.#actionDefinitions.clear()
@@ -418,14 +418,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		return this._socketEmit('setActionDefinitions', { actions: hostActions })
+		this._socketEmit('setActionDefinitions', { actions: hostActions }).catch(() =>
+			this.log('debug', `Call to setActionDefinitions failed`)
+		)
 	}
 
 	/**
 	 * Set the feedback definitions for this instance
 	 * @param feedbacks The feedback definitions
 	 */
-	setFeedbackDefinitions(feedbacks: CompanionFeedbackDefinitions): Promise<void> {
+	setFeedbackDefinitions(feedbacks: CompanionFeedbackDefinitions): void {
 		const hostFeedbacks: SetFeedbackDefinitionsMessage['feedbacks'] = []
 
 		this.#feedbackDefinitions.clear()
@@ -447,14 +449,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		return this._socketEmit('setFeedbackDefinitions', { feedbacks: hostFeedbacks })
+		this._socketEmit('setFeedbackDefinitions', { feedbacks: hostFeedbacks }).catch(() =>
+			this.log('debug', `Call to setFeedbackDefinitions failed`)
+		)
 	}
 
 	/**
 	 * Set the peset definitions for this instance
 	 * @param presets The preset definitions
 	 */
-	setPresetDefinitions(presets: CompanionPresetDefinitions): Promise<void> {
+	setPresetDefinitions(presets: CompanionPresetDefinitions): void {
 		const hostPresets: SetPresetDefinitionsMessage['presets'] = []
 
 		for (const [id, preset] of Object.entries(presets)) {
@@ -466,14 +470,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		return this._socketEmit('setPresetDefinitions', { presets: hostPresets })
+		this._socketEmit('setPresetDefinitions', { presets: hostPresets }).catch(() =>
+			this.log('debug', `Call to setPresetDefinitions failed`)
+		)
 	}
 
 	/**
 	 * Set the variable definitions for this instance
 	 * @param variables The variable definitions
 	 */
-	setVariableDefinitions(variables: CompanionVariableDefinition[]): Promise<void> {
+	setVariableDefinitions(variables: CompanionVariableDefinition[]): void {
 		const hostVariables: SetVariableDefinitionsMessage['variables'] = []
 
 		this.#variableDefinitions.clear()
@@ -500,14 +506,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		return this._socketEmit('setVariableDefinitions', { variables: hostVariables })
+		this._socketEmit('setVariableDefinitions', { variables: hostVariables }).catch(() =>
+			this.log('debug', `Call to setVariableDefinitions failed`)
+		)
 	}
 
 	/**
 	 * Set the values of some variables
 	 * @param values The new values for the variables
 	 */
-	setVariableValues(values: CompanionVariableValues): Promise<void> {
+	setVariableValues(values: CompanionVariableValues): void {
 		const hostValues: SetVariableValuesMessage['newValues'] = []
 
 		for (const [variableId, value] of Object.entries(values)) {
@@ -528,7 +536,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		return this._socketEmit('setVariableValues', { newValues: hostValues })
+		this._socketEmit('setVariableValues', { newValues: hostValues }).catch(() =>
+			this.log('debug', `Call to setVariableValues failed`)
+		)
 	}
 
 	/**
