@@ -35,7 +35,7 @@ import {
 	UpdateFeedbackInstancesMessage,
 	UpdateFeedbackValuesMessage,
 } from '../host-api/api.js'
-import { literal } from '../util.js'
+import { assertNever, literal } from '../util.js'
 import { InstanceBaseShared } from '../instance-base.js'
 import { ResultCallback } from '../host-api/versions.js'
 import PQueue from 'p-queue'
@@ -47,6 +47,9 @@ import { isInstanceBaseProps, listenToEvents, serializeIsVisibleFn } from '../in
 import { runThroughUpgradeScripts } from '../internal/upgrade.js'
 import { convertFeedbackInstanceToEvent, callFeedbackOnDefinition } from '../internal/feedback.js'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
+
+type ParamsIfReturnIsNever<T extends (...args: any[]) => any> = ReturnType<T> extends never ? Parameters<T> : never
+type ParamsIfReturnIsValid<T extends (...args: any[]) => any> = ReturnType<T> extends never ? never : Parameters<T>
 
 export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
 	readonly #socket: SocketIOClient.Socket
@@ -94,9 +97,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		this.log('debug', 'Initializing')
 	}
 
-	private async _socketEmit<T extends keyof ModuleToHostEventsV0>(
+	private async _socketEmitWithCb<T extends keyof ModuleToHostEventsV0>(
 		name: T,
-		msg: Parameters<ModuleToHostEventsV0[T]>[0]
+		msg: ParamsIfReturnIsValid<ModuleToHostEventsV0[T]>[0]
 	): Promise<ReturnType<ModuleToHostEventsV0[T]>> {
 		return new Promise<ReturnType<ModuleToHostEventsV0[T]>>((resolve, reject) => {
 			const innerCb: ResultCallback<ReturnType<ModuleToHostEventsV0[T]>> = (
@@ -108,6 +111,13 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 			this.#socket.emit(name, msg, innerCb)
 		})
+	}
+
+	private _socketEmitNoCb<T extends keyof ModuleToHostEventsV0>(
+		name: T,
+		msg: ParamsIfReturnIsNever<ModuleToHostEventsV0[T]>[0]
+	): void {
+		this.#socket.emit(name, msg)
 	}
 
 	private async _handleInit(msg: InitMessage): Promise<InitResponseMessage> {
@@ -131,7 +141,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			const config = (updatedConfig ?? msg.config) as TConfig
 
 			// Send the upgraded data back to companion now. Just so that if the init crashes, this doesnt have to be repeated
-			const pSendUpgrade = this._socketEmit('upgradedItems', {
+			const pSendUpgrade = this._socketEmitWithCb('upgradedItems', {
 				updatedActions,
 				updatedFeedbacks,
 			})
@@ -251,7 +261,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		// Send the new values back
 		if (Object.keys(newValues).length > 0) {
-			await this._socketEmit('updateFeedbackValues', {
+			this._socketEmitNoCb('updateFeedbackValues', {
 				values: newValues,
 			})
 		}
@@ -379,8 +389,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Save an updated configuration object
 	 * @param newConfig The new config object
 	 */
-	async saveConfig(newConfig: TConfig): Promise<void> {
-		return this._socketEmit('saveConfig', { config: newConfig })
+	saveConfig(newConfig: TConfig): void {
+		this._socketEmitNoCb('saveConfig', { config: newConfig })
 	}
 
 	/**
@@ -418,9 +428,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		this._socketEmit('setActionDefinitions', { actions: hostActions }).catch(() =>
-			this.log('debug', `Call to setActionDefinitions failed`)
-		)
+		this._socketEmitNoCb('setActionDefinitions', { actions: hostActions })
 	}
 
 	/**
@@ -449,9 +457,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		this._socketEmit('setFeedbackDefinitions', { feedbacks: hostFeedbacks }).catch(() =>
-			this.log('debug', `Call to setFeedbackDefinitions failed`)
-		)
+		this._socketEmitNoCb('setFeedbackDefinitions', { feedbacks: hostFeedbacks })
 	}
 
 	/**
@@ -470,9 +476,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		this._socketEmit('setPresetDefinitions', { presets: hostPresets }).catch(() =>
-			this.log('debug', `Call to setPresetDefinitions failed`)
-		)
+		this._socketEmitNoCb('setPresetDefinitions', { presets: hostPresets })
 	}
 
 	/**
@@ -506,9 +510,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		this._socketEmit('setVariableDefinitions', { variables: hostVariables }).catch(() =>
-			this.log('debug', `Call to setVariableDefinitions failed`)
-		)
+		this._socketEmitNoCb('setVariableDefinitions', { variables: hostVariables })
 	}
 
 	/**
@@ -536,9 +538,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		this._socketEmit('setVariableValues', { newValues: hostValues }).catch(() =>
-			this.log('debug', `Call to setVariableValues failed`)
-		)
+		this._socketEmitNoCb('setVariableValues', { newValues: hostValues })
 	}
 
 	/**
@@ -556,7 +556,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @returns The string with variables replaced with their values
 	 */
 	async parseVariablesInString(text: string): Promise<string> {
-		const res = await this._socketEmit('parseVariablesInString', { text: text })
+		const res = await this._socketEmitWithCb('parseVariablesInString', { text: text })
 		return res.text
 	}
 
@@ -564,7 +564,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Request all feedbacks of the specified types to be checked for changes
 	 * @param feedbackTypes The feedback types to check
 	 */
-	async checkFeedbacks(...feedbackTypes: string[]): Promise<void> {
+	checkFeedbacks(...feedbackTypes: string[]): void {
 		const newValues: UpdateFeedbackValuesMessage['values'] = []
 
 		const types = new Set(feedbackTypes)
@@ -591,7 +591,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		// Send the new values back
 		if (Object.keys(newValues).length > 0) {
-			await this._socketEmit('updateFeedbackValues', {
+			this._socketEmitNoCb('updateFeedbackValues', {
 				values: newValues,
 			})
 		}
@@ -601,7 +601,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Request the specified feedback instances to be checked for changes
 	 * @param feedbackIds The ids of the feedback instances to check
 	 */
-	async checkFeedbacksById(...feedbackIds: string[]): Promise<void> {
+	checkFeedbacksById(...feedbackIds: string[]): void {
 		const newValues: UpdateFeedbackValuesMessage['values'] = []
 
 		for (const id of feedbackIds) {
@@ -623,7 +623,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		// Send the new values back
 		if (Object.keys(newValues).length > 0) {
-			await this._socketEmit('updateFeedbackValues', {
+			this._socketEmitNoCb('updateFeedbackValues', {
 				values: newValues,
 			})
 		}
@@ -716,8 +716,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param path message path
 	 * @param args mesage arguments
 	 */
-	async oscSend(host: string, port: number, path: string, args: OSCSomeArguments): Promise<void> {
-		return this._socketEmit(
+	oscSend(host: string, port: number, path: string, args: OSCSomeArguments): void {
+		this._socketEmitNoCb(
 			'send-osc',
 			literal<SendOscMessage>({
 				host,
@@ -733,8 +733,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param status The status level
 	 * @param message Additional information about the status
 	 */
-	async updateStatus(status: InstanceStatus, message?: string | null): Promise<void> {
-		this._socketEmit(
+	updateStatus(status: InstanceStatus, message?: string | null): void {
+		this._socketEmitNoCb(
 			'set-status',
 			literal<SetStatusMessage>({
 				status,
@@ -749,14 +749,12 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param message The message text to write
 	 */
 	log(level: LogLevel, message: string): void {
-		this._socketEmit(
+		this._socketEmitNoCb(
 			'log-message',
 			literal<LogMessageMessage>({
 				level,
 				message,
 			})
-		).catch((e) => {
-			console.error(`log failed: ${e}`)
-		})
+		)
 	}
 }
