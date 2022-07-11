@@ -14,16 +14,16 @@ import { SomeCompanionPresetDefinition } from '../module-api/preset.js'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http.js'
 
 export interface ModuleToHostEventsV0 {
-	'log-message': (msg: LogMessageMessage) => void
-	'set-status': (msg: SetStatusMessage) => void
-	setActionDefinitions: (msg: SetActionDefinitionsMessage) => void
-	setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => void
-	setVariableDefinitions: (msg: SetVariableDefinitionsMessage) => void
-	setPresetDefinitions: (msg: SetPresetDefinitionsMessage) => void
-	setVariableValues: (msg: SetVariableValuesMessage) => void
-	updateFeedbackValues: (msg: UpdateFeedbackValuesMessage) => void
-	saveConfig: (msg: SaveConfigMessage) => void
-	'send-osc': (msg: SendOscMessage) => void
+	'log-message': (msg: LogMessageMessage) => never
+	'set-status': (msg: SetStatusMessage) => never
+	setActionDefinitions: (msg: SetActionDefinitionsMessage) => never
+	setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => never
+	setVariableDefinitions: (msg: SetVariableDefinitionsMessage) => never
+	setPresetDefinitions: (msg: SetPresetDefinitionsMessage) => never
+	setVariableValues: (msg: SetVariableValuesMessage) => never
+	updateFeedbackValues: (msg: UpdateFeedbackValuesMessage) => never
+	saveConfig: (msg: SaveConfigMessage) => never
+	'send-osc': (msg: SendOscMessage) => never
 	parseVariablesInString: (msg: ParseVariablesInStringMessage) => ParseVariablesInStringResponseMessage
 	upgradedItems: (msg: UpgradedDataResponseMessage) => void
 }
