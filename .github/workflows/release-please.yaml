@@ -60,7 +60,7 @@ jobs:
       - name: Publish to NPM
         if: ${{ steps.do-publish.outputs.tag }}
         run: |
-          yarn publish --access=public--network-timeout 100000 --tag ${{ steps.do-publish.outputs.tag }}
+          yarn publish --access=public --network-timeout 100000 --tag ${{ steps.do-publish.outputs.tag }}
         env:
           CI: true
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
