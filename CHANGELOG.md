@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.4](https://github.com/bitfocus/companion-module-base/compare/v0.0.3...v0.0.4) (2022-07-12)
+
+
+### Bug Fixes
+
+* make non-async socket.io methods not pass a callback to companion. make less methods async ([7205498](https://github.com/bitfocus/companion-module-base/commit/7205498fba4aafab6c800a62c412751c23e3f412))
+* make some 'setter' methods non-async ([cbbb3a0](https://github.com/bitfocus/companion-module-base/commit/cbbb3a04ed75f8b4d4f0f7369bef926702dca03a))
+* module startup ([6c061af](https://github.com/bitfocus/companion-module-base/commit/6c061af4df2a0260715f269c3ad6ef8e9882ff76))
+
 ## [0.0.3](https://github.com/bitfocus/companion-module-base/compare/v0.0.2...v0.0.3) (2022-07-10)
 
 
