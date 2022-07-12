@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1](https://github.com/bitfocus/companion-module-base/compare/v0.1.0...v0.1.1) (2022-07-12)
+
+
+### Bug Fixes
+
+* allow subscribeActions and related methods ([70803d0](https://github.com/bitfocus/companion-module-base/commit/70803d0cdeb3b973ea3e12d3bb43412bfe9a797e))
+* use apiVersion from manifest instead of package.json of @companion-module/base ([2ad58c1](https://github.com/bitfocus/companion-module-base/commit/2ad58c1938a1b95a4a99bde1ef50868bfff65133))
+
 ## [0.1.0](https://github.com/bitfocus/companion-module-base/compare/v0.0.4...v0.1.0) (2022-07-12)
 
 
