@@ -13,9 +13,9 @@ jobs:
         with:
           release-type: node
           package-name: release-please-action
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ steps.release.outputs.release_created }}
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
           node-version: 14
         if: ${{ steps.release.outputs.release_created }}

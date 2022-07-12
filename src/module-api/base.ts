@@ -629,14 +629,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		}
 	}
 
-	/** @deprecated ? */
-	_getAllActions() {
-		return Array.from(this.#actionInstances.values())
-	}
-	/** @deprecated ? */
-	_subscribeActions(actionId?: string): void {
-		let actions = this._getAllActions()
-		if (actionId) actions = actions.filter((fb) => fb.actionId === actionId)
+	/**
+	 * Call subscribe on all currently known placed actions.
+	 * It can be useful to trigger this upon establishing a connection, to ensure all data is loaded
+	 * @param actionIds The actionIds to call subscribe for. If no values are provided, then all are called
+	 */
+	subscribeActions(...actionIds: string[]): void {
+		let actions = Array.from(this.#actionInstances.values())
+
+		const actionIdSet = new Set(actionIds)
+		if (actionIdSet.size) actions = actions.filter((fb) => actionIdSet.has(fb.actionId))
 
 		for (const act of actions) {
 			const def = this.#actionDefinitions.get(act.actionId)
@@ -650,10 +652,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 	}
-	/** @deprecated ? */
-	_unsubscribeActions(actionId?: string): void {
-		let actions = this._getAllActions()
-		if (actionId) actions = actions.filter((fb) => fb.actionId === actionId)
+	/**
+	 * Call unsubscribe on all currently known placed actions.
+	 * It can be useful to do some cleanup upon a connection closing
+	 * @param actionIds The actionIds to call subscribe for. If no values are provided, then all are called
+	 */
+	unsubscribeActions(...actionIds: string[]): void {
+		let actions = Array.from(this.#actionInstances.values())
+
+		const actionIdSet = new Set(actionIds)
+		if (actionIdSet.size) actions = actions.filter((fb) => actionIdSet.has(fb.actionId))
 
 		for (const act of actions) {
 			const def = this.#actionDefinitions.get(act.actionId)
@@ -668,14 +676,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		}
 	}
 
-	/** @deprecated ? */
-	_getAllFeedbacks() {
-		return Array.from(this.#feedbackInstances.values())
-	}
-	/** @deprecated ? */
-	_subscribeFeedbacks(feedbackId?: string): void {
-		let feedbacks = this._getAllFeedbacks()
-		if (feedbackId) feedbacks = feedbacks.filter((fb) => fb.feedbackId === feedbackId)
+	/**
+	 * Call subscribe on all currently known placed feedbacks.
+	 * It can be useful to trigger this upon establishing a connection, to ensure all data is loaded
+	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called
+	 */
+	subscribeFeedbacks(...feedbackIds: string[]): void {
+		let feedbacks = Array.from(this.#feedbackInstances.values())
+
+		const feedbackIdSet = new Set(feedbackIds)
+		if (feedbackIdSet.size) feedbacks = feedbacks.filter((fb) => feedbackIdSet.has(fb.feedbackId))
 
 		for (const fb of feedbacks) {
 			const def = this.#feedbackDefinitions.get(fb.feedbackId)
@@ -690,10 +700,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 	}
-	/** @deprecated ? */
-	_unsubscribeFeedbacks(feedbackId?: string): void {
-		let feedbacks = this._getAllFeedbacks()
-		if (feedbackId) feedbacks = feedbacks.filter((fb) => fb.feedbackId === feedbackId)
+	/**
+	 * Call unsubscribe on all currently known placed feedbacks.
+	 * It can be useful to do some cleanup upon a connection closing
+	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called
+	 */
+	unsubscribeFeedbacks(...feedbackIds: string[]): void {
+		let feedbacks = Array.from(this.#feedbackInstances.values())
+
+		const feedbackIdSet = new Set(feedbackIds)
+		if (feedbackIdSet.size) feedbacks = feedbacks.filter((fb) => feedbackIdSet.has(fb.feedbackId))
 
 		for (const fb of feedbacks) {
 			const def = this.#feedbackDefinitions.get(fb.feedbackId)
