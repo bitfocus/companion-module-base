@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0](https://github.com/bitfocus/companion-module-base/compare/v0.0.4...v0.1.0) (2022-07-12)
+
+
+### Features
+
+* add apiVersion to manifest ([896f151](https://github.com/bitfocus/companion-module-base/commit/896f151ab63d652f600aec7869e9456fa0199b47))
+
 ## [0.0.4](https://github.com/bitfocus/companion-module-base/compare/v0.0.3...v0.0.4) (2022-07-12)
 
 
