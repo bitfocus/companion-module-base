@@ -9,6 +9,8 @@ export interface ModuleManifestRuntime {
 	type: string
 	/** Which host-api does it use. Must be socket.io */
 	api: string
+	/** The version of the host-api used. */
+	apiVersion: string
 
 	/** Entrypoint to pass to the runtime. eg index.js */
 	entrypoint: string
