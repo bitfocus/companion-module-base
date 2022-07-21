@@ -629,6 +629,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		}
 	}
 
+	/** @deprecated */
+	_getAllActions() {
+		return Array.from(this.#actionInstances.values()).map((act) => ({
+			id: act.id,
+			actionId: act.actionId,
+			controlId: act.controlId,
+			options: act.options,
+		}))
+	}
+
 	/**
 	 * Call subscribe on all currently known placed actions.
 	 * It can be useful to trigger this upon establishing a connection, to ensure all data is loaded
@@ -674,6 +684,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				})
 			}
 		}
+	}
+
+	/** @deprecated */
+	_getAllFeedbacks() {
+		return Array.from(this.#feedbackInstances.values()).map((fb) => ({
+			id: fb.id,
+			feedbackId: fb.feedbackId,
+			controlId: fb.controlId,
+			options: fb.options,
+		}))
 	}
 
 	/**
