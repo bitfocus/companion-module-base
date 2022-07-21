@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/bitfocus/companion-module-base/compare/v0.1.1...v0.1.2) (2022-07-21)
+
+
+### Bug Fixes
+
+* re-add method needed by legacy wrapper ([f0e3327](https://github.com/bitfocus/companion-module-base/commit/f0e332713f14ab1b6be0333b3204073a51e56f44))
+
 ## [0.1.1](https://github.com/bitfocus/companion-module-base/compare/v0.1.0...v0.1.1) (2022-07-12)
 
 
