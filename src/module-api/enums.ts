@@ -2,14 +2,15 @@
  * All the possible status levels that an instance can use.
  * Note: When adding more, companion needs to be updated to know how they should be displayed
  */
-export type InstanceStatus =
-	| 'ok'
-	| 'connecting'
-	| 'disconnected'
-	| 'connection_failure'
-	| 'bad_config'
-	| 'unknown_error'
-	| 'unknown_warning'
+export enum InstanceStatus {
+	Ok = 'ok',
+	Connecting = 'connecting',
+	Disconnected = 'disconnected',
+	ConnectionFailure = 'connection_failure',
+	BadConfig = 'bad_config',
+	UnknownError = 'unknown_error',
+	UnknwownWarning = 'unknown_warning',
+}
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug'
 
