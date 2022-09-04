@@ -1,5 +1,5 @@
 import * as SocketIOClient from 'socket.io-client'
-import { CompanionActionDefinition, CompanionActionDefinitions } from './action.js'
+import { CompanionActionDefinition, CompanionActionDefinitions, CompanionActionInfo } from './action.js'
 import {
 	CompanionFeedbackDefinitions,
 	CompanionFeedbackDefinition,
@@ -31,6 +31,7 @@ import {
 	SetStatusMessage,
 	SetVariableDefinitionsMessage,
 	SetVariableValuesMessage,
+	StartStopRecordActionsMessage,
 	UpdateActionInstancesMessage,
 	UpdateFeedbackInstancesMessage,
 	UpdateFeedbackValuesMessage,
@@ -58,6 +59,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })
 	#initialized: boolean = false
+	#recordingActions: boolean = false
 
 	readonly #actionDefinitions = new Map<string, CompanionActionDefinition>()
 	readonly #feedbackDefinitions = new Map<string, CompanionFeedbackDefinition>()
@@ -92,6 +94,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			handleHttpRequest: this._handleHttpRequest.bind(this),
 			learnAction: this._handleLearnAction.bind(this),
 			learnFeedback: this._handleLearnFeedback.bind(this),
+			startStopRecordActions: this._handleStartStopRecordActions.bind(this),
 		})
 
 		this.log('debug', 'Initializing')
@@ -167,6 +170,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 			return {
 				hasHttpHandler: typeof this.handleHttpRequest === 'function',
+				hasRecordActionsHandler: typeof this.handleStartStopRecordActions == 'function',
 				newUpgradeIndex: this.#upgradeScripts.length,
 				updatedConfig: config,
 			}
@@ -367,6 +371,28 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 	}
+	private async _handleStartStopRecordActions(msg: StartStopRecordActionsMessage): Promise<void> {
+		if (!msg.recording) {
+			if (!this.#recordingActions) {
+				// Already stopped
+				return
+			}
+		} else {
+			if (this.#recordingActions) {
+				// Already running
+				return
+			}
+		}
+
+		if (!this.handleStartStopRecordActions) {
+			this.#recordingActions = false
+			throw new Error('Recording actions is not supported by this module!')
+		}
+
+		this.#recordingActions = msg.recording
+
+		this.handleStartStopRecordActions(msg.controlId)
+	}
 
 	/**
 	 * Main initialization function called once the module
@@ -403,6 +429,12 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param request partial request object from Express
 	 */
 	handleHttpRequest?(request: CompanionHTTPRequest): CompanionHTTPResponse | Promise<CompanionHTTPResponse>
+
+	/**
+	 * Handle request from Companion to start/stop recording actions
+	 * @param controlId control actions are being recorded for
+	 */
+	handleStartStopRecordActions?(controlId: string): boolean
 
 	/**
 	 * Set the action definitions for this instance
@@ -743,6 +775,21 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				})
 			}
 		}
+	}
+
+	/**
+	 * Add an action to the current recording session
+	 * @param action The action to be added to the recording session
+	 * @param uniquenessId A unique id for the action being recorded. This should be different for each action, but by passing the same as a previous call will replace the previous value
+	 */
+	recordAction(action: Omit<CompanionActionInfo, 'id' | 'controlId'>, uniquenessId?: string): void {
+		if (!this.#recordingActions) throw new Error('Not currently recording actions')
+
+		this._socketEmitNoCb('recordAction', {
+			uniquenessId: uniquenessId ?? null,
+			actionId: action.actionId,
+			options: action.options,
+		})
 	}
 
 	/**
