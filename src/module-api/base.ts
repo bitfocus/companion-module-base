@@ -391,7 +391,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		this.#recordingActions = msg.recording
 
-		this.handleStartStopRecordActions(msg.controlId)
+		this.handleStartStopRecordActions(this.#recordingActions, msg.controlId)
 	}
 
 	/**
@@ -432,9 +432,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 	/**
 	 * Handle request from Companion to start/stop recording actions
+	 * @param isRecording whether recording is now running
 	 * @param controlId control actions are being recorded for
 	 */
-	handleStartStopRecordActions?(controlId: string): boolean
+	handleStartStopRecordActions?(isRecording: boolean, controlId: string): void
 
 	/**
 	 * Set the action definitions for this instance
