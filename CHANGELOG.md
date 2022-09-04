@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0](https://github.com/bitfocus/companion-module-base/compare/v0.1.2...v0.2.0) (2022-09-04)
+
+
+### Features
+
+* convert InstanceStatus into proper enum ([73213ab](https://github.com/bitfocus/companion-module-base/commit/73213ab4976168c5e7241ef0c8ea906464cef297))
+* initial refactored socket helpers ([603b806](https://github.com/bitfocus/companion-module-base/commit/603b80655cf85a5577b28ae06c32e109f23b8755))
+
 ## [0.1.2](https://github.com/bitfocus/companion-module-base/compare/v0.1.1...v0.1.2) (2022-07-21)
 
 
