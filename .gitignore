@@ -14,5 +14,6 @@ db
 
 docs
 dist
+generated
 *.log
 node_modules
