@@ -12,3 +12,9 @@ In the future it will be possible to write modules in other languages, but it is
 To get started with creating a new module, you should start with one of the following templates. These should be kept up to date, but you should make sure all the dependencies are up to date before you begin.
 
 - TODO
+
+## Documentation
+
+You can view detailed generated documentation [here](https://bitfocus.github.io/companion-module-base/).
+
+Or refer to [the wiki](https://github.com/bitfocus/companion-module-base/wiki) for a more handwritten version

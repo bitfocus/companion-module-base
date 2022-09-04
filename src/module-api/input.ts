@@ -17,20 +17,35 @@ export type SomeCompanionInputField =
  * The common properties for an input field
  */
 export interface CompanionInputFieldBase {
-	/** The unique id of this input field */
+	/** The unique id of this input field within the input group */
 	id: string
 	/** The type of this input field */
 	type: 'static-text' | 'textinput' | 'dropdown' | 'multidropdown' | 'colorpicker' | 'number' | 'checkbox'
 	/** The label of the field */
 	label: string
-	/** A hover tooltop for this field */
+	/** A hover tooltip for this field */
 	tooltip?: string
-	/** A function called to check whether this input should be visible, based on the current options selections */
-	isVisible?: (options: any /*CompanionActionEvent | CompanionFeedbackEvent*/) => boolean // TODO - this varies based on where it is used, and in this current structure is not possible to type without breaking every module
+	/**
+	 * A function called to check whether this input should be visible, based on the current options selections within the input group
+	 *
+	 * Note: This function must not depend on anything outside of its scope. If it does it will fail to compile and will be skipped.
+	 */
+	isVisible?: (options: CompanionOptionValues) => boolean
 }
 
 /**
  * A static un-editable line of text
+ * 
+ * Available for actions/feedbacks/config
+ * 
+ * ```js
+ * {
+ * 	id: 'important-line',
+ * 	type: 'static-text',
+ * 	label: 'Important info',
+ * 	value: 'Some message here'
+ * }
+```
  */
 export interface CompanionInputFieldStaticText extends CompanionInputFieldBase {
 	type: 'static-text'
@@ -40,17 +55,41 @@ export interface CompanionInputFieldStaticText extends CompanionInputFieldBase {
 
 /**
  * A colour picker input
+ *
+ * Available for actions/feedbacks/config
+ *
+ * Example:
+ * ```js
+ * {
+ * 	id: 'bg',
+ * 	type: 'colorpicker',
+ * 	label: 'Background color',
+ * 	'default': combineRgb(255, 0, 0)
+ * }
+ * ```
  */
 export interface CompanionInputFieldColor extends CompanionInputFieldBase {
 	type: 'colorpicker'
 	/**
-	 * The default color value
+	 * The default color value to set when creating this action/feedback/instance
 	 */
 	default: number
 }
 
 /**
  * A basic text input field
+ *
+ * Available for actions/feedbacks/config
+ *
+ * Example:
+ * ```js
+ * {
+ * 	id: 'val',
+ * 	type: 'textinput',
+ * 	label: 'Provide name',
+ * 	'default': 'Bob'
+ * }
+ * ```
  */
 export interface CompanionInputFieldTextInput extends CompanionInputFieldBase {
 	type: 'textinput'
@@ -79,6 +118,8 @@ export interface CompanionInputFieldTextInput extends CompanionInputFieldBase {
 export type DropdownChoiceId = string | number
 /**
  * An option for a dropdown input
+ *
+ * Available for actions/feedbacks/config
  */
 export interface DropdownChoice {
 	/** Value of the option */
@@ -89,6 +130,21 @@ export interface DropdownChoice {
 
 /**
  * A dropdown input field
+ *
+ * Available for actions/feedbacks/config
+ *
+ * Example:
+ * ```js
+ * {
+ * 	id: 'val',
+ * 	type: 'dropdown',
+ * 	label: 'Select name',
+ * 	choices: [
+ * 		{ id: 'bob', label: 'Bob' },
+ * 		{ id: 'sally', label: 'Sally' },
+ * 	]
+ * 	'default': 'bob'
+ * }
  */
 export interface CompanionInputFieldDropdown extends CompanionInputFieldBase {
 	type: 'dropdown'
@@ -99,7 +155,7 @@ export interface CompanionInputFieldDropdown extends CompanionInputFieldBase {
 	/** The default selected value */
 	default: DropdownChoiceId
 
-	/** Allow custom values to be defined */
+	/** Allow custom values to be defined by the user */
 	allowCustom?: boolean
 	/** Check custom value against regex */
 	regex?: string
@@ -110,6 +166,21 @@ export interface CompanionInputFieldDropdown extends CompanionInputFieldBase {
 
 /**
  * A multi-select dropdown input field
+ *
+ * Available for actions/feedbacks/config
+ *
+ * Example:
+ * ```js
+ * {
+ * 	id: 'val',
+ * 	type: 'multidropdown',
+ * 	label: 'Select name',
+ * 	choices: [
+ * 		{ id: 'bob', label: 'Bob' },
+ * 		{ id: 'sally', label: 'Sally' },
+ * 	]
+ * 	'default': 'bob'
+ * }
  */
 export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldBase {
 	type: 'multidropdown'
@@ -131,6 +202,18 @@ export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldBas
 
 /**
  * A checkbox input field
+ *
+ * Available for actions/feedbacks/config
+ *
+ * Example:
+ * ```js
+ * {
+ * 	id: 'doit',
+ * 	type: 'checkbox',
+ * 	label: 'Do the thing',
+ * 	'default': true
+ * }
+ * ```
  */
 export interface CompanionInputFieldCheckbox extends CompanionInputFieldBase {
 	type: 'checkbox'
@@ -140,6 +223,20 @@ export interface CompanionInputFieldCheckbox extends CompanionInputFieldBase {
 
 /**
  * A number input field
+ *
+ * Available for actions/feedbacks/config
+ *
+ * Example:
+ * ```js
+ * {
+ * 	id: 'size',
+ * 	type: 'number',
+ * 	label: 'Target size',
+ * 	'default': 50,
+ * 	min: 0,
+ * 	max: 100
+ * }
+ * ```
  */
 export interface CompanionInputFieldNumber extends CompanionInputFieldBase {
 	type: 'number'
