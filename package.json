@@ -19,8 +19,8 @@
 		"assets"
 	],
 	"dependencies": {
-		"@sentry/node": "^7.12.1",
-		"@sentry/tracing": "^7.12.1",
+		"@sentry/node": "^7.13.0",
+		"@sentry/tracing": "^7.13.0",
 		"ajv": "^8.11.0",
 		"eventemitter3": "^4.0.7",
 		"p-queue": "^6.6.2",
@@ -34,6 +34,6 @@
 		"json-schema-to-typescript": "^11.0.2",
 		"prettier": "^2.7.1",
 		"typedoc": "^0.23.14",
-		"typescript": "~4.8.2"
+		"typescript": "~4.8.3"
 	}
 }
