@@ -250,7 +250,6 @@ export interface LearnFeedbackResponseMessage {
 
 export interface StartStopRecordActionsMessage {
 	recording: boolean
-	controlId: string
 }
 
 export interface RecordActionMessage {
