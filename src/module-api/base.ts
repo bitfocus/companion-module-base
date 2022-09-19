@@ -793,6 +793,20 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	/**
+	 * Experimental: This method may change without notice. Do not use!
+	 * Set the value of a custom variable
+	 * @param variableId
+	 * @param value
+	 * @returns Promise which resolves upon success, or rejects if the variable no longer exists
+	 */
+	setCustomVariableValue(variableId: string, value: CompanionVariableValue): void {
+		this._socketEmitNoCb('setCustomVariable', {
+			customVariableId: variableId,
+			value,
+		})
+	}
+
+	/**
 	 * Send an osc message from the system osc sender
 	 * @param host destination ip address
 	 * @param port destination port number

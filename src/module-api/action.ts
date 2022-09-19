@@ -1,4 +1,24 @@
-import { SomeCompanionInputField, CompanionOptionValues } from './input.js'
+import {
+	CompanionOptionValues,
+	CompanionInputFieldCheckbox,
+	CompanionInputFieldColor,
+	CompanionInputFieldDropdown,
+	CompanionInputFieldMultiDropdown,
+	CompanionInputFieldNumber,
+	CompanionInputFieldStaticText,
+	CompanionInputFieldTextInput,
+	CompanionInputFieldCustomVariable,
+} from './input.js'
+
+export type SomeCompanionActionInputField =
+	| CompanionInputFieldStaticText
+	| CompanionInputFieldColor
+	| CompanionInputFieldTextInput
+	| CompanionInputFieldDropdown
+	| CompanionInputFieldMultiDropdown
+	| CompanionInputFieldNumber
+	| CompanionInputFieldCheckbox
+	| CompanionInputFieldCustomVariable
 
 /**
  * The definition of an action
@@ -9,7 +29,7 @@ export interface CompanionActionDefinition {
 	/** Additional description of the action */
 	description?: string
 	/** The input fields for the action */
-	options: SomeCompanionInputField[]
+	options: SomeCompanionActionInputField[]
 	/** Called to execute the action */
 	callback: (action: CompanionActionEvent) => Promise<void> | void
 	/**

@@ -2,7 +2,7 @@ import * as SocketIOClient from 'socket.io-client'
 import { CompanionStaticUpgradeScript } from '../module-api/upgrade'
 import { EncodeIsVisible } from '../host-api/api.js'
 import { ResultCallback } from '../host-api/versions.js'
-import { SomeCompanionInputField } from '../module-api/input'
+import { CompanionInputFieldBase } from '../module-api/input'
 
 /**
  * Signature for the handler functions
@@ -45,7 +45,7 @@ export function listenToEvents<T extends object>(socket: SocketIOClient.Socket<T
 	}
 }
 
-export function serializeIsVisibleFn<T extends SomeCompanionInputField>(options: T[]): EncodeIsVisible<T>[] {
+export function serializeIsVisibleFn<T extends CompanionInputFieldBase>(options: T[]): EncodeIsVisible<T>[] {
 	return options.map((option) => {
 		if ('isVisible' in option) {
 			if (typeof option.isVisible === 'function') {
