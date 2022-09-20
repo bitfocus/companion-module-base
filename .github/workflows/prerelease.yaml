@@ -9,7 +9,7 @@ on:
 
 name: prerelease
 jobs:
-  release-please:
+  prerelease:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -26,7 +26,7 @@ jobs:
           CI: true
       - name: Publish to NPM
         run: |
-          yarn version --new-version ${{ github.event.inputs.tag }}
+          yarn version --no-git-tag-version --new-version ${{ github.event.inputs.tag }}
 
           npm publish --access=public --tag nightly
         env:
