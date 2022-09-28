@@ -26,6 +26,7 @@ export interface ModuleToHostEventsV0 {
 	'send-osc': (msg: SendOscMessage) => never
 	parseVariablesInString: (msg: ParseVariablesInStringMessage) => ParseVariablesInStringResponseMessage
 	upgradedItems: (msg: UpgradedDataResponseMessage) => void
+	recordAction: (mgs: RecordActionMessage) => never
 }
 
 export interface HostToModuleEventsV0 {
@@ -39,6 +40,7 @@ export interface HostToModuleEventsV0 {
 	handleHttpRequest: (msg: HandleHttpRequestMessage) => HandleHttpRequestResponseMessage
 	learnAction: (msg: LearnActionMessage) => LearnActionResponseMessage
 	learnFeedback: (msg: LearnFeedbackMessage) => LearnFeedbackResponseMessage
+	startStopRecordActions: (msg: StartStopRecordActionsMessage) => void
 }
 
 export type EncodeIsVisible<T extends SomeCompanionInputField> = Omit<T, 'isVisible'> & {
@@ -56,6 +58,7 @@ export interface InitMessage {
 }
 export interface InitResponseMessage {
 	hasHttpHandler: boolean
+	hasRecordActionsHandler: boolean
 	newUpgradeIndex: number
 
 	updatedConfig: unknown | undefined
@@ -243,4 +246,14 @@ export interface LearnFeedbackMessage {
 }
 export interface LearnFeedbackResponseMessage {
 	options: CompanionOptionValues | undefined
+}
+
+export interface StartStopRecordActionsMessage {
+	recording: boolean
+}
+
+export interface RecordActionMessage {
+	uniquenessId: string | null
+	actionId: string
+	options: CompanionOptionValues
 }
