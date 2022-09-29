@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.0](https://github.com/bitfocus/companion-module-base/compare/v0.2.0...v0.3.0) (2022-09-29)
+
+
+### Features
+
+* add json schema for companion/manifest.json files ([dd69090](https://github.com/bitfocus/companion-module-base/commit/dd69090fb9002c15b8624495b9b615753ff86270))
+* api for recording actions ([#11](https://github.com/bitfocus/companion-module-base/issues/11)) ([ad27dcc](https://github.com/bitfocus/companion-module-base/commit/ad27dccab04af86e4367dcececd2bef00ede7c80))
+* implement validation of manifest json, using the json schema ([1b5714d](https://github.com/bitfocus/companion-module-base/commit/1b5714d41eb1cc6dc842b9fcd16bd8cd284fc38a))
+* modules set custom variables ([#12](https://github.com/bitfocus/companion-module-base/issues/12)) ([9d54fda](https://github.com/bitfocus/companion-module-base/commit/9d54fda81dcdf404779aba0aa81cae1e36bbc4ca))
+
 ## [0.2.0](https://github.com/bitfocus/companion-module-base/compare/v0.1.2...v0.2.0) (2022-09-04)
 
 
