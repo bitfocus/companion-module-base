@@ -1,5 +1,23 @@
-import { SomeCompanionInputField, CompanionOptionValues } from './input.js'
+import {
+	CompanionOptionValues,
+	CompanionInputFieldStaticText,
+	CompanionInputFieldCheckbox,
+	CompanionInputFieldColor,
+	CompanionInputFieldDropdown,
+	CompanionInputFieldMultiDropdown,
+	CompanionInputFieldNumber,
+	CompanionInputFieldTextInput,
+} from './input.js'
 import { CompanionAdditionalStyleProps, CompanionRequiredStyleProps } from './style.js'
+
+export type SomeCompanionFeedbackInputField =
+	| CompanionInputFieldStaticText
+	| CompanionInputFieldColor
+	| CompanionInputFieldTextInput
+	| CompanionInputFieldDropdown
+	| CompanionInputFieldMultiDropdown
+	| CompanionInputFieldNumber
+	| CompanionInputFieldCheckbox
 
 /**
  * Basic information about an instance of an feedback
@@ -68,7 +86,7 @@ export interface CompanionFeedbackDefinitionBase {
 	/** Additional description of the feedback */
 	description?: string
 	/** The input fields for the feedback */
-	options: SomeCompanionInputField[]
+	options: SomeCompanionFeedbackInputField[]
 	/**
 	 * Called to report the existence of an feedback
 	 * Useful to ensure necessary data is loaded

@@ -4,15 +4,6 @@ export interface CompanionOptionValues {
 	[key: string]: InputValue | undefined
 }
 
-export type SomeCompanionInputField =
-	| CompanionInputFieldStaticText
-	| CompanionInputFieldColor
-	| CompanionInputFieldTextInput
-	| CompanionInputFieldDropdown
-	| CompanionInputFieldMultiDropdown
-	| CompanionInputFieldNumber
-	| CompanionInputFieldCheckbox
-
 /**
  * The common properties for an input field
  */
@@ -20,7 +11,15 @@ export interface CompanionInputFieldBase {
 	/** The unique id of this input field within the input group */
 	id: string
 	/** The type of this input field */
-	type: 'static-text' | 'textinput' | 'dropdown' | 'multidropdown' | 'colorpicker' | 'number' | 'checkbox'
+	type:
+		| 'static-text'
+		| 'textinput'
+		| 'dropdown'
+		| 'multidropdown'
+		| 'colorpicker'
+		| 'number'
+		| 'checkbox'
+		| 'custom-variable'
 	/** The label of the field */
 	label: string
 	/** A hover tooltip for this field */
@@ -265,4 +264,22 @@ export interface CompanionInputFieldNumber extends CompanionInputFieldBase {
 
 	/** Whether to show a slider for the input */
 	range?: boolean
+}
+
+/**
+ * A custom variable picker input
+ *
+ * Available for actions
+ *
+ * Example:
+ * ```js
+ * {
+ * 	id: 'destination',
+ * 	type: 'custom-variable',
+ * 	label: 'Save result to variable',
+ * }
+ * ```
+ */
+export interface CompanionInputFieldCustomVariable extends CompanionInputFieldBase {
+	type: 'custom-variable'
 }

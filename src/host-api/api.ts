@@ -5,13 +5,15 @@
  * This will allow for cleaner and more stable apis which can both evolve at different rates
  */
 
-import { CompanionFeedbackButtonStyleResult } from '../module-api/feedback.js'
+import { CompanionFeedbackButtonStyleResult, SomeCompanionFeedbackInputField } from '../module-api/feedback.js'
 import { OSCSomeArguments } from '../common/osc.js'
 import { SomeCompanionConfigField } from '../module-api/config.js'
 import { LogLevel, InstanceStatus } from '../module-api/enums.js'
-import { SomeCompanionInputField, InputValue, CompanionOptionValues } from '../module-api/input.js'
+import { InputValue, CompanionOptionValues, CompanionInputFieldBase } from '../module-api/input.js'
 import { SomeCompanionPresetDefinition } from '../module-api/preset.js'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http.js'
+import { SomeCompanionActionInputField } from '../module-api/action.js'
+import { CompanionVariableValue } from '../module-api/variable.js'
 
 export interface ModuleToHostEventsV0 {
 	'log-message': (msg: LogMessageMessage) => never
@@ -26,7 +28,8 @@ export interface ModuleToHostEventsV0 {
 	'send-osc': (msg: SendOscMessage) => never
 	parseVariablesInString: (msg: ParseVariablesInStringMessage) => ParseVariablesInStringResponseMessage
 	upgradedItems: (msg: UpgradedDataResponseMessage) => void
-	recordAction: (mgs: RecordActionMessage) => never
+	recordAction: (msg: RecordActionMessage) => never
+	setCustomVariable: (msg: SetCustomVariableMessage) => never
 }
 
 export interface HostToModuleEventsV0 {
@@ -43,7 +46,7 @@ export interface HostToModuleEventsV0 {
 	startStopRecordActions: (msg: StartStopRecordActionsMessage) => void
 }
 
-export type EncodeIsVisible<T extends SomeCompanionInputField> = Omit<T, 'isVisible'> & {
+export type EncodeIsVisible<T extends CompanionInputFieldBase> = Omit<T, 'isVisible'> & {
 	isVisibleFn?: string
 }
 
@@ -86,14 +89,12 @@ export interface SetStatusMessage {
 	message: string | null
 }
 
-export type SomeEncodedCompanionInputField = EncodeIsVisible<SomeCompanionInputField>
-
 export interface SetActionDefinitionsMessage {
 	actions: Array<{
 		id: string
 		name: string
 		description?: string
-		options: SomeEncodedCompanionInputField[] // TODO module-lib - versioned types?
+		options: EncodeIsVisible<SomeCompanionActionInputField>[] // TODO module-lib - versioned types?
 		hasLearn: boolean
 	}>
 }
@@ -103,7 +104,7 @@ export interface SetFeedbackDefinitionsMessage {
 		id: string
 		name: string
 		description?: string
-		options: SomeEncodedCompanionInputField[] // TODO module-lib - versioned types?
+		options: EncodeIsVisible<SomeCompanionFeedbackInputField>[] // TODO module-lib - versioned types?
 		type: 'boolean' | 'advanced'
 		defaultStyle?: Partial<CompanionFeedbackButtonStyleResult>
 		hasLearn: boolean
@@ -256,4 +257,9 @@ export interface RecordActionMessage {
 	uniquenessId: string | null
 	actionId: string
 	options: CompanionOptionValues
+}
+
+export interface SetCustomVariableMessage {
+	customVariableId: string
+	value: CompanionVariableValue
 }
