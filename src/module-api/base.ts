@@ -37,7 +37,6 @@ import {
 } from '../host-api/api.js'
 import { literal } from '../util.js'
 import { InstanceBaseShared } from '../instance-base.js'
-import { ResultCallback } from '../host-api/versions.js'
 import PQueue from 'p-queue'
 import { CompanionVariableDefinition, CompanionVariableValue, CompanionVariableValues } from './variable.js'
 import { OSCSomeArguments } from '../common/osc.js'
@@ -48,9 +47,6 @@ import { runThroughUpgradeScripts } from '../internal/upgrade.js'
 import { convertFeedbackInstanceToEvent, callFeedbackOnDefinition } from '../internal/feedback.js'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 import { IpcWrapper } from '../host-api/ipc-wrapper.js'
-
-type ParamsIfReturnIsNever<T extends (...args: any[]) => any> = ReturnType<T> extends never ? Parameters<T> : never
-type ParamsIfReturnIsValid<T extends (...args: any[]) => any> = ReturnType<T> extends never ? never : Parameters<T>
 
 export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
 	readonly #ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>
@@ -97,26 +93,14 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			},
 			5000
 		)
-		process.on('message', (msg) => this.#ipcWrapper.receivedMessage(msg))
+		process.on('message', (msg) => {
+			this.#ipcWrapper.receivedMessage(msg)
+		})
 
 		this.#upgradeScripts = internal.upgradeScripts
 		this.id = internal.id
 
 		this.log('debug', 'Initializing')
-	}
-
-	private async _socketEmitWithCb<T extends keyof ModuleToHostEventsV0>(
-		name: T,
-		msg: ParamsIfReturnIsValid<ModuleToHostEventsV0[T]>[0]
-	): Promise<ReturnType<ModuleToHostEventsV0[T]>> {
-		return this.#ipcWrapper.sendWithCb(name, msg)
-	}
-
-	private _socketEmitNoCb<T extends keyof ModuleToHostEventsV0>(
-		name: T,
-		msg: ParamsIfReturnIsNever<ModuleToHostEventsV0[T]>[0]
-	): void {
-		return this.#ipcWrapper.sendWithNoCb(name, msg)
 	}
 
 	private async _handleInit(msg: InitMessage): Promise<InitResponseMessage> {
@@ -140,7 +124,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			const config = (updatedConfig ?? msg.config) as TConfig
 
 			// Send the upgraded data back to companion now. Just so that if the init crashes, this doesnt have to be repeated
-			const pSendUpgrade = this._socketEmitWithCb('upgradedItems', {
+			const pSendUpgrade = this.#ipcWrapper.sendWithCb('upgradedItems', {
 				updatedActions,
 				updatedFeedbacks,
 			})
@@ -261,7 +245,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		// Send the new values back
 		if (Object.keys(newValues).length > 0) {
-			this._socketEmitNoCb('updateFeedbackValues', {
+			this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', {
 				values: newValues,
 			})
 		}
@@ -412,7 +396,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param newConfig The new config object
 	 */
 	saveConfig(newConfig: TConfig): void {
-		this._socketEmitNoCb('saveConfig', { config: newConfig })
+		this.#ipcWrapper.sendWithNoCb('saveConfig', { config: newConfig })
 	}
 
 	/**
@@ -456,7 +440,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		this._socketEmitNoCb('setActionDefinitions', { actions: hostActions })
+		this.#ipcWrapper.sendWithNoCb('setActionDefinitions', { actions: hostActions })
 	}
 
 	/**
@@ -485,7 +469,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		this._socketEmitNoCb('setFeedbackDefinitions', { feedbacks: hostFeedbacks })
+		this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', { feedbacks: hostFeedbacks })
 	}
 
 	/**
@@ -504,7 +488,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		this._socketEmitNoCb('setPresetDefinitions', { presets: hostPresets })
+		this.#ipcWrapper.sendWithNoCb('setPresetDefinitions', { presets: hostPresets })
 	}
 
 	/**
@@ -538,7 +522,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		this._socketEmitNoCb('setVariableDefinitions', { variables: hostVariables })
+		this.#ipcWrapper.sendWithNoCb('setVariableDefinitions', { variables: hostVariables })
 	}
 
 	/**
@@ -566,7 +550,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		this._socketEmitNoCb('setVariableValues', { newValues: hostValues })
+		this.#ipcWrapper.sendWithNoCb('setVariableValues', { newValues: hostValues })
 	}
 
 	/**
@@ -584,7 +568,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @returns The string with variables replaced with their values
 	 */
 	async parseVariablesInString(text: string): Promise<string> {
-		const res = await this._socketEmitWithCb('parseVariablesInString', { text: text })
+		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', { text: text })
 		return res.text
 	}
 
@@ -619,7 +603,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		// Send the new values back
 		if (Object.keys(newValues).length > 0) {
-			this._socketEmitNoCb('updateFeedbackValues', {
+			this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', {
 				values: newValues,
 			})
 		}
@@ -651,7 +635,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		// Send the new values back
 		if (Object.keys(newValues).length > 0) {
-			this._socketEmitNoCb('updateFeedbackValues', {
+			this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', {
 				values: newValues,
 			})
 		}
@@ -781,7 +765,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	recordAction(action: Omit<CompanionActionInfo, 'id' | 'controlId'>, uniquenessId?: string): void {
 		if (!this.#recordingActions) throw new Error('Not currently recording actions')
 
-		this._socketEmitNoCb('recordAction', {
+		this.#ipcWrapper.sendWithNoCb('recordAction', {
 			uniquenessId: uniquenessId ?? null,
 			actionId: action.actionId,
 			options: action.options,
@@ -796,7 +780,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @returns Promise which resolves upon success, or rejects if the variable no longer exists
 	 */
 	setCustomVariableValue(variableId: string, value: CompanionVariableValue): void {
-		this._socketEmitNoCb('setCustomVariable', {
+		this.#ipcWrapper.sendWithNoCb('setCustomVariable', {
 			customVariableId: variableId,
 			value,
 		})
@@ -810,7 +794,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param args mesage arguments
 	 */
 	oscSend(host: string, port: number, path: string, args: OSCSomeArguments): void {
-		this._socketEmitNoCb(
+		this.#ipcWrapper.sendWithNoCb(
 			'send-osc',
 			literal<SendOscMessage>({
 				host,
@@ -827,7 +811,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param message Additional information about the status
 	 */
 	updateStatus(status: InstanceStatus, message?: string | null): void {
-		this._socketEmitNoCb(
+		this.#ipcWrapper.sendWithNoCb(
 			'set-status',
 			literal<SetStatusMessage>({
 				status,
@@ -842,7 +826,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param message The message text to write
 	 */
 	log(level: LogLevel, message: string): void {
-		this._socketEmitNoCb(
+		this.#ipcWrapper.sendWithNoCb(
 			'log-message',
 			literal<LogMessageMessage>({
 				level,

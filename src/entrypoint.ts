@@ -107,25 +107,37 @@ export function runEntrypoint<TConfig>(
 				},
 				5000
 			)
-			ipcWrapper.sendWithCb('register', { apiVersion, connectionId, verificationToken }).then(
-				() => {
-					console.log(`Module-host accepted registration`)
+			const receiveCallback = (msg: any) => {
+				ipcWrapper.receivedMessage(msg)
+			}
+			process.on('message', receiveCallback)
 
-					module = new factory(
-						literal<InstanceBaseProps<TConfig>>({
-							id: connectionId,
-							upgradeScripts,
-							_isInstanceBaseProps: true,
-						})
-					)
-				},
-				(err) => {
-					console.error('Module registration failed')
+			ipcWrapper
+				.sendWithCb('register', { apiVersion, connectionId, verificationToken })
+				.then(
+					() => {
+						process.off('message', receiveCallback)
 
-					// Kill the process
-					process.exit(11)
-				}
-			)
+						console.log(`Module-host accepted registration`)
+
+						module = new factory(
+							literal<InstanceBaseProps<TConfig>>({
+								id: connectionId,
+								upgradeScripts,
+								_isInstanceBaseProps: true,
+							})
+						)
+					},
+					(err) => {
+						console.error('Module registration failed')
+
+						// Kill the process
+						process.exit(11)
+					}
+				)
+				.finally(() => {
+					process.off('message', receiveCallback)
+				})
 
 			// socket.on('disconnect', async () => {
 			// 	console.log(`Disconnected from module-host: ${socket.id}`)

@@ -1,6 +1,5 @@
 import { nanoid } from 'nanoid'
 import { assertNever } from '../util'
-import { HostToModuleEventsV0, ModuleToHostEventsV0 } from './api'
 
 /**
  * Signature for the handler functions
@@ -56,6 +55,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 	async sendWithCb<T extends keyof TOutbound>(
 		name: T,
 		msg: ParamsIfReturnIsValid<TOutbound[T]>[0],
+		defaultResponse: undefined | (() => Error),
 		timeout: number = 0
 	): Promise<ReturnType<TOutbound[T]>> {
 		if (timeout <= 0) timeout = this.#defaultTimeout
@@ -79,7 +79,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 		// Setup a timeout, creating the error in the call, so that the stack trace is useful
 		const timeoutError = new Error('Call timed out')
 		callbacks.timeout = setTimeout(() => {
-			callbacks.reject(timeoutError)
+			callbacks.reject(defaultResponse ? defaultResponse() : timeoutError)
 		}, timeout)
 
 		return promise

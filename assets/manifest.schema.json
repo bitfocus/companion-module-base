@@ -74,7 +74,7 @@
 				},
 				"api": {
 					"type": "string",
-					"description": "Which host-api does it use. Must be socket.io"
+					"description": "Which host-api does it use. Must be nodejs-ipc"
 				},
 				"apiVersion": {
 					"type": "string",
