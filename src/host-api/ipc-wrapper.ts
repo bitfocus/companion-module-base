@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import { assertNever } from '../util'
+import ejson from 'ejson'
 
 /**
  * Signature for the handler functions
@@ -19,14 +20,14 @@ type ParamsIfReturnIsValid<T extends (...args: any[]) => any> = ReturnType<T> ex
 interface IpcCallMessagePacket {
 	direction: 'call'
 	name: string
-	payload: unknown
+	payload: string
 	callbackId: string | undefined
 }
 interface IpcResponseMessagePacket {
 	direction: 'response'
 	callbackId: string
 	success: boolean
-	payload: unknown
+	payload: string
 }
 
 interface PendingCallback {
@@ -72,7 +73,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 		this.#sendMessage({
 			direction: 'call',
 			name: String(name),
-			payload: msg,
+			payload: ejson.stringify(msg),
 			callbackId: id,
 		})
 
@@ -89,7 +90,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 		this.#sendMessage({
 			direction: 'call',
 			name: String(name),
-			payload: msg,
+			payload: ejson.stringify(msg),
 			callbackId: undefined,
 		})
 	}
@@ -105,21 +106,22 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 							direction: 'response',
 							callbackId: msg.callbackId,
 							success: false,
-							payload: new Error(`Unknown command "${msg.name}"`),
+							payload: ejson.stringify(new Error(`Unknown command "${msg.name}"`)),
 						})
 					}
 					return
 				}
 
 				// TODO - should anything be logged here?
-				handler(msg.payload).then(
+				const data = ejson.parse(msg.payload)
+				handler(data).then(
 					(res) => {
 						if (msg.callbackId) {
 							this.#sendMessage({
 								direction: 'response',
 								callbackId: msg.callbackId,
 								success: true,
-								payload: res,
+								payload: ejson.stringify(res),
 							})
 						}
 					},

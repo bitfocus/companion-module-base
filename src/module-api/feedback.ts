@@ -73,7 +73,7 @@ export type CompanionFeedbackButtonStyleResult = Partial<CompanionRequiredStyleP
 
 /** The resulting style of an advanced feedback */
 export interface CompanionAdvancedFeedbackResult extends CompanionFeedbackButtonStyleResult {
-	imageBuffer?: Buffer
+	imageBuffer?: Uint8Array
 }
 
 /**
