@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/bitfocus/companion-module-base/compare/v0.4.0...v0.4.1) (2022-10-01)
+
+
+### Bug Fixes
+
+* manifest validation failing once webpacked ([afa2970](https://github.com/bitfocus/companion-module-base/commit/afa2970ca99047c7b1648005a70c82f6d3401867))
+
 ## [0.4.0](https://github.com/bitfocus/companion-module-base/compare/v0.3.0...v0.4.0) (2022-10-01)
 
 
