@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.0](https://github.com/bitfocus/companion-module-base/compare/v0.3.0...v0.4.0) (2022-10-01)
+
+
+### Features
+
+* encode ipc payloads with ejson, to make transfer less lossey ([fe1d388](https://github.com/bitfocus/companion-module-base/commit/fe1d3884769801fd1dadf5e62960cba0b98a753b))
+* switch to using child-process ipc instead of socket.io for modules ([c38026f](https://github.com/bitfocus/companion-module-base/commit/c38026f40dbd551d90059ce24260e353df359756))
+* switch to using child-process ipc instead of socket.io for modules ([0256d09](https://github.com/bitfocus/companion-module-base/commit/0256d09e1b0870bb1e825442a1be8e31c2a53eb5))
+
 ## [0.3.0](https://github.com/bitfocus/companion-module-base/compare/v0.2.0...v0.3.0) (2022-09-29)
 
 
