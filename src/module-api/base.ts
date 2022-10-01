@@ -1,11 +1,10 @@
-import * as SocketIOClient from 'socket.io-client'
 import { CompanionActionDefinition, CompanionActionDefinitions, CompanionActionInfo } from './action.js'
 import {
 	CompanionFeedbackDefinitions,
 	CompanionFeedbackDefinition,
 	CompanionFeedbackButtonStyleResult,
 } from './feedback.js'
-import { CompanionPresetDefinitions, SomeCompanionPresetDefinition } from './preset.js'
+import { CompanionPresetDefinitions } from './preset.js'
 import { InstanceStatus, LogLevel } from './enums.js'
 import {
 	ActionInstance,
@@ -36,7 +35,7 @@ import {
 	UpdateFeedbackInstancesMessage,
 	UpdateFeedbackValuesMessage,
 } from '../host-api/api.js'
-import { assertNever, literal } from '../util.js'
+import { literal } from '../util.js'
 import { InstanceBaseShared } from '../instance-base.js'
 import { ResultCallback } from '../host-api/versions.js'
 import PQueue from 'p-queue'
@@ -44,16 +43,17 @@ import { CompanionVariableDefinition, CompanionVariableValue, CompanionVariableV
 import { OSCSomeArguments } from '../common/osc.js'
 import { SomeCompanionConfigField } from './config.js'
 import { CompanionStaticUpgradeScript } from './upgrade.js'
-import { isInstanceBaseProps, listenToEvents, serializeIsVisibleFn } from '../internal/base.js'
+import { isInstanceBaseProps, serializeIsVisibleFn } from '../internal/base.js'
 import { runThroughUpgradeScripts } from '../internal/upgrade.js'
 import { convertFeedbackInstanceToEvent, callFeedbackOnDefinition } from '../internal/feedback.js'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
+import { IpcWrapper } from '../host-api/ipc-wrapper.js'
 
 type ParamsIfReturnIsNever<T extends (...args: any[]) => any> = ReturnType<T> extends never ? Parameters<T> : never
 type ParamsIfReturnIsValid<T extends (...args: any[]) => any> = ReturnType<T> extends never ? never : Parameters<T>
 
 export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
-	readonly #socket: SocketIOClient.Socket
+	readonly #ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>
 	readonly #upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]
 	public readonly id: string
 
@@ -73,29 +73,34 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Create an instance of the module.
 	 */
 	constructor(internal: unknown) {
-		if (!isInstanceBaseProps<TConfig>(internal) || !internal.socket.connected)
+		if (!isInstanceBaseProps<TConfig>(internal) || !internal._isInstanceBaseProps)
 			throw new Error(
 				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`
 			)
 
-		this.#socket = internal.socket
+		this.#ipcWrapper = new IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>(
+			{
+				init: this._handleInit.bind(this),
+				destroy: this._handleDestroy.bind(this),
+				updateConfig: this._handleConfigUpdate.bind(this),
+				executeAction: this._handleExecuteAction.bind(this),
+				updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
+				updateActions: this._handleUpdateActions.bind(this),
+				getConfigFields: this._handleGetConfigFields.bind(this),
+				handleHttpRequest: this._handleHttpRequest.bind(this),
+				learnAction: this._handleLearnAction.bind(this),
+				learnFeedback: this._handleLearnFeedback.bind(this),
+				startStopRecordActions: this._handleStartStopRecordActions.bind(this),
+			},
+			(msg) => {
+				process.send!(msg)
+			},
+			5000
+		)
+		process.on('message', (msg) => this.#ipcWrapper.receivedMessage(msg))
+
 		this.#upgradeScripts = internal.upgradeScripts
 		this.id = internal.id
-
-		// subscribe to socket events from host
-		listenToEvents<HostToModuleEventsV0>(this.#socket, {
-			init: this._handleInit.bind(this),
-			destroy: this._handleDestroy.bind(this),
-			updateConfig: this._handleConfigUpdate.bind(this),
-			executeAction: this._handleExecuteAction.bind(this),
-			updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
-			updateActions: this._handleUpdateActions.bind(this),
-			getConfigFields: this._handleGetConfigFields.bind(this),
-			handleHttpRequest: this._handleHttpRequest.bind(this),
-			learnAction: this._handleLearnAction.bind(this),
-			learnFeedback: this._handleLearnFeedback.bind(this),
-			startStopRecordActions: this._handleStartStopRecordActions.bind(this),
-		})
 
 		this.log('debug', 'Initializing')
 	}
@@ -104,23 +109,14 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		name: T,
 		msg: ParamsIfReturnIsValid<ModuleToHostEventsV0[T]>[0]
 	): Promise<ReturnType<ModuleToHostEventsV0[T]>> {
-		return new Promise<ReturnType<ModuleToHostEventsV0[T]>>((resolve, reject) => {
-			const innerCb: ResultCallback<ReturnType<ModuleToHostEventsV0[T]>> = (
-				err: any,
-				res: ReturnType<ModuleToHostEventsV0[T]>
-			): void => {
-				if (err) reject(err)
-				else resolve(res)
-			}
-			this.#socket.emit(name, msg, innerCb)
-		})
+		return this.#ipcWrapper.sendWithCb(name, msg)
 	}
 
 	private _socketEmitNoCb<T extends keyof ModuleToHostEventsV0>(
 		name: T,
 		msg: ParamsIfReturnIsNever<ModuleToHostEventsV0[T]>[0]
 	): void {
-		this.#socket.emit(name, msg)
+		return this.#ipcWrapper.sendWithNoCb(name, msg)
 	}
 
 	private async _handleInit(msg: InitMessage): Promise<InitResponseMessage> {

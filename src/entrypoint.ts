@@ -1,6 +1,5 @@
-import * as SocketIOClient from 'socket.io-client'
 import PTimeout from 'p-timeout'
-import { HostApiSocketIo, HostToModuleEventsInit, ModuleToHostEventsInit } from './host-api/versions.js'
+import { HostApiNodeJsIpc, HostToModuleEventsInit, ModuleToHostEventsInit } from './host-api/versions.js'
 import fs from 'fs/promises'
 import { ModuleManifest } from './manifest.js'
 import { CompanionStaticUpgradeScript } from './module-api/upgrade.js'
@@ -9,6 +8,7 @@ import { literal } from './util.js'
 import { InstanceBaseProps } from './internal/base.js'
 import { init, configureScope } from '@sentry/node'
 import '@sentry/tracing'
+import { IpcWrapper } from './host-api/ipc-wrapper.js'
 
 let hasEntrypoint = false
 
@@ -56,9 +56,11 @@ export function runEntrypoint<TConfig>(
 			const manifestBlob = await fs.readFile(manifestPath)
 			const manifestJson: Partial<ModuleManifest> = JSON.parse(manifestBlob.toString())
 
-			if (manifestJson.runtime?.api !== HostApiSocketIo) throw new Error(`Module manifest 'api' mismatch`)
+			if (manifestJson.runtime?.api !== HostApiNodeJsIpc) throw new Error(`Module manifest 'api' mismatch`)
 			if (!manifestJson.runtime.apiVersion) throw new Error(`Module manifest 'apiVersion' missing`)
 			const apiVersion = manifestJson.runtime.apiVersion
+
+			if (!process.send) throw new Error('Module is not being run with ipc')
 
 			console.log(`Starting up module class: ${factory.name}`)
 
@@ -66,12 +68,9 @@ export function runEntrypoint<TConfig>(
 			if (typeof connectionId !== 'string' || !connectionId)
 				throw new Error('Module initialise is missing CONNECTION_ID')
 
-			const socketIoUrl = process.env.SOCKETIO_URL
-			if (typeof socketIoUrl !== 'string' || !socketIoUrl) throw new Error('Module initialise is missing SOCKETIO_URL')
-
-			const socketIoToken = process.env.SOCKETIO_TOKEN
-			if (typeof socketIoToken !== 'string' || !socketIoToken)
-				throw new Error('Module initialise is missing SOCKETIO_TOKEN')
+			const verificationToken = process.env.VERIFICATION_TOKEN
+			if (typeof verificationToken !== 'string' || !verificationToken)
+				throw new Error('Module initialise is missing VERIFICATION_TOKEN')
 
 			// Allow the DSN to be provided as an env variable
 			const sentryDsn = process.env.SENTRY_DSN
@@ -101,50 +100,49 @@ export function runEntrypoint<TConfig>(
 
 			let module: InstanceBase<any> | undefined
 
-			const socket: SocketIOClient.Socket<HostToModuleEventsInit, ModuleToHostEventsInit> = SocketIOClient.io(
-				socketIoUrl,
-				{
-					reconnection: false,
-					timeout: 5000,
-					transports: ['websocket'],
-				}
+			const ipcWrapper = new IpcWrapper<ModuleToHostEventsInit, HostToModuleEventsInit>(
+				{},
+				(msg) => {
+					process.send!(msg)
+				},
+				5000
 			)
-			socket.on('connect', () => {
-				console.log(`Connected to module-host: ${socket.id}`)
-
-				socket.emit('register', apiVersion, connectionId, socketIoToken, () => {
+			ipcWrapper.sendWithCb('register', { apiVersion, connectionId, verificationToken }).then(
+				() => {
 					console.log(`Module-host accepted registration`)
 
 					module = new factory(
 						literal<InstanceBaseProps<TConfig>>({
 							id: connectionId,
-							socket,
 							upgradeScripts,
+							_isInstanceBaseProps: true,
 						})
 					)
-				})
-			})
-			socket.on('connect_error', (e: any) => {
-				console.log(`connection failed to module-host: ${socket.id}`, e.toString())
+				},
+				(err) => {
+					console.error('Module registration failed')
 
-				process.exit(12)
-			})
-			socket.on('disconnect', async () => {
-				console.log(`Disconnected from module-host: ${socket.id}`)
-
-				if (module) {
-					// Try and de-init the module before killing it
-					try {
-						const p = module.destroy()
-						if (p) await PTimeout(p, 5000)
-					} catch (e) {
-						// Ignore
-					}
+					// Kill the process
+					process.exit(11)
 				}
+			)
 
-				// Kill the process
-				process.exit(11)
-			})
+			// socket.on('disconnect', async () => {
+			// 	console.log(`Disconnected from module-host: ${socket.id}`)
+
+			// 	if (module) {
+			// 		// Try and de-init the module before killing it
+			// 		try {
+			// 			const p = module.destroy()
+			// 			if (p) await PTimeout(p, 5000)
+			// 		} catch (e) {
+			// 			// Ignore
+			// 		}
+			// 	}
+
+			// 	// Kill the process
+			// 	process.exit(11)
+			// })
 		} catch (e: any) {
 			console.error(`Failed to startup module:`)
 			console.error(e.stack || e.message)

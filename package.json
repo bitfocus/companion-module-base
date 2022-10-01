@@ -24,9 +24,9 @@
 		"@sentry/tracing": "^7.14.0",
 		"ajv": "^8.11.0",
 		"eventemitter3": "^4.0.7",
+		"nanoid": "^3.3.4",
 		"p-queue": "^6.6.2",
 		"p-timeout": "^4.1.0",
-		"socket.io-client": "^4.5.2",
 		"tslib": "^2.4.0"
 	},
 	"devDependencies": {

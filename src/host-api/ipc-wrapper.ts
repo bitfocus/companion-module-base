@@ -1,0 +1,167 @@
+import { nanoid } from 'nanoid'
+import { assertNever } from '../util'
+import { HostToModuleEventsV0, ModuleToHostEventsV0 } from './api'
+
+/**
+ * Signature for the handler functions
+ */
+type HandlerFunction<T extends (...args: any) => any> = (data: Parameters<T>[0]) => Promise<ReturnType<T>>
+
+type HandlerFunctionOrNever<T> = T extends (...args: any) => any ? HandlerFunction<T> : never
+
+/** Map of handler functions */
+type EventHandlers<T extends object> = {
+	[K in keyof T]: HandlerFunctionOrNever<T[K]>
+}
+
+type ParamsIfReturnIsNever<T extends (...args: any[]) => any> = ReturnType<T> extends never ? Parameters<T> : never
+type ParamsIfReturnIsValid<T extends (...args: any[]) => any> = ReturnType<T> extends never ? never : Parameters<T>
+
+interface IpcCallMessagePacket {
+	direction: 'call'
+	name: string
+	payload: unknown
+	callbackId: string | undefined
+}
+interface IpcResponseMessagePacket {
+	direction: 'response'
+	callbackId: string
+	success: boolean
+	payload: unknown
+}
+
+interface PendingCallback {
+	timeout: NodeJS.Timer | undefined
+	resolve: (v: any) => void
+	reject: (e: any) => void
+}
+
+export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound extends { [key: string]: any }> {
+	#handlers: EventHandlers<TInbound>
+	#sendMessage: (message: IpcCallMessagePacket | IpcResponseMessagePacket) => void
+	#defaultTimeout: number
+
+	#pendingCallbacks: Record<string, PendingCallback> = {}
+
+	constructor(
+		handlers: EventHandlers<TInbound>,
+		sendMessage: (message: IpcCallMessagePacket | IpcResponseMessagePacket) => void,
+		defaultTimeout: number
+	) {
+		this.#handlers = handlers
+		this.#sendMessage = sendMessage
+		this.#defaultTimeout = defaultTimeout
+	}
+
+	async sendWithCb<T extends keyof TOutbound>(
+		name: T,
+		msg: ParamsIfReturnIsValid<TOutbound[T]>[0],
+		timeout: number = 0
+	): Promise<ReturnType<TOutbound[T]>> {
+		if (timeout <= 0) timeout = this.#defaultTimeout
+
+		const callbacks: PendingCallback = { timeout: undefined, resolve: () => null, reject: () => null }
+		const promise = new Promise<ReturnType<TOutbound[T]>>((resolve, reject) => {
+			callbacks.resolve = resolve
+			callbacks.reject = reject
+		})
+
+		const id = nanoid()
+		this.#pendingCallbacks[id] = callbacks
+
+		this.#sendMessage({
+			direction: 'call',
+			name: String(name),
+			payload: msg,
+			callbackId: id,
+		})
+
+		// Setup a timeout, creating the error in the call, so that the stack trace is useful
+		const timeoutError = new Error('Call timed out')
+		callbacks.timeout = setTimeout(() => {
+			callbacks.reject(timeoutError)
+		}, timeout)
+
+		return promise
+	}
+
+	sendWithNoCb<T extends keyof TOutbound>(name: T, msg: ParamsIfReturnIsNever<TOutbound[T]>[0]): void {
+		this.#sendMessage({
+			direction: 'call',
+			name: String(name),
+			payload: msg,
+			callbackId: undefined,
+		})
+	}
+
+	receivedMessage(msg: IpcCallMessagePacket | IpcResponseMessagePacket): void {
+		const rawMsg = msg
+		switch (msg.direction) {
+			case 'call': {
+				const handler = this.#handlers[msg.name]
+				if (!handler) {
+					if (msg.callbackId) {
+						this.#sendMessage({
+							direction: 'response',
+							callbackId: msg.callbackId,
+							success: false,
+							payload: new Error(`Unknown command "${msg.name}"`),
+						})
+					}
+					return
+				}
+
+				// TODO - should anything be logged here?
+				handler(msg.payload).then(
+					(res) => {
+						if (msg.callbackId) {
+							this.#sendMessage({
+								direction: 'response',
+								callbackId: msg.callbackId,
+								success: true,
+								payload: res,
+							})
+						}
+					},
+					(err) => {
+						if (msg.callbackId) {
+							this.#sendMessage({
+								direction: 'response',
+								callbackId: msg.callbackId,
+								success: false,
+								payload: err,
+							})
+						}
+					}
+				)
+
+				break
+			}
+			case 'response': {
+				if (!msg.callbackId) {
+					console.error(`Ipc: Response message has no callbackId`)
+					return
+				}
+				const callbacks = this.#pendingCallbacks[msg.callbackId]
+				if (!callbacks) {
+					// Likely timed out, we should ignore
+					return
+				}
+
+				clearTimeout(callbacks.timeout)
+
+				if (msg.success) {
+					callbacks.resolve(msg.payload)
+				} else {
+					callbacks.reject(msg.payload)
+				}
+
+				break
+			}
+			default:
+				assertNever(msg)
+				console.error(`Ipc: Message of unknown direction "${rawMsg.direction}"`)
+				break
+		}
+	}
+}

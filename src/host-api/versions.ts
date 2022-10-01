@@ -1,8 +1,14 @@
-export const HostApiSocketIo = 'socket.io'
+export const HostApiNodeJsIpc = 'nodejs-ipc'
 
 export type ResultCallback<T> = (err: any, res: T) => void
 
 export interface ModuleToHostEventsInit {
-	register: (apiVersion: string, connectionId: string, socketIoToken: string, cb: () => void) => void
+	register: (msg: ModuleRegisterMessage) => void
 }
 export type HostToModuleEventsInit = Record<never, never>
+
+export interface ModuleRegisterMessage {
+	apiVersion: string
+	connectionId: string
+	verificationToken: string
+}
