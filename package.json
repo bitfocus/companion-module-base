@@ -7,9 +7,10 @@
 	"license": "MIT",
 	"repository": "https://github.com/bitfocus/companion-module-base",
 	"scripts": {
-		"build": "yarn build:json-schema && yarn build:ts",
+		"build": "yarn build:json-schema && yarn build:ajv-validator && yarn build:ts",
 		"build:ts": "tsc -p tsconfig.build.json",
-		"build:json-schema": "json2ts --input assets/manifest.schema.json --output generated/manifest.d.ts && node scripts/wrap-json-schema.js",
+		"build:json-schema": "json2ts --input assets/manifest.schema.json --output generated/manifest.d.ts",
+		"build:ajv-validator": "ajv compile -s assets/manifest.schema.json -o generated/validate_manifest.js",
 		"docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/index.ts --excludePrivate --theme default --out docs"
 	},
 	"files": [
@@ -22,7 +23,6 @@
 	"dependencies": {
 		"@sentry/node": "^7.14.0",
 		"@sentry/tracing": "^7.14.0",
-		"ajv": "^8.11.0",
 		"ejson": "^2.2.3",
 		"eventemitter3": "^4.0.7",
 		"nanoid": "^3.3.4",
@@ -34,6 +34,8 @@
 		"@tsconfig/node14": "^1.0.3",
 		"@types/ejson": "^2.2.0",
 		"@types/node": "^14.18.31",
+		"ajv": "^8.11.0",
+		"ajv-cli": "^5.0.0",
 		"json-schema-to-typescript": "^11.0.2",
 		"prettier": "^2.7.1",
 		"typedoc": "^0.23.15",
