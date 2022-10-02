@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/bitfocus/companion-module-base/compare/v0.4.1...v0.4.2) (2022-10-02)
+
+
+### Bug Fixes
+
+* module manifest validation issues ([4d6cc02](https://github.com/bitfocus/companion-module-base/commit/4d6cc028223786dd4101f19250d35ade37c35ea3))
+
 ## [0.4.1](https://github.com/bitfocus/companion-module-base/compare/v0.4.0...v0.4.1) (2022-10-01)
 
 
