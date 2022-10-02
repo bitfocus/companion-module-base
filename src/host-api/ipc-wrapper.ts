@@ -131,7 +131,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 								direction: 'response',
 								callbackId: msg.callbackId,
 								success: false,
-								payload: err,
+								payload: ejson.stringify(err),
 							})
 						}
 					}
@@ -152,10 +152,11 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 
 				clearTimeout(callbacks.timeout)
 
+				const data = ejson.parse(msg.payload)
 				if (msg.success) {
-					callbacks.resolve(msg.payload)
+					callbacks.resolve(data)
 				} else {
-					callbacks.reject(msg.payload)
+					callbacks.reject(data)
 				}
 
 				break
