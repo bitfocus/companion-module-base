@@ -113,7 +113,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 				}
 
 				// TODO - should anything be logged here?
-				const data = ejson.parse(msg.payload)
+				const data = msg.payload ? ejson.parse(msg.payload) : undefined
 				handler(data).then(
 					(res) => {
 						if (msg.callbackId) {
@@ -152,7 +152,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 
 				clearTimeout(callbacks.timeout)
 
-				const data = ejson.parse(msg.payload)
+				const data = msg.payload ? ejson.parse(msg.payload) : undefined
 				if (msg.success) {
 					callbacks.resolve(data)
 				} else {
