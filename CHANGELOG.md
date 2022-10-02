@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3](https://github.com/bitfocus/companion-module-base/compare/v0.4.2...v0.4.3) (2022-10-02)
+
+
+### Bug Fixes
+
+* manifest type reexports ([5ffff52](https://github.com/bitfocus/companion-module-base/commit/5ffff525ae7ee352f9369417e9da04cec1e807c3))
+
 ## [0.4.2](https://github.com/bitfocus/companion-module-base/compare/v0.4.1...v0.4.2) (2022-10-02)
 
 
