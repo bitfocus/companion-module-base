@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.4](https://github.com/bitfocus/companion-module-base/compare/v0.4.3...v0.4.4) (2022-10-02)
+
+
+### Bug Fixes
+
+* missing ejson conversion ([b5f881d](https://github.com/bitfocus/companion-module-base/commit/b5f881dfb0f98ce7383034b79273ff6177f75c10))
+* update manifest schema ([2c7932b](https://github.com/bitfocus/companion-module-base/commit/2c7932bd3994ac8ff4a85dabcdb98061160f1318))
+
 ## [0.4.3](https://github.com/bitfocus/companion-module-base/compare/v0.4.2...v0.4.3) (2022-10-02)
 
 
