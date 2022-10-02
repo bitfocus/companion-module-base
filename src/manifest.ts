@@ -2,7 +2,7 @@ import { ModuleManifest } from '../generated/manifest'
 // @ts-expect-error no typings
 import validateManifestSchema from '../generated/validate_manifest'
 
-export { ModuleManifest }
+export * from '../generated/manifest'
 
 /** Validate that a manifest looks correctly populated */
 export function validateManifest(manifest: ModuleManifest): void {
