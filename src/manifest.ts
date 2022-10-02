@@ -1,8 +1,8 @@
-import { ModuleManifest } from '../generated/manifest'
+import type { ModuleManifest, ModuleManifestMaintainer, ModuleManifestRuntime } from '../generated/manifest'
 // @ts-expect-error no typings
 import validateManifestSchema from '../generated/validate_manifest'
 
-export * from '../generated/manifest'
+export { ModuleManifest, ModuleManifestMaintainer, ModuleManifestRuntime }
 
 /** Validate that a manifest looks correctly populated */
 export function validateManifest(manifest: ModuleManifest): void {
