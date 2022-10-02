@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.5](https://github.com/bitfocus/companion-module-base/compare/v0.4.4...v0.4.5) (2022-10-02)
+
+
+### Bug Fixes
+
+* ejson.parse doesn't accept undefined ([3e079bb](https://github.com/bitfocus/companion-module-base/commit/3e079bb5223fbcabce461a406b2ecfbea1991c33))
+
 ## [0.4.4](https://github.com/bitfocus/companion-module-base/compare/v0.4.3...v0.4.4) (2022-10-02)
 
 
