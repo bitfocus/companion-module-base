@@ -74,7 +74,8 @@
 				},
 				"api": {
 					"type": "string",
-					"description": "Which host-api does it use. Must be nodejs-ipc"
+					"description": "Which host-api does it use. In the future alternate options will be allowed",
+					"enum": ["nodejs-ipc"]
 				},
 				"apiVersion": {
 					"type": "string",
