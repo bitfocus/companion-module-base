@@ -11,6 +11,7 @@ import '@sentry/tracing'
 import { IpcWrapper } from './host-api/ipc-wrapper.js'
 
 let hasEntrypoint = false
+let moduleInstance: InstanceBase<any> | undefined
 
 export type InstanceConstructor<TConfig> = new (internal: unknown) => InstanceBase<TConfig>
 
@@ -98,8 +99,6 @@ export function runEntrypoint<TConfig>(
 				console.log('Sentry disabled')
 			}
 
-			let module: InstanceBase<any> | undefined
-
 			const ipcWrapper = new IpcWrapper<ModuleToHostEventsInit, HostToModuleEventsInit>(
 				{},
 				(msg) => {
@@ -107,54 +106,29 @@ export function runEntrypoint<TConfig>(
 				},
 				5000
 			)
-			const receiveCallback = (msg: any) => {
+			process.once('message', (msg: any) => {
 				ipcWrapper.receivedMessage(msg)
-			}
-			process.on('message', receiveCallback)
+			})
 
-			ipcWrapper
-				.sendWithCb('register', { apiVersion, connectionId, verificationToken })
-				.then(
-					() => {
-						process.off('message', receiveCallback)
-
-						console.log(`Module-host accepted registration`)
-
-						module = new factory(
-							literal<InstanceBaseProps<TConfig>>({
-								id: connectionId,
-								upgradeScripts,
-								_isInstanceBaseProps: true,
-							})
-						)
-					},
-					(err) => {
-						console.error('Module registration failed')
-
-						// Kill the process
-						process.exit(11)
-					}
-				)
-				.finally(() => {
-					process.off('message', receiveCallback)
+			moduleInstance = new factory(
+				literal<InstanceBaseProps<TConfig>>({
+					id: connectionId,
+					upgradeScripts,
+					_isInstanceBaseProps: true,
 				})
+			)
 
-			// socket.on('disconnect', async () => {
-			// 	console.log(`Disconnected from module-host: ${socket.id}`)
+			ipcWrapper.sendWithCb('register', { apiVersion, connectionId, verificationToken }).then(
+				() => {
+					console.log(`Module-host accepted registration`)
+				},
+				(err) => {
+					console.error('Module registration failed', err)
 
-			// 	if (module) {
-			// 		// Try and de-init the module before killing it
-			// 		try {
-			// 			const p = module.destroy()
-			// 			if (p) await PTimeout(p, 5000)
-			// 		} catch (e) {
-			// 			// Ignore
-			// 		}
-			// 	}
-
-			// 	// Kill the process
-			// 	process.exit(11)
-			// })
+					// Kill the process
+					process.exit(11)
+				}
+			)
 		} catch (e: any) {
 			console.error(`Failed to startup module:`)
 			console.error(e.stack || e.message)
