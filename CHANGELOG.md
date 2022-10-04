@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.6](https://github.com/bitfocus/companion-module-base/compare/v0.4.5...v0.4.6) (2022-10-04)
+
+
+### Bug Fixes
+
+* 'init' being received before module is ready ([d571d9c](https://github.com/bitfocus/companion-module-base/commit/d571d9c61f693f7387a8e517bbcaf7d794e20e3f))
+* error propagation in ipc responses ([68c7c6e](https://github.com/bitfocus/companion-module-base/commit/68c7c6e8c9044be2f5aa3500103a3c70972dda2a))
+* populate default module config at first start ([38da676](https://github.com/bitfocus/companion-module-base/commit/38da67618cc0b6502797003992a0e7610a06dedb))
+
 ## [0.4.5](https://github.com/bitfocus/companion-module-base/compare/v0.4.4...v0.4.5) (2022-10-02)
 
 
