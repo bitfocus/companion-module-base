@@ -52,6 +52,7 @@ export type EncodeIsVisible<T extends CompanionInputFieldBase> = Omit<T, 'isVisi
 
 export interface InitMessage {
 	label: string
+	isFirstInit: boolean
 	config: unknown
 
 	lastUpgradeIndex: number

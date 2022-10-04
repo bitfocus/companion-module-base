@@ -109,6 +109,20 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 			const actions = msg.actions
 			const feedbacks = msg.feedbacks
+			let config = msg.config as TConfig
+
+			// Create initial config object
+			if (msg.isFirstInit) {
+				const newConfig: any = {}
+				const fields = this.getConfigFields()
+				for (const field of fields) {
+					if ('default' in field) {
+						newConfig[field.id] = field.default
+					}
+				}
+				config = newConfig as TConfig
+				this.saveConfig(config)
+			}
 
 			/**
 			 * Performing upgrades during init requires a fair chunk of work.
@@ -119,9 +133,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				feedbacks,
 				msg.lastUpgradeIndex,
 				this.#upgradeScripts,
-				msg.config
+				config
 			)
-			const config = (updatedConfig ?? msg.config) as TConfig
+			config = (updatedConfig as TConfig | undefined) ?? config
 
 			// Send the upgraded data back to companion now. Just so that if the init crashes, this doesnt have to be repeated
 			const pSendUpgrade = this.#ipcWrapper.sendWithCb('upgradedItems', {
