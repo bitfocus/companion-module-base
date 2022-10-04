@@ -106,7 +106,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 							direction: 'response',
 							callbackId: msg.callbackId,
 							success: false,
-							payload: ejson.stringify(new Error(`Unknown command "${msg.name}"`)),
+							payload: ejson.stringify({ message: `Unknown command "${msg.name}"` }),
 						})
 					}
 					return
@@ -131,7 +131,8 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 								direction: 'response',
 								callbackId: msg.callbackId,
 								success: false,
-								payload: ejson.stringify(err),
+								payload:
+									err instanceof Error ? JSON.stringify(err, Object.getOwnPropertyNames(err)) : ejson.stringify(err),
 							})
 						}
 					}
@@ -156,7 +157,12 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 				if (msg.success) {
 					callbacks.resolve(data)
 				} else {
-					callbacks.reject(data)
+					let err = data
+					if ('message' in data) {
+						err = new Error(data.message)
+						if (data.stack) err.stack = data.stack
+					}
+					callbacks.reject(err)
 				}
 
 				break
