@@ -3,9 +3,7 @@ import type { CompanionFeedbackDefinitions } from './feedback.js'
 import type { CompanionPresetDefinitions } from './preset.js'
 import type { InstanceStatus, LogLevel } from './enums.js'
 import type {
-	ActionInstance,
 	ExecuteActionMessage,
-	FeedbackInstance,
 	GetConfigFieldsMessage,
 	GetConfigFieldsResponseMessage,
 	HandleHttpRequestMessage,
@@ -535,11 +533,6 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		this.#feedbackManager.checkFeedbacksById(feedbackIds)
 	}
 
-	/** @deprecated */
-	_getAllActions(): Pick<ActionInstance, 'id' | 'actionId' | 'controlId' | 'options'>[] {
-		return this.#actionManager._getAllActions()
-	}
-
 	/**
 	 * Call subscribe on all currently known placed actions.
 	 * It can be useful to trigger this upon establishing a connection, to ensure all data is loaded.
@@ -555,11 +548,6 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 */
 	unsubscribeActions(...actionIds: string[]): void {
 		this.#actionManager.unsubscribeActions(actionIds)
-	}
-
-	/** @deprecated */
-	_getAllFeedbacks(): Pick<FeedbackInstance, 'id' | 'feedbackId' | 'controlId' | 'options'>[] {
-		return this.#feedbackManager._getAllFeedbacks()
 	}
 
 	/**

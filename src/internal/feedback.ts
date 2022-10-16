@@ -420,16 +420,6 @@ export class FeedbackManager {
 		}
 	}
 
-	/** @deprecated */
-	_getAllFeedbacks(): Pick<FeedbackInstance, 'id' | 'feedbackId' | 'controlId' | 'options'>[] {
-		return Array.from(this.#feedbackInstances.values()).map((fb) => ({
-			id: fb.id,
-			feedbackId: fb.feedbackId,
-			controlId: fb.controlId,
-			options: fb.options,
-		}))
-	}
-
 	subscribeFeedbacks(feedbackIds: string[]): void {
 		let feedbacks = Array.from(this.#feedbackInstances.values())
 
