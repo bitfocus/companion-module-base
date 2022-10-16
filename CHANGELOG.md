@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.7](https://github.com/bitfocus/companion-module-base/compare/v0.4.6...v0.4.7) (2022-10-16)
+
+
+### Bug Fixes
+
+* make multidropdown option naming consistent ([b322f6d](https://github.com/bitfocus/companion-module-base/commit/b322f6d534da98e0bcaffc373a080f1e9af70a2e))
+
 ## [0.4.6](https://github.com/bitfocus/companion-module-base/compare/v0.4.5...v0.4.6) (2022-10-04)
 
 
