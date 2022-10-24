@@ -165,7 +165,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			return {
 				hasHttpHandler: typeof this.handleHttpRequest === 'function',
 				hasRecordActionsHandler: typeof this.handleStartStopRecordActions == 'function',
-				newUpgradeIndex: this.#upgradeScripts.length,
+				newUpgradeIndex: this.#upgradeScripts.length - 1,
 				updatedConfig: config,
 			}
 		})

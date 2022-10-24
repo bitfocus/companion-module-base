@@ -1,6 +1,15 @@
 import { CompanionStaticUpgradeScript } from '../module-api/upgrade.js'
 import { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '../host-api/api.js'
 
+/**
+ * Run through the upgrade scripts for the given data
+ * @param allActions Actions that may need upgrading
+ * @param allFeedbacks Feedbacks that may need upgrading
+ * @param defaultUpgradeIndex The lastUpgradeIndex of the connection, if known
+ * @param upgradeScripts The scripts that may be run
+ * @param config The config if it may need updating
+ * @returns The upgraded data that needs persisting
+ */
 export function runThroughUpgradeScripts(
 	allActions: { [id: string]: ActionInstance | undefined | null },
 	allFeedbacks: { [id: string]: FeedbackInstance | undefined | null },
@@ -37,8 +46,9 @@ export function runThroughUpgradeScripts(
 	let updatedActions: UpgradedDataResponseMessage['updatedActions'] = {}
 
 	if (pendingUpgradesGrouped.size > 0) {
+		// Figure out which script to run first. Note: we track the last index we ran, so it is offset by one
 		const pendingUpgradeGroups = Array.from(pendingUpgradesGrouped.keys()).sort()
-		const firstUpgradeGroup = Math.min(...pendingUpgradeGroups, defaultUpgradeIndex ?? Number.POSITIVE_INFINITY)
+		const firstUpgradeGroup = Math.min(...pendingUpgradeGroups, defaultUpgradeIndex ?? Number.POSITIVE_INFINITY) + 1
 
 		// Start building arrays of the ids which we are upgrading as we go
 		const actionsIdsToUpgrade: string[] = []
@@ -56,6 +66,9 @@ export function runThroughUpgradeScripts(
 
 			// Only upgrade the config, if we are past the last version we had for it
 			const upgradeConfig = config !== undefined && defaultUpgradeIndex !== null && i > defaultUpgradeIndex
+
+			// Ensure there is something to upgrade
+			if (!upgradeConfig && actionsIdsToUpgrade.length === 0 && feedbackIdsToUpgrade.length === 0) continue
 
 			// We have an upgrade script that can be run
 			const fcn = upgradeScripts[i]
