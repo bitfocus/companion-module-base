@@ -21,24 +21,24 @@
 		"assets"
 	],
 	"dependencies": {
+		"@sentry/node": "^7.18.0",
+		"@sentry/tracing": "^7.18.0",
 		"ajv": "^8.11.0",
-		"@sentry/node": "^7.14.0",
-		"@sentry/tracing": "^7.14.0",
 		"ejson": "^2.2.3",
 		"eventemitter3": "^4.0.7",
 		"nanoid": "^3.3.4",
 		"p-queue": "^6.6.2",
 		"p-timeout": "^4.1.0",
-		"tslib": "^2.4.0"
+		"tslib": "^2.4.1"
 	},
 	"devDependencies": {
 		"@tsconfig/node14": "^1.0.3",
 		"@types/ejson": "^2.2.0",
-		"@types/node": "^14.18.31",
+		"@types/node": "^14.18.33",
 		"ajv-cli": "^5.0.0",
 		"json-schema-to-typescript": "^11.0.2",
 		"prettier": "^2.7.1",
-		"typedoc": "^0.23.15",
+		"typedoc": "^0.23.20",
 		"typescript": "~4.8.4"
 	}
 }
