@@ -42,12 +42,12 @@ jobs:
             if verlt $PUBLISHED_VERSION $THIS_VERSION
             then
               echo "Publishing latest"
-              echo ::set-output name=tag::"latest"
-              echo ::set-output name=docs::"1"
+              echo "tag=latest" >> $GITHUB_OUTPUT
+              echo "docs=1" >> $GITHUB_OUTPUT
             else
               echo "Publishing hotfix"
-              echo ::set-output name=tag::"hotfix"
-              echo ::set-output name=docs::"0"
+              echo "tag=hotfix" >> $GITHUB_OUTPUT
+              echo "docs=0" >> $GITHUB_OUTPUT
             fi
 
           fi
