@@ -9,7 +9,7 @@ export enum InstanceStatus {
 	ConnectionFailure = 'connection_failure',
 	BadConfig = 'bad_config',
 	UnknownError = 'unknown_error',
-	UnknwownWarning = 'unknown_warning',
+	UnknownWarning = 'unknown_warning',
 }
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug'
