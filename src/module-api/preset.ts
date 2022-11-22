@@ -45,8 +45,6 @@ export interface CompanionPresetAction {
  * The definition of a press button preset
  */
 export interface CompanionButtonPresetDefinition {
-	id: string
-
 	/** The type of this preset */
 	type: 'button'
 	/** The category of this preset, for grouping */

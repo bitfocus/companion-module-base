@@ -120,7 +120,7 @@ export interface SetVariableDefinitionsMessage {
 }
 
 export interface SetPresetDefinitionsMessage {
-	presets: CompanionButtonPresetDefinition[]
+	presets: Array<CompanionButtonPresetDefinition & { id: string }>
 }
 
 export interface SetVariableValuesMessage {
