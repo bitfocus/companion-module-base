@@ -66,7 +66,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	readonly #variableValues = new Map<string, CompanionVariableValue>()
 
 	/**
-	 * Create an instance of the module.
+	 * Create an instance of the module
 	 */
 	constructor(internal: unknown) {
 		if (!isInstanceBaseProps<TConfig>(internal) || !internal._isInstanceBaseProps)
@@ -389,8 +389,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	/**
-	 * Main initialization function called once the module
-	 * is OK to start doing things.
+	 * Main initialization function called
+	 * once the module is OK to start doing things.
 	 */
 	abstract init(config: TConfig): Promise<void>
 
@@ -414,7 +414,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	/**
-	 * Creates the configuration fields for web config.
+	 * Creates the configuration fields for web config
 	 */
 	abstract getConfigFields(): SomeCompanionConfigField[]
 
@@ -667,8 +667,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 	/**
 	 * Call subscribe on all currently known placed actions.
-	 * It can be useful to trigger this upon establishing a connection, to ensure all data is loaded
-	 * @param actionIds The actionIds to call subscribe for. If no values are provided, then all are called
+	 * It can be useful to trigger this upon establishing a connection, to ensure all data is loaded.
+	 * @param actionIds The actionIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	subscribeActions(...actionIds: string[]): void {
 		let actions = Array.from(this.#actionInstances.values())
@@ -690,8 +690,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 	/**
 	 * Call unsubscribe on all currently known placed actions.
-	 * It can be useful to do some cleanup upon a connection closing
-	 * @param actionIds The actionIds to call subscribe for. If no values are provided, then all are called
+	 * It can be useful to do some cleanup upon a connection closing.
+	 * @param actionIds The actionIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	unsubscribeActions(...actionIds: string[]): void {
 		let actions = Array.from(this.#actionInstances.values())
@@ -724,8 +724,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 	/**
 	 * Call subscribe on all currently known placed feedbacks.
-	 * It can be useful to trigger this upon establishing a connection, to ensure all data is loaded
-	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called
+	 * It can be useful to trigger this upon establishing a connection, to ensure all data is loaded.
+	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	subscribeFeedbacks(...feedbackIds: string[]): void {
 		let feedbacks = Array.from(this.#feedbackInstances.values())
@@ -748,8 +748,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 	/**
 	 * Call unsubscribe on all currently known placed feedbacks.
-	 * It can be useful to do some cleanup upon a connection closing
-	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called
+	 * It can be useful to do some cleanup upon a connection closing.
+	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	unsubscribeFeedbacks(...feedbackIds: string[]): void {
 		let feedbacks = Array.from(this.#feedbackInstances.values())
@@ -774,7 +774,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	/**
 	 * Add an action to the current recording session
 	 * @param action The action to be added to the recording session
-	 * @param uniquenessId A unique id for the action being recorded. This should be different for each action, but by passing the same as a previous call will replace the previous value
+	 * @param uniquenessId A unique id for the action being recorded. This should be different for each action, but by passing the same as a previous call will replace the previous value.
 	 */
 	recordAction(action: Omit<CompanionActionInfo, 'id' | 'controlId'>, uniquenessId?: string): void {
 		if (!this.#recordingActions) throw new Error('Not currently recording actions')
@@ -823,6 +823,11 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Update the status of this connection
 	 * @param status The status level
 	 * @param message Additional information about the status
+	 * 
+	 * ### Example
+	 * ```js
+	 * this.updateStatus(InstanceStatus.Ok)
+	 * ```
 	 */
 	updateStatus(status: InstanceStatus, message?: string | null): void {
 		this.#ipcWrapper.sendWithNoCb(

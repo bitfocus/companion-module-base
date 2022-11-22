@@ -37,6 +37,7 @@ export interface CompanionInputFieldBase {
  * 
  * Available for actions/feedbacks/config
  * 
+ * ### Example
  * ```js
  * {
  * 	id: 'important-line',
@@ -44,7 +45,7 @@ export interface CompanionInputFieldBase {
  * 	label: 'Important info',
  * 	value: 'Some message here'
  * }
-```
+ * ```
  */
 export interface CompanionInputFieldStaticText extends CompanionInputFieldBase {
 	type: 'static-text'
@@ -57,7 +58,7 @@ export interface CompanionInputFieldStaticText extends CompanionInputFieldBase {
  *
  * Available for actions/feedbacks/config
  *
- * Example:
+ * ### Example
  * ```js
  * {
  * 	id: 'bg',
@@ -80,7 +81,7 @@ export interface CompanionInputFieldColor extends CompanionInputFieldBase {
  *
  * Available for actions/feedbacks/config
  *
- * Example:
+ * ### Example
  * ```js
  * {
  * 	id: 'val',
@@ -132,7 +133,7 @@ export interface DropdownChoice {
  *
  * Available for actions/feedbacks/config
  *
- * Example:
+ * ### Example
  * ```js
  * {
  * 	id: 'val',
@@ -141,9 +142,10 @@ export interface DropdownChoice {
  * 	choices: [
  * 		{ id: 'bob', label: 'Bob' },
  * 		{ id: 'sally', label: 'Sally' },
- * 	]
- * 	'default': 'bob'
+ * 	],
+ * 	default: 'bob'
  * }
+ * ```
  */
 export interface CompanionInputFieldDropdown extends CompanionInputFieldBase {
 	type: 'dropdown'
@@ -168,7 +170,7 @@ export interface CompanionInputFieldDropdown extends CompanionInputFieldBase {
  *
  * Available for actions/feedbacks/config
  *
- * Example:
+ * ### Example
  * ```js
  * {
  * 	id: 'val',
@@ -177,9 +179,10 @@ export interface CompanionInputFieldDropdown extends CompanionInputFieldBase {
  * 	choices: [
  * 		{ id: 'bob', label: 'Bob' },
  * 		{ id: 'sally', label: 'Sally' },
- * 	]
- * 	'default': 'bob'
+ * 	],
+ * 	default: 'bob'
  * }
+ * ```
  */
 export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldBase {
 	type: 'multidropdown'
@@ -204,13 +207,13 @@ export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldBas
  *
  * Available for actions/feedbacks/config
  *
- * Example:
+ * ### Example
  * ```js
  * {
  * 	id: 'doit',
  * 	type: 'checkbox',
  * 	label: 'Do the thing',
- * 	'default': true
+ * 	default: true
  * }
  * ```
  */
@@ -225,13 +228,13 @@ export interface CompanionInputFieldCheckbox extends CompanionInputFieldBase {
  *
  * Available for actions/feedbacks/config
  *
- * Example:
+ * ### Example
  * ```js
  * {
  * 	id: 'size',
  * 	type: 'number',
  * 	label: 'Target size',
- * 	'default': 50,
+ * 	default: 50,
  * 	min: 0,
  * 	max: 100
  * }
@@ -271,7 +274,7 @@ export interface CompanionInputFieldNumber extends CompanionInputFieldBase {
  *
  * Available for actions
  *
- * Example:
+ * ### Example
  * ```js
  * {
  * 	id: 'destination',
