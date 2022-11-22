@@ -3,21 +3,10 @@ import { CompanionOptionValues } from './input.js'
 import { CompanionAdditionalStyleProps, CompanionRequiredStyleProps } from './style.js'
 
 /**
- * The base options for a preset
+ * The options for a button preset
  */
-export interface CompanionPresetOptions {
+export interface CompanionButtonPresetOptions {
 	relativeDelay?: boolean
-}
-
-/**
- * The options for a press button preset
- */
-export type CompanionPressPresetOptions = CompanionPresetOptions
-
-/**
- * The options for a stepped button preset
- */
-export interface CompanionSteppedPresetOptions extends CompanionPresetOptions {
 	stepAutoProgress?: boolean
 }
 
@@ -55,9 +44,11 @@ export interface CompanionPresetAction {
 /**
  * The definition of a press button preset
  */
-export interface CompanionPressButtonPresetDefinition {
+export interface CompanionButtonPresetDefinition {
+	id: string
+
 	/** The type of this preset */
-	type: 'press'
+	type: 'button'
 	/** The category of this preset, for grouping */
 	category: string
 	/** The name of this preset */
@@ -65,49 +56,25 @@ export interface CompanionPressButtonPresetDefinition {
 	/** The base style of this preset */
 	style: CompanionPresetStyle
 	/** Options for this preset */
-	options?: CompanionPressPresetOptions
+	options?: CompanionButtonPresetOptions
 	/** The feedbacks on the button */
 	feedbacks: CompanionPresetFeedback[]
-	actions: {
-		/** The button down actions */
-		down: CompanionPresetAction[]
-		/** The button up actions */
-		up: CompanionPresetAction[]
-	}
+	steps: CompanionButtonStepActions[]
 }
 
-/**
- * The definition of a stepped button preset
- */
-export interface CompanionSteppedButtonPresetDefinition {
-	/** The type of this preset */
-	type: 'step'
-	/** The category of this preset, for grouping */
-	category: string
-	/** The name of this preset */
-	name: string
-	/** The base style of this preset */
-	style: CompanionPresetStyle
-	/** Options for this preset */
-	options?: CompanionSteppedPresetOptions
-	/** The feedbacks on the button */
-	feedbacks: CompanionPresetFeedback[]
-	/** The steps of this button, and their actions */
-	actions: {
-		[step: number]: CompanionPresetAction[]
-	}
-}
+export interface CompanionButtonStepActions {
+	/** The button down actions */
+	down: CompanionPresetAction[]
+	/** The button up actions */
+	up: CompanionPresetAction[]
 
-/**
- * The definition of some preset
- */
-export type SomeCompanionPresetDefinition =
-	| CompanionSteppedButtonPresetDefinition
-	| CompanionPressButtonPresetDefinition
+	rotate_left?: CompanionPresetAction[]
+	rotate_right?: CompanionPresetAction[]
+}
 
 /**
  * The definitions of a group of feedbacks
  */
 export interface CompanionPresetDefinitions {
-	[id: string]: SomeCompanionPresetDefinition | undefined
+	[id: string]: CompanionButtonPresetDefinition | undefined
 }
