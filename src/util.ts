@@ -1,3 +1,27 @@
+/**
+ * Assert a certain type for a literal.
+ * This can be used to correctly type parts of an object in TypeScript.
+ * 
+ * ### Example
+ *  ```ts
+ * {
+ *  [ActionId.MyAction]: literal<CompanionActionDefinition>({
+ *   name: 'My Action',
+ *   // ...
+ *  })
+ * }
+ * ```
+ * 
+ * instead of this
+ * ```ts
+ * {
+ *  [ActionId.MyAction]: {
+ *   name: 'My Action',
+ *   // ...
+ *  }
+ * }
+ * ```
+ */
 export function literal<T>(v: T): T {
 	return v
 }
@@ -13,10 +37,25 @@ export interface RgbComponents {
 	b: number
 }
 
+/**
+ * Combine separate RGB component to one single value to be used in feedback styles
+ * 
+ * ### Example
+ * 
+ * ```js
+ * defaultStyle: {
+ *  bgcolor: combineRgb(255, 0, 0),
+ *  color: combineRgb(255, 255, 255),
+ * }
+ * ```
+ */
 export function combineRgb(r: number, g: number, b: number): number {
 	return ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff)
 }
 
+/**
+ * Split a combined color value to separate RGB component values
+ */
 export function splitRgb(dec: number): RgbComponents {
 	return {
 		r: (dec & 0xff0000) >> 16,

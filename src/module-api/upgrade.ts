@@ -81,7 +81,7 @@ export interface CompanionMigrationFeedback {
 
 	/**
 	 * If the feedback is being converted to a boolean feedback, the style can be set here.
-	 * If it is already a booelan feedback or is a different type of feedback, this will be ignored
+	 * If it is already a boolean feedback or is a different type of feedback, this will be ignored.
 	 */
 	style?: Partial<CompanionFeedbackButtonStyleResult>
 }
@@ -111,7 +111,7 @@ export interface CompanionUpgradeToBooleanFeedbackMap {
 
 /**
  * A helper script to automate the bulk of the process to upgrade feedbacks from 'advanced' to 'boolean'.
- * There are some built in rules for properties names based on the most common cases
+ * There are some built-in rules for properties names based on the most common cases.
  * @param upgradeMap The feedbacks to upgrade and the properties to convert
  */
 export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig = unknown>(

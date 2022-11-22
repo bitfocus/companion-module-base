@@ -20,7 +20,7 @@ export type SomeCompanionFeedbackInputField =
 	| CompanionInputFieldCheckbox
 
 /**
- * Basic information about an instance of an feedback
+ * Basic information about an instance of a feedback
  */
 export interface CompanionFeedbackInfo {
 	/** The type of the feedback */
@@ -88,12 +88,12 @@ export interface CompanionFeedbackDefinitionBase {
 	/** The input fields for the feedback */
 	options: SomeCompanionFeedbackInputField[]
 	/**
-	 * Called to report the existence of an feedback
+	 * Called to report the existence of a feedback.
 	 * Useful to ensure necessary data is loaded
 	 */
 	subscribe?: (feedback: CompanionFeedbackInfo) => void
 	/**
-	 * Called to report an feedback has been edited/removed
+	 * Called to report an feedback has been edited/removed.
 	 * Useful to cleanup subscriptions setup in subscribe
 	 */
 	unsubscribe?: (feedback: CompanionFeedbackInfo) => void
