@@ -1,6 +1,6 @@
 {
 	"name": "@companion-module/base",
-	"version": "0.4.7",
+	"version": "0.4.8",
 	"type": "commonjs",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
