@@ -109,10 +109,8 @@ export interface CompanionInputFieldTextInput extends CompanionInputFieldBase {
 	regex?: string
 	/**
 	 * Whether to suggest variables to the user
-	 * TODO: If enabled, the value will have variables parsed before execution
-	 * TODO: Is this sensible, because of regex?
 	 */
-	// useVariables?: boolean
+	useVariables?: boolean
 }
 
 export type DropdownChoiceId = string | number
