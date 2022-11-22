@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/bitfocus/companion-module-base/compare/v0.4.8...v0.5.0) (2022-11-22)
+
+
+### Features
+
+* combine stepped and press button types ([#25](https://github.com/bitfocus/companion-module-base/issues/25)) ([e666bef](https://github.com/bitfocus/companion-module-base/commit/e666bef727fd5b0123921c8c81814ed116328066))
+
 ## [0.4.8](https://github.com/bitfocus/companion-module-base/compare/v0.4.7...v0.4.8) (2022-11-22)
 
 
