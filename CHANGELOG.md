@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/bitfocus/companion-module-base/compare/v0.5.0...v0.5.1) (2022-11-22)
+
+
+### Bug Fixes
+
+* enable CompanionInputFieldTextInput.useVariables ([4f77b3e](https://github.com/bitfocus/companion-module-base/commit/4f77b3ec644ab0802ce2f82e7799637f777ec495))
+
 ## [0.5.0](https://github.com/bitfocus/companion-module-base/compare/v0.4.8...v0.5.0) (2022-11-22)
 
 
