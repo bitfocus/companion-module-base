@@ -70,7 +70,7 @@
 			"properties": {
 				"type": {
 					"type": "string",
-					"description": "Type of the module. Must be: node14"
+					"description": "Type of the module. Must be: node18"
 				},
 				"api": {
 					"type": "string",

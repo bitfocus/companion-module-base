@@ -94,7 +94,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			5000
 		)
 		process.on('message', (msg) => {
-			this.#ipcWrapper.receivedMessage(msg)
+			this.#ipcWrapper.receivedMessage(msg as any)
 		})
 
 		this.#upgradeScripts = internal.upgradeScripts
@@ -823,7 +823,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Update the status of this connection
 	 * @param status The status level
 	 * @param message Additional information about the status
-	 * 
+	 *
 	 * ### Example
 	 * ```js
 	 * this.updateStatus(InstanceStatus.Ok)
