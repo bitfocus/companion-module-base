@@ -8,7 +8,7 @@ import {
 	CompanionInputFieldNumber,
 	CompanionInputFieldTextInput,
 } from './input.js'
-import { CompanionAdditionalStyleProps, CompanionRequiredStyleProps } from './style.js'
+import { CompanionButtonStyleProps } from './style.js'
 
 export type SomeCompanionFeedbackInputField =
 	| CompanionInputFieldStaticText
@@ -69,7 +69,7 @@ export interface CompanionFeedbackAdvancedEvent extends CompanionFeedbackInfo {
 /**
  * The resulting style of a boolean feedback
  */
-export type CompanionFeedbackButtonStyleResult = Partial<CompanionRequiredStyleProps & CompanionAdditionalStyleProps>
+export type CompanionFeedbackButtonStyleResult = Partial<CompanionButtonStyleProps>
 
 /** The resulting style of an advanced feedback */
 export interface CompanionAdvancedFeedbackResult extends CompanionFeedbackButtonStyleResult {

@@ -1,19 +1,18 @@
 import { CompanionFeedbackButtonStyleResult } from './feedback.js'
 import { CompanionOptionValues } from './input.js'
-import { CompanionAdditionalStyleProps, CompanionRequiredStyleProps } from './style.js'
+import { CompanionButtonStyleProps } from './style.js'
 
 /**
  * The options for a button preset
  */
 export interface CompanionButtonPresetOptions {
+	/** Use relative delays between the actions executing (default = false) */
 	relativeDelay?: boolean
+	/** Auto-progress the current step when releasing the button (default = true) */
 	stepAutoProgress?: boolean
+	/** Enable rotary actions for this button (default = false) */
+	rotaryActions?: boolean
 }
-
-/**
- * The style properties for a preset
- */
-export type CompanionPresetStyle = CompanionRequiredStyleProps & Partial<CompanionAdditionalStyleProps>
 
 /**
  * The configuration of an feedback in a preset
@@ -52,7 +51,7 @@ export interface CompanionButtonPresetDefinition {
 	/** The name of this preset */
 	name: string
 	/** The base style of this preset */
-	style: CompanionPresetStyle
+	style: CompanionButtonStyleProps
 	/** Options for this preset */
 	options?: CompanionButtonPresetOptions
 	/** The feedbacks on the button */
