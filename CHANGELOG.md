@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/bitfocus/companion-module-base/compare/v0.6.0...v0.6.1) (2022-11-26)
+
+
+### Bug Fixes
+
+* missing exports ([5dbd28c](https://github.com/bitfocus/companion-module-base/commit/5dbd28cf35711eab037c63fbd00d2c5342f69121))
+
 ## [0.6.0](https://github.com/bitfocus/companion-module-base/compare/v0.5.1...v0.6.0) (2022-11-26)
 
 
