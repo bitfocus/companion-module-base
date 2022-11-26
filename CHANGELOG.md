@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/bitfocus/companion-module-base/compare/v0.5.1...v0.6.0) (2022-11-26)
+
+
+### Features
+
+* require node 18 ([7b42e3d](https://github.com/bitfocus/companion-module-base/commit/7b42e3d3b1d4877f6cce3298dd7a746dec48cfe1))
+
+
+### Bug Fixes
+
+* add missing properties ([6bb321c](https://github.com/bitfocus/companion-module-base/commit/6bb321c4c44ea44bd6a2a47c22c8c61bcf447dcd))
+
 ## [0.5.1](https://github.com/bitfocus/companion-module-base/compare/v0.5.0...v0.5.1) (2022-11-22)
 
 
