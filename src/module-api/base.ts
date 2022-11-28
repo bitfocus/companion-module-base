@@ -48,6 +48,14 @@ import { convertFeedbackInstanceToEvent, callFeedbackOnDefinition } from '../int
 import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 import { IpcWrapper } from '../host-api/ipc-wrapper.js'
 
+export interface InstanceBaseOptions {
+	/**
+	 * Disable enforcement of variables requiring a definition.
+	 * It is not recommended to set this, unless you know what you are doing.
+	 */
+	disableVariableValidation: boolean
+}
+
 export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
 	readonly #ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>
 	readonly #upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]
@@ -65,6 +73,12 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	readonly #actionInstances = new Map<string, ActionInstance>()
 	readonly #variableValues = new Map<string, CompanionVariableValue>()
 
+	readonly #options: InstanceBaseOptions
+
+	public get instanceOptions(): InstanceBaseOptions {
+		return this.#options
+	}
+
 	/**
 	 * Create an instance of the module
 	 */
@@ -73,6 +87,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			throw new Error(
 				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`
 			)
+
+		this.#options = {
+			disableVariableValidation: false,
+		}
 
 		this.#ipcWrapper = new IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>(
 			{
@@ -528,11 +546,13 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 		}
 
-		const validIds = new Set(this.#variableDefinitions.keys())
-		for (const id of this.#variableValues.keys()) {
-			if (!validIds.has(id)) {
-				// Delete any local cached value
-				this.#variableValues.delete(id)
+		if (!this.#options.disableVariableValidation) {
+			const validIds = new Set(this.#variableDefinitions.keys())
+			for (const id of this.#variableValues.keys()) {
+				if (!validIds.has(id)) {
+					// Delete any local cached value
+					this.#variableValues.delete(id)
+				}
 			}
 		}
 
@@ -547,7 +567,19 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		const hostValues: SetVariableValuesMessage['newValues'] = []
 
 		for (const [variableId, value] of Object.entries(values)) {
-			if (this.#variableDefinitions.has(variableId)) {
+			if (this.#options.disableVariableValidation) {
+				// update the cached value
+				if (value === undefined) {
+					this.#variableValues.delete(variableId)
+				} else {
+					this.#variableValues.set(variableId, value)
+				}
+
+				hostValues.push({
+					id: variableId,
+					value: value,
+				})
+			} else if (this.#variableDefinitions.has(variableId)) {
 				// update the cached value
 				this.#variableValues.set(variableId, value ?? '')
 
