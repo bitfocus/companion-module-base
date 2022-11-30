@@ -71,9 +71,18 @@ export interface CompanionFeedbackAdvancedEvent extends CompanionFeedbackInfo {
  */
 export type CompanionFeedbackButtonStyleResult = Partial<CompanionButtonStyleProps>
 
+/** Size and position information for an ImageBuffer */
+export interface CompanionImageBufferPosition {
+	x: number
+	y: number
+	width: number
+	height: number
+}
+
 /** The resulting style of an advanced feedback */
 export interface CompanionAdvancedFeedbackResult extends CompanionFeedbackButtonStyleResult {
-	imageBuffer?: Uint8Array
+	imageBuffer?: Uint8Array | string
+	imageBufferPosition?: CompanionImageBufferPosition
 }
 
 /**
