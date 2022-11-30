@@ -7,9 +7,9 @@ export interface CompanionOptionValues {
 /**
  * The common properties for an input field
  */
-export interface CompanionInputFieldBase {
+export interface CompanionInputFieldBase<TOptions extends Record<string, any> = CompanionOptionValues, Id = string> {
 	/** The unique id of this input field within the input group */
-	id: string
+	id: Id
 	/** The type of this input field */
 	type:
 		| 'static-text'
@@ -29,14 +29,14 @@ export interface CompanionInputFieldBase {
 	 *
 	 * Note: This function must not depend on anything outside of its scope. If it does it will fail to compile and will be skipped.
 	 */
-	isVisible?: (options: CompanionOptionValues) => boolean
+	isVisible?: (options: TOptions) => boolean
 }
 
 /**
  * A static un-editable line of text
- * 
+ *
  * Available for actions/feedbacks/config
- * 
+ *
  * ### Example
  * ```js
  * {
@@ -47,7 +47,8 @@ export interface CompanionInputFieldBase {
  * }
  * ```
  */
-export interface CompanionInputFieldStaticText extends CompanionInputFieldBase {
+export interface CompanionInputFieldStaticText<TOptions extends Record<string, any> = CompanionOptionValues, Id = string>
+	extends CompanionInputFieldBase<TOptions, Id> {
 	type: 'static-text'
 	/** The text to show */
 	value: string
@@ -68,7 +69,8 @@ export interface CompanionInputFieldStaticText extends CompanionInputFieldBase {
  * }
  * ```
  */
-export interface CompanionInputFieldColor extends CompanionInputFieldBase {
+export interface CompanionInputFieldColor<TOptions extends Record<string, any> = CompanionOptionValues, Id = string>
+	extends CompanionInputFieldBase<TOptions, Id> {
 	type: 'colorpicker'
 	/**
 	 * The default color value to set when creating this action/feedback/instance
@@ -91,7 +93,8 @@ export interface CompanionInputFieldColor extends CompanionInputFieldBase {
  * }
  * ```
  */
-export interface CompanionInputFieldTextInput extends CompanionInputFieldBase {
+export interface CompanionInputFieldTextInput<TOptions extends Record<string, any> = CompanionOptionValues, Id = string>
+	extends CompanionInputFieldBase<TOptions, Id> {
 	type: 'textinput'
 	/**
 	 * The default text value
@@ -119,9 +122,9 @@ export type DropdownChoiceId = string | number
  *
  * Available for actions/feedbacks/config
  */
-export interface DropdownChoice {
+export interface DropdownChoice<TValue = DropdownChoiceId> {
 	/** Value of the option */
-	id: DropdownChoiceId
+	id: TValue
 	/** Label to show to users */
 	label: string
 }
@@ -145,14 +148,15 @@ export interface DropdownChoice {
  * }
  * ```
  */
-export interface CompanionInputFieldDropdown extends CompanionInputFieldBase {
+export interface CompanionInputFieldDropdown<TOptions extends Record<string, any> = CompanionOptionValues, TValue = DropdownChoiceId, Id = string>
+	extends CompanionInputFieldBase<TOptions, Id> {
 	type: 'dropdown'
 
 	/** The possible choices */
-	choices: DropdownChoice[]
+	choices: DropdownChoice<TValue>[]
 
 	/** The default selected value */
-	default: DropdownChoiceId
+	default: TValue
 
 	/** Allow custom values to be defined by the user */
 	allowCustom?: boolean
@@ -182,14 +186,18 @@ export interface CompanionInputFieldDropdown extends CompanionInputFieldBase {
  * }
  * ```
  */
-export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldBase {
+export interface CompanionInputFieldMultiDropdown<
+	TOptions extends Record<string, any> = CompanionOptionValues,
+	TValue = DropdownChoiceId,
+	Id = string
+> extends CompanionInputFieldBase<TOptions, Id> {
 	type: 'multidropdown'
 
 	/** The possible choices */
-	choices: DropdownChoice[]
+	choices: DropdownChoice<TValue>[]
 
 	/** The default selected values */
-	default: DropdownChoiceId[]
+	default: TValue[]
 
 	/** The minimum number of entries the dropdown must have before it allows searching */
 	minChoicesForSearch?: number
@@ -215,7 +223,8 @@ export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldBas
  * }
  * ```
  */
-export interface CompanionInputFieldCheckbox extends CompanionInputFieldBase {
+export interface CompanionInputFieldCheckbox<TOptions extends Record<string, any> = CompanionOptionValues, Id = string>
+	extends CompanionInputFieldBase<TOptions, Id> {
 	type: 'checkbox'
 	/** The default value */
 	default: boolean
@@ -238,7 +247,8 @@ export interface CompanionInputFieldCheckbox extends CompanionInputFieldBase {
  * }
  * ```
  */
-export interface CompanionInputFieldNumber extends CompanionInputFieldBase {
+export interface CompanionInputFieldNumber<TOptions  extends Record<string, any>= CompanionOptionValues, Id = string>
+	extends CompanionInputFieldBase<TOptions, Id> {
 	type: 'number'
 
 	/** The default value */
@@ -281,6 +291,7 @@ export interface CompanionInputFieldNumber extends CompanionInputFieldBase {
  * }
  * ```
  */
-export interface CompanionInputFieldCustomVariable extends CompanionInputFieldBase {
+export interface CompanionInputFieldCustomVariable<TOptions extends Record<string, any> = CompanionOptionValues, Id = string>
+	extends CompanionInputFieldBase<TOptions, Id> {
 	type: 'custom-variable'
 }

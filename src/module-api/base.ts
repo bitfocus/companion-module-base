@@ -1,4 +1,9 @@
-import { CompanionActionDefinition, CompanionActionDefinitions, CompanionActionInfo } from './action.js'
+import {
+	CompanionActionDefinition,
+	CompanionActionDefinitions,
+	CompanionActionInfo,
+	SomeCompanionActionInputField,
+} from './action.js'
 import {
 	CompanionFeedbackDefinitions,
 	CompanionFeedbackDefinition,
@@ -459,11 +464,15 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		for (const [actionId, action] of Object.entries(actions)) {
 			if (action) {
+				const options = Array.isArray(action.options)
+					? action.options
+					: Object.entries(action.options).map(([id, opt]) => ({ ...opt, id } as any as SomeCompanionActionInputField)) // TODO
+
 				hostActions.push({
 					id: actionId,
 					name: action.name,
 					description: action.description,
-					options: serializeIsVisibleFn(action.options),
+					options: serializeIsVisibleFn(options),
 					hasLearn: !!action.learn,
 				})
 
