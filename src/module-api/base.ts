@@ -230,10 +230,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		for (const [id, feedback] of Object.entries(msg.feedbacks)) {
 			const existing = this.#feedbackInstances.get(id)
-			const feedbackId = existing?.feedbackId ?? feedback?.feedbackId
-			const definition = feedbackId ? this.#feedbackDefinitions.get(feedbackId) : null
 			if (existing) {
 				// Call unsubscribe
+				const definition = this.#feedbackDefinitions.get(existing.feedbackId)
 				if (definition?.unsubscribe) {
 					try {
 						definition.unsubscribe(convertFeedbackInstanceToEvent(definition.type, existing))
@@ -251,6 +250,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				this.#feedbackInstances.set(id, feedback)
 
 				// Inserted or updated
+				const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 				if (definition?.subscribe) {
 					try {
 						definition.subscribe(convertFeedbackInstanceToEvent(definition.type, feedback))
@@ -301,9 +301,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		for (const [id, action] of Object.entries(msg.actions)) {
 			const existing = this.#actionInstances.get(id)
-			const definition = existing && this.#actionDefinitions.get(existing.actionId)
 			if (existing) {
 				// Call unsubscribe
+				const definition = this.#actionDefinitions.get(existing.actionId)
 				if (definition?.unsubscribe) {
 					try {
 						definition.unsubscribe(existing)
@@ -321,6 +321,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				this.#actionInstances.set(id, action)
 
 				// Inserted or updated
+				const definition = this.#actionDefinitions.get(action.actionId)
 				if (definition?.subscribe) {
 					try {
 						definition.subscribe(action)
@@ -736,7 +737,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		for (const act of actions) {
 			const def = this.#actionDefinitions.get(act.actionId)
-			if (def && def.subscribe) {
+			if (def?.subscribe) {
 				def.subscribe({
 					id: act.id,
 					actionId: act.actionId,
@@ -793,7 +794,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		for (const fb of feedbacks) {
 			const def = this.#feedbackDefinitions.get(fb.feedbackId)
-			if (def && def.subscribe) {
+			if (def?.subscribe) {
 				def.subscribe({
 					type: def.type,
 					id: fb.id,
