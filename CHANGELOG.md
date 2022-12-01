@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0](https://github.com/bitfocus/companion-module-base/compare/v0.6.1...v1.0.0) (2022-12-01)
+
+
+### Features
+
+* allow disabling requirement for variables to have a definition ([2018e8e](https://github.com/bitfocus/companion-module-base/commit/2018e8eb44d4eb49cd1f659871e607ce9782afa3))
+* imageBuffer from advanced feedback improvements ([0a92773](https://github.com/bitfocus/companion-module-base/commit/0a927738fb9008616f1d555499ffc78fde8e59cf))
+
+
+### Bug Fixes
+
+* log error if feedback returned a promise ([fe9fe27](https://github.com/bitfocus/companion-module-base/commit/fe9fe27db79ad3303a18f3dbd09920f6ffa1a395))
+* subscribe not being called when adding actions & feedbacks ([6701a43](https://github.com/bitfocus/companion-module-base/commit/6701a43be29f480e052659d3528340e7e4b24f12))
+
+
+### Miscellaneous Chores
+
+* release 1.0.0 ([9dce09c](https://github.com/bitfocus/companion-module-base/commit/9dce09c2c186d268a1d5da7c5b647f1b046c334d))
+
 ## [0.6.1](https://github.com/bitfocus/companion-module-base/compare/v0.6.0...v0.6.1) (2022-11-26)
 
 
