@@ -3,6 +3,7 @@ import {
 	CompanionFeedbackDefinitions,
 	CompanionFeedbackDefinition,
 	CompanionFeedbackButtonStyleResult,
+	CompanionAdvancedFeedbackResult,
 } from './feedback.js'
 import { CompanionPresetDefinitions } from './preset.js'
 import { InstanceStatus, LogLevel } from './enums.js'
@@ -266,6 +267,12 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 					} catch (e: any) {
 						console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 					}
+
+					if (value instanceof Promise) {
+						value = undefined
+						console.error(`Feedback check returned Promise, this is not allowed: ${JSON.stringify(feedback)}`)
+					}
+
 					newValues.push({
 						id: id,
 						controlId: feedback.controlId,
@@ -636,10 +643,19 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 				try {
 					// Calculate the new value for the feedback
+					let value: CompanionAdvancedFeedbackResult | boolean | undefined = callFeedbackOnDefinition(
+						definition,
+						feedback
+					)
+					if (value instanceof Promise) {
+						value = undefined
+						console.error(`Feedback check returned Promise, this is not allowed: ${JSON.stringify(feedback)}`)
+					}
+
 					newValues.push({
 						id: id,
 						controlId: feedback.controlId,
-						value: callFeedbackOnDefinition(definition, feedback),
+						value: value,
 					})
 				} catch (e: any) {
 					console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
@@ -668,10 +684,20 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			if (feedback && definition) {
 				try {
 					// Calculate the new value for the feedback
+					let value: CompanionAdvancedFeedbackResult | boolean | undefined = callFeedbackOnDefinition(
+						definition,
+						feedback
+					)
+					if (value instanceof Promise) {
+						value = undefined
+						console.error(`Feedback check returned Promise, this is not allowed: ${JSON.stringify(feedback)}`)
+					}
+
+					// Calculate the new value for the feedback
 					newValues.push({
 						id: id,
 						controlId: feedback.controlId,
-						value: callFeedbackOnDefinition(definition, feedback),
+						value: value,
 					})
 				} catch (e: any) {
 					console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
