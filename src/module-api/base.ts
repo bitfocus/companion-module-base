@@ -164,7 +164,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 			// Now we can initialise the module
 			try {
-				await this.init(config)
+				await this.init(config, !!msg.isFirstInit)
 
 				this.#initialized = true
 			} catch (e) {
@@ -418,7 +418,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Main initialization function called
 	 * once the module is OK to start doing things.
 	 */
-	abstract init(config: TConfig): Promise<void>
+	abstract init(config: TConfig, isFirstInit: boolean): Promise<void>
 
 	/**
 	 * Clean up the instance before it is destroyed.
