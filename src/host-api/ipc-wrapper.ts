@@ -158,7 +158,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 					callbacks.resolve(data)
 				} else {
 					let err = data
-					if ('message' in data) {
+					if (data && 'message' in data) {
 						err = new Error(data.message)
 						if (data.stack) err.stack = data.stack
 					}
