@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/bitfocus/companion-module-base/compare/v1.0.0...v1.0.1) (2022-12-20)
+
+
+### Bug Fixes
+
+* module init function should know if it is the first init ([3374ac1](https://github.com/bitfocus/companion-module-base/commit/3374ac16f28fc1c72420c99579a7544dd501882b))
+* unhandled error in ipc-wrapper ([07c9472](https://github.com/bitfocus/companion-module-base/commit/07c94728f31164d214421b41e406e9da0c32ccad))
+
 ## [1.0.0](https://github.com/bitfocus/companion-module-base/compare/v0.6.1...v1.0.0) (2022-12-01)
 
 
