@@ -217,6 +217,7 @@ export interface ParseVariablesInStringMessage {
 }
 export interface ParseVariablesInStringResponseMessage {
 	text: string
+	variableIds?: string[]
 }
 
 export interface HandleHttpRequestMessage {

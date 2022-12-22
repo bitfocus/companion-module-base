@@ -59,6 +59,10 @@ export interface InstanceBaseOptions {
 	disableVariableValidation: boolean
 }
 
+interface FeedbackInstanceExt extends FeedbackInstance {
+	referencedVariables: Set<string> | null
+}
+
 export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
 	readonly #ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>
 	readonly #upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]
@@ -79,7 +83,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	readonly #feedbackDefinitions = new Map<string, CompanionFeedbackDefinition>()
 	readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
 
-	readonly #feedbackInstances = new Map<string, FeedbackInstance>()
+	readonly #feedbackInstances = new Map<string, FeedbackInstanceExt>()
 	readonly #actionInstances = new Map<string, ActionInstance>()
 	readonly #variableValues = new Map<string, CompanionVariableValue>()
 
@@ -258,7 +262,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				this.#feedbackInstances.delete(id)
 			} else {
 				// TODO module-lib - deep freeze the feedback to avoid mutation?
-				this.#feedbackInstances.set(id, feedback)
+				this.#feedbackInstances.set(id, {
+					...feedback,
+					referencedVariables: null,
+				})
 
 				// Inserted or updated
 				const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
@@ -420,6 +427,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 						| CompanionAdvancedFeedbackResult
 						| Promise<CompanionAdvancedFeedbackResult>
 						| undefined
+					const newReferencedVariables = new Set<string>()
+
 					// Calculate the new value for the feedback
 					if (definition) {
 						// Set this while the promise starts executing
@@ -428,7 +437,14 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 						const context: CompanionFeedbackContext = {
 							parseVariablesInString: async (text: string): Promise<string> => {
 								const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', { text: text })
-								// TODO - do some tracking of the variables that were parsed
+
+								// Track which variables were referenced
+								if (res.variableIds && res.variableIds.length) {
+									for (const id of res.variableIds) {
+										newReferencedVariables.add(id)
+									}
+								}
+
 								return res.text
 							},
 						}
@@ -463,6 +479,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 						controlId: feedback.controlId,
 						value: await value,
 					})
+
+					feedback.referencedVariables = newReferencedVariables.size > 0 ? newReferencedVariables : null
 				}
 			})
 			.catch((e) => {
