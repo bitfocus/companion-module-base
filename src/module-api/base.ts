@@ -36,6 +36,7 @@ import {
 	UpdateActionInstancesMessage,
 	UpdateFeedbackInstancesMessage,
 	UpdateFeedbackValuesMessage,
+	VariablesChangedMessage,
 } from '../host-api/api.js'
 import { literal } from '../util.js'
 import { InstanceBaseShared } from '../instance-base.js'
@@ -60,7 +61,7 @@ export interface InstanceBaseOptions {
 }
 
 interface FeedbackInstanceExt extends FeedbackInstance {
-	referencedVariables: Set<string> | null
+	referencedVariables: string[] | null
 }
 
 export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
@@ -122,6 +123,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				learnAction: this._handleLearnAction.bind(this),
 				learnFeedback: this._handleLearnFeedback.bind(this),
 				startStopRecordActions: this._handleStartStopRecordActions.bind(this),
+				variablesChanged: this._handleVariablesChanged.bind(this),
 			},
 			(msg) => {
 				process.send!(msg)
@@ -407,6 +409,32 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		this.handleStartStopRecordActions(this.#recordingActions)
 	}
 
+	private async _handleVariablesChanged(msg: VariablesChangedMessage): Promise<void> {
+		if (!msg.variablesIds.length) return
+
+		const changedFeedbackIds = new Set(msg.variablesIds)
+
+		// Determine the feedbacks that need checking
+		const feedbackIds = new Set<string>()
+		for (const feedback of this.#feedbackInstances.values()) {
+			if (feedback.referencedVariables) {
+				for (const id of feedback.referencedVariables) {
+					if (changedFeedbackIds.has(id)) {
+						feedbackIds.add(feedback.id)
+						break
+					}
+				}
+			}
+		}
+
+		// Trigger all the feedbacks to be rechecked
+		for (const id of feedbackIds) {
+			setImmediate(() => {
+				this.#triggerCheckFeedback(id)
+			})
+		}
+	}
+
 	#triggerCheckFeedback(id: string) {
 		if (this.#feedbacksBeingChecked.has(id)) {
 			// Already being checked
@@ -479,8 +507,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 						controlId: feedback.controlId,
 						value: await value,
 					})
+					this.#sendFeedbackValues()
 
-					feedback.referencedVariables = newReferencedVariables.size > 0 ? newReferencedVariables : null
+					feedback.referencedVariables = newReferencedVariables.size > 0 ? Array.from(newReferencedVariables) : null
 				}
 			})
 			.catch((e) => {
@@ -503,7 +532,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Send pending feedback values (from this.#pendingFeedbackValues) to companion, with a debounce
 	 */
 	#sendFeedbackValues = debounceFn(
-		() => {
+		(): void => {
 			const newValues = this.#pendingFeedbackValues
 			this.#pendingFeedbackValues = new Map()
 

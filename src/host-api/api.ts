@@ -44,6 +44,7 @@ export interface HostToModuleEventsV0 {
 	learnAction: (msg: LearnActionMessage) => LearnActionResponseMessage
 	learnFeedback: (msg: LearnFeedbackMessage) => LearnFeedbackResponseMessage
 	startStopRecordActions: (msg: StartStopRecordActionsMessage) => void
+	variablesChanged: (msg: VariablesChangedMessage) => void
 }
 
 export type EncodeIsVisible<T extends CompanionInputFieldBase> = Omit<T, 'isVisible'> & {
@@ -254,4 +255,8 @@ export interface RecordActionMessage {
 export interface SetCustomVariableMessage {
 	customVariableId: string
 	value: CompanionVariableValue
+}
+
+export interface VariablesChangedMessage {
+	variablesIds: string[]
 }
