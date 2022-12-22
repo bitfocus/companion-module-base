@@ -4,6 +4,7 @@ import {
 	CompanionFeedbackDefinition,
 	CompanionFeedbackButtonStyleResult,
 	CompanionAdvancedFeedbackResult,
+	CompanionFeedbackContext,
 } from './feedback.js'
 import { CompanionPresetDefinitions } from './preset.js'
 import { InstanceStatus, LogLevel } from './enums.js'
@@ -413,21 +414,33 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 					let value: boolean | CompanionAdvancedFeedbackResult | undefined
 					// Calculate the new value for the feedback
 					if (definition) {
+						const context: CompanionFeedbackContext = {
+							parseVariablesInString: async (text: string): Promise<string> => {
+								// TODO - do some tracking of the variables that were parsed
+								return this.parseVariablesInString(text)
+							},
+						}
 						if (definition.type === 'boolean') {
-							value = await definition.callback({
-								...convertFeedbackInstanceToEvent('boolean', feedback),
-								type: 'boolean',
-								_rawBank: feedback.rawBank,
-							})
+							value = await definition.callback(
+								{
+									...convertFeedbackInstanceToEvent('boolean', feedback),
+									type: 'boolean',
+									_rawBank: feedback.rawBank,
+								},
+								context
+							)
 						} else {
-							value = await definition.callback({
-								...convertFeedbackInstanceToEvent('advanced', feedback),
-								type: 'advanced',
-								image: feedback.image,
-								_page: feedback.page,
-								_bank: feedback.bank,
-								_rawBank: feedback.rawBank,
-							})
+							value = await definition.callback(
+								{
+									...convertFeedbackInstanceToEvent('advanced', feedback),
+									type: 'advanced',
+									image: feedback.image,
+									_page: feedback.page,
+									_bank: feedback.bank,
+									_rawBank: feedback.rawBank,
+								},
+								context
+							)
 						}
 					}
 

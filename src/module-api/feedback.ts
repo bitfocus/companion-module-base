@@ -124,7 +124,7 @@ export interface CompanionBooleanFeedbackDefinition extends CompanionFeedbackDef
 	/** The default style properties for this feedback */
 	defaultStyle: Partial<CompanionFeedbackButtonStyleResult>
 	/** Called to get the feedback value */
-	callback: (feedback: CompanionFeedbackBooleanEvent) => boolean | Promise<boolean>
+	callback: (feedback: CompanionFeedbackBooleanEvent, context: CompanionFeedbackContext) => boolean | Promise<boolean>
 }
 
 /**
@@ -135,8 +135,19 @@ export interface CompanionAdvancedFeedbackDefinition extends CompanionFeedbackDe
 	type: 'advanced'
 	/** Called to get the feedback value */
 	callback: (
-		feedback: CompanionFeedbackAdvancedEvent
+		feedback: CompanionFeedbackAdvancedEvent,
+		context: CompanionFeedbackContext
 	) => CompanionAdvancedFeedbackResult | Promise<CompanionAdvancedFeedbackResult>
+}
+
+export interface CompanionFeedbackContext {
+	/**
+	 * Parse and replace all the variables in a string
+	 * Note: it is important to use this version when in a feedback, so that the feedback will react properly when the variables parsed change
+	 * @param text The text to parse
+	 * @returns The string with variables replaced with their values
+	 */
+	parseVariablesInString(text: string): Promise<string>
 }
 
 /**
