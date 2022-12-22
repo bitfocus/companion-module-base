@@ -85,6 +85,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 	readonly #options: InstanceBaseOptions
 
+	// while in a context which provides an alternate parseVariablesInString, we should log when the original is called
+	#parseVariablesContext: string | undefined
+
 	public get instanceOptions(): InstanceBaseOptions {
 		return this.#options
 	}
@@ -411,17 +414,26 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				if (feedback) {
 					const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 
-					let value: boolean | CompanionAdvancedFeedbackResult | undefined
+					let value:
+						| boolean
+						| Promise<boolean>
+						| CompanionAdvancedFeedbackResult
+						| Promise<CompanionAdvancedFeedbackResult>
+						| undefined
 					// Calculate the new value for the feedback
 					if (definition) {
+						// Set this while the promise starts executing
+						this.#parseVariablesContext = `Feedback ${feedback.feedbackId} (${id})`
+
 						const context: CompanionFeedbackContext = {
 							parseVariablesInString: async (text: string): Promise<string> => {
+								const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', { text: text })
 								// TODO - do some tracking of the variables that were parsed
-								return this.parseVariablesInString(text)
+								return res.text
 							},
 						}
 						if (definition.type === 'boolean') {
-							value = await definition.callback(
+							value = definition.callback(
 								{
 									...convertFeedbackInstanceToEvent('boolean', feedback),
 									type: 'boolean',
@@ -430,7 +442,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 								context
 							)
 						} else {
-							value = await definition.callback(
+							value = definition.callback(
 								{
 									...convertFeedbackInstanceToEvent('advanced', feedback),
 									type: 'advanced',
@@ -442,12 +454,14 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 								context
 							)
 						}
+
+						this.#parseVariablesContext = undefined
 					}
 
 					this.#pendingFeedbackValues.set(id, {
 						id: id,
 						controlId: feedback.controlId,
-						value: value,
+						value: await value,
 					})
 				}
 			})
@@ -455,6 +469,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 			})
 			.finally(() => {
+				// ensure this.#parseVariablesContext is cleared
+				this.#parseVariablesContext = undefined
+
 				this.#feedbacksBeingChecked.delete(id)
 
 				// If queued, trigger a check
@@ -693,6 +710,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @returns The string with variables replaced with their values
 	 */
 	async parseVariablesInString(text: string): Promise<string> {
+		if (this.#parseVariablesContext) {
+			this.log('debug', `parseVariablesInString called while in: ${this.#parseVariablesContext}`)
+		}
+
 		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', { text: text })
 		return res.text
 	}
