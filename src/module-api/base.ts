@@ -48,6 +48,7 @@ import { runThroughUpgradeScripts } from '../internal/upgrade.js'
 import { convertFeedbackInstanceToEvent, callFeedbackOnDefinition } from '../internal/feedback.js'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 import { IpcWrapper } from '../host-api/ipc-wrapper.js'
+import debounceFn from 'debounce-fn'
 
 export interface InstanceBaseOptions {
 	/**
@@ -65,6 +66,13 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })
 	#initialized: boolean = false
 	#recordingActions: boolean = false
+
+	// Feedback values waiting to be sent
+	#pendingFeedbackValues = new Map<string, UpdateFeedbackValuesMessage['values'][0]>()
+	// Feedbacks in progress to recheck
+	#feedbacksToRecheck = new Set<string>()
+	// Feedbacks currently being checked
+	#feedbacksBeingChecked = new Set<string>()
 
 	readonly #actionDefinitions = new Map<string, CompanionActionDefinition>()
 	readonly #feedbackDefinitions = new Map<string, CompanionFeedbackDefinition>()
@@ -220,9 +228,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			_bank: msg.action.bank,
 		})
 	}
-	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
-		const newValues: UpdateFeedbackValuesMessage['values'] = []
 
+	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
 		if (!skipUpgrades) {
 			runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, undefined)
@@ -259,34 +266,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 					}
 				}
 
-				// Calculate the new value for the feedback
-				if (definition) {
-					let value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined
-					try {
-						value = callFeedbackOnDefinition(definition, feedback)
-					} catch (e: any) {
-						console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
-					}
-
-					if (value instanceof Promise) {
-						value = undefined
-						console.error(`Feedback check returned Promise, this is not allowed: ${JSON.stringify(feedback)}`)
-					}
-
-					newValues.push({
-						id: id,
-						controlId: feedback.controlId,
-						value: value,
-					})
-				}
+				// update the feedback value
+				this.#triggerCheckFeedback(id)
 			}
-		}
-
-		// Send the new values back
-		if (Object.keys(newValues).length > 0) {
-			this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', {
-				values: newValues,
-			})
 		}
 	}
 	private async _handleUpdateActions(msg: UpdateActionInstancesMessage, skipUpgrades?: boolean): Promise<void> {
@@ -413,6 +395,66 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		this.handleStartStopRecordActions(this.#recordingActions)
 	}
+
+	#triggerCheckFeedback(id: string) {
+		if (this.#feedbacksBeingChecked.has(id)) {
+			// Already being checked
+			this.#feedbacksToRecheck.add(id)
+			return
+		}
+
+		const feedback = this.#feedbackInstances.get(id)
+
+		Promise.resolve()
+			.then(async () => {
+				if (feedback) {
+					const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
+
+					// Calculate the new value for the feedback
+					if (definition) {
+						const value = await callFeedbackOnDefinition(definition, feedback)
+
+						this.#pendingFeedbackValues.set(id, {
+							id: id,
+							controlId: feedback.controlId,
+							value: value,
+						})
+					}
+				}
+			})
+			.catch((e) => {
+				console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
+			})
+			.finally(() => {
+				this.#feedbacksBeingChecked.delete(id)
+
+				// If queued, trigger a check
+				if (this.#feedbacksToRecheck.has(id)) {
+					this.#triggerCheckFeedback(id)
+				}
+			})
+	}
+
+	/**
+	 * Send pending feedback values (from this.#pendingFeedbackValues) to companion, with a debounce
+	 */
+	#sendFeedbackValues = debounceFn(
+		() => {
+			const newValues = this.#pendingFeedbackValues
+			this.#pendingFeedbackValues = new Map()
+
+			// Send the new values back
+			if (newValues.size > 0) {
+				this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', {
+					values: Array.from(newValues.values()),
+				})
+			}
+		},
+		{
+			wait: 5,
+			maxWait: 25,
+		}
+	)
 
 	/**
 	 * Main initialization function called
@@ -631,8 +673,6 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param feedbackTypes The feedback types to check
 	 */
 	checkFeedbacks(...feedbackTypes: string[]): void {
-		const newValues: UpdateFeedbackValuesMessage['values'] = []
-
 		const types = new Set(feedbackTypes)
 		for (const [id, feedback] of this.#feedbackInstances.entries()) {
 			const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
@@ -642,33 +682,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 					continue
 				}
 
-				try {
-					// Calculate the new value for the feedback
-					let value: CompanionAdvancedFeedbackResult | boolean | undefined = callFeedbackOnDefinition(
-						definition,
-						feedback
-					)
-					if (value instanceof Promise) {
-						value = undefined
-						console.error(`Feedback check returned Promise, this is not allowed: ${JSON.stringify(feedback)}`)
-					}
-
-					newValues.push({
-						id: id,
-						controlId: feedback.controlId,
-						value: value,
-					})
-				} catch (e: any) {
-					console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
-				}
+				// update the feedback value
+				this.#triggerCheckFeedback(id)
 			}
-		}
-
-		// Send the new values back
-		if (Object.keys(newValues).length > 0) {
-			this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', {
-				values: newValues,
-			})
 		}
 	}
 
@@ -677,40 +693,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param feedbackIds The ids of the feedback instances to check
 	 */
 	checkFeedbacksById(...feedbackIds: string[]): void {
-		const newValues: UpdateFeedbackValuesMessage['values'] = []
-
 		for (const id of feedbackIds) {
-			const feedback = this.#feedbackInstances.get(id)
-			const definition = feedback && this.#feedbackDefinitions.get(feedback.feedbackId)
-			if (feedback && definition) {
-				try {
-					// Calculate the new value for the feedback
-					let value: CompanionAdvancedFeedbackResult | boolean | undefined = callFeedbackOnDefinition(
-						definition,
-						feedback
-					)
-					if (value instanceof Promise) {
-						value = undefined
-						console.error(`Feedback check returned Promise, this is not allowed: ${JSON.stringify(feedback)}`)
-					}
-
-					// Calculate the new value for the feedback
-					newValues.push({
-						id: id,
-						controlId: feedback.controlId,
-						value: value,
-					})
-				} catch (e: any) {
-					console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
-				}
-			}
-		}
-
-		// Send the new values back
-		if (Object.keys(newValues).length > 0) {
-			this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', {
-				values: newValues,
-			})
+			// update the feedback value
+			this.#triggerCheckFeedback(id)
 		}
 	}
 

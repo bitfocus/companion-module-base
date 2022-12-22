@@ -124,7 +124,7 @@ export interface CompanionBooleanFeedbackDefinition extends CompanionFeedbackDef
 	/** The default style properties for this feedback */
 	defaultStyle: Partial<CompanionFeedbackButtonStyleResult>
 	/** Called to get the feedback value */
-	callback: (feedback: CompanionFeedbackBooleanEvent) => boolean
+	callback: (feedback: CompanionFeedbackBooleanEvent) => boolean | Promise<boolean>
 }
 
 /**
@@ -134,7 +134,9 @@ export interface CompanionAdvancedFeedbackDefinition extends CompanionFeedbackDe
 	/** The type of the feedback */
 	type: 'advanced'
 	/** Called to get the feedback value */
-	callback: (feedback: CompanionFeedbackAdvancedEvent) => CompanionAdvancedFeedbackResult
+	callback: (
+		feedback: CompanionFeedbackAdvancedEvent
+	) => CompanionAdvancedFeedbackResult | Promise<CompanionAdvancedFeedbackResult>
 }
 
 /**
