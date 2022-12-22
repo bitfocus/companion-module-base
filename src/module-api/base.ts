@@ -45,7 +45,7 @@ import { SomeCompanionConfigField } from './config.js'
 import { CompanionStaticUpgradeScript } from './upgrade.js'
 import { isInstanceBaseProps, serializeIsVisibleFn } from '../internal/base.js'
 import { runThroughUpgradeScripts } from '../internal/upgrade.js'
-import { convertFeedbackInstanceToEvent, callFeedbackOnDefinition } from '../internal/feedback.js'
+import { convertFeedbackInstanceToEvent } from '../internal/feedback.js'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 import { IpcWrapper } from '../host-api/ipc-wrapper.js'
 import debounceFn from 'debounce-fn'
@@ -410,16 +410,32 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				if (feedback) {
 					const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 
+					let value: boolean | CompanionAdvancedFeedbackResult | undefined
 					// Calculate the new value for the feedback
 					if (definition) {
-						const value = await callFeedbackOnDefinition(definition, feedback)
-
-						this.#pendingFeedbackValues.set(id, {
-							id: id,
-							controlId: feedback.controlId,
-							value: value,
-						})
+						if (definition.type === 'boolean') {
+							value = await definition.callback({
+								...convertFeedbackInstanceToEvent('boolean', feedback),
+								type: 'boolean',
+								_rawBank: feedback.rawBank,
+							})
+						} else {
+							value = await definition.callback({
+								...convertFeedbackInstanceToEvent('advanced', feedback),
+								type: 'advanced',
+								image: feedback.image,
+								_page: feedback.page,
+								_bank: feedback.bank,
+								_rawBank: feedback.rawBank,
+							})
+						}
 					}
+
+					this.#pendingFeedbackValues.set(id, {
+						id: id,
+						controlId: feedback.controlId,
+						value: value,
+					})
 				}
 			})
 			.catch((e) => {
