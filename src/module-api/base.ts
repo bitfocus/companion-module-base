@@ -464,7 +464,11 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 						const context: CompanionFeedbackContext = {
 							parseVariablesInString: async (text: string): Promise<string> => {
-								const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', { text: text })
+								const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+									text: text,
+									controlId: feedback.controlId,
+									feedbackInstanceId: id,
+								})
 
 								// Track which variables were referenced
 								if (res.variableIds && res.variableIds.length) {
@@ -758,10 +762,19 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 */
 	async parseVariablesInString(text: string): Promise<string> {
 		if (this.#parseVariablesContext) {
-			this.log('debug', `parseVariablesInString called while in: ${this.#parseVariablesContext}`)
+			this.log(
+				'debug',
+				`parseVariablesInString called while in: ${
+					this.#parseVariablesContext
+				}. You should use the parseVariablesInString provided to the callback instead`
+			)
 		}
 
-		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', { text: text })
+		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+			text: text,
+			controlId: undefined,
+			feedbackInstanceId: undefined,
+		})
 		return res.text
 	}
 

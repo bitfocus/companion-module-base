@@ -215,10 +215,12 @@ export interface SendOscMessage {
 
 export interface ParseVariablesInStringMessage {
 	text: string
+	controlId: string | undefined
+	feedbackInstanceId: string | undefined
 }
 export interface ParseVariablesInStringResponseMessage {
 	text: string
-	variableIds?: string[]
+	variableIds: string[] | undefined
 }
 
 export interface HandleHttpRequestMessage {
