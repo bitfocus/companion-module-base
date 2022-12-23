@@ -1,3 +1,4 @@
+import { CompanionCommonCallbackContext } from './common.js'
 import {
 	CompanionOptionValues,
 	CompanionInputFieldCheckbox,
@@ -20,6 +21,8 @@ export type SomeCompanionActionInputField =
 	| CompanionInputFieldCheckbox
 	| CompanionInputFieldCustomVariable
 
+export type CompanionActionContext = CompanionCommonCallbackContext
+
 /**
  * The definition of an action
  */
@@ -31,23 +34,24 @@ export interface CompanionActionDefinition {
 	/** The input fields for the action */
 	options: SomeCompanionActionInputField[]
 	/** Called to execute the action */
-	callback: (action: CompanionActionEvent) => Promise<void> | void
+	callback: (action: CompanionActionEvent, context: CompanionActionContext) => Promise<void> | void
 	/**
 	 * Called to report the existence of an action
 	 * Useful to ensure necessary data is loaded
 	 */
-	subscribe?: (action: CompanionActionInfo) => Promise<void> | void
+	subscribe?: (action: CompanionActionInfo, context: CompanionActionContext) => Promise<void> | void
 	/**
 	 * Called to report an action has been edited/removed
 	 * Useful to cleanup subscriptions setup in subscribe
 	 */
-	unsubscribe?: (action: CompanionActionInfo) => Promise<void> | void
+	unsubscribe?: (action: CompanionActionInfo, context: CompanionActionContext) => Promise<void> | void
 
 	/**
 	 * The user requested to 'learn' the values for this action.
 	 */
 	learn?: (
-		action: CompanionActionEvent
+		action: CompanionActionEvent,
+		context: CompanionActionContext
 	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 }
 

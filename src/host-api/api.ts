@@ -217,6 +217,7 @@ export interface ParseVariablesInStringMessage {
 	text: string
 	controlId: string | undefined
 	feedbackInstanceId: string | undefined
+	actionInstanceId: string | undefined
 }
 export interface ParseVariablesInStringResponseMessage {
 	text: string

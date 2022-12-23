@@ -1,3 +1,4 @@
+import { CompanionCommonCallbackContext } from './common.js'
 import {
 	CompanionOptionValues,
 	CompanionInputFieldStaticText,
@@ -100,18 +101,19 @@ export interface CompanionFeedbackDefinitionBase {
 	 * Called to report the existence of a feedback.
 	 * Useful to ensure necessary data is loaded
 	 */
-	subscribe?: (feedback: CompanionFeedbackInfo) => void
+	subscribe?: (feedback: CompanionFeedbackInfo, context: CompanionFeedbackContext) => void
 	/**
 	 * Called to report an feedback has been edited/removed.
 	 * Useful to cleanup subscriptions setup in subscribe
 	 */
-	unsubscribe?: (feedback: CompanionFeedbackInfo) => void
+	unsubscribe?: (feedback: CompanionFeedbackInfo, context: CompanionFeedbackContext) => void
 
 	/**
 	 * The user requested to 'learn' the values for this feedback.
 	 */
 	learn?: (
-		action: CompanionFeedbackInfo
+		action: CompanionFeedbackInfo,
+		context: CompanionFeedbackContext
 	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 }
 
@@ -140,15 +142,7 @@ export interface CompanionAdvancedFeedbackDefinition extends CompanionFeedbackDe
 	) => CompanionAdvancedFeedbackResult | Promise<CompanionAdvancedFeedbackResult>
 }
 
-export interface CompanionFeedbackContext {
-	/**
-	 * Parse and replace all the variables in a string
-	 * Note: it is important to use this version when in a feedback, so that the feedback will react properly when the variables parsed change
-	 * @param text The text to parse
-	 * @returns The string with variables replaced with their values
-	 */
-	parseVariablesInString(text: string): Promise<string>
-}
+export type CompanionFeedbackContext = CompanionCommonCallbackContext
 
 /**
  * The definition of some feedback

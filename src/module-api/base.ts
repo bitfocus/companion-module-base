@@ -1,4 +1,9 @@
-import { CompanionActionDefinition, CompanionActionDefinitions, CompanionActionInfo } from './action.js'
+import {
+	CompanionActionDefinition,
+	CompanionActionDefinitions,
+	CompanionActionInfo,
+	CompanionActionContext,
+} from './action.js'
 import {
 	CompanionFeedbackDefinitions,
 	CompanionFeedbackDefinition,
@@ -227,16 +232,32 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		const actionDefinition = this.#actionDefinitions.get(msg.action.actionId)
 		if (!actionDefinition) throw new Error(`Unknown action: ${msg.action.actionId}`)
 
-		await actionDefinition.callback({
-			id: msg.action.id,
-			actionId: msg.action.actionId,
-			controlId: msg.action.controlId,
-			options: msg.action.options,
+		const context: CompanionActionContext = {
+			parseVariablesInString: async (text: string): Promise<string> => {
+				const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+					text: text,
+					controlId: msg.action.controlId,
+					actionInstanceId: msg.action.id,
+					feedbackInstanceId: undefined,
+				})
 
-			_deviceId: msg.deviceId,
-			_page: msg.action.page,
-			_bank: msg.action.bank,
-		})
+				return res.text
+			},
+		}
+
+		await actionDefinition.callback(
+			{
+				id: msg.action.id,
+				actionId: msg.action.actionId,
+				controlId: msg.action.controlId,
+				options: msg.action.options,
+
+				_deviceId: msg.deviceId,
+				_page: msg.action.page,
+				_bank: msg.action.bank,
+			},
+			context
+		)
 	}
 
 	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
@@ -251,8 +272,21 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				// Call unsubscribe
 				const definition = this.#feedbackDefinitions.get(existing.feedbackId)
 				if (definition?.unsubscribe) {
+					const context: CompanionFeedbackContext = {
+						parseVariablesInString: async (text: string): Promise<string> => {
+							const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+								text: text,
+								controlId: existing.controlId,
+								actionInstanceId: undefined,
+								feedbackInstanceId: existing.id,
+							})
+
+							return res.text
+						},
+					}
+
 					try {
-						definition.unsubscribe(convertFeedbackInstanceToEvent(definition.type, existing))
+						definition.unsubscribe(convertFeedbackInstanceToEvent(definition.type, existing), context)
 					} catch (e: any) {
 						console.error(`Feedback unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`)
 					}
@@ -272,8 +306,21 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				// Inserted or updated
 				const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 				if (definition?.subscribe) {
+					const context: CompanionFeedbackContext = {
+						parseVariablesInString: async (text: string): Promise<string> => {
+							const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+								text: text,
+								controlId: feedback.controlId,
+								actionInstanceId: undefined,
+								feedbackInstanceId: feedback.id,
+							})
+
+							return res.text
+						},
+					}
+
 					try {
-						definition.subscribe(convertFeedbackInstanceToEvent(definition.type, feedback))
+						definition.subscribe(convertFeedbackInstanceToEvent(definition.type, feedback), context)
 					} catch (e: any) {
 						console.error(`Feedback subscribe failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 					}
@@ -300,8 +347,21 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				// Call unsubscribe
 				const definition = this.#actionDefinitions.get(existing.actionId)
 				if (definition?.unsubscribe) {
+					const context: CompanionFeedbackContext = {
+						parseVariablesInString: async (text: string): Promise<string> => {
+							const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+								text: text,
+								controlId: existing.controlId,
+								actionInstanceId: existing.id,
+								feedbackInstanceId: undefined,
+							})
+
+							return res.text
+						},
+					}
+
 					try {
-						definition.unsubscribe(existing)
+						definition.unsubscribe(existing, context)
 					} catch (e: any) {
 						console.error(`Action unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`)
 					}
@@ -318,8 +378,21 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				// Inserted or updated
 				const definition = this.#actionDefinitions.get(action.actionId)
 				if (definition?.subscribe) {
+					const context: CompanionFeedbackContext = {
+						parseVariablesInString: async (text: string): Promise<string> => {
+							const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+								text: text,
+								controlId: action.controlId,
+								actionInstanceId: action.id,
+								feedbackInstanceId: undefined,
+							})
+
+							return res.text
+						},
+					}
+
 					try {
-						definition.subscribe(action)
+						definition.subscribe(action, context)
 					} catch (e: any) {
 						console.error(`Action subscribe failed: ${JSON.stringify(action)} - ${e?.message ?? e} ${e?.stack}`)
 					}
@@ -344,16 +417,32 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	private async _handleLearnAction(msg: LearnActionMessage): Promise<LearnActionResponseMessage> {
 		const definition = this.#actionDefinitions.get(msg.action.actionId)
 		if (definition && definition.learn) {
-			const newOptions = await definition.learn({
-				id: msg.action.id,
-				actionId: msg.action.actionId,
-				controlId: msg.action.controlId,
-				options: msg.action.options,
+			const context: CompanionFeedbackContext = {
+				parseVariablesInString: async (text: string): Promise<string> => {
+					const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+						text: text,
+						controlId: msg.action.controlId,
+						actionInstanceId: msg.action.id,
+						feedbackInstanceId: undefined,
+					})
 
-				_deviceId: undefined,
-				_page: msg.action.page,
-				_bank: msg.action.bank,
-			})
+					return res.text
+				},
+			}
+
+			const newOptions = await definition.learn(
+				{
+					id: msg.action.id,
+					actionId: msg.action.actionId,
+					controlId: msg.action.controlId,
+					options: msg.action.options,
+
+					_deviceId: undefined,
+					_page: msg.action.page,
+					_bank: msg.action.bank,
+				},
+				context
+			)
 
 			return {
 				options: newOptions,
@@ -368,13 +457,29 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	private async _handleLearnFeedback(msg: LearnFeedbackMessage): Promise<LearnFeedbackResponseMessage> {
 		const definition = this.#feedbackDefinitions.get(msg.feedback.feedbackId)
 		if (definition && definition.learn) {
-			const newOptions = await definition.learn({
-				id: msg.feedback.id,
-				feedbackId: msg.feedback.feedbackId,
-				controlId: msg.feedback.controlId,
-				options: msg.feedback.options,
-				type: definition.type,
-			})
+			const context: CompanionFeedbackContext = {
+				parseVariablesInString: async (text: string): Promise<string> => {
+					const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+						text: text,
+						controlId: msg.feedback.controlId,
+						actionInstanceId: undefined,
+						feedbackInstanceId: msg.feedback.id,
+					})
+
+					return res.text
+				},
+			}
+
+			const newOptions = await definition.learn(
+				{
+					id: msg.feedback.id,
+					feedbackId: msg.feedback.feedbackId,
+					controlId: msg.feedback.controlId,
+					options: msg.feedback.options,
+					type: definition.type,
+				},
+				context
+			)
 
 			return {
 				options: newOptions,
@@ -467,6 +572,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 								const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
 									text: text,
 									controlId: feedback.controlId,
+									actionInstanceId: undefined,
 									feedbackInstanceId: id,
 								})
 
@@ -773,6 +879,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
 			text: text,
 			controlId: undefined,
+			actionInstanceId: undefined,
 			feedbackInstanceId: undefined,
 		})
 		return res.text
@@ -833,12 +940,28 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		for (const act of actions) {
 			const def = this.#actionDefinitions.get(act.actionId)
 			if (def?.subscribe) {
-				def.subscribe({
-					id: act.id,
-					actionId: act.actionId,
-					controlId: act.controlId,
-					options: act.options,
-				})
+				const context: CompanionActionContext = {
+					parseVariablesInString: async (text: string): Promise<string> => {
+						const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+							text: text,
+							controlId: act.controlId,
+							actionInstanceId: act.id,
+							feedbackInstanceId: undefined,
+						})
+
+						return res.text
+					},
+				}
+
+				def.subscribe(
+					{
+						id: act.id,
+						actionId: act.actionId,
+						controlId: act.controlId,
+						options: act.options,
+					},
+					context
+				)
 			}
 		}
 	}
@@ -856,12 +979,28 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		for (const act of actions) {
 			const def = this.#actionDefinitions.get(act.actionId)
 			if (def && def.unsubscribe) {
-				def.unsubscribe({
-					id: act.id,
-					actionId: act.actionId,
-					controlId: act.controlId,
-					options: act.options,
-				})
+				const context: CompanionActionContext = {
+					parseVariablesInString: async (text: string): Promise<string> => {
+						const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+							text: text,
+							controlId: act.controlId,
+							actionInstanceId: act.id,
+							feedbackInstanceId: undefined,
+						})
+
+						return res.text
+					},
+				}
+
+				def.unsubscribe(
+					{
+						id: act.id,
+						actionId: act.actionId,
+						controlId: act.controlId,
+						options: act.options,
+					},
+					context
+				)
 			}
 		}
 	}
@@ -890,13 +1029,29 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		for (const fb of feedbacks) {
 			const def = this.#feedbackDefinitions.get(fb.feedbackId)
 			if (def?.subscribe) {
-				def.subscribe({
-					type: def.type,
-					id: fb.id,
-					feedbackId: fb.feedbackId,
-					controlId: fb.controlId,
-					options: fb.options,
-				})
+				const context: CompanionFeedbackContext = {
+					parseVariablesInString: async (text: string): Promise<string> => {
+						const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+							text: text,
+							controlId: fb.controlId,
+							actionInstanceId: undefined,
+							feedbackInstanceId: fb.id,
+						})
+
+						return res.text
+					},
+				}
+
+				def.subscribe(
+					{
+						type: def.type,
+						id: fb.id,
+						feedbackId: fb.feedbackId,
+						controlId: fb.controlId,
+						options: fb.options,
+					},
+					context
+				)
 			}
 		}
 	}
@@ -914,13 +1069,29 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		for (const fb of feedbacks) {
 			const def = this.#feedbackDefinitions.get(fb.feedbackId)
 			if (def && def.unsubscribe) {
-				def.unsubscribe({
-					type: def.type,
-					id: fb.id,
-					feedbackId: fb.feedbackId,
-					controlId: fb.controlId,
-					options: fb.options,
-				})
+				const context: CompanionFeedbackContext = {
+					parseVariablesInString: async (text: string): Promise<string> => {
+						const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+							text: text,
+							controlId: fb.controlId,
+							actionInstanceId: undefined,
+							feedbackInstanceId: fb.id,
+						})
+
+						return res.text
+					},
+				}
+
+				def.unsubscribe(
+					{
+						type: def.type,
+						id: fb.id,
+						feedbackId: fb.feedbackId,
+						controlId: fb.controlId,
+						options: fb.options,
+					},
+					context
+				)
 			}
 		}
 	}
