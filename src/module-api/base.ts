@@ -242,7 +242,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				}
 			}
 
-			if (!feedback) {
+			if (!feedback || feedback.disabled) {
 				// Deleted
 				this.#feedbackInstances.delete(id)
 			} else {
@@ -313,7 +313,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				}
 			}
 
-			if (!action) {
+			if (!action || action.disabled) {
 				// Deleted
 				this.#actionInstances.delete(id)
 			} else {
