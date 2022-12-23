@@ -21,6 +21,9 @@ export type SomeCompanionActionInputField =
 	| CompanionInputFieldCheckbox
 	| CompanionInputFieldCustomVariable
 
+/**
+ * Utility functions available in the context of the current action
+ */
 export type CompanionActionContext = CompanionCommonCallbackContext
 
 /**

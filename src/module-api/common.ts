@@ -1,3 +1,6 @@
+/**
+ * Utility functions available in the context of an action/feedback
+ */
 export interface CompanionCommonCallbackContext {
 	/**
 	 * Parse and replace all the variables in a string

@@ -863,6 +863,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 	/**
 	 * Parse and replace all the variables in a string
+	 * Note: You must not use this for feedbacks, as your feedback will not update when the variable changes.
+	 * There is an alternate version of this supplied to each of the action/feedback callbacks that tracks
+	 * usages properly and will retrigger the feedback when the variables change.
 	 * @param text The text to parse
 	 * @returns The string with variables replaced with their values
 	 */
@@ -1114,13 +1117,13 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	/**
 	 * Experimental: This method may change without notice. Do not use!
 	 * Set the value of a custom variable
-	 * @param variableId
+	 * @param variableName
 	 * @param value
 	 * @returns Promise which resolves upon success, or rejects if the variable no longer exists
 	 */
-	setCustomVariableValue(variableId: string, value: CompanionVariableValue): void {
+	setCustomVariableValue(variableName: string, value: CompanionVariableValue): void {
 		this.#ipcWrapper.sendWithNoCb('setCustomVariable', {
-			customVariableId: variableId,
+			customVariableId: variableName,
 			value,
 		})
 	}

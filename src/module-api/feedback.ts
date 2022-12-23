@@ -52,7 +52,7 @@ export interface CompanionFeedbackBooleanEvent extends CompanionFeedbackInfo {
 export interface CompanionFeedbackAdvancedEvent extends CompanionFeedbackInfo {
 	// readonly type: 'advanced'
 
-	/** If control supports an imageBuffer, the dimensions the buffer must be */
+	/** If control supports an imageBuffer, the dimensions the buffer should be */
 	readonly image?: {
 		readonly width: number
 		readonly height: number
@@ -142,6 +142,9 @@ export interface CompanionAdvancedFeedbackDefinition extends CompanionFeedbackDe
 	) => CompanionAdvancedFeedbackResult | Promise<CompanionAdvancedFeedbackResult>
 }
 
+/**
+ * Utility functions available in the context of the current feedback
+ */
 export type CompanionFeedbackContext = CompanionCommonCallbackContext
 
 /**
