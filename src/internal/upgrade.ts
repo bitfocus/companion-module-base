@@ -113,27 +113,31 @@ export function runThroughUpgradeScripts(
 			// Apply changes
 			if (upgradeConfig && res.updatedConfig) config = res.updatedConfig
 
-			for (const [id, action] of Object.entries(res.updatedActions)) {
-				const instance = allActions[id]
-				if (instance) {
-					instance.actionId = action.actionId
-					instance.options = action.options
+			for (const action of res.updatedActions) {
+				if (action) {
+					const instance = allActions[action.id]
+					if (instance) {
+						instance.actionId = action.actionId
+						instance.options = action.options
 
-					// Mark it as changed
-					updatedActions[id] = instance
+						// Mark it as changed
+						updatedActions[action.id] = instance
+					}
 				}
 			}
 
-			for (const [id, feedback] of Object.entries(res.updatedFeedbacks)) {
-				const instance = allFeedbacks[id]
-				if (instance) {
-					instance.feedbackId = feedback.feedbackId
-					instance.options = feedback.options
+			for (const feedback of res.updatedFeedbacks) {
+				if (feedback) {
+					const instance = allFeedbacks[feedback.id]
+					if (instance) {
+						instance.feedbackId = feedback.feedbackId
+						instance.options = feedback.options
 
-					// Mark it as changed
-					updatedFeedbacks[id] = {
-						...instance,
-						style: updatedFeedbacks[id]?.style ?? feedback.style,
+						// Mark it as changed
+						updatedFeedbacks[feedback.id] = {
+							...instance,
+							style: updatedFeedbacks[feedback.id]?.style ?? feedback.style,
+						}
 					}
 				}
 			}
