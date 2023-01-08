@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.2](https://github.com/bitfocus/companion-module-base/compare/v1.0.1...v1.0.2) (2023-01-08)
+
+
+### Bug Fixes
+
+* don't subscribe actions/feedbacks that are disabled during init ([23ff218](https://github.com/bitfocus/companion-module-base/commit/23ff218ef24e347da36854269b649031508dd0b5))
+* upgrade scripts not reporting results back to companion ([75ab637](https://github.com/bitfocus/companion-module-base/commit/75ab637f3672c064bd5ba9f651d876e259e09217))
+
 ## [1.0.1](https://github.com/bitfocus/companion-module-base/compare/v1.0.0...v1.0.1) (2022-12-20)
 
 
