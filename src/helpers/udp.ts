@@ -75,12 +75,10 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 
 		this.#socket = dgram.createSocket('udp4')
 
-		if (this.#options.bind_port || this.#options.bind_ip) {
-			try {
-				this.#socket.bind(this.#options.bind_port || 0, this.#options.bind_ip)
-			} catch (e) {
-				throw new Error(`Unable to bind to ip/port: ${this.#options.bind_ip}:${this.#options.bind_port}`)
-			}
+		try {
+			this.#socket.bind(this.#options.bind_port || 0, this.#options.bind_ip)
+		} catch (e) {
+			throw new Error(`Unable to bind to ip/port: ${this.#options.bind_ip}:${this.#options.bind_port}`)
 		}
 
 		if (this.#options.broadcast) {
