@@ -19,7 +19,7 @@ import { IpcWrapper } from '../host-api/ipc-wrapper'
 import { serializeIsVisibleFn } from './base'
 import debounceFn from 'debounce-fn'
 
-export function convertFeedbackInstanceToEvent(
+function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'advanced',
 	feedback: FeedbackInstance
 ): CompanionFeedbackInfo {
@@ -36,6 +36,11 @@ interface FeedbackInstanceExt extends FeedbackInstance {
 	referencedVariables: string[] | null
 }
 
+interface FeedbackCheckStatus {
+	// whether a recheck has been requested while it was being checked
+	needsRecheck: boolean
+}
+
 export class FeedbackManager {
 	readonly #ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>
 
@@ -44,10 +49,8 @@ export class FeedbackManager {
 
 	// Feedback values waiting to be sent
 	#pendingFeedbackValues = new Map<string, UpdateFeedbackValuesMessage['values'][0]>()
-	// Feedbacks in progress to recheck
-	#feedbacksToRecheck = new Set<string>()
 	// Feedbacks currently being checked
-	#feedbacksBeingChecked = new Set<string>()
+	#feedbacksBeingChecked = new Map<string, FeedbackCheckStatus>()
 
 	// while in a context which provides an alternate parseVariablesInString, we should log when the original is called
 	#parseVariablesContext: string | undefined
@@ -58,6 +61,13 @@ export class FeedbackManager {
 
 	constructor(ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>) {
 		this.#ipcWrapper = ipcWrapper
+	}
+
+	public getDefinitionIds(): string[] {
+		return Array.from(this.#feedbackDefinitions.keys())
+	}
+	public getInstanceIds(): string[] {
+		return Array.from(this.#feedbackInstances.keys())
 	}
 
 	public async handleUpdateFeedbacks(feedbacks: { [id: string]: FeedbackInstance | null | undefined }) {
@@ -134,9 +144,10 @@ export class FeedbackManager {
 				parseVariablesInString: async (text: string): Promise<string> => {
 					const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
 						text: text,
-						controlId: msg.feedback.controlId,
+						// Don't report a source, as this call shouldn't be tracked
+						controlId: undefined,
 						actionInstanceId: undefined,
-						feedbackInstanceId: msg.feedback.id,
+						feedbackInstanceId: undefined,
 					})
 
 					return res.text
@@ -192,11 +203,18 @@ export class FeedbackManager {
 	}
 
 	#triggerCheckFeedback(id: string) {
-		if (this.#feedbacksBeingChecked.has(id)) {
+		const existingRecheck = this.#feedbacksBeingChecked.get(id)
+		if (existingRecheck) {
 			// Already being checked
-			this.#feedbacksToRecheck.add(id)
+			existingRecheck.needsRecheck = true
 			return
 		}
+
+		const feedbackCheckStatus: FeedbackCheckStatus = {
+			needsRecheck: false,
+		}
+		// mark it as being checked
+		this.#feedbacksBeingChecked.set(id, feedbackCheckStatus)
 
 		const feedback = this.#feedbackInstances.get(id)
 
@@ -282,9 +300,13 @@ export class FeedbackManager {
 
 				this.#feedbacksBeingChecked.delete(id)
 
+				// TODO - also recheck if a variable referenced by the result has changed while it was executing
+
 				// If queued, trigger a check
-				if (this.#feedbacksToRecheck.has(id)) {
-					this.#triggerCheckFeedback(id)
+				if (feedbackCheckStatus.needsRecheck) {
+					setImmediate(() => {
+						this.#triggerCheckFeedback(id)
+					})
 				}
 			})
 	}
