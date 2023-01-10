@@ -46,6 +46,7 @@ import { runThroughUpgradeScripts } from '../internal/upgrade.js'
 import { FeedbackManager } from '../internal/feedback.js'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 import { IpcWrapper } from '../host-api/ipc-wrapper.js'
+import { resetErrorsCount } from 'ajv/dist/compile/errors.js'
 
 export interface InstanceBaseOptions {
 	/**
@@ -241,8 +242,15 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
 		if (!skipUpgrades) {
-			// TODO - is this being persisted?
-			runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, undefined)
+			const res = runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, undefined)
+			this.#ipcWrapper
+				.sendWithCb('upgradedItems', {
+					updatedActions: res.updatedActions,
+					updatedFeedbacks: res.updatedFeedbacks,
+				})
+				.catch((e) => {
+					this.log('error', `Failed to save upgraded feedbacks: ${e}`)
+				})
 		}
 
 		this.#feedbackManager.handleUpdateFeedbacks(msg.feedbacks)
@@ -250,12 +258,15 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	private async _handleUpdateActions(msg: UpdateActionInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
 		if (!skipUpgrades) {
-			// const pendingUpgrades = Object.values(msg.actions).filter((act) => typeof act?.upgradeIndex === 'number')
-			// if (pendingUpgrades.length > 0) {
-			// 	//
-			// }
-			// TODO - is this being persisted?
-			runThroughUpgradeScripts(msg.actions, {}, null, this.#upgradeScripts, undefined)
+			const res = runThroughUpgradeScripts(msg.actions, {}, null, this.#upgradeScripts, undefined)
+			this.#ipcWrapper
+				.sendWithCb('upgradedItems', {
+					updatedActions: res.updatedActions,
+					updatedFeedbacks: res.updatedFeedbacks,
+				})
+				.catch((e) => {
+					this.log('error', `Failed to save upgraded actions: ${e}`)
+				})
 		}
 
 		for (const [id, action] of Object.entries(msg.actions)) {

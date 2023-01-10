@@ -3,6 +3,7 @@ import { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '.
 
 /**
  * Run through the upgrade scripts for the given data
+ * Note: this updates the inputs in place, but the result needs to be sent back to companion
  * @param allActions Actions that may need upgrading
  * @param allFeedbacks Feedbacks that may need upgrading
  * @param defaultUpgradeIndex The lastUpgradeIndex of the connection, if known
