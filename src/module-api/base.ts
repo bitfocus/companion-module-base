@@ -4,19 +4,12 @@ import {
 	CompanionActionInfo,
 	CompanionActionContext,
 } from './action.js'
-import {
-	CompanionFeedbackDefinitions,
-	CompanionFeedbackDefinition,
-	CompanionFeedbackButtonStyleResult,
-	CompanionAdvancedFeedbackResult,
-	CompanionFeedbackContext,
-} from './feedback.js'
+import { CompanionFeedbackDefinitions, CompanionFeedbackContext } from './feedback.js'
 import { CompanionPresetDefinitions } from './preset.js'
 import { InstanceStatus, LogLevel } from './enums.js'
 import {
 	ActionInstance,
 	ExecuteActionMessage,
-	FeedbackInstance,
 	GetConfigFieldsMessage,
 	GetConfigFieldsResponseMessage,
 	HandleHttpRequestMessage,
@@ -32,7 +25,6 @@ import {
 	ModuleToHostEventsV0,
 	SendOscMessage,
 	SetActionDefinitionsMessage,
-	SetFeedbackDefinitionsMessage,
 	SetPresetDefinitionsMessage,
 	SetStatusMessage,
 	SetVariableDefinitionsMessage,
@@ -40,7 +32,6 @@ import {
 	StartStopRecordActionsMessage,
 	UpdateActionInstancesMessage,
 	UpdateFeedbackInstancesMessage,
-	UpdateFeedbackValuesMessage,
 	VariablesChangedMessage,
 } from '../host-api/api.js'
 import { literal } from '../util.js'
@@ -52,10 +43,9 @@ import { SomeCompanionConfigField } from './config.js'
 import { CompanionStaticUpgradeScript } from './upgrade.js'
 import { isInstanceBaseProps, serializeIsVisibleFn } from '../internal/base.js'
 import { runThroughUpgradeScripts } from '../internal/upgrade.js'
-import { convertFeedbackInstanceToEvent } from '../internal/feedback.js'
+import { FeedbackManager } from '../internal/feedback.js'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 import { IpcWrapper } from '../host-api/ipc-wrapper.js'
-import debounceFn from 'debounce-fn'
 
 export interface InstanceBaseOptions {
 	/**
@@ -63,10 +53,6 @@ export interface InstanceBaseOptions {
 	 * It is not recommended to set this, unless you know what you are doing.
 	 */
 	disableVariableValidation: boolean
-}
-
-interface FeedbackInstanceExt extends FeedbackInstance {
-	referencedVariables: string[] | null
 }
 
 export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
@@ -78,25 +64,15 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	#initialized: boolean = false
 	#recordingActions: boolean = false
 
-	// Feedback values waiting to be sent
-	#pendingFeedbackValues = new Map<string, UpdateFeedbackValuesMessage['values'][0]>()
-	// Feedbacks in progress to recheck
-	#feedbacksToRecheck = new Set<string>()
-	// Feedbacks currently being checked
-	#feedbacksBeingChecked = new Set<string>()
+	readonly #feedbackManager: FeedbackManager
 
 	readonly #actionDefinitions = new Map<string, CompanionActionDefinition>()
-	readonly #feedbackDefinitions = new Map<string, CompanionFeedbackDefinition>()
 	readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
 
-	readonly #feedbackInstances = new Map<string, FeedbackInstanceExt>()
 	readonly #actionInstances = new Map<string, ActionInstance>()
 	readonly #variableValues = new Map<string, CompanionVariableValue>()
 
 	readonly #options: InstanceBaseOptions
-
-	// while in a context which provides an alternate parseVariablesInString, we should log when the original is called
-	#parseVariablesContext: string | undefined
 
 	public get instanceOptions(): InstanceBaseOptions {
 		return this.#options
@@ -138,6 +114,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		process.on('message', (msg) => {
 			this.#ipcWrapper.receivedMessage(msg as any)
 		})
+
+		this.#feedbackManager = new FeedbackManager(this.#ipcWrapper)
 
 		this.#upgradeScripts = internal.upgradeScripts
 		this.id = internal.id
@@ -263,73 +241,11 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
 		if (!skipUpgrades) {
+			// TODO - is this being persisted?
 			runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, undefined)
 		}
 
-		for (const [id, feedback] of Object.entries(msg.feedbacks)) {
-			const existing = this.#feedbackInstances.get(id)
-			if (existing) {
-				// Call unsubscribe
-				const definition = this.#feedbackDefinitions.get(existing.feedbackId)
-				if (definition?.unsubscribe) {
-					const context: CompanionFeedbackContext = {
-						parseVariablesInString: async (text: string): Promise<string> => {
-							const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-								text: text,
-								controlId: existing.controlId,
-								actionInstanceId: undefined,
-								feedbackInstanceId: existing.id,
-							})
-
-							return res.text
-						},
-					}
-
-					try {
-						definition.unsubscribe(convertFeedbackInstanceToEvent(definition.type, existing), context)
-					} catch (e: any) {
-						console.error(`Feedback unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`)
-					}
-				}
-			}
-
-			if (!feedback || feedback.disabled) {
-				// Deleted
-				this.#feedbackInstances.delete(id)
-			} else {
-				// TODO module-lib - deep freeze the feedback to avoid mutation?
-				this.#feedbackInstances.set(id, {
-					...feedback,
-					referencedVariables: null,
-				})
-
-				// Inserted or updated
-				const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
-				if (definition?.subscribe) {
-					const context: CompanionFeedbackContext = {
-						parseVariablesInString: async (text: string): Promise<string> => {
-							const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-								text: text,
-								controlId: feedback.controlId,
-								actionInstanceId: undefined,
-								feedbackInstanceId: feedback.id,
-							})
-
-							return res.text
-						},
-					}
-
-					try {
-						definition.subscribe(convertFeedbackInstanceToEvent(definition.type, feedback), context)
-					} catch (e: any) {
-						console.error(`Feedback subscribe failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
-					}
-				}
-
-				// update the feedback value
-				this.#triggerCheckFeedback(id)
-			}
-		}
+		this.#feedbackManager.handleUpdateFeedbacks(msg.feedbacks)
 	}
 	private async _handleUpdateActions(msg: UpdateActionInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
@@ -338,6 +254,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			// if (pendingUpgrades.length > 0) {
 			// 	//
 			// }
+			// TODO - is this being persisted?
 			runThroughUpgradeScripts(msg.actions, {}, null, this.#upgradeScripts, undefined)
 		}
 
@@ -455,41 +372,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		}
 	}
 	private async _handleLearnFeedback(msg: LearnFeedbackMessage): Promise<LearnFeedbackResponseMessage> {
-		const definition = this.#feedbackDefinitions.get(msg.feedback.feedbackId)
-		if (definition && definition.learn) {
-			const context: CompanionFeedbackContext = {
-				parseVariablesInString: async (text: string): Promise<string> => {
-					const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-						text: text,
-						controlId: msg.feedback.controlId,
-						actionInstanceId: undefined,
-						feedbackInstanceId: msg.feedback.id,
-					})
-
-					return res.text
-				},
-			}
-
-			const newOptions = await definition.learn(
-				{
-					id: msg.feedback.id,
-					feedbackId: msg.feedback.feedbackId,
-					controlId: msg.feedback.controlId,
-					options: msg.feedback.options,
-					type: definition.type,
-				},
-				context
-			)
-
-			return {
-				options: newOptions,
-			}
-		} else {
-			// Not supported
-			return {
-				options: undefined,
-			}
-		}
+		return this.#feedbackManager.handleLearnFeedback(msg)
 	}
 	private async _handleStartStopRecordActions(msg: StartStopRecordActionsMessage): Promise<void> {
 		if (!msg.recording) {
@@ -515,149 +398,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	private async _handleVariablesChanged(msg: VariablesChangedMessage): Promise<void> {
-		if (!msg.variablesIds.length) return
-
-		const changedFeedbackIds = new Set(msg.variablesIds)
-
-		// Determine the feedbacks that need checking
-		const feedbackIds = new Set<string>()
-		for (const feedback of this.#feedbackInstances.values()) {
-			if (feedback.referencedVariables) {
-				for (const id of feedback.referencedVariables) {
-					if (changedFeedbackIds.has(id)) {
-						feedbackIds.add(feedback.id)
-						break
-					}
-				}
-			}
-		}
-
-		// Trigger all the feedbacks to be rechecked
-		for (const id of feedbackIds) {
-			setImmediate(() => {
-				this.#triggerCheckFeedback(id)
-			})
-		}
+		this.#feedbackManager.handleVariablesChanged(msg)
 	}
-
-	#triggerCheckFeedback(id: string) {
-		if (this.#feedbacksBeingChecked.has(id)) {
-			// Already being checked
-			this.#feedbacksToRecheck.add(id)
-			return
-		}
-
-		const feedback = this.#feedbackInstances.get(id)
-
-		Promise.resolve()
-			.then(async () => {
-				if (feedback) {
-					const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
-
-					let value:
-						| boolean
-						| Promise<boolean>
-						| CompanionAdvancedFeedbackResult
-						| Promise<CompanionAdvancedFeedbackResult>
-						| undefined
-					const newReferencedVariables = new Set<string>()
-
-					// Calculate the new value for the feedback
-					if (definition) {
-						// Set this while the promise starts executing
-						this.#parseVariablesContext = `Feedback ${feedback.feedbackId} (${id})`
-
-						const context: CompanionFeedbackContext = {
-							parseVariablesInString: async (text: string): Promise<string> => {
-								const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-									text: text,
-									controlId: feedback.controlId,
-									actionInstanceId: undefined,
-									feedbackInstanceId: id,
-								})
-
-								// Track which variables were referenced
-								if (res.variableIds && res.variableIds.length) {
-									for (const id of res.variableIds) {
-										newReferencedVariables.add(id)
-									}
-								}
-
-								return res.text
-							},
-						}
-						if (definition.type === 'boolean') {
-							value = definition.callback(
-								{
-									...convertFeedbackInstanceToEvent('boolean', feedback),
-									type: 'boolean',
-									_rawBank: feedback.rawBank,
-								},
-								context
-							)
-						} else {
-							value = definition.callback(
-								{
-									...convertFeedbackInstanceToEvent('advanced', feedback),
-									type: 'advanced',
-									image: feedback.image,
-									_page: feedback.page,
-									_bank: feedback.bank,
-									_rawBank: feedback.rawBank,
-								},
-								context
-							)
-						}
-
-						this.#parseVariablesContext = undefined
-					}
-
-					this.#pendingFeedbackValues.set(id, {
-						id: id,
-						controlId: feedback.controlId,
-						value: await value,
-					})
-					this.#sendFeedbackValues()
-
-					feedback.referencedVariables = newReferencedVariables.size > 0 ? Array.from(newReferencedVariables) : null
-				}
-			})
-			.catch((e) => {
-				console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
-			})
-			.finally(() => {
-				// ensure this.#parseVariablesContext is cleared
-				this.#parseVariablesContext = undefined
-
-				this.#feedbacksBeingChecked.delete(id)
-
-				// If queued, trigger a check
-				if (this.#feedbacksToRecheck.has(id)) {
-					this.#triggerCheckFeedback(id)
-				}
-			})
-	}
-
-	/**
-	 * Send pending feedback values (from this.#pendingFeedbackValues) to companion, with a debounce
-	 */
-	#sendFeedbackValues = debounceFn(
-		(): void => {
-			const newValues = this.#pendingFeedbackValues
-			this.#pendingFeedbackValues = new Map()
-
-			// Send the new values back
-			if (newValues.size > 0) {
-				this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', {
-					values: Array.from(newValues.values()),
-				})
-			}
-		},
-		{
-			wait: 5,
-			maxWait: 25,
-		}
-	)
 
 	/**
 	 * Main initialization function called
@@ -733,28 +475,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param feedbacks The feedback definitions
 	 */
 	setFeedbackDefinitions(feedbacks: CompanionFeedbackDefinitions): void {
-		const hostFeedbacks: SetFeedbackDefinitionsMessage['feedbacks'] = []
-
-		this.#feedbackDefinitions.clear()
-
-		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
-			if (feedback) {
-				hostFeedbacks.push({
-					id: feedbackId,
-					name: feedback.name,
-					description: feedback.description,
-					options: serializeIsVisibleFn(feedback.options),
-					type: feedback.type,
-					defaultStyle: 'defaultStyle' in feedback ? feedback.defaultStyle : undefined,
-					hasLearn: !!feedback.learn,
-				})
-
-				// Remember the definition locally
-				this.#feedbackDefinitions.set(feedbackId, feedback)
-			}
-		}
-
-		this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', { feedbacks: hostFeedbacks })
+		this.#feedbackManager.setFeedbackDefinitions(feedbacks)
 	}
 
 	/**
@@ -870,12 +591,11 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @returns The string with variables replaced with their values
 	 */
 	async parseVariablesInString(text: string): Promise<string> {
-		if (this.#parseVariablesContext) {
+		const currentContext = this.#feedbackManager.parseVariablesContext
+		if (currentContext) {
 			this.log(
 				'debug',
-				`parseVariablesInString called while in: ${
-					this.#parseVariablesContext
-				}. You should use the parseVariablesInString provided to the callback instead`
+				`parseVariablesInString called while in: ${currentContext}. You should use the parseVariablesInString provided to the callback instead`
 			)
 		}
 
@@ -893,19 +613,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param feedbackTypes The feedback types to check
 	 */
 	checkFeedbacks(...feedbackTypes: string[]): void {
-		const types = new Set(feedbackTypes)
-		for (const [id, feedback] of this.#feedbackInstances.entries()) {
-			const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
-			if (definition) {
-				if (types.size > 0 && !types.has(feedback.feedbackId)) {
-					// Not to be considered
-					continue
-				}
-
-				// update the feedback value
-				this.#triggerCheckFeedback(id)
-			}
-		}
+		this.#feedbackManager.checkFeedbacks(feedbackTypes)
 	}
 
 	/**
@@ -913,10 +621,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param feedbackIds The ids of the feedback instances to check
 	 */
 	checkFeedbacksById(...feedbackIds: string[]): void {
-		for (const id of feedbackIds) {
-			// update the feedback value
-			this.#triggerCheckFeedback(id)
-		}
+		this.#feedbackManager.checkFeedbacksById(feedbackIds)
 	}
 
 	/** @deprecated */
@@ -1010,12 +715,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 	/** @deprecated */
 	_getAllFeedbacks() {
-		return Array.from(this.#feedbackInstances.values()).map((fb) => ({
-			id: fb.id,
-			feedbackId: fb.feedbackId,
-			controlId: fb.controlId,
-			options: fb.options,
-		}))
+		return this.#feedbackManager._getAllFeedbacks()
 	}
 
 	/**
@@ -1024,39 +724,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	subscribeFeedbacks(...feedbackIds: string[]): void {
-		let feedbacks = Array.from(this.#feedbackInstances.values())
-
-		const feedbackIdSet = new Set(feedbackIds)
-		if (feedbackIdSet.size) feedbacks = feedbacks.filter((fb) => feedbackIdSet.has(fb.feedbackId))
-
-		for (const fb of feedbacks) {
-			const def = this.#feedbackDefinitions.get(fb.feedbackId)
-			if (def?.subscribe) {
-				const context: CompanionFeedbackContext = {
-					parseVariablesInString: async (text: string): Promise<string> => {
-						const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-							text: text,
-							controlId: fb.controlId,
-							actionInstanceId: undefined,
-							feedbackInstanceId: fb.id,
-						})
-
-						return res.text
-					},
-				}
-
-				def.subscribe(
-					{
-						type: def.type,
-						id: fb.id,
-						feedbackId: fb.feedbackId,
-						controlId: fb.controlId,
-						options: fb.options,
-					},
-					context
-				)
-			}
-		}
+		this.#feedbackManager.subscribeFeedbacks(feedbackIds)
 	}
 	/**
 	 * Call unsubscribe on all currently known placed feedbacks.
@@ -1064,39 +732,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	unsubscribeFeedbacks(...feedbackIds: string[]): void {
-		let feedbacks = Array.from(this.#feedbackInstances.values())
-
-		const feedbackIdSet = new Set(feedbackIds)
-		if (feedbackIdSet.size) feedbacks = feedbacks.filter((fb) => feedbackIdSet.has(fb.feedbackId))
-
-		for (const fb of feedbacks) {
-			const def = this.#feedbackDefinitions.get(fb.feedbackId)
-			if (def && def.unsubscribe) {
-				const context: CompanionFeedbackContext = {
-					parseVariablesInString: async (text: string): Promise<string> => {
-						const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-							text: text,
-							controlId: fb.controlId,
-							actionInstanceId: undefined,
-							feedbackInstanceId: fb.id,
-						})
-
-						return res.text
-					},
-				}
-
-				def.unsubscribe(
-					{
-						type: def.type,
-						id: fb.id,
-						feedbackId: fb.feedbackId,
-						controlId: fb.controlId,
-						options: fb.options,
-					},
-					context
-				)
-			}
-		}
+		this.#feedbackManager.unsubscribeFeedbacks(feedbackIds)
 	}
 
 	/**
