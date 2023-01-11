@@ -5,6 +5,7 @@ SENTRY
 package-lock.json
 .cache
 /build/
+/coverage
 out/
 config
 db

@@ -116,7 +116,11 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			this.#ipcWrapper.receivedMessage(msg as any)
 		})
 
-		this.#feedbackManager = new FeedbackManager(this.#ipcWrapper)
+		this.#feedbackManager = new FeedbackManager(
+			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
+			(msg) => this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', msg),
+			(msg) => this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', msg)
+		)
 
 		this.#upgradeScripts = internal.upgradeScripts
 		this.id = internal.id

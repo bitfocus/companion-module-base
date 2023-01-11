@@ -11,6 +11,8 @@ import {
 	LearnFeedbackMessage,
 	LearnFeedbackResponseMessage,
 	ModuleToHostEventsV0,
+	ParseVariablesInStringMessage,
+	ParseVariablesInStringResponseMessage,
 	SetFeedbackDefinitionsMessage,
 	UpdateFeedbackValuesMessage,
 	VariablesChangedMessage,
@@ -37,12 +39,19 @@ interface FeedbackInstanceExt extends FeedbackInstance {
 }
 
 interface FeedbackCheckStatus {
-	// whether a recheck has been requested while it was being checked
+	/** whether a recheck has been requested while it was being checked */
 	needsRecheck: boolean
+
+	/** the variables that changed while this feedback was being checked  */
+	changedVariables: Set<string>
 }
 
 export class FeedbackManager {
-	readonly #ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>
+	readonly #parseVariablesInString: (
+		msg: ParseVariablesInStringMessage
+	) => Promise<ParseVariablesInStringResponseMessage>
+	readonly #updateFeedbackValues: (msg: UpdateFeedbackValuesMessage) => void
+	readonly #setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => void
 
 	readonly #feedbackDefinitions = new Map<string, CompanionFeedbackDefinition>()
 	readonly #feedbackInstances = new Map<string, FeedbackInstanceExt>()
@@ -59,8 +68,14 @@ export class FeedbackManager {
 		return this.#parseVariablesContext
 	}
 
-	constructor(ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>) {
-		this.#ipcWrapper = ipcWrapper
+	constructor(
+		parseVariablesInString: (msg: ParseVariablesInStringMessage) => Promise<ParseVariablesInStringResponseMessage>,
+		updateFeedbackValues: (msg: UpdateFeedbackValuesMessage) => void,
+		setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => void
+	) {
+		this.#parseVariablesInString = parseVariablesInString
+		this.#updateFeedbackValues = updateFeedbackValues
+		this.#setFeedbackDefinitions = setFeedbackDefinitions
 	}
 
 	public getDefinitionIds(): string[] {
@@ -79,7 +94,7 @@ export class FeedbackManager {
 				if (definition?.unsubscribe) {
 					const context: CompanionFeedbackContext = {
 						parseVariablesInString: async (text: string): Promise<string> => {
-							const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+							const res = await this.#parseVariablesInString({
 								text: text,
 								controlId: existing.controlId,
 								actionInstanceId: undefined,
@@ -113,7 +128,7 @@ export class FeedbackManager {
 				if (definition?.subscribe) {
 					const context: CompanionFeedbackContext = {
 						parseVariablesInString: async (text: string): Promise<string> => {
-							const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+							const res = await this.#parseVariablesInString({
 								text: text,
 								controlId: feedback.controlId,
 								actionInstanceId: undefined,
@@ -142,12 +157,11 @@ export class FeedbackManager {
 		if (definition && definition.learn) {
 			const context: CompanionFeedbackContext = {
 				parseVariablesInString: async (text: string): Promise<string> => {
-					const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+					const res = await this.#parseVariablesInString({
 						text: text,
-						// Don't report a source, as this call shouldn't be tracked
-						controlId: undefined,
+						controlId: msg.feedback.controlId,
 						actionInstanceId: undefined,
-						feedbackInstanceId: undefined,
+						feedbackInstanceId: msg.feedback.id,
 					})
 
 					return res.text
@@ -181,9 +195,19 @@ export class FeedbackManager {
 
 		const changedFeedbackIds = new Set(msg.variablesIds)
 
+		// Any feedbacks being checked should be made aware
+		for (const feedbackStatus of this.#feedbacksBeingChecked.values()) {
+			for (const id of msg.variablesIds) {
+				feedbackStatus.changedVariables.add(id)
+			}
+		}
+
 		// Determine the feedbacks that need checking
 		const feedbackIds = new Set<string>()
 		for (const feedback of this.#feedbackInstances.values()) {
+			// if feedback is currently being checked, it will be handled differently
+			if (this.#feedbacksBeingChecked.has(feedback.id)) continue
+
 			if (feedback.referencedVariables) {
 				for (const id of feedback.referencedVariables) {
 					if (changedFeedbackIds.has(id)) {
@@ -210,86 +234,88 @@ export class FeedbackManager {
 			return
 		}
 
+		const feedback0 = this.#feedbackInstances.get(id)
+		if (!feedback0) return
+
+		const feedback = feedback0
+
 		const feedbackCheckStatus: FeedbackCheckStatus = {
 			needsRecheck: false,
+			changedVariables: new Set(),
 		}
 		// mark it as being checked
 		this.#feedbacksBeingChecked.set(id, feedbackCheckStatus)
 
-		const feedback = this.#feedbackInstances.get(id)
-
 		Promise.resolve()
 			.then(async () => {
-				if (feedback) {
-					const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
+				const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 
-					let value:
-						| boolean
-						| Promise<boolean>
-						| CompanionAdvancedFeedbackResult
-						| Promise<CompanionAdvancedFeedbackResult>
-						| undefined
-					const newReferencedVariables = new Set<string>()
+				let value:
+					| boolean
+					| Promise<boolean>
+					| CompanionAdvancedFeedbackResult
+					| Promise<CompanionAdvancedFeedbackResult>
+					| undefined
+				const newReferencedVariables = new Set<string>()
 
-					// Calculate the new value for the feedback
-					if (definition) {
-						// Set this while the promise starts executing
-						this.#parseVariablesContext = `Feedback ${feedback.feedbackId} (${id})`
+				// Calculate the new value for the feedback
+				if (definition) {
+					// Set this while the promise starts executing
+					this.#parseVariablesContext = `Feedback ${feedback.feedbackId} (${id})`
 
-						const context: CompanionFeedbackContext = {
-							parseVariablesInString: async (text: string): Promise<string> => {
-								const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-									text: text,
-									controlId: feedback.controlId,
-									actionInstanceId: undefined,
-									feedbackInstanceId: id,
-								})
+					const context: CompanionFeedbackContext = {
+						parseVariablesInString: async (text: string): Promise<string> => {
+							const res = await this.#parseVariablesInString({
+								text: text,
+								controlId: feedback.controlId,
+								actionInstanceId: undefined,
+								feedbackInstanceId: id,
+							})
 
-								// Track which variables were referenced
-								if (res.variableIds && res.variableIds.length) {
-									for (const id of res.variableIds) {
-										newReferencedVariables.add(id)
-									}
+							// Track which variables were referenced
+							if (res.variableIds && res.variableIds.length) {
+								for (const id of res.variableIds) {
+									newReferencedVariables.add(id)
 								}
+							}
 
-								return res.text
+							return res.text
+						},
+					}
+					if (definition.type === 'boolean') {
+						value = definition.callback(
+							{
+								...convertFeedbackInstanceToEvent('boolean', feedback),
+								type: 'boolean',
+								_rawBank: feedback.rawBank,
 							},
-						}
-						if (definition.type === 'boolean') {
-							value = definition.callback(
-								{
-									...convertFeedbackInstanceToEvent('boolean', feedback),
-									type: 'boolean',
-									_rawBank: feedback.rawBank,
-								},
-								context
-							)
-						} else {
-							value = definition.callback(
-								{
-									...convertFeedbackInstanceToEvent('advanced', feedback),
-									type: 'advanced',
-									image: feedback.image,
-									_page: feedback.page,
-									_bank: feedback.bank,
-									_rawBank: feedback.rawBank,
-								},
-								context
-							)
-						}
-
-						this.#parseVariablesContext = undefined
+							context
+						)
+					} else {
+						value = definition.callback(
+							{
+								...convertFeedbackInstanceToEvent('advanced', feedback),
+								type: 'advanced',
+								image: feedback.image,
+								_page: feedback.page,
+								_bank: feedback.bank,
+								_rawBank: feedback.rawBank,
+							},
+							context
+						)
 					}
 
-					this.#pendingFeedbackValues.set(id, {
-						id: id,
-						controlId: feedback.controlId,
-						value: await value,
-					})
-					this.#sendFeedbackValues()
-
-					feedback.referencedVariables = newReferencedVariables.size > 0 ? Array.from(newReferencedVariables) : null
+					this.#parseVariablesContext = undefined
 				}
+
+				this.#pendingFeedbackValues.set(id, {
+					id: id,
+					controlId: feedback.controlId,
+					value: await value,
+				})
+				this.#sendFeedbackValues()
+
+				feedback.referencedVariables = newReferencedVariables.size > 0 ? Array.from(newReferencedVariables) : null
 			})
 			.catch((e) => {
 				console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
@@ -298,12 +324,22 @@ export class FeedbackManager {
 				// ensure this.#parseVariablesContext is cleared
 				this.#parseVariablesContext = undefined
 
+				// it is no longer being checked
 				this.#feedbacksBeingChecked.delete(id)
 
-				// TODO - also recheck if a variable referenced by the result has changed while it was executing
+				// Check if any variables changed that should cause an immediate recheck
+				let recheckForVariableChanged = false
+				if (feedback.referencedVariables) {
+					for (const id of feedback.referencedVariables) {
+						if (feedbackCheckStatus.changedVariables.has(id)) {
+							recheckForVariableChanged = true
+							break
+						}
+					}
+				}
 
 				// If queued, trigger a check
-				if (feedbackCheckStatus.needsRecheck) {
+				if (recheckForVariableChanged || feedbackCheckStatus.needsRecheck) {
 					setImmediate(() => {
 						this.#triggerCheckFeedback(id)
 					})
@@ -321,7 +357,7 @@ export class FeedbackManager {
 
 			// Send the new values back
 			if (newValues.size > 0) {
-				this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', {
+				this.#updateFeedbackValues({
 					values: Array.from(newValues.values()),
 				})
 			}
@@ -354,7 +390,7 @@ export class FeedbackManager {
 			}
 		}
 
-		this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', { feedbacks: hostFeedbacks })
+		this.#setFeedbackDefinitions({ feedbacks: hostFeedbacks })
 	}
 
 	checkFeedbacks(feedbackTypes: string[]): void {
@@ -401,7 +437,7 @@ export class FeedbackManager {
 			if (def?.subscribe) {
 				const context: CompanionFeedbackContext = {
 					parseVariablesInString: async (text: string): Promise<string> => {
-						const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+						const res = await this.#parseVariablesInString({
 							text: text,
 							controlId: fb.controlId,
 							actionInstanceId: undefined,
@@ -437,7 +473,7 @@ export class FeedbackManager {
 			if (def && def.unsubscribe) {
 				const context: CompanionFeedbackContext = {
 					parseVariablesInString: async (text: string): Promise<string> => {
-						const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+						const res = await this.#parseVariablesInString({
 							text: text,
 							controlId: fb.controlId,
 							actionInstanceId: undefined,
