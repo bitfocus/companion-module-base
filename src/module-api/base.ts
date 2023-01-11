@@ -8,7 +8,6 @@ import { CompanionFeedbackDefinitions, CompanionFeedbackContext } from './feedba
 import { CompanionPresetDefinitions } from './preset.js'
 import { InstanceStatus, LogLevel } from './enums.js'
 import {
-	ActionInstance,
 	ExecuteActionMessage,
 	GetConfigFieldsMessage,
 	GetConfigFieldsResponseMessage,
@@ -24,7 +23,6 @@ import {
 	LogMessageMessage,
 	ModuleToHostEventsV0,
 	SendOscMessage,
-	SetActionDefinitionsMessage,
 	SetPresetDefinitionsMessage,
 	SetStatusMessage,
 	SetVariableDefinitionsMessage,
@@ -46,6 +44,7 @@ import { runThroughUpgradeScripts } from '../internal/upgrade.js'
 import { FeedbackManager } from '../internal/feedback.js'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 import { IpcWrapper } from '../host-api/ipc-wrapper.js'
+import { ActionManager } from '../internal/actions.js'
 
 export interface InstanceBaseOptions {
 	/**
@@ -64,12 +63,11 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	#initialized: boolean = false
 	#recordingActions: boolean = false
 
+	readonly #actionManager: ActionManager
 	readonly #feedbackManager: FeedbackManager
 
-	readonly #actionDefinitions = new Map<string, CompanionActionDefinition>()
 	readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
 
-	readonly #actionInstances = new Map<string, ActionInstance>()
 	readonly #variableValues = new Map<string, CompanionVariableValue>()
 
 	readonly #options: InstanceBaseOptions
@@ -115,6 +113,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			this.#ipcWrapper.receivedMessage(msg as any)
 		})
 
+		this.#actionManager = new ActionManager(
+			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
+			(msg) => this.#ipcWrapper.sendWithNoCb('setActionDefinitions', msg)
+		)
 		this.#feedbackManager = new FeedbackManager(
 			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', msg),
@@ -211,35 +213,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		})
 	}
 	private async _handleExecuteAction(msg: ExecuteActionMessage): Promise<void> {
-		const actionDefinition = this.#actionDefinitions.get(msg.action.actionId)
-		if (!actionDefinition) throw new Error(`Unknown action: ${msg.action.actionId}`)
-
-		const context: CompanionActionContext = {
-			parseVariablesInString: async (text: string): Promise<string> => {
-				const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-					text: text,
-					controlId: msg.action.controlId,
-					actionInstanceId: msg.action.id,
-					feedbackInstanceId: undefined,
-				})
-
-				return res.text
-			},
-		}
-
-		await actionDefinition.callback(
-			{
-				id: msg.action.id,
-				actionId: msg.action.actionId,
-				controlId: msg.action.controlId,
-				options: msg.action.options,
-
-				_deviceId: msg.deviceId,
-				_page: msg.action.page,
-				_bank: msg.action.bank,
-			},
-			context
-		)
+		return this.#actionManager.handleExecuteAction(msg)
 	}
 
 	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
@@ -256,7 +230,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				})
 		}
 
-		this.#feedbackManager.handleUpdateFeedbacks(msg.feedbacks)
+		await this.#feedbackManager.handleUpdateFeedbacks(msg.feedbacks)
 	}
 	private async _handleUpdateActions(msg: UpdateActionInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
@@ -272,64 +246,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				})
 		}
 
-		for (const [id, action] of Object.entries(msg.actions)) {
-			const existing = this.#actionInstances.get(id)
-			if (existing) {
-				// Call unsubscribe
-				const definition = this.#actionDefinitions.get(existing.actionId)
-				if (definition?.unsubscribe) {
-					const context: CompanionFeedbackContext = {
-						parseVariablesInString: async (text: string): Promise<string> => {
-							const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-								text: text,
-								controlId: existing.controlId,
-								actionInstanceId: existing.id,
-								feedbackInstanceId: undefined,
-							})
-
-							return res.text
-						},
-					}
-
-					try {
-						definition.unsubscribe(existing, context)
-					} catch (e: any) {
-						console.error(`Action unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`)
-					}
-				}
-			}
-
-			if (!action || action.disabled) {
-				// Deleted
-				this.#actionInstances.delete(id)
-			} else {
-				// TODO module-lib - deep freeze the action to avoid mutation?
-				this.#actionInstances.set(id, action)
-
-				// Inserted or updated
-				const definition = this.#actionDefinitions.get(action.actionId)
-				if (definition?.subscribe) {
-					const context: CompanionFeedbackContext = {
-						parseVariablesInString: async (text: string): Promise<string> => {
-							const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-								text: text,
-								controlId: action.controlId,
-								actionInstanceId: action.id,
-								feedbackInstanceId: undefined,
-							})
-
-							return res.text
-						},
-					}
-
-					try {
-						definition.subscribe(action, context)
-					} catch (e: any) {
-						console.error(`Action subscribe failed: ${JSON.stringify(action)} - ${e?.message ?? e} ${e?.stack}`)
-					}
-				}
-			}
-		}
+		await this.#actionManager.handleUpdateActions(msg.actions)
 	}
 
 	private async _handleGetConfigFields(_msg: GetConfigFieldsMessage): Promise<GetConfigFieldsResponseMessage> {
@@ -346,44 +263,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		return { response: res }
 	}
 	private async _handleLearnAction(msg: LearnActionMessage): Promise<LearnActionResponseMessage> {
-		const definition = this.#actionDefinitions.get(msg.action.actionId)
-		if (definition && definition.learn) {
-			const context: CompanionFeedbackContext = {
-				parseVariablesInString: async (text: string): Promise<string> => {
-					const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-						text: text,
-						controlId: msg.action.controlId,
-						actionInstanceId: msg.action.id,
-						feedbackInstanceId: undefined,
-					})
-
-					return res.text
-				},
-			}
-
-			const newOptions = await definition.learn(
-				{
-					id: msg.action.id,
-					actionId: msg.action.actionId,
-					controlId: msg.action.controlId,
-					options: msg.action.options,
-
-					_deviceId: undefined,
-					_page: msg.action.page,
-					_bank: msg.action.bank,
-				},
-				context
-			)
-
-			return {
-				options: newOptions,
-			}
-		} else {
-			// Not supported
-			return {
-				options: undefined,
-			}
-		}
+		return this.#actionManager.handleLearnAction(msg)
 	}
 	private async _handleLearnFeedback(msg: LearnFeedbackMessage): Promise<LearnFeedbackResponseMessage> {
 		return this.#feedbackManager.handleLearnFeedback(msg)
@@ -462,26 +342,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param actions The action definitions
 	 */
 	setActionDefinitions(actions: CompanionActionDefinitions): void {
-		const hostActions: SetActionDefinitionsMessage['actions'] = []
-
-		this.#actionDefinitions.clear()
-
-		for (const [actionId, action] of Object.entries(actions)) {
-			if (action) {
-				hostActions.push({
-					id: actionId,
-					name: action.name,
-					description: action.description,
-					options: serializeIsVisibleFn(action.options),
-					hasLearn: !!action.learn,
-				})
-
-				// Remember the definition locally
-				this.#actionDefinitions.set(actionId, action)
-			}
-		}
-
-		this.#ipcWrapper.sendWithNoCb('setActionDefinitions', { actions: hostActions })
+		this.#actionManager.setActionDefinitions(actions)
 	}
 
 	/**
@@ -640,12 +501,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 	/** @deprecated */
 	_getAllActions() {
-		return Array.from(this.#actionInstances.values()).map((act) => ({
-			id: act.id,
-			actionId: act.actionId,
-			controlId: act.controlId,
-			options: act.options,
-		}))
+		return this.#actionManager._getAllActions()
 	}
 
 	/**
@@ -654,38 +510,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param actionIds The actionIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	subscribeActions(...actionIds: string[]): void {
-		let actions = Array.from(this.#actionInstances.values())
-
-		const actionIdSet = new Set(actionIds)
-		if (actionIdSet.size) actions = actions.filter((fb) => actionIdSet.has(fb.actionId))
-
-		for (const act of actions) {
-			const def = this.#actionDefinitions.get(act.actionId)
-			if (def?.subscribe) {
-				const context: CompanionActionContext = {
-					parseVariablesInString: async (text: string): Promise<string> => {
-						const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-							text: text,
-							controlId: act.controlId,
-							actionInstanceId: act.id,
-							feedbackInstanceId: undefined,
-						})
-
-						return res.text
-					},
-				}
-
-				def.subscribe(
-					{
-						id: act.id,
-						actionId: act.actionId,
-						controlId: act.controlId,
-						options: act.options,
-					},
-					context
-				)
-			}
-		}
+		this.#actionManager.subscribeActions(actionIds)
 	}
 	/**
 	 * Call unsubscribe on all currently known placed actions.
@@ -693,38 +518,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param actionIds The actionIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	unsubscribeActions(...actionIds: string[]): void {
-		let actions = Array.from(this.#actionInstances.values())
-
-		const actionIdSet = new Set(actionIds)
-		if (actionIdSet.size) actions = actions.filter((fb) => actionIdSet.has(fb.actionId))
-
-		for (const act of actions) {
-			const def = this.#actionDefinitions.get(act.actionId)
-			if (def && def.unsubscribe) {
-				const context: CompanionActionContext = {
-					parseVariablesInString: async (text: string): Promise<string> => {
-						const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-							text: text,
-							controlId: act.controlId,
-							actionInstanceId: act.id,
-							feedbackInstanceId: undefined,
-						})
-
-						return res.text
-					},
-				}
-
-				def.unsubscribe(
-					{
-						id: act.id,
-						actionId: act.actionId,
-						controlId: act.controlId,
-						options: act.options,
-					},
-					context
-				)
-			}
-		}
+		this.#actionManager.unsubscribeActions(actionIds)
 	}
 
 	/** @deprecated */
