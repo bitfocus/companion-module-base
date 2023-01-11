@@ -1,14 +1,11 @@
+import { CompanionActionDefinitions, CompanionActionInfo } from './action'
+import { CompanionFeedbackDefinitions } from './feedback'
+import { CompanionPresetDefinitions } from './preset'
+import { InstanceStatus, LogLevel } from './enums'
 import {
-	CompanionActionDefinition,
-	CompanionActionDefinitions,
-	CompanionActionInfo,
-	CompanionActionContext,
-} from './action.js'
-import { CompanionFeedbackDefinitions, CompanionFeedbackContext } from './feedback.js'
-import { CompanionPresetDefinitions } from './preset.js'
-import { InstanceStatus, LogLevel } from './enums.js'
-import {
+	ActionInstance,
 	ExecuteActionMessage,
+	FeedbackInstance,
 	GetConfigFieldsMessage,
 	GetConfigFieldsResponseMessage,
 	HandleHttpRequestMessage,
@@ -31,20 +28,20 @@ import {
 	UpdateActionInstancesMessage,
 	UpdateFeedbackInstancesMessage,
 	VariablesChangedMessage,
-} from '../host-api/api.js'
-import { literal } from '../util.js'
-import { InstanceBaseShared } from '../instance-base.js'
+} from '../host-api/api'
+import { literal } from '../util'
+import { InstanceBaseShared } from '../instance-base'
 import PQueue from 'p-queue'
-import { CompanionVariableDefinition, CompanionVariableValue, CompanionVariableValues } from './variable.js'
-import { OSCSomeArguments } from '../common/osc.js'
-import { SomeCompanionConfigField } from './config.js'
-import { CompanionStaticUpgradeScript } from './upgrade.js'
-import { isInstanceBaseProps, serializeIsVisibleFn } from '../internal/base.js'
-import { runThroughUpgradeScripts } from '../internal/upgrade.js'
-import { FeedbackManager } from '../internal/feedback.js'
-import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
-import { IpcWrapper } from '../host-api/ipc-wrapper.js'
-import { ActionManager } from '../internal/actions.js'
+import { CompanionVariableDefinition, CompanionVariableValue, CompanionVariableValues } from './variable'
+import { OSCSomeArguments } from '../common/osc'
+import { SomeCompanionConfigField } from './config'
+import { CompanionStaticUpgradeScript } from './upgrade'
+import { isInstanceBaseProps, serializeIsVisibleFn } from '../internal/base'
+import { runThroughUpgradeScripts } from '../internal/upgrade'
+import { FeedbackManager } from '../internal/feedback'
+import { CompanionHTTPRequest, CompanionHTTPResponse } from './http'
+import { IpcWrapper } from '../host-api/ipc-wrapper'
+import { ActionManager } from '../internal/actions'
 
 export interface InstanceBaseOptions {
 	/**
@@ -60,8 +57,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	public readonly id: string
 
 	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })
-	#initialized: boolean = false
-	#recordingActions: boolean = false
+	#initialized = false
+	#recordingActions = false
 
 	readonly #actionManager: ActionManager
 	readonly #feedbackManager: FeedbackManager
@@ -115,12 +112,14 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		this.#actionManager = new ActionManager(
 			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
-			(msg) => this.#ipcWrapper.sendWithNoCb('setActionDefinitions', msg)
+			(msg) => this.#ipcWrapper.sendWithNoCb('setActionDefinitions', msg),
+			this.log.bind(this)
 		)
 		this.#feedbackManager = new FeedbackManager(
 			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', msg),
-			(msg) => this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', msg)
+			(msg) => this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', msg),
+			this.log.bind(this)
 		)
 
 		this.#upgradeScripts = internal.upgradeScripts
@@ -184,8 +183,12 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 			setImmediate(() => {
 				// Subscribe all of the actions and feedbacks
-				this._handleUpdateActions({ actions }, true)
-				this._handleUpdateFeedbacks({ feedbacks }, true)
+				this._handleUpdateActions({ actions }, true).catch((e) => {
+					this.log('error', `Receive actions failed: ${e}`)
+				})
+				this._handleUpdateFeedbacks({ feedbacks }, true).catch((e) => {
+					this.log('error', `Receive feedbacks failed: ${e}`)
+				})
 			})
 
 			return {
@@ -230,7 +233,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				})
 		}
 
-		await this.#feedbackManager.handleUpdateFeedbacks(msg.feedbacks)
+		this.#feedbackManager.handleUpdateFeedbacks(msg.feedbacks)
 	}
 	private async _handleUpdateActions(msg: UpdateActionInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
@@ -246,7 +249,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				})
 		}
 
-		await this.#actionManager.handleUpdateActions(msg.actions)
+		this.#actionManager.handleUpdateActions(msg.actions)
 	}
 
 	private async _handleGetConfigFields(_msg: GetConfigFieldsMessage): Promise<GetConfigFieldsResponseMessage> {
@@ -500,7 +503,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	/** @deprecated */
-	_getAllActions() {
+	_getAllActions(): Pick<ActionInstance, 'id' | 'actionId' | 'controlId' | 'options'>[] {
 		return this.#actionManager._getAllActions()
 	}
 
@@ -522,7 +525,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	/** @deprecated */
-	_getAllFeedbacks() {
+	_getAllFeedbacks(): Pick<FeedbackInstance, 'id' | 'feedbackId' | 'controlId' | 'options'>[] {
 		return this.#feedbackManager._getAllFeedbacks()
 	}
 

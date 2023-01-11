@@ -1,6 +1,6 @@
-import { CompanionFeedbackButtonStyleResult } from './feedback.js'
-import { CompanionOptionValues } from './input.js'
-import { CompanionButtonStyleProps } from './style.js'
+import { CompanionFeedbackButtonStyleResult } from './feedback'
+import { CompanionOptionValues } from './input'
+import { CompanionButtonStyleProps } from './style'
 
 /**
  * The options for a button preset

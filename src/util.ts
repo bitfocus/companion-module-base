@@ -1,7 +1,7 @@
 /**
  * Assert a certain type for a literal.
  * This can be used to correctly type parts of an object in TypeScript.
- * 
+ *
  * ### Example
  *  ```ts
  * {
@@ -11,7 +11,7 @@
  *  })
  * }
  * ```
- * 
+ *
  * instead of this
  * ```ts
  * {
@@ -39,9 +39,9 @@ export interface RgbComponents {
 
 /**
  * Combine separate RGB component to one single value to be used in feedback styles
- * 
+ *
  * ### Example
- * 
+ *
  * ```js
  * defaultStyle: {
  *  bgcolor: combineRgb(255, 0, 0),
@@ -62,18 +62,4 @@ export function splitRgb(dec: number): RgbComponents {
 		g: (dec & 0x00ff00) >> 8,
 		b: dec & 0x0000ff,
 	}
-}
-
-export function from15to32Keys(key: number): number {
-	key = key - 1
-
-	let rows = Math.floor(key / 5)
-	let col = (key % 5) + 1
-	let res = rows * 8 + col
-
-	if (res >= 32) {
-		//debug('from15to32: assert: old config had bigger pages than expected')
-		return 31
-	}
-	return res
 }

@@ -1,16 +1,17 @@
-import PTimeout from 'p-timeout'
-import { HostApiNodeJsIpc, HostToModuleEventsInit, ModuleToHostEventsInit } from './host-api/versions.js'
+/* eslint-disable no-process-exit */
+import { HostApiNodeJsIpc, HostToModuleEventsInit, ModuleToHostEventsInit } from './host-api/versions'
 import fs from 'fs/promises'
-import { ModuleManifest } from './manifest.js'
-import { CompanionStaticUpgradeScript } from './module-api/upgrade.js'
-import { InstanceBase } from './module-api/base.js'
-import { literal } from './util.js'
-import { InstanceBaseProps } from './internal/base.js'
+import { ModuleManifest } from './manifest'
+import { CompanionStaticUpgradeScript } from './module-api/upgrade'
+import { InstanceBase } from './module-api/base'
+import { literal } from './util'
+import { InstanceBaseProps } from './internal/base'
 import { init, configureScope } from '@sentry/node'
 import '@sentry/tracing'
-import { IpcWrapper } from './host-api/ipc-wrapper.js'
+import { IpcWrapper } from './host-api/ipc-wrapper'
 
 let hasEntrypoint = false
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let moduleInstance: InstanceBase<any> | undefined
 
 export type InstanceConstructor<TConfig> = new (internal: unknown) => InstanceBase<TConfig>
@@ -38,8 +39,8 @@ export function runEntrypoint<TConfig>(
 	factory: InstanceConstructor<TConfig>,
 	upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]
 ): void {
-	Promise.resolve().then(async () => {
-		try {
+	Promise.resolve()
+		.then(async () => {
 			// const pkgJsonStr = (await fs.readFile(path.join(__dirname, '../package.json'))).toString()
 			// const pkgJson = JSON.parse(pkgJsonStr)
 			// if (!pkgJson || pkgJson.name !== '@companion-module/base')
@@ -129,10 +130,10 @@ export function runEntrypoint<TConfig>(
 					process.exit(11)
 				}
 			)
-		} catch (e: any) {
+		})
+		.catch((e) => {
 			console.error(`Failed to startup module:`)
 			console.error(e.stack || e.message)
 			process.exit(1)
-		}
-	})
+		})
 }

@@ -4,7 +4,6 @@ import {
 	SetActionDefinitionsMessage,
 	ActionInstance,
 	ExecuteActionMessage,
-	UpdateActionInstancesMessage,
 	LearnActionMessage,
 	LearnActionResponseMessage,
 } from '../host-api/api'
@@ -12,25 +11,39 @@ import {
 	CompanionActionContext,
 	CompanionActionDefinition,
 	CompanionActionDefinitions,
+	CompanionActionInfo,
 	CompanionFeedbackContext,
+	LogLevel,
 } from '../module-api'
 import { serializeIsVisibleFn } from './base'
+
+function convertActionInstanceToEvent(action: ActionInstance): CompanionActionInfo {
+	return {
+		id: action.id,
+		actionId: action.actionId,
+		controlId: action.controlId,
+		options: action.options,
+	}
+}
 
 export class ActionManager {
 	readonly #parseVariablesInString: (
 		msg: ParseVariablesInStringMessage
 	) => Promise<ParseVariablesInStringResponseMessage>
 	readonly #setActionDefinitions: (msg: SetActionDefinitionsMessage) => void
+	readonly #log: (level: LogLevel, message: string) => void
 
 	readonly #actionDefinitions = new Map<string, CompanionActionDefinition>()
 	readonly #actionInstances = new Map<string, ActionInstance>()
 
 	constructor(
 		parseVariablesInString: (msg: ParseVariablesInStringMessage) => Promise<ParseVariablesInStringResponseMessage>,
-		setActionDefinitions: (msg: SetActionDefinitionsMessage) => void
+		setActionDefinitions: (msg: SetActionDefinitionsMessage) => void,
+		log: (level: LogLevel, message: string) => void
 	) {
 		this.#parseVariablesInString = parseVariablesInString
 		this.#setActionDefinitions = setActionDefinitions
+		this.#log = log
 	}
 
 	public async handleExecuteAction(msg: ExecuteActionMessage): Promise<void> {
@@ -65,7 +78,7 @@ export class ActionManager {
 		)
 	}
 
-	public async handleUpdateActions(actions: { [id: string]: ActionInstance | null | undefined }): Promise<void> {
+	public handleUpdateActions(actions: { [id: string]: ActionInstance | null | undefined }): void {
 		for (const [id, action] of Object.entries(actions)) {
 			const existing = this.#actionInstances.get(id)
 			if (existing) {
@@ -85,11 +98,12 @@ export class ActionManager {
 						},
 					}
 
-					try {
-						definition.unsubscribe(existing, context)
-					} catch (e: any) {
-						console.error(`Action unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`)
-					}
+					Promise.resolve(definition.unsubscribe(convertActionInstanceToEvent(existing), context)).catch((e) => {
+						this.#log(
+							'error',
+							`Action unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`
+						)
+					})
 				}
 			}
 
@@ -116,11 +130,9 @@ export class ActionManager {
 						},
 					}
 
-					try {
-						definition.subscribe(action, context)
-					} catch (e: any) {
-						console.error(`Action subscribe failed: ${JSON.stringify(action)} - ${e?.message ?? e} ${e?.stack}`)
-					}
+					Promise.resolve(definition.subscribe(convertActionInstanceToEvent(action), context)).catch((e) => {
+						this.#log('error', `Action subscribe failed: ${JSON.stringify(action)} - ${e?.message ?? e} ${e?.stack}`)
+					})
 				}
 			}
 		}
@@ -191,7 +203,7 @@ export class ActionManager {
 	}
 
 	/** @deprecated */
-	_getAllActions() {
+	_getAllActions(): Pick<ActionInstance, 'id' | 'actionId' | 'controlId' | 'options'>[] {
 		return Array.from(this.#actionInstances.values()).map((act) => ({
 			id: act.id,
 			actionId: act.actionId,
@@ -222,15 +234,9 @@ export class ActionManager {
 					},
 				}
 
-				def.subscribe(
-					{
-						id: act.id,
-						actionId: act.actionId,
-						controlId: act.controlId,
-						options: act.options,
-					},
-					context
-				)
+				Promise.resolve(def.subscribe(convertActionInstanceToEvent(act), context)).catch((e) => {
+					this.#log('error', `Action subscribe failed: ${JSON.stringify(act)} - ${e?.message ?? e} ${e?.stack}`)
+				})
 			}
 		}
 	}
@@ -257,15 +263,9 @@ export class ActionManager {
 					},
 				}
 
-				def.unsubscribe(
-					{
-						id: act.id,
-						actionId: act.actionId,
-						controlId: act.controlId,
-						options: act.options,
-					},
-					context
-				)
+				Promise.resolve(def.unsubscribe(convertActionInstanceToEvent(act), context)).catch((e) => {
+					this.#log('error', `Action unsubscribe failed: ${JSON.stringify(act)} - ${e?.message ?? e} ${e?.stack}`)
+				})
 			}
 		}
 	}

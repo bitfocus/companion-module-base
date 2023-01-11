@@ -14,6 +14,7 @@ export enum InstanceStatus {
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug'
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Regex {
 	// TODO - are all of these needed?
 	export const IP = '/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/'

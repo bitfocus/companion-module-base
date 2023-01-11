@@ -1,7 +1,7 @@
-export * from './manifest.js'
-export * from './module-api/index.js'
-export * from './common/osc.js'
-export { literal, combineRgb, splitRgb, RgbComponents, assertNever } from './util.js'
-export * from './helpers/index.js'
+export * from './manifest'
+export * from './module-api/index'
+export * from './common/osc'
+export { literal, combineRgb, splitRgb, RgbComponents, assertNever } from './util'
+export * from './helpers/index'
 
-export { runEntrypoint } from './entrypoint.js'
+export { runEntrypoint } from './entrypoint'

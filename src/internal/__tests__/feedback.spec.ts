@@ -1,6 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
-	ModuleToHostEventsV0,
-	HostToModuleEventsV0,
 	FeedbackInstance,
 	ParseVariablesInStringResponseMessage,
 	ParseVariablesInStringMessage,
@@ -9,7 +8,7 @@ import {
 } from '../../host-api/api'
 import { runAllTimers } from '../../__mocks__/util'
 import { FeedbackManager } from '../feedback'
-import { CompanionFeedbackDefinition } from '../../module-api'
+import { CompanionFeedbackDefinition, LogLevel } from '../../module-api'
 import { literal } from '../../util'
 
 const mockDefinitionId = 'definition0'
@@ -53,6 +52,10 @@ const unimplementedFunction = () => {
 	throw new Error('Not implemented')
 }
 
+const mockLogger = (level: LogLevel, msg: string) => {
+	console.log(`${level}: ${msg}`)
+}
+
 describe('FeedbackManager', () => {
 	beforeEach(() => {
 		jest.useFakeTimers()
@@ -62,7 +65,12 @@ describe('FeedbackManager', () => {
 
 	it('set definitions', () => {
 		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const manager = new FeedbackManager(unimplementedAsyncFunction, unimplementedFunction, mockSetFeedbackDefinitions)
+		const manager = new FeedbackManager(
+			unimplementedAsyncFunction,
+			unimplementedFunction,
+			mockSetFeedbackDefinitions,
+			mockLogger
+		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 		expect(manager.getInstanceIds()).toHaveLength(0)
 
@@ -107,7 +115,8 @@ describe('FeedbackManager', () => {
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
-			mockSetFeedbackDefinitions
+			mockSetFeedbackDefinitions,
+			mockLogger
 		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 		expect(manager.getInstanceIds()).toHaveLength(0)
@@ -168,7 +177,12 @@ describe('FeedbackManager', () => {
 
 	it('instance: disabled', async () => {
 		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const manager = new FeedbackManager(unimplementedAsyncFunction, unimplementedFunction, mockSetFeedbackDefinitions)
+		const manager = new FeedbackManager(
+			unimplementedAsyncFunction,
+			unimplementedFunction,
+			mockSetFeedbackDefinitions,
+			mockLogger
+		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 		expect(manager.getInstanceIds()).toHaveLength(0)
 
@@ -209,7 +223,8 @@ describe('FeedbackManager', () => {
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
-			mockSetFeedbackDefinitions
+			mockSetFeedbackDefinitions,
+			mockLogger
 		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 		expect(manager.getInstanceIds()).toHaveLength(0)
@@ -261,7 +276,8 @@ describe('FeedbackManager', () => {
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
-			mockSetFeedbackDefinitions
+			mockSetFeedbackDefinitions,
+			mockLogger
 		)
 
 		const mockDefinition: CompanionFeedbackDefinition = {
@@ -395,7 +411,7 @@ describe('FeedbackManager', () => {
 			expect(mockDefinition2.callback).toHaveBeenCalledTimes(0)
 
 			// check all
-			await manager.handleVariablesChanged({
+			manager.handleVariablesChanged({
 				variablesIds: ['not-used'],
 			})
 
@@ -414,7 +430,12 @@ describe('FeedbackManager', () => {
 		)
 		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
 		const mockUpdateFeedbackValues = jest.fn((_msg: UpdateFeedbackValuesMessage) => null)
-		const manager = new FeedbackManager(mockParseVariables, mockUpdateFeedbackValues, mockSetFeedbackDefinitions)
+		const manager = new FeedbackManager(
+			mockParseVariables,
+			mockUpdateFeedbackValues,
+			mockSetFeedbackDefinitions,
+			mockLogger
+		)
 
 		const mockDefinition: CompanionFeedbackDefinition = {
 			type: 'boolean',
@@ -487,7 +508,7 @@ describe('FeedbackManager', () => {
 			expect(mockDefinition2.callback).toHaveBeenCalledTimes(0)
 
 			// check all
-			await manager.handleVariablesChanged({
+			manager.handleVariablesChanged({
 				variablesIds: ['var-unused'],
 			})
 
@@ -503,7 +524,7 @@ describe('FeedbackManager', () => {
 			expect(mockDefinition2.callback).toHaveBeenCalledTimes(0)
 
 			// check all
-			await manager.handleVariablesChanged({
+			manager.handleVariablesChanged({
 				variablesIds: ['var-abcdef'],
 			})
 
@@ -528,7 +549,7 @@ describe('FeedbackManager', () => {
 			expect(mockDefinition2.callback).toHaveBeenCalledTimes(0)
 
 			// check all
-			await manager.handleVariablesChanged({
+			manager.handleVariablesChanged({
 				variablesIds: ['all'],
 			})
 
@@ -562,7 +583,12 @@ describe('FeedbackManager', () => {
 		)
 		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
 		const mockUpdateFeedbackValues = jest.fn((_msg: UpdateFeedbackValuesMessage) => null)
-		const manager = new FeedbackManager(mockParseVariables, mockUpdateFeedbackValues, mockSetFeedbackDefinitions)
+		const manager = new FeedbackManager(
+			mockParseVariables,
+			mockUpdateFeedbackValues,
+			mockSetFeedbackDefinitions,
+			mockLogger
+		)
 
 		let waitForManualResolve = false
 		let nextResolve: (() => void) | undefined
@@ -766,7 +792,7 @@ describe('FeedbackManager', () => {
 			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
 
 			// change what variables will be found
-			mockParseVariables.mockImplementationOnce(async (msg: ParseVariablesInStringMessage) =>
+			mockParseVariables.mockImplementationOnce(async (_msg: ParseVariablesInStringMessage) =>
 				literal<ParseVariablesInStringResponseMessage>({
 					text: `res - tmp`,
 					variableIds: ['all', `different`],
@@ -810,7 +836,12 @@ describe('FeedbackManager', () => {
 
 	it('learn values: no implementation', async () => {
 		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const manager = new FeedbackManager(unimplementedAsyncFunction, unimplementedFunction, mockSetFeedbackDefinitions)
+		const manager = new FeedbackManager(
+			unimplementedAsyncFunction,
+			unimplementedFunction,
+			mockSetFeedbackDefinitions,
+			mockLogger
+		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 
 		const mockDefinitionId = 'definition0'
@@ -834,7 +865,12 @@ describe('FeedbackManager', () => {
 
 	it('learn values: with implementation', async () => {
 		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const manager = new FeedbackManager(unimplementedAsyncFunction, unimplementedFunction, mockSetFeedbackDefinitions)
+		const manager = new FeedbackManager(
+			unimplementedAsyncFunction,
+			unimplementedFunction,
+			mockSetFeedbackDefinitions,
+			mockLogger
+		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 
 		const mockDefinitionId = 'definition0'
@@ -869,14 +905,19 @@ describe('FeedbackManager', () => {
 	})
 
 	it('learn values: with implementation using variables', async () => {
-		const mockParseVariables = jest.fn(async (msg: ParseVariablesInStringMessage) =>
+		const mockParseVariables = jest.fn(async (_msg: ParseVariablesInStringMessage) =>
 			literal<ParseVariablesInStringResponseMessage>({
 				text: 'res str',
 				variableIds: ['abc', '123'],
 			})
 		)
 		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const manager = new FeedbackManager(mockParseVariables, unimplementedFunction, mockSetFeedbackDefinitions)
+		const manager = new FeedbackManager(
+			mockParseVariables,
+			unimplementedFunction,
+			mockSetFeedbackDefinitions,
+			mockLogger
+		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 
 		const mockDefinitionId = 'definition0'
@@ -930,7 +971,8 @@ describe('FeedbackManager', () => {
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
-			mockSetFeedbackDefinitions
+			mockSetFeedbackDefinitions,
+			mockLogger
 		)
 
 		const mockDefinition: CompanionFeedbackDefinition = {
@@ -938,8 +980,8 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(async (fb, ctx) => false),
-			subscribe: jest.fn(async (fb, ctx) => {}),
+			callback: jest.fn(async (_fb, _ctx) => false),
+			subscribe: jest.fn(async (_fb, _ctx) => undefined),
 		}
 
 		beforeAll(async () => {
@@ -1062,7 +1104,8 @@ describe('FeedbackManager', () => {
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
-			mockSetFeedbackDefinitions
+			mockSetFeedbackDefinitions,
+			mockLogger
 		)
 
 		const mockDefinition: CompanionFeedbackDefinition = {
@@ -1070,8 +1113,8 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(async (fb, ctx) => false),
-			unsubscribe: jest.fn(async (fb, ctx) => {}),
+			callback: jest.fn(async (_fb, _ctx) => false),
+			unsubscribe: jest.fn(async (_fb, _ctx) => undefined),
 		}
 
 		beforeAll(async () => {

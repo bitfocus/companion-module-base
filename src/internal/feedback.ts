@@ -17,6 +17,7 @@ import {
 } from '../host-api/api'
 import { serializeIsVisibleFn } from './base'
 import debounceFn from 'debounce-fn'
+import { LogLevel } from '../module-api/enums'
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'advanced',
@@ -49,6 +50,7 @@ export class FeedbackManager {
 	) => Promise<ParseVariablesInStringResponseMessage>
 	readonly #updateFeedbackValues: (msg: UpdateFeedbackValuesMessage) => void
 	readonly #setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => void
+	readonly #log: (level: LogLevel, message: string) => void
 
 	readonly #feedbackDefinitions = new Map<string, CompanionFeedbackDefinition>()
 	readonly #feedbackInstances = new Map<string, FeedbackInstanceExt>()
@@ -68,11 +70,13 @@ export class FeedbackManager {
 	constructor(
 		parseVariablesInString: (msg: ParseVariablesInStringMessage) => Promise<ParseVariablesInStringResponseMessage>,
 		updateFeedbackValues: (msg: UpdateFeedbackValuesMessage) => void,
-		setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => void
+		setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => void,
+		log: (level: LogLevel, message: string) => void
 	) {
 		this.#parseVariablesInString = parseVariablesInString
 		this.#updateFeedbackValues = updateFeedbackValues
 		this.#setFeedbackDefinitions = setFeedbackDefinitions
+		this.#log = log
 	}
 
 	public getDefinitionIds(): string[] {
@@ -82,7 +86,7 @@ export class FeedbackManager {
 		return Array.from(this.#feedbackInstances.keys())
 	}
 
-	public async handleUpdateFeedbacks(feedbacks: { [id: string]: FeedbackInstance | null | undefined }) {
+	public handleUpdateFeedbacks(feedbacks: { [id: string]: FeedbackInstance | null | undefined }): void {
 		for (const [id, feedback] of Object.entries(feedbacks)) {
 			const existing = this.#feedbackInstances.get(id)
 			if (existing) {
@@ -102,11 +106,14 @@ export class FeedbackManager {
 						},
 					}
 
-					try {
+					Promise.resolve(
 						definition.unsubscribe(convertFeedbackInstanceToEvent(definition.type, existing), context)
-					} catch (e: any) {
-						console.error(`Feedback unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`)
-					}
+					).catch((e) => {
+						this.#log(
+							'error',
+							`Feedback unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`
+						)
+					})
 				}
 			}
 
@@ -136,11 +143,14 @@ export class FeedbackManager {
 						},
 					}
 
-					try {
+					Promise.resolve(
 						definition.subscribe(convertFeedbackInstanceToEvent(definition.type, feedback), context)
-					} catch (e: any) {
-						console.error(`Feedback subscribe failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
-					}
+					).catch((e) => {
+						this.#log(
+							'error',
+							`Feedback subscribe failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`
+						)
+					})
 				}
 
 				// update the feedback value
@@ -187,7 +197,7 @@ export class FeedbackManager {
 		}
 	}
 
-	public async handleVariablesChanged(msg: VariablesChangedMessage): Promise<void> {
+	public handleVariablesChanged(msg: VariablesChangedMessage): void {
 		if (!msg.variablesIds.length) return
 
 		const changedFeedbackIds = new Set(msg.variablesIds)
@@ -414,7 +424,7 @@ export class FeedbackManager {
 	}
 
 	/** @deprecated */
-	_getAllFeedbacks() {
+	_getAllFeedbacks(): Pick<FeedbackInstance, 'id' | 'feedbackId' | 'controlId' | 'options'>[] {
 		return Array.from(this.#feedbackInstances.values()).map((fb) => ({
 			id: fb.id,
 			feedbackId: fb.feedbackId,
@@ -445,16 +455,9 @@ export class FeedbackManager {
 					},
 				}
 
-				def.subscribe(
-					{
-						type: def.type,
-						id: fb.id,
-						feedbackId: fb.feedbackId,
-						controlId: fb.controlId,
-						options: fb.options,
-					},
-					context
-				)
+				Promise.resolve(def.subscribe(convertFeedbackInstanceToEvent(def.type, fb), context)).catch((e) => {
+					this.#log('error', `Feedback subscribe failed: ${JSON.stringify(fb)} - ${e?.message ?? e} ${e?.stack}`)
+				})
 			}
 		}
 	}
@@ -481,16 +484,9 @@ export class FeedbackManager {
 					},
 				}
 
-				def.unsubscribe(
-					{
-						type: def.type,
-						id: fb.id,
-						feedbackId: fb.feedbackId,
-						controlId: fb.controlId,
-						options: fb.options,
-					},
-					context
-				)
+				Promise.resolve(def.unsubscribe(convertFeedbackInstanceToEvent(def.type, fb), context)).catch((e) => {
+					this.#log('error', `Feedback unsubscribe failed: ${JSON.stringify(fb)} - ${e?.message ?? e} ${e?.stack}`)
+				})
 			}
 		}
 	}

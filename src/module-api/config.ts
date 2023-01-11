@@ -7,7 +7,7 @@ import {
 	CompanionInputFieldNumber,
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
-} from './input.js'
+} from './input'
 
 /**
  * A configuration input field

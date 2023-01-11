@@ -1,5 +1,5 @@
 const orgSetTimeout = setTimeout
-export async function runAllTimers() {
+export async function runAllTimers(): Promise<void> {
 	// Run all timers, and wait, multiple times.
 	// This is to allow timers AND internal promises to resolve in inner functions
 	for (let i = 0; i < 50; i++) {
@@ -8,7 +8,7 @@ export async function runAllTimers() {
 	}
 }
 
-export async function runTimersUntilNow() {
+export async function runTimersUntilNow(): Promise<void> {
 	// Run all timers, and wait, multiple times.
 	// This is to allow timers AND internal promises to resolve in inner functions
 	for (let i = 0; i < 50; i++) {

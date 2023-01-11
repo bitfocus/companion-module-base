@@ -5,15 +5,15 @@
  * This will allow for cleaner and more stable apis which can both evolve at different rates
  */
 
-import { CompanionFeedbackButtonStyleResult, SomeCompanionFeedbackInputField } from '../module-api/feedback.js'
-import { OSCSomeArguments } from '../common/osc.js'
-import { SomeCompanionConfigField } from '../module-api/config.js'
-import { LogLevel, InstanceStatus } from '../module-api/enums.js'
-import { InputValue, CompanionOptionValues, CompanionInputFieldBase } from '../module-api/input.js'
-import { CompanionButtonPresetDefinition } from '../module-api/preset.js'
-import { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http.js'
-import { SomeCompanionActionInputField } from '../module-api/action.js'
-import { CompanionVariableValue } from '../module-api/variable.js'
+import { CompanionFeedbackButtonStyleResult, SomeCompanionFeedbackInputField } from '../module-api/feedback'
+import { OSCSomeArguments } from '../common/osc'
+import { SomeCompanionConfigField } from '../module-api/config'
+import { LogLevel, InstanceStatus } from '../module-api/enums'
+import { InputValue, CompanionOptionValues, CompanionInputFieldBase } from '../module-api/input'
+import { CompanionButtonPresetDefinition } from '../module-api/preset'
+import { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http'
+import { SomeCompanionActionInputField } from '../module-api/action'
+import { CompanionVariableValue } from '../module-api/variable'
 
 export interface ModuleToHostEventsV0 {
 	'log-message': (msg: LogMessageMessage) => never

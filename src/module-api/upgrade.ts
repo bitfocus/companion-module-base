@@ -1,5 +1,5 @@
-import { CompanionFeedbackButtonStyleResult } from './feedback.js'
-import { CompanionOptionValues } from './input.js'
+import { CompanionFeedbackButtonStyleResult } from './feedback'
+import { CompanionOptionValues } from './input'
 
 /** For future use */
 export type CompanionUpgradeContext = unknown

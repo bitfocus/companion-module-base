@@ -1,5 +1,5 @@
-import { CompanionStaticUpgradeScript } from '../module-api/upgrade.js'
-import { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '../host-api/api.js'
+import { CompanionStaticUpgradeScript } from '../module-api/upgrade'
+import { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '../host-api/api'
 
 /**
  * Run through the upgrade scripts for the given data
@@ -17,7 +17,9 @@ export function runThroughUpgradeScripts(
 	defaultUpgradeIndex: number | null,
 	upgradeScripts: CompanionStaticUpgradeScript<any>[],
 	config: unknown | undefined
-) {
+): UpgradedDataResponseMessage & {
+	updatedConfig: unknown | undefined
+} {
 	// First we group all the actions and feedbacks by the version they currently are.
 	const pendingUpgradesGrouped = new Map<number, { feedbacks: string[]; actions: string[] }>()
 	const getPendingSpecialUpgrade = (i: number) => {
@@ -43,8 +45,8 @@ export function runThroughUpgradeScripts(
 		}
 	}
 
-	let updatedFeedbacks: UpgradedDataResponseMessage['updatedFeedbacks'] = {}
-	let updatedActions: UpgradedDataResponseMessage['updatedActions'] = {}
+	const updatedFeedbacks: UpgradedDataResponseMessage['updatedFeedbacks'] = {}
+	const updatedActions: UpgradedDataResponseMessage['updatedActions'] = {}
 
 	if (pendingUpgradesGrouped.size > 0) {
 		// Figure out which script to run first. Note: we track the last index we ran, so it is offset by one

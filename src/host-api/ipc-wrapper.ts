@@ -57,7 +57,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 		name: T,
 		msg: ParamsIfReturnIsValid<TOutbound[T]>[0],
 		defaultResponse?: () => Error,
-		timeout: number = 0
+		timeout = 0
 	): Promise<ReturnType<TOutbound[T]>> {
 		if (timeout <= 0) timeout = this.#defaultTimeout
 

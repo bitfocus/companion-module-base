@@ -1,4 +1,4 @@
-import { CompanionCommonCallbackContext } from './common.js'
+import { CompanionCommonCallbackContext } from './common'
 import {
 	CompanionOptionValues,
 	CompanionInputFieldStaticText,
@@ -8,8 +8,8 @@ import {
 	CompanionInputFieldMultiDropdown,
 	CompanionInputFieldNumber,
 	CompanionInputFieldTextInput,
-} from './input.js'
-import { CompanionButtonStyleProps } from './style.js'
+} from './input'
+import { CompanionButtonStyleProps } from './style'
 
 export type SomeCompanionFeedbackInputField =
 	| CompanionInputFieldStaticText
@@ -101,12 +101,12 @@ export interface CompanionFeedbackDefinitionBase {
 	 * Called to report the existence of a feedback.
 	 * Useful to ensure necessary data is loaded
 	 */
-	subscribe?: (feedback: CompanionFeedbackInfo, context: CompanionFeedbackContext) => void
+	subscribe?: (feedback: CompanionFeedbackInfo, context: CompanionFeedbackContext) => void | Promise<void>
 	/**
 	 * Called to report an feedback has been edited/removed.
 	 * Useful to cleanup subscriptions setup in subscribe
 	 */
-	unsubscribe?: (feedback: CompanionFeedbackInfo, context: CompanionFeedbackContext) => void
+	unsubscribe?: (feedback: CompanionFeedbackInfo, context: CompanionFeedbackContext) => void | Promise<void>
 
 	/**
 	 * The user requested to 'learn' the values for this feedback.

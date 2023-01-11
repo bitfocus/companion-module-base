@@ -1,4 +1,4 @@
-import { CompanionCommonCallbackContext } from './common.js'
+import { CompanionCommonCallbackContext } from './common'
 import {
 	CompanionOptionValues,
 	CompanionInputFieldCheckbox,
@@ -9,7 +9,7 @@ import {
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
 	CompanionInputFieldCustomVariable,
-} from './input.js'
+} from './input'
 
 export type SomeCompanionActionInputField =
 	| CompanionInputFieldStaticText

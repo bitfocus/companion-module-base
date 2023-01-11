@@ -34,9 +34,9 @@ export interface CompanionInputFieldBase {
 
 /**
  * A static un-editable line of text
- * 
+ *
  * Available for actions/feedbacks/config
- * 
+ *
  * ### Example
  * ```js
  * {

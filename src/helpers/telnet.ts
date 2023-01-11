@@ -19,7 +19,7 @@ import EventEmitter from 'eventemitter3'
 import { Transform, TransformCallback, TransformOptions } from 'stream'
 import { TCPHelper, TCPHelperEvents, TCPHelperOptions } from './tcp'
 
-const NULL = 0
+// const NULL = 0
 const DATA = 0
 const SE = 240
 const SB = 250
@@ -79,7 +79,7 @@ export class TelnetHelper extends EventEmitter<TelnetHelperEvents> {
 	connect(): boolean {
 		return this.#tcp.connect()
 	}
-	send(message: string | Buffer): Promise<boolean> {
+	async send(message: string | Buffer): Promise<boolean> {
 		return this.#tcp.send(message)
 	}
 
