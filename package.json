@@ -11,7 +11,8 @@
 		"build:ts": "tsc -p tsconfig.build.json",
 		"build:json-schema": "json2ts --input assets/manifest.schema.json --output generated/manifest.d.ts",
 		"build:ajv-validator": "ajv compile -s assets/manifest.schema.json -o generated/validate_manifest.js",
-		"docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/index.ts --excludePrivate --theme default --out docs"
+		"docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/index.ts --excludePrivate --theme default --out docs",
+		"unit": "jest"
 	},
 	"engines": {
 		"node": "^18.12"
