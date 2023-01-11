@@ -1,16 +1,15 @@
-import { CompanionActionDefinition, CompanionActionDefinitions, CompanionActionInfo } from './action.js'
 import {
-	CompanionFeedbackDefinitions,
-	CompanionFeedbackDefinition,
-	CompanionFeedbackButtonStyleResult,
-	CompanionAdvancedFeedbackResult,
-} from './feedback.js'
+	CompanionActionDefinition,
+	CompanionActionDefinitions,
+	CompanionActionInfo,
+	CompanionActionContext,
+} from './action.js'
+import { CompanionFeedbackDefinitions, CompanionFeedbackContext } from './feedback.js'
 import { CompanionPresetDefinitions } from './preset.js'
 import { InstanceStatus, LogLevel } from './enums.js'
 import {
 	ActionInstance,
 	ExecuteActionMessage,
-	FeedbackInstance,
 	GetConfigFieldsMessage,
 	GetConfigFieldsResponseMessage,
 	HandleHttpRequestMessage,
@@ -26,7 +25,6 @@ import {
 	ModuleToHostEventsV0,
 	SendOscMessage,
 	SetActionDefinitionsMessage,
-	SetFeedbackDefinitionsMessage,
 	SetPresetDefinitionsMessage,
 	SetStatusMessage,
 	SetVariableDefinitionsMessage,
@@ -34,7 +32,7 @@ import {
 	StartStopRecordActionsMessage,
 	UpdateActionInstancesMessage,
 	UpdateFeedbackInstancesMessage,
-	UpdateFeedbackValuesMessage,
+	VariablesChangedMessage,
 } from '../host-api/api.js'
 import { literal } from '../util.js'
 import { InstanceBaseShared } from '../instance-base.js'
@@ -45,7 +43,7 @@ import { SomeCompanionConfigField } from './config.js'
 import { CompanionStaticUpgradeScript } from './upgrade.js'
 import { isInstanceBaseProps, serializeIsVisibleFn } from '../internal/base.js'
 import { runThroughUpgradeScripts } from '../internal/upgrade.js'
-import { convertFeedbackInstanceToEvent, callFeedbackOnDefinition } from '../internal/feedback.js'
+import { FeedbackManager } from '../internal/feedback.js'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 import { IpcWrapper } from '../host-api/ipc-wrapper.js'
 
@@ -66,11 +64,11 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	#initialized: boolean = false
 	#recordingActions: boolean = false
 
+	readonly #feedbackManager: FeedbackManager
+
 	readonly #actionDefinitions = new Map<string, CompanionActionDefinition>()
-	readonly #feedbackDefinitions = new Map<string, CompanionFeedbackDefinition>()
 	readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
 
-	readonly #feedbackInstances = new Map<string, FeedbackInstance>()
 	readonly #actionInstances = new Map<string, ActionInstance>()
 	readonly #variableValues = new Map<string, CompanionVariableValue>()
 
@@ -106,6 +104,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				learnAction: this._handleLearnAction.bind(this),
 				learnFeedback: this._handleLearnFeedback.bind(this),
 				startStopRecordActions: this._handleStartStopRecordActions.bind(this),
+				variablesChanged: this._handleVariablesChanged.bind(this),
 			},
 			(msg) => {
 				process.send!(msg)
@@ -115,6 +114,12 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		process.on('message', (msg) => {
 			this.#ipcWrapper.receivedMessage(msg as any)
 		})
+
+		this.#feedbackManager = new FeedbackManager(
+			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
+			(msg) => this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', msg),
+			(msg) => this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', msg)
+		)
 
 		this.#upgradeScripts = internal.upgradeScripts
 		this.id = internal.id
@@ -209,94 +214,62 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		const actionDefinition = this.#actionDefinitions.get(msg.action.actionId)
 		if (!actionDefinition) throw new Error(`Unknown action: ${msg.action.actionId}`)
 
-		await actionDefinition.callback({
-			id: msg.action.id,
-			actionId: msg.action.actionId,
-			controlId: msg.action.controlId,
-			options: msg.action.options,
+		const context: CompanionActionContext = {
+			parseVariablesInString: async (text: string): Promise<string> => {
+				const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+					text: text,
+					controlId: msg.action.controlId,
+					actionInstanceId: msg.action.id,
+					feedbackInstanceId: undefined,
+				})
 
-			_deviceId: msg.deviceId,
-			_page: msg.action.page,
-			_bank: msg.action.bank,
-		})
+				return res.text
+			},
+		}
+
+		await actionDefinition.callback(
+			{
+				id: msg.action.id,
+				actionId: msg.action.actionId,
+				controlId: msg.action.controlId,
+				options: msg.action.options,
+
+				_deviceId: msg.deviceId,
+				_page: msg.action.page,
+				_bank: msg.action.bank,
+			},
+			context
+		)
 	}
-	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
-		const newValues: UpdateFeedbackValuesMessage['values'] = []
 
+	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
 		if (!skipUpgrades) {
-			runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, undefined)
+			const res = runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, undefined)
+			this.#ipcWrapper
+				.sendWithCb('upgradedItems', {
+					updatedActions: res.updatedActions,
+					updatedFeedbacks: res.updatedFeedbacks,
+				})
+				.catch((e) => {
+					this.log('error', `Failed to save upgraded feedbacks: ${e}`)
+				})
 		}
 
-		for (const [id, feedback] of Object.entries(msg.feedbacks)) {
-			const existing = this.#feedbackInstances.get(id)
-			if (existing) {
-				// Call unsubscribe
-				const definition = this.#feedbackDefinitions.get(existing.feedbackId)
-				if (definition?.unsubscribe) {
-					try {
-						definition.unsubscribe(convertFeedbackInstanceToEvent(definition.type, existing))
-					} catch (e: any) {
-						console.error(`Feedback unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`)
-					}
-				}
-			}
-
-			if (!feedback || feedback.disabled) {
-				// Deleted
-				this.#feedbackInstances.delete(id)
-			} else {
-				// TODO module-lib - deep freeze the feedback to avoid mutation?
-				this.#feedbackInstances.set(id, feedback)
-
-				// Inserted or updated
-				const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
-				if (definition?.subscribe) {
-					try {
-						definition.subscribe(convertFeedbackInstanceToEvent(definition.type, feedback))
-					} catch (e: any) {
-						console.error(`Feedback subscribe failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
-					}
-				}
-
-				// Calculate the new value for the feedback
-				if (definition) {
-					let value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined
-					try {
-						value = callFeedbackOnDefinition(definition, feedback)
-					} catch (e: any) {
-						console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
-					}
-
-					if (value instanceof Promise) {
-						value = undefined
-						console.error(`Feedback check returned Promise, this is not allowed: ${JSON.stringify(feedback)}`)
-					}
-
-					newValues.push({
-						id: id,
-						controlId: feedback.controlId,
-						value: value,
-					})
-				}
-			}
-		}
-
-		// Send the new values back
-		if (Object.keys(newValues).length > 0) {
-			this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', {
-				values: newValues,
-			})
-		}
+		this.#feedbackManager.handleUpdateFeedbacks(msg.feedbacks)
 	}
 	private async _handleUpdateActions(msg: UpdateActionInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
 		if (!skipUpgrades) {
-			// const pendingUpgrades = Object.values(msg.actions).filter((act) => typeof act?.upgradeIndex === 'number')
-			// if (pendingUpgrades.length > 0) {
-			// 	//
-			// }
-			runThroughUpgradeScripts(msg.actions, {}, null, this.#upgradeScripts, undefined)
+			const res = runThroughUpgradeScripts(msg.actions, {}, null, this.#upgradeScripts, undefined)
+			this.#ipcWrapper
+				.sendWithCb('upgradedItems', {
+					updatedActions: res.updatedActions,
+					updatedFeedbacks: res.updatedFeedbacks,
+				})
+				.catch((e) => {
+					this.log('error', `Failed to save upgraded actions: ${e}`)
+				})
 		}
 
 		for (const [id, action] of Object.entries(msg.actions)) {
@@ -305,8 +278,21 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				// Call unsubscribe
 				const definition = this.#actionDefinitions.get(existing.actionId)
 				if (definition?.unsubscribe) {
+					const context: CompanionFeedbackContext = {
+						parseVariablesInString: async (text: string): Promise<string> => {
+							const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+								text: text,
+								controlId: existing.controlId,
+								actionInstanceId: existing.id,
+								feedbackInstanceId: undefined,
+							})
+
+							return res.text
+						},
+					}
+
 					try {
-						definition.unsubscribe(existing)
+						definition.unsubscribe(existing, context)
 					} catch (e: any) {
 						console.error(`Action unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`)
 					}
@@ -323,8 +309,21 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				// Inserted or updated
 				const definition = this.#actionDefinitions.get(action.actionId)
 				if (definition?.subscribe) {
+					const context: CompanionFeedbackContext = {
+						parseVariablesInString: async (text: string): Promise<string> => {
+							const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+								text: text,
+								controlId: action.controlId,
+								actionInstanceId: action.id,
+								feedbackInstanceId: undefined,
+							})
+
+							return res.text
+						},
+					}
+
 					try {
-						definition.subscribe(action)
+						definition.subscribe(action, context)
 					} catch (e: any) {
 						console.error(`Action subscribe failed: ${JSON.stringify(action)} - ${e?.message ?? e} ${e?.stack}`)
 					}
@@ -349,16 +348,32 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	private async _handleLearnAction(msg: LearnActionMessage): Promise<LearnActionResponseMessage> {
 		const definition = this.#actionDefinitions.get(msg.action.actionId)
 		if (definition && definition.learn) {
-			const newOptions = await definition.learn({
-				id: msg.action.id,
-				actionId: msg.action.actionId,
-				controlId: msg.action.controlId,
-				options: msg.action.options,
+			const context: CompanionFeedbackContext = {
+				parseVariablesInString: async (text: string): Promise<string> => {
+					const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+						text: text,
+						controlId: msg.action.controlId,
+						actionInstanceId: msg.action.id,
+						feedbackInstanceId: undefined,
+					})
 
-				_deviceId: undefined,
-				_page: msg.action.page,
-				_bank: msg.action.bank,
-			})
+					return res.text
+				},
+			}
+
+			const newOptions = await definition.learn(
+				{
+					id: msg.action.id,
+					actionId: msg.action.actionId,
+					controlId: msg.action.controlId,
+					options: msg.action.options,
+
+					_deviceId: undefined,
+					_page: msg.action.page,
+					_bank: msg.action.bank,
+				},
+				context
+			)
 
 			return {
 				options: newOptions,
@@ -371,25 +386,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		}
 	}
 	private async _handleLearnFeedback(msg: LearnFeedbackMessage): Promise<LearnFeedbackResponseMessage> {
-		const definition = this.#feedbackDefinitions.get(msg.feedback.feedbackId)
-		if (definition && definition.learn) {
-			const newOptions = await definition.learn({
-				id: msg.feedback.id,
-				feedbackId: msg.feedback.feedbackId,
-				controlId: msg.feedback.controlId,
-				options: msg.feedback.options,
-				type: definition.type,
-			})
-
-			return {
-				options: newOptions,
-			}
-		} else {
-			// Not supported
-			return {
-				options: undefined,
-			}
-		}
+		return this.#feedbackManager.handleLearnFeedback(msg)
 	}
 	private async _handleStartStopRecordActions(msg: StartStopRecordActionsMessage): Promise<void> {
 		if (!msg.recording) {
@@ -412,6 +409,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		this.#recordingActions = msg.recording
 
 		this.handleStartStopRecordActions(this.#recordingActions)
+	}
+
+	private async _handleVariablesChanged(msg: VariablesChangedMessage): Promise<void> {
+		this.#feedbackManager.handleVariablesChanged(msg)
 	}
 
 	/**
@@ -488,28 +489,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param feedbacks The feedback definitions
 	 */
 	setFeedbackDefinitions(feedbacks: CompanionFeedbackDefinitions): void {
-		const hostFeedbacks: SetFeedbackDefinitionsMessage['feedbacks'] = []
-
-		this.#feedbackDefinitions.clear()
-
-		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
-			if (feedback) {
-				hostFeedbacks.push({
-					id: feedbackId,
-					name: feedback.name,
-					description: feedback.description,
-					options: serializeIsVisibleFn(feedback.options),
-					type: feedback.type,
-					defaultStyle: 'defaultStyle' in feedback ? feedback.defaultStyle : undefined,
-					hasLearn: !!feedback.learn,
-				})
-
-				// Remember the definition locally
-				this.#feedbackDefinitions.set(feedbackId, feedback)
-			}
-		}
-
-		this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', { feedbacks: hostFeedbacks })
+		this.#feedbackManager.setFeedbackDefinitions(feedbacks)
 	}
 
 	/**
@@ -618,11 +598,27 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 	/**
 	 * Parse and replace all the variables in a string
+	 * Note: You must not use this for feedbacks, as your feedback will not update when the variable changes.
+	 * There is an alternate version of this supplied to each of the action/feedback callbacks that tracks
+	 * usages properly and will retrigger the feedback when the variables change.
 	 * @param text The text to parse
 	 * @returns The string with variables replaced with their values
 	 */
 	async parseVariablesInString(text: string): Promise<string> {
-		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', { text: text })
+		const currentContext = this.#feedbackManager.parseVariablesContext
+		if (currentContext) {
+			this.log(
+				'debug',
+				`parseVariablesInString called while in: ${currentContext}. You should use the parseVariablesInString provided to the callback instead`
+			)
+		}
+
+		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+			text: text,
+			controlId: undefined,
+			actionInstanceId: undefined,
+			feedbackInstanceId: undefined,
+		})
 		return res.text
 	}
 
@@ -631,45 +627,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param feedbackTypes The feedback types to check
 	 */
 	checkFeedbacks(...feedbackTypes: string[]): void {
-		const newValues: UpdateFeedbackValuesMessage['values'] = []
-
-		const types = new Set(feedbackTypes)
-		for (const [id, feedback] of this.#feedbackInstances.entries()) {
-			const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
-			if (definition) {
-				if (types.size > 0 && !types.has(feedback.feedbackId)) {
-					// Not to be considered
-					continue
-				}
-
-				try {
-					// Calculate the new value for the feedback
-					let value: CompanionAdvancedFeedbackResult | boolean | undefined = callFeedbackOnDefinition(
-						definition,
-						feedback
-					)
-					if (value instanceof Promise) {
-						value = undefined
-						console.error(`Feedback check returned Promise, this is not allowed: ${JSON.stringify(feedback)}`)
-					}
-
-					newValues.push({
-						id: id,
-						controlId: feedback.controlId,
-						value: value,
-					})
-				} catch (e: any) {
-					console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
-				}
-			}
-		}
-
-		// Send the new values back
-		if (Object.keys(newValues).length > 0) {
-			this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', {
-				values: newValues,
-			})
-		}
+		this.#feedbackManager.checkFeedbacks(feedbackTypes)
 	}
 
 	/**
@@ -677,41 +635,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param feedbackIds The ids of the feedback instances to check
 	 */
 	checkFeedbacksById(...feedbackIds: string[]): void {
-		const newValues: UpdateFeedbackValuesMessage['values'] = []
-
-		for (const id of feedbackIds) {
-			const feedback = this.#feedbackInstances.get(id)
-			const definition = feedback && this.#feedbackDefinitions.get(feedback.feedbackId)
-			if (feedback && definition) {
-				try {
-					// Calculate the new value for the feedback
-					let value: CompanionAdvancedFeedbackResult | boolean | undefined = callFeedbackOnDefinition(
-						definition,
-						feedback
-					)
-					if (value instanceof Promise) {
-						value = undefined
-						console.error(`Feedback check returned Promise, this is not allowed: ${JSON.stringify(feedback)}`)
-					}
-
-					// Calculate the new value for the feedback
-					newValues.push({
-						id: id,
-						controlId: feedback.controlId,
-						value: value,
-					})
-				} catch (e: any) {
-					console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
-				}
-			}
-		}
-
-		// Send the new values back
-		if (Object.keys(newValues).length > 0) {
-			this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', {
-				values: newValues,
-			})
-		}
+		this.#feedbackManager.checkFeedbacksById(feedbackIds)
 	}
 
 	/** @deprecated */
@@ -738,12 +662,28 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		for (const act of actions) {
 			const def = this.#actionDefinitions.get(act.actionId)
 			if (def?.subscribe) {
-				def.subscribe({
-					id: act.id,
-					actionId: act.actionId,
-					controlId: act.controlId,
-					options: act.options,
-				})
+				const context: CompanionActionContext = {
+					parseVariablesInString: async (text: string): Promise<string> => {
+						const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+							text: text,
+							controlId: act.controlId,
+							actionInstanceId: act.id,
+							feedbackInstanceId: undefined,
+						})
+
+						return res.text
+					},
+				}
+
+				def.subscribe(
+					{
+						id: act.id,
+						actionId: act.actionId,
+						controlId: act.controlId,
+						options: act.options,
+					},
+					context
+				)
 			}
 		}
 	}
@@ -761,24 +701,35 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		for (const act of actions) {
 			const def = this.#actionDefinitions.get(act.actionId)
 			if (def && def.unsubscribe) {
-				def.unsubscribe({
-					id: act.id,
-					actionId: act.actionId,
-					controlId: act.controlId,
-					options: act.options,
-				})
+				const context: CompanionActionContext = {
+					parseVariablesInString: async (text: string): Promise<string> => {
+						const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+							text: text,
+							controlId: act.controlId,
+							actionInstanceId: act.id,
+							feedbackInstanceId: undefined,
+						})
+
+						return res.text
+					},
+				}
+
+				def.unsubscribe(
+					{
+						id: act.id,
+						actionId: act.actionId,
+						controlId: act.controlId,
+						options: act.options,
+					},
+					context
+				)
 			}
 		}
 	}
 
 	/** @deprecated */
 	_getAllFeedbacks() {
-		return Array.from(this.#feedbackInstances.values()).map((fb) => ({
-			id: fb.id,
-			feedbackId: fb.feedbackId,
-			controlId: fb.controlId,
-			options: fb.options,
-		}))
+		return this.#feedbackManager._getAllFeedbacks()
 	}
 
 	/**
@@ -787,23 +738,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	subscribeFeedbacks(...feedbackIds: string[]): void {
-		let feedbacks = Array.from(this.#feedbackInstances.values())
-
-		const feedbackIdSet = new Set(feedbackIds)
-		if (feedbackIdSet.size) feedbacks = feedbacks.filter((fb) => feedbackIdSet.has(fb.feedbackId))
-
-		for (const fb of feedbacks) {
-			const def = this.#feedbackDefinitions.get(fb.feedbackId)
-			if (def?.subscribe) {
-				def.subscribe({
-					type: def.type,
-					id: fb.id,
-					feedbackId: fb.feedbackId,
-					controlId: fb.controlId,
-					options: fb.options,
-				})
-			}
-		}
+		this.#feedbackManager.subscribeFeedbacks(feedbackIds)
 	}
 	/**
 	 * Call unsubscribe on all currently known placed feedbacks.
@@ -811,23 +746,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	unsubscribeFeedbacks(...feedbackIds: string[]): void {
-		let feedbacks = Array.from(this.#feedbackInstances.values())
-
-		const feedbackIdSet = new Set(feedbackIds)
-		if (feedbackIdSet.size) feedbacks = feedbacks.filter((fb) => feedbackIdSet.has(fb.feedbackId))
-
-		for (const fb of feedbacks) {
-			const def = this.#feedbackDefinitions.get(fb.feedbackId)
-			if (def && def.unsubscribe) {
-				def.unsubscribe({
-					type: def.type,
-					id: fb.id,
-					feedbackId: fb.feedbackId,
-					controlId: fb.controlId,
-					options: fb.options,
-				})
-			}
-		}
+		this.#feedbackManager.unsubscribeFeedbacks(feedbackIds)
 	}
 
 	/**
@@ -848,13 +767,13 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	/**
 	 * Experimental: This method may change without notice. Do not use!
 	 * Set the value of a custom variable
-	 * @param variableId
+	 * @param variableName
 	 * @param value
 	 * @returns Promise which resolves upon success, or rejects if the variable no longer exists
 	 */
-	setCustomVariableValue(variableId: string, value: CompanionVariableValue): void {
+	setCustomVariableValue(variableName: string, value: CompanionVariableValue): void {
 		this.#ipcWrapper.sendWithNoCb('setCustomVariable', {
-			customVariableId: variableId,
+			customVariableId: variableName,
 			value,
 		})
 	}

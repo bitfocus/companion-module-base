@@ -1,3 +1,4 @@
+import { CompanionCommonCallbackContext } from './common.js'
 import {
 	CompanionOptionValues,
 	CompanionInputFieldStaticText,
@@ -51,7 +52,7 @@ export interface CompanionFeedbackBooleanEvent extends CompanionFeedbackInfo {
 export interface CompanionFeedbackAdvancedEvent extends CompanionFeedbackInfo {
 	// readonly type: 'advanced'
 
-	/** If control supports an imageBuffer, the dimensions the buffer must be */
+	/** If control supports an imageBuffer, the dimensions the buffer should be */
 	readonly image?: {
 		readonly width: number
 		readonly height: number
@@ -100,18 +101,19 @@ export interface CompanionFeedbackDefinitionBase {
 	 * Called to report the existence of a feedback.
 	 * Useful to ensure necessary data is loaded
 	 */
-	subscribe?: (feedback: CompanionFeedbackInfo) => void
+	subscribe?: (feedback: CompanionFeedbackInfo, context: CompanionFeedbackContext) => void
 	/**
 	 * Called to report an feedback has been edited/removed.
 	 * Useful to cleanup subscriptions setup in subscribe
 	 */
-	unsubscribe?: (feedback: CompanionFeedbackInfo) => void
+	unsubscribe?: (feedback: CompanionFeedbackInfo, context: CompanionFeedbackContext) => void
 
 	/**
 	 * The user requested to 'learn' the values for this feedback.
 	 */
 	learn?: (
-		action: CompanionFeedbackInfo
+		action: CompanionFeedbackInfo,
+		context: CompanionFeedbackContext
 	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 }
 
@@ -124,7 +126,7 @@ export interface CompanionBooleanFeedbackDefinition extends CompanionFeedbackDef
 	/** The default style properties for this feedback */
 	defaultStyle: Partial<CompanionFeedbackButtonStyleResult>
 	/** Called to get the feedback value */
-	callback: (feedback: CompanionFeedbackBooleanEvent) => boolean
+	callback: (feedback: CompanionFeedbackBooleanEvent, context: CompanionFeedbackContext) => boolean | Promise<boolean>
 }
 
 /**
@@ -134,8 +136,16 @@ export interface CompanionAdvancedFeedbackDefinition extends CompanionFeedbackDe
 	/** The type of the feedback */
 	type: 'advanced'
 	/** Called to get the feedback value */
-	callback: (feedback: CompanionFeedbackAdvancedEvent) => CompanionAdvancedFeedbackResult
+	callback: (
+		feedback: CompanionFeedbackAdvancedEvent,
+		context: CompanionFeedbackContext
+	) => CompanionAdvancedFeedbackResult | Promise<CompanionAdvancedFeedbackResult>
 }
+
+/**
+ * Utility functions available in the context of the current feedback
+ */
+export type CompanionFeedbackContext = CompanionCommonCallbackContext
 
 /**
  * The definition of some feedback
