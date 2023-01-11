@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/bitfocus/companion-module-base/compare/v1.0.2...v1.1.0) (2023-01-11)
+
+
+### Features
+
+* allow feedbacks to return a promise ([#32](https://github.com/bitfocus/companion-module-base/issues/32)) ([8923a5e](https://github.com/bitfocus/companion-module-base/commit/8923a5ecd2dfeb520880b049374fabad6e1f7260))
+
+
+### Bug Fixes
+
+* udp socket not reporting as listening ([51d5bbf](https://github.com/bitfocus/companion-module-base/commit/51d5bbfc93506924b2ea4769f48e41f48e0c20a5))
+
 ## [1.0.2](https://github.com/bitfocus/companion-module-base/compare/v1.0.1...v1.0.2) (2023-01-08)
 
 
