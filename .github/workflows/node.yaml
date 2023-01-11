@@ -52,12 +52,12 @@ jobs:
           CI: true
       - name: Run tests
         run: |
-          yarn unit --coverage
+          yarn unit
         env:
           CI: true
-      - name: Send coverage
-        uses: codecov/codecov-action@v3
-        if: matrix.node-version == '18.x'
+      # - name: Send coverage
+      #   uses: codecov/codecov-action@v3
+      #   if: matrix.node-version == '18.x'
       - name: Check docs generation
         if: matrix.node-version == '18.x'
         run: |
