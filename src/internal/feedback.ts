@@ -7,17 +7,14 @@ import {
 } from '../module-api/feedback'
 import {
 	FeedbackInstance,
-	HostToModuleEventsV0,
 	LearnFeedbackMessage,
 	LearnFeedbackResponseMessage,
-	ModuleToHostEventsV0,
 	ParseVariablesInStringMessage,
 	ParseVariablesInStringResponseMessage,
 	SetFeedbackDefinitionsMessage,
 	UpdateFeedbackValuesMessage,
 	VariablesChangedMessage,
 } from '../host-api/api'
-import { IpcWrapper } from '../host-api/ipc-wrapper'
 import { serializeIsVisibleFn } from './base'
 import debounceFn from 'debounce-fn'
 
