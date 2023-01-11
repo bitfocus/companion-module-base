@@ -61,6 +61,7 @@ jobs:
       - name: Check docs generation
         if: matrix.node-version == '18.x'
         run: |
+          yarn build
           yarn docs:html
         env:
           CI: true
