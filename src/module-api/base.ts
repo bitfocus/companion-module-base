@@ -46,7 +46,6 @@ import { runThroughUpgradeScripts } from '../internal/upgrade.js'
 import { FeedbackManager } from '../internal/feedback.js'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 import { IpcWrapper } from '../host-api/ipc-wrapper.js'
-import { resetErrorsCount } from 'ajv/dist/compile/errors.js'
 
 export interface InstanceBaseOptions {
 	/**
