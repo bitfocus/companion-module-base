@@ -5,7 +5,11 @@ import ejson from 'ejson'
 /**
  * Signature for the handler functions
  */
-type HandlerFunction<T extends (...args: any) => any> = (data: Parameters<T>[0]) => Promise<ReturnType<T>>
+type HandlerFunction<T extends (...args: any) => any> = (data: Parameters<T>[0]) => HandlerReturnType<T>
+
+type HandlerReturnType<T extends (...args: any) => any> = ReturnType<T> extends never
+	? Promise<void>
+	: Promise<ReturnType<T>>
 
 type HandlerFunctionOrNever<T> = T extends (...args: any) => any ? HandlerFunction<T> : never
 

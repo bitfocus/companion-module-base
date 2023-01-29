@@ -44,7 +44,7 @@ export interface HostToModuleEventsV0 {
 	learnAction: (msg: LearnActionMessage) => LearnActionResponseMessage
 	learnFeedback: (msg: LearnFeedbackMessage) => LearnFeedbackResponseMessage
 	startStopRecordActions: (msg: StartStopRecordActionsMessage) => void
-	variablesChanged: (msg: VariablesChangedMessage) => void
+	variablesChanged: (msg: VariablesChangedMessage) => never
 }
 
 export type EncodeIsVisible<T extends CompanionInputFieldBase> = Omit<T, 'isVisible'> & {
@@ -71,9 +71,14 @@ export interface InitResponseMessage {
 
 export interface UpgradedDataResponseMessage {
 	updatedFeedbacks: {
-		[id: string]: (FeedbackInstanceBase & { style?: Partial<CompanionFeedbackButtonStyleResult> }) | undefined
+		[id: string]:
+			| (FeedbackInstanceBase & {
+					controlId: string
+					style?: Partial<CompanionFeedbackButtonStyleResult>
+			  })
+			| undefined
 	}
-	updatedActions: { [id: string]: ActionInstanceBase | undefined }
+	updatedActions: { [id: string]: (ActionInstanceBase & { controlId: string }) | undefined }
 }
 
 export type GetConfigFieldsMessage = Record<string, never>
@@ -193,9 +198,9 @@ export interface ActionInstance extends ActionInstanceBase {
 	controlId: string
 
 	/** @deprecated */
-	page: number
+	page: number | null
 	/** @deprecated */
-	bank: number
+	bank: number | null
 }
 
 export interface UpdateActionInstancesMessage {
