@@ -407,13 +407,10 @@ export class FeedbackManager {
 		for (const [id, feedback] of this.#feedbackInstances.entries()) {
 			const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 			if (definition) {
-				if (types.size > 0 && !types.has(feedback.feedbackId)) {
-					// Not to be considered
-					continue
+				if (types.size === 0 || types.has(feedback.feedbackId)) {
+					// update the feedback value
+					this.#triggerCheckFeedback(id)
 				}
-
-				// update the feedback value
-				this.#triggerCheckFeedback(id)
 			}
 		}
 	}

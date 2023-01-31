@@ -88,7 +88,7 @@ export interface CompanionActionEvent extends CompanionActionInfo {
 	/** @deprecated */
 	readonly _deviceId: string | undefined
 	/** @deprecated */
-	readonly _page: number
+	readonly _page: number | null
 	/** @deprecated */
-	readonly _bank: number
+	readonly _bank: number | null
 }
