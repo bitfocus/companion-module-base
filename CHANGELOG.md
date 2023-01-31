@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/bitfocus/companion-module-base/compare/v1.1.0...v1.1.1) (2023-01-31)
+
+
+### Bug Fixes
+
+* race condition when async feedbacks are being checked ([a2ab3d9](https://github.com/bitfocus/companion-module-base/commit/a2ab3d9b72bb38f2fa29fb69de01a19deab05a9b))
+* typings ([410ed15](https://github.com/bitfocus/companion-module-base/commit/410ed159164f160199d4b8840592077fe52b4fc6))
+
 ## [1.1.0](https://github.com/bitfocus/companion-module-base/compare/v1.0.2...v1.1.0) (2023-01-11)
 
 
