@@ -315,10 +315,12 @@ export class FeedbackManager {
 					this.#parseVariablesContext = undefined
 				}
 
+				// Await the value before looking at this.#pendingFeedbackValues, to avoid race conditions
+				const resolvedValue = await value
 				this.#pendingFeedbackValues.set(id, {
 					id: id,
 					controlId: feedback.controlId,
-					value: await value,
+					value: resolvedValue,
 				})
 				this.#sendFeedbackValues()
 
