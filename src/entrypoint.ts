@@ -1,33 +1,16 @@
 /* eslint-disable no-process-exit */
-import { HostApiNodeJsIpc, HostToModuleEventsInit, ModuleToHostEventsInit } from './host-api/versions'
-import fs from 'fs/promises'
-import { ModuleManifest } from './manifest'
 import { CompanionStaticUpgradeScript } from './module-api/upgrade'
 import { InstanceBase } from './module-api/base'
-import { literal } from './util'
-import { InstanceBaseProps } from './internal/base'
-import { init, configureScope } from '@sentry/node'
-import '@sentry/tracing'
-import { IpcWrapper } from './host-api/ipc-wrapper'
 
 let hasEntrypoint = false
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let moduleInstance: InstanceBase<any> | undefined
 
 export type InstanceConstructor<TConfig> = new (internal: unknown) => InstanceBase<TConfig>
-
-// async function readFileUrl(url: URL): Promise<string> {
-// 	// Hack to make json files be loadable after being inlined by webpack
-// 	const prefix = 'application/json;base64,'
-// 	if (url.pathname.startsWith(prefix)) {
-// 		const base64 = url.pathname.substring(prefix.length)
-// 		return Buffer.from(base64, 'base64').toString()
-// 	}
-
-// 	// Fallback to reading from disk
-// 	const buf = await fs.readFile(url)
-// 	return buf.toString()
-// }
+export type InternalApiGenerator<TConfig> = (
+	factory: InstanceConstructor<TConfig>,
+	upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]
+) => Promise<InstanceBase<TConfig>>
 
 /**
  * Setup the module for execution
@@ -41,95 +24,17 @@ export function runEntrypoint<TConfig>(
 ): void {
 	Promise.resolve()
 		.then(async () => {
-			// const pkgJsonStr = (await fs.readFile(path.join(__dirname, '../package.json'))).toString()
-			// const pkgJson = JSON.parse(pkgJsonStr)
-			// if (!pkgJson || pkgJson.name !== '@companion-module/base')
-			// 	throw new Error('Failed to find the package.json for @companion-module/base')
-			// if (!pkgJson.version) throw new Error('Missing version field in the package.json for @companion-module/base')
-
 			// Ensure only called once per module
 			if (hasEntrypoint) throw new Error(`runEntrypoint can only be called once`)
 			hasEntrypoint = true
 
-			const manifestPath = process.env.MODULE_MANIFEST
-			if (!manifestPath) throw new Error('Module initialise is missing MODULE_MANIFEST')
+			const internalApiPath = process.env.MODULE_API_PATH
+			if (!internalApiPath) throw new Error('Module initialise is missing MODULE_API_PATH')
 
-			// check manifest api field against apiVersion
-			const manifestBlob = await fs.readFile(manifestPath)
-			const manifestJson: Partial<ModuleManifest> = JSON.parse(manifestBlob.toString())
+			// eslint-disable-next-line node/no-unsupported-features/es-syntax
+			const internalApiRaw: InternalApiGenerator<TConfig> = (await import(internalApiPath)).default
 
-			if (manifestJson.runtime?.api !== HostApiNodeJsIpc) throw new Error(`Module manifest 'api' mismatch`)
-			if (!manifestJson.runtime.apiVersion) throw new Error(`Module manifest 'apiVersion' missing`)
-			const apiVersion = manifestJson.runtime.apiVersion
-
-			if (!process.send) throw new Error('Module is not being run with ipc')
-
-			console.log(`Starting up module class: ${factory.name}`)
-
-			const connectionId = process.env.CONNECTION_ID
-			if (typeof connectionId !== 'string' || !connectionId)
-				throw new Error('Module initialise is missing CONNECTION_ID')
-
-			const verificationToken = process.env.VERIFICATION_TOKEN
-			if (typeof verificationToken !== 'string' || !verificationToken)
-				throw new Error('Module initialise is missing VERIFICATION_TOKEN')
-
-			// Allow the DSN to be provided as an env variable
-			const sentryDsn = process.env.SENTRY_DSN
-			const sentryUserId = process.env.SENTRY_USERID
-			const sentryCompanionVersion = process.env.SENTRY_COMPANION_VERSION
-			if (sentryDsn && sentryUserId && sentryDsn.substring(0, 8) == 'https://') {
-				console.log('Sentry enabled')
-
-				init({
-					dsn: sentryDsn,
-					release: `${manifestJson.name}@${manifestJson.version}`,
-					beforeSend(event) {
-						if (event.exception) {
-							console.log('sentry', 'error', event.exception)
-						}
-						return event
-					},
-				})
-
-				configureScope((scope) => {
-					scope.setUser({ id: sentryUserId })
-					scope.setTag('companion', sentryCompanionVersion)
-				})
-			} else {
-				console.log('Sentry disabled')
-			}
-
-			const ipcWrapper = new IpcWrapper<ModuleToHostEventsInit, HostToModuleEventsInit>(
-				{},
-				(msg) => {
-					process.send!(msg)
-				},
-				5000
-			)
-			process.once('message', (msg: any) => {
-				ipcWrapper.receivedMessage(msg)
-			})
-
-			moduleInstance = new factory(
-				literal<InstanceBaseProps<TConfig>>({
-					id: connectionId,
-					upgradeScripts,
-					_isInstanceBaseProps: true,
-				})
-			)
-
-			ipcWrapper.sendWithCb('register', { apiVersion, connectionId, verificationToken }).then(
-				() => {
-					console.log(`Module-host accepted registration`)
-				},
-				(err) => {
-					console.error('Module registration failed', err)
-
-					// Kill the process
-					process.exit(11)
-				}
-			)
+			moduleInstance = await internalApiRaw(factory, upgradeScripts)
 		})
 		.catch((e) => {
 			console.error(`Failed to startup module:`)
