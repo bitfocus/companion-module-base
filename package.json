@@ -27,21 +27,13 @@
 		"assets"
 	],
 	"dependencies": {
-		"@sentry/node": "^7.28.0",
-		"@sentry/tracing": "^7.28.0",
 		"ajv": "^8.11.2",
-		"debounce-fn": "github:julusian/debounce-fn#4.0.0-maxWaithack.0",
-		"ejson": "^2.2.3",
 		"eventemitter3": "^4.0.7",
-		"nanoid": "^3.3.4",
-		"p-queue": "^6.6.2",
-		"p-timeout": "^4.1.0",
 		"tslib": "^2.4.1"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^0.5.2",
 		"@tsconfig/node18": "^1.0.1",
-		"@types/ejson": "^2.2.0",
 		"@types/jest": "^29.2.5",
 		"@types/node": "^18.11.17",
 		"ajv-cli": "^5.0.0",
