@@ -35,7 +35,9 @@ export interface ModuleToHostEventsV0 {
 export interface HostToModuleEventsV0 {
 	init: (msg: InitMessage) => InitResponseMessage
 	destroy: (msg: Record<string, never>) => void
+	/** @deprecated */
 	updateConfig: (config: unknown) => void
+	updateConfigAndLabel: (msg: UpdateConfigAndLabelMessage) => void
 	updateFeedbacks: (msg: UpdateFeedbackInstancesMessage) => void
 	updateActions: (msg: UpdateActionInstancesMessage) => void
 	executeAction: (msg: ExecuteActionMessage) => void
@@ -178,6 +180,11 @@ export interface FeedbackInstance extends FeedbackInstanceBase {
 
 	/** @deprecated */
 	rawBank: any
+}
+
+export interface UpdateConfigAndLabelMessage {
+	label: string
+	config: unknown
 }
 
 export interface UpdateFeedbackInstancesMessage {

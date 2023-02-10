@@ -9,6 +9,7 @@ import { InstanceBaseProps } from './internal/base'
 import { init, configureScope } from '@sentry/node'
 import '@sentry/tracing'
 import { IpcWrapper } from './host-api/ipc-wrapper'
+import path from 'path'
 
 let hasEntrypoint = false
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -60,7 +61,20 @@ export function runEntrypoint<TConfig>(
 
 			if (manifestJson.runtime?.api !== HostApiNodeJsIpc) throw new Error(`Module manifest 'api' mismatch`)
 			if (!manifestJson.runtime.apiVersion) throw new Error(`Module manifest 'apiVersion' missing`)
-			const apiVersion = manifestJson.runtime.apiVersion
+			let apiVersion = manifestJson.runtime.apiVersion
+
+			if (apiVersion === '0.0.0') {
+				// It looks like the module is in dev mode. lets attempt to load the package.json from this module instead
+				try {
+					const baseJsonStr = await fs.readFile(path.join(__dirname, '../package.json'))
+					const baseJson = JSON.parse(baseJsonStr.toString())
+					if (baseJson.name === '@companion-module/base') {
+						apiVersion = baseJson.version
+					}
+				} catch (e) {
+					throw new Error('Failed to determine module api version')
+				}
+			}
 
 			if (!process.send) throw new Error('Module is not being run with ipc')
 

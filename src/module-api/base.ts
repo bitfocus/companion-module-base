@@ -26,6 +26,7 @@ import {
 	SetVariableValuesMessage,
 	StartStopRecordActionsMessage,
 	UpdateActionInstancesMessage,
+	UpdateConfigAndLabelMessage,
 	UpdateFeedbackInstancesMessage,
 	VariablesChangedMessage,
 } from '../host-api/api'
@@ -68,9 +69,18 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	readonly #variableValues = new Map<string, CompanionVariableValue>()
 
 	readonly #options: InstanceBaseOptions
+	#label: string
 
 	public get instanceOptions(): InstanceBaseOptions {
 		return this.#options
+	}
+
+	/**
+	 * The user chosen name for this instance.
+	 * This can be changed just before `configUpdated` is called
+	 */
+	public get label(): string {
+		return this.#label
 	}
 
 	/**
@@ -90,7 +100,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			{
 				init: this._handleInit.bind(this),
 				destroy: this._handleDestroy.bind(this),
-				updateConfig: this._handleConfigUpdate.bind(this),
+				updateConfigAndLabel: this._handleConfigUpdateAndLabel.bind(this),
+				updateConfig: async () => undefined, // Replaced by updateConfigAndLabel
 				executeAction: this._handleExecuteAction.bind(this),
 				updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
 				updateActions: this._handleUpdateActions.bind(this),
@@ -124,6 +135,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		this.#upgradeScripts = internal.upgradeScripts
 		this.id = internal.id
+		this.#label = internal.id // Temporary
 
 		this.log('debug', 'Initializing')
 	}
@@ -135,6 +147,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			const actions = msg.actions
 			const feedbacks = msg.feedbacks
 			let config = msg.config as TConfig
+			this.#label = msg.label
 
 			// Create initial config object
 			if (msg.isFirstInit) {
@@ -208,11 +221,12 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			this.#initialized = false
 		})
 	}
-	private async _handleConfigUpdate(config: unknown): Promise<void> {
+	private async _handleConfigUpdateAndLabel(msg: UpdateConfigAndLabelMessage): Promise<void> {
 		await this.#lifecycleQueue.add(async () => {
 			if (!this.#initialized) throw new Error('Not initialized')
 
-			await this.configUpdated(config as TConfig)
+			this.#label = msg.label
+			await this.configUpdated(msg.config as TConfig)
 		})
 	}
 	private async _handleExecuteAction(msg: ExecuteActionMessage): Promise<void> {
