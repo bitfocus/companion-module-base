@@ -85,6 +85,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 		const timeoutError = new Error('Call timed out')
 		callbacks.timeout = setTimeout(() => {
 			callbacks.reject(defaultResponse ? defaultResponse() : timeoutError)
+			delete this.#pendingCallbacks[id]
 		}, timeout)
 
 		return promise
@@ -150,6 +151,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 					return
 				}
 				const callbacks = this.#pendingCallbacks[msg.callbackId]
+				delete this.#pendingCallbacks[msg.callbackId]
 				if (!callbacks) {
 					// Likely timed out, we should ignore
 					return
