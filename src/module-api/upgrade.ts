@@ -1,8 +1,14 @@
 import { CompanionFeedbackButtonStyleResult } from './feedback'
 import { CompanionOptionValues } from './input'
 
-/** For future use */
-export type CompanionUpgradeContext = unknown
+/** Additional utilities for Upgrade Scripts */
+export interface CompanionUpgradeContext<TConfig> {
+	/**
+	 * Current configuration of the module.
+	 * This cannot be changed
+	 */
+	readonly currentConfig: Readonly<TConfig>
+}
 
 /**
  * The items for an upgrade script to upgrade
@@ -44,7 +50,7 @@ export interface CompanionStaticUpgradeResult<TConfig> {
  * The definition of an upgrade script function
  */
 export type CompanionStaticUpgradeScript<TConfig> = (
-	context: CompanionUpgradeContext,
+	context: CompanionUpgradeContext<TConfig>,
 	props: CompanionStaticUpgradeProps<TConfig>
 ) => CompanionStaticUpgradeResult<TConfig>
 

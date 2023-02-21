@@ -61,6 +61,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	#initialized = false
 	#recordingActions = false
 
+	#lastConfig: TConfig = {} as any
+
 	readonly #actionManager: ActionManager
 	readonly #feedbackManager: FeedbackManager
 
@@ -146,7 +148,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 			const actions = msg.actions
 			const feedbacks = msg.feedbacks
-			let config = msg.config as TConfig
+			this.#lastConfig = msg.config as TConfig
 			this.#label = msg.label
 
 			// Create initial config object
@@ -158,8 +160,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 						newConfig[field.id] = field.default
 					}
 				}
-				config = newConfig as TConfig
-				this.saveConfig(config)
+				this.#lastConfig = newConfig as TConfig
+				this.saveConfig(this.#lastConfig)
 
 				// this is new, so there is no point attempting to run any upgrade scripts
 				msg.lastUpgradeIndex = this.#upgradeScripts.length - 1
@@ -174,9 +176,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				feedbacks,
 				msg.lastUpgradeIndex,
 				this.#upgradeScripts,
-				config
+				this.#lastConfig,
+				false
 			)
-			config = (updatedConfig as TConfig | undefined) ?? config
+			this.#lastConfig = (updatedConfig as TConfig | undefined) ?? this.#lastConfig
 
 			// Send the upgraded data back to companion now. Just so that if the init crashes, this doesnt have to be repeated
 			const pSendUpgrade = this.#ipcWrapper.sendWithCb('upgradedItems', {
@@ -186,7 +189,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 			// Now we can initialise the module
 			try {
-				await this.init(config, !!msg.isFirstInit)
+				await this.init(this.#lastConfig, !!msg.isFirstInit)
 
 				this.#initialized = true
 			} catch (e) {
@@ -211,7 +214,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				hasHttpHandler: typeof this.handleHttpRequest === 'function',
 				hasRecordActionsHandler: typeof this.handleStartStopRecordActions == 'function',
 				newUpgradeIndex: this.#upgradeScripts.length - 1,
-				updatedConfig: config,
+				updatedConfig: this.#lastConfig,
 			}
 		})
 	}
@@ -229,7 +232,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			if (!this.#initialized) throw new Error('Not initialized')
 
 			this.#label = msg.label
-			await this.configUpdated(msg.config as TConfig)
+			this.#lastConfig = msg.config as TConfig
+
+			await this.configUpdated(this.#lastConfig)
 		})
 	}
 	private async _handleExecuteAction(msg: ExecuteActionMessage): Promise<void> {
@@ -239,7 +244,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
 		if (!skipUpgrades) {
-			const res = runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, undefined)
+			const res = runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, this.#lastConfig, true)
 			this.#ipcWrapper
 				.sendWithCb('upgradedItems', {
 					updatedActions: res.updatedActions,
@@ -255,7 +260,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	private async _handleUpdateActions(msg: UpdateActionInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
 		if (!skipUpgrades) {
-			const res = runThroughUpgradeScripts(msg.actions, {}, null, this.#upgradeScripts, undefined)
+			const res = runThroughUpgradeScripts(msg.actions, {}, null, this.#upgradeScripts, this.#lastConfig, true)
 			this.#ipcWrapper
 				.sendWithCb('upgradedItems', {
 					updatedActions: res.updatedActions,
@@ -337,6 +342,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param newConfig The new config object
 	 */
 	saveConfig(newConfig: TConfig): void {
+		this.#lastConfig = newConfig
 		this.#ipcWrapper.sendWithNoCb('saveConfig', { config: newConfig })
 	}
 

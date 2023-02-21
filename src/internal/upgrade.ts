@@ -17,7 +17,8 @@ function clone<T>(val: T): T {
  * @param allFeedbacks Feedbacks that may need upgrading
  * @param defaultUpgradeIndex The lastUpgradeIndex of the connection, if known
  * @param upgradeScripts The scripts that may be run
- * @param config The config if it may need updating
+ * @param config The current config of the module
+ * @param skipConfigUpgrade Whether to skip upgrading the config
  * @returns The upgraded data that needs persisting
  */
 export function runThroughUpgradeScripts(
@@ -25,7 +26,8 @@ export function runThroughUpgradeScripts(
 	allFeedbacks: { [id: string]: FeedbackInstance | undefined | null },
 	defaultUpgradeIndex0: number | null,
 	upgradeScripts: CompanionStaticUpgradeScript<any>[],
-	config: unknown | undefined
+	config: unknown,
+	skipConfigUpgrade: boolean
 ): UpgradedDataResponseMessage & {
 	updatedConfig: unknown | undefined
 } {
@@ -55,7 +57,7 @@ export function runThroughUpgradeScripts(
 			pending.feedbacks.push(feedback.id)
 		}
 	}
-	if (config) {
+	if (!skipConfigUpgrade) {
 		// If there is config we still need to upgrade that
 		for (let i = defaultUpgradeIndex; i < upgradeScripts.length; i++) {
 			// ensure the group is registered
@@ -94,7 +96,10 @@ export function runThroughUpgradeScripts(
 			// We have an upgrade script that can be run
 			const fcn = upgradeScripts[i]
 			const res = fcn(
-				{},
+				{
+					// Pass a clone to avoid mutations
+					currentConfig: clone(config) as any,
+				},
 				{
 					config: upgradeConfig ? config : null,
 
