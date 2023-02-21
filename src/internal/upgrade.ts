@@ -1,5 +1,14 @@
-import { CompanionStaticUpgradeScript } from '../module-api/upgrade'
+import {
+	CompanionMigrationAction,
+	CompanionMigrationFeedback,
+	CompanionStaticUpgradeScript,
+} from '../module-api/upgrade'
 import { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '../host-api/api'
+import { Complete, literal } from '../util'
+
+function clone<T>(val: T): T {
+	return JSON.parse(JSON.stringify(val))
+}
 
 /**
  * Run through the upgrade scripts for the given data
@@ -14,18 +23,20 @@ import { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '.
 export function runThroughUpgradeScripts(
 	allActions: { [id: string]: ActionInstance | undefined | null },
 	allFeedbacks: { [id: string]: FeedbackInstance | undefined | null },
-	defaultUpgradeIndex: number | null,
+	defaultUpgradeIndex0: number | null,
 	upgradeScripts: CompanionStaticUpgradeScript<any>[],
 	config: unknown | undefined
 ): UpgradedDataResponseMessage & {
 	updatedConfig: unknown | undefined
 } {
+	const defaultUpgradeIndex = defaultUpgradeIndex0 ?? -1
+
 	// First we group all the actions and feedbacks by the version they currently are.
-	const pendingUpgradesGrouped = new Map<number, { feedbacks: string[]; actions: string[] }>()
-	const getPendingSpecialUpgrade = (i: number) => {
+	const pendingUpgradesGrouped = new Map<number, { feedbacks: string[]; actions: string[]; config: boolean }>()
+	const getPendingUpgradeGroup = (i: number) => {
 		let v = pendingUpgradesGrouped.get(i)
 		if (!v) {
-			v = { actions: [], feedbacks: [] }
+			v = { actions: [], feedbacks: [], config: false }
 			pendingUpgradesGrouped.set(i, v)
 		}
 		return v
@@ -33,15 +44,22 @@ export function runThroughUpgradeScripts(
 	for (const action of Object.values(allActions)) {
 		const upgradeIndex = action?.upgradeIndex ?? defaultUpgradeIndex
 		if (action && typeof upgradeIndex === 'number') {
-			const pending = getPendingSpecialUpgrade(upgradeIndex)
+			const pending = getPendingUpgradeGroup(upgradeIndex)
 			pending.actions.push(action.id)
 		}
 	}
 	for (const feedback of Object.values(allFeedbacks)) {
 		const upgradeIndex = feedback?.upgradeIndex ?? defaultUpgradeIndex
 		if (feedback && typeof upgradeIndex === 'number') {
-			const pending = getPendingSpecialUpgrade(upgradeIndex)
+			const pending = getPendingUpgradeGroup(upgradeIndex)
 			pending.feedbacks.push(feedback.id)
+		}
+	}
+	if (config) {
+		// If there is config we still need to upgrade that
+		for (let i = defaultUpgradeIndex; i < upgradeScripts.length; i++) {
+			// ensure the group is registered
+			getPendingUpgradeGroup(i).config = true
 		}
 	}
 
@@ -51,7 +69,7 @@ export function runThroughUpgradeScripts(
 	if (pendingUpgradesGrouped.size > 0) {
 		// Figure out which script to run first. Note: we track the last index we ran, so it is offset by one
 		const pendingUpgradeGroups = Array.from(pendingUpgradesGrouped.keys()).sort()
-		const firstUpgradeGroup = Math.min(...pendingUpgradeGroups, defaultUpgradeIndex ?? Number.POSITIVE_INFINITY) + 1
+		const firstUpgradeGroup = Math.min(...pendingUpgradeGroups, defaultUpgradeIndex) + 1
 
 		// Start building arrays of the ids which we are upgrading as we go
 		const actionsIdsToUpgrade: string[] = []
@@ -68,7 +86,7 @@ export function runThroughUpgradeScripts(
 			}
 
 			// Only upgrade the config, if we are past the last version we had for it
-			const upgradeConfig = config !== undefined && defaultUpgradeIndex !== null && i > defaultUpgradeIndex
+			const upgradeConfig = !!group?.config
 
 			// Ensure there is something to upgrade
 			if (!upgradeConfig && actionsIdsToUpgrade.length === 0 && feedbackIdsToUpgrade.length === 0) continue
@@ -85,13 +103,13 @@ export function runThroughUpgradeScripts(
 						.map((id) => {
 							const inst = allActions[id]
 							if (inst) {
-								return {
+								return literal<Complete<CompanionMigrationAction>>({
 									id: inst.id,
 									controlId: inst.controlId,
 
 									actionId: inst.actionId,
-									options: inst.options,
-								}
+									options: clone(inst.options),
+								})
 							}
 						})
 						.filter((v): v is ActionInstance => !!v),
@@ -100,13 +118,14 @@ export function runThroughUpgradeScripts(
 						.map((id) => {
 							const inst = allFeedbacks[id]
 							if (inst) {
-								return {
+								return literal<Complete<Omit<CompanionMigrationFeedback, 'style'>>>({
 									id: inst.id,
 									controlId: inst.controlId,
 
 									feedbackId: inst.feedbackId,
-									options: inst.options,
-								}
+									options: clone(inst.options),
+									// TODO - style?
+								})
 							}
 						})
 						.filter((v): v is FeedbackInstance => !!v),

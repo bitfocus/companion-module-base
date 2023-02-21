@@ -160,6 +160,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				}
 				config = newConfig as TConfig
 				this.saveConfig(config)
+
+				// this is new, so there is no point attempting to run any upgrade scripts
+				msg.lastUpgradeIndex = this.#upgradeScripts.length - 1
 			}
 
 			/**

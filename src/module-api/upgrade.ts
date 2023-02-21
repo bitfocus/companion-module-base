@@ -59,8 +59,6 @@ export interface CompanionMigrationAction {
 
 	/** The id of the action definition */
 	actionId: string
-	/** The execution delay of the action */
-	delay?: number
 	/** The user selected options for the action */
 	options: CompanionOptionValues
 }
