@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.2.0](https://github.com/bitfocus/companion-module-base/compare/v1.1.1...v1.2.0) (2023-02-21)
+
+
+### Features
+
+* add surfaceId property to action callback ([37b7673](https://github.com/bitfocus/companion-module-base/commit/37b76735b4487d64516dcbaf6614298f486edc85))
+* provide `currentConfig` to upgrade scripts ([39e8bc3](https://github.com/bitfocus/companion-module-base/commit/39e8bc30cbf73d7f82848adc9c6dbb8a37df98e8))
+* provide module with instance label ([766d934](https://github.com/bitfocus/companion-module-base/commit/766d9348b8247e0d93f57894087aed6d61e0f359))
+
+
+### Bug Fixes
+
+* ipc-wrapper memory leak ([2b7b2b9](https://github.com/bitfocus/companion-module-base/commit/2b7b2b9e0c77b113ccbe34fc5beb072833af8c1e))
+* some testing of upgrade scripts ([d61b405](https://github.com/bitfocus/companion-module-base/commit/d61b40532d2a99a01d70fefca6c056333dc28ef1))
+* upgrade script tests ([2b74f33](https://github.com/bitfocus/companion-module-base/commit/2b74f33d00009c987540ff6bac8ca3b305bfc4fb))
+
 ## [1.1.1](https://github.com/bitfocus/companion-module-base/compare/v1.1.0...v1.1.1) (2023-01-31)
 
 
