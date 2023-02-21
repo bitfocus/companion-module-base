@@ -141,7 +141,10 @@ export interface SetVariableValuesMessage {
 export interface ExecuteActionMessage {
 	action: ActionInstance
 
-	/** @deprecated */
+	/** Identifier of the surface which triggered this action */
+	surfaceId: string | undefined
+
+	/** @deprecated will be removed in favor of `surfaceId` soon */
 	deviceId: string | undefined
 }
 

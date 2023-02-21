@@ -83,9 +83,10 @@ export interface CompanionActionInfo {
  * Extended information for execution of an action
  */
 export interface CompanionActionEvent extends CompanionActionInfo {
-	// Future: the contents of this should be re-evaluated in v1
+	/** Identifier of the surface which triggered this action */
+	readonly surfaceId: string | undefined
 
-	/** @deprecated */
+	/** @deprecated use `surfaceId` instead */
 	readonly _deviceId: string | undefined
 	/** @deprecated */
 	readonly _page: number | null

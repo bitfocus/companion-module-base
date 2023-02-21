@@ -70,7 +70,9 @@ export class ActionManager {
 				controlId: msg.action.controlId,
 				options: msg.action.options,
 
-				_deviceId: msg.deviceId,
+				surfaceId: msg.surfaceId ?? msg.deviceId,
+
+				_deviceId: msg.surfaceId ?? msg.deviceId,
 				_page: msg.action.page,
 				_bank: msg.action.bank,
 			},
@@ -160,6 +162,8 @@ export class ActionManager {
 					actionId: msg.action.actionId,
 					controlId: msg.action.controlId,
 					options: msg.action.options,
+
+					surfaceId: undefined,
 
 					_deviceId: undefined,
 					_page: msg.action.page,
