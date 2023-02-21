@@ -64,7 +64,7 @@ describe('runThroughUpgradeScripts', () => {
 
 	it('nothing to upgrade', () => {
 		const scripts = createMockScripts(2)
-		const result = runThroughUpgradeScripts({}, {}, null, scripts, undefined)
+		const result = runThroughUpgradeScripts({}, {}, null, scripts, {}, true)
 
 		// Check result looks sane
 		expect(result).toBeTruthy()
@@ -84,11 +84,11 @@ describe('runThroughUpgradeScripts', () => {
 			something: true,
 		}
 		const scripts = createMockScripts(2)
-		const result = runThroughUpgradeScripts({}, {}, null, scripts, { ...configBefore })
+		const result = runThroughUpgradeScripts({}, {}, null, scripts, { ...configBefore }, false)
 
 		// Check result looks sane
 		expect(result).toBeTruthy()
-		expect(result.updatedConfig).toEqual(configBefore)
+		expect(result.updatedConfig).toEqual(undefined)
 		expect(result.updatedActions).toEqual({})
 		expect(result.updatedFeedbacks).toEqual({})
 
@@ -115,8 +115,7 @@ describe('runThroughUpgradeScripts', () => {
 			})
 		})
 
-		const result = runThroughUpgradeScripts({}, {}, 0, scripts, { ...configBefore })
-
+		const result = runThroughUpgradeScripts({}, {}, 0, scripts, { ...configBefore }, false)
 		// Check result looks sane
 		expect(result).toBeTruthy()
 		expect(result.updatedConfig).toEqual({
@@ -183,7 +182,7 @@ describe('runThroughUpgradeScripts', () => {
 		})
 
 		const actionsInput = makeActionsInput(action0Before, action1Before)
-		const result = runThroughUpgradeScripts(actionsInput, {}, 0, scripts, undefined)
+		const result = runThroughUpgradeScripts(actionsInput, {}, 0, scripts, {}, true)
 
 		// Check result looks sane
 		expect(result).toBeTruthy()
@@ -248,7 +247,7 @@ describe('runThroughUpgradeScripts', () => {
 		})
 
 		const actionsInput = makeActionsInput(action0Before, action1Before)
-		const result = runThroughUpgradeScripts(actionsInput, {}, 0, scripts, undefined)
+		const result = runThroughUpgradeScripts(actionsInput, {}, 0, scripts, {}, true)
 
 		// Check result looks sane
 		expect(result).toBeTruthy()

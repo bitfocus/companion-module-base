@@ -67,6 +67,7 @@ export function runThroughUpgradeScripts(
 
 	const updatedFeedbacks: UpgradedDataResponseMessage['updatedFeedbacks'] = {}
 	const updatedActions: UpgradedDataResponseMessage['updatedActions'] = {}
+	let updatedConfig: unknown | undefined
 
 	if (pendingUpgradesGrouped.size > 0) {
 		// Figure out which script to run first. Note: we track the last index we ran, so it is offset by one
@@ -93,15 +94,17 @@ export function runThroughUpgradeScripts(
 			// Ensure there is something to upgrade
 			if (!upgradeConfig && actionsIdsToUpgrade.length === 0 && feedbackIdsToUpgrade.length === 0) continue
 
+			const inputConfig = updatedConfig ?? config
+
 			// We have an upgrade script that can be run
 			const fcn = upgradeScripts[i]
 			const res = fcn(
 				{
 					// Pass a clone to avoid mutations
-					currentConfig: clone(config) as any,
+					currentConfig: clone(inputConfig) as any,
 				},
 				{
-					config: upgradeConfig ? config : null,
+					config: upgradeConfig ? inputConfig : null,
 
 					// Only pass the actions & feedbacks which need upgrading from this version
 					actions: actionsIdsToUpgrade
@@ -138,7 +141,7 @@ export function runThroughUpgradeScripts(
 			)
 
 			// Apply changes
-			if (upgradeConfig && res.updatedConfig) config = res.updatedConfig
+			if (upgradeConfig && res.updatedConfig) updatedConfig = res.updatedConfig
 
 			for (const action of res.updatedActions) {
 				if (action) {
@@ -188,6 +191,6 @@ export function runThroughUpgradeScripts(
 	return {
 		updatedActions,
 		updatedFeedbacks,
-		updatedConfig: config,
+		updatedConfig,
 	}
 }
