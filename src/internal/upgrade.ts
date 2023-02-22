@@ -24,15 +24,13 @@ function clone<T>(val: T): T {
 export function runThroughUpgradeScripts(
 	allActions: { [id: string]: ActionInstance | undefined | null },
 	allFeedbacks: { [id: string]: FeedbackInstance | undefined | null },
-	defaultUpgradeIndex0: number | null,
+	defaultUpgradeIndex: number | null,
 	upgradeScripts: CompanionStaticUpgradeScript<any>[],
 	config: unknown,
 	skipConfigUpgrade: boolean
 ): UpgradedDataResponseMessage & {
 	updatedConfig: unknown | undefined
 } {
-	const defaultUpgradeIndex = defaultUpgradeIndex0 ?? -1
-
 	// First we group all the actions and feedbacks by the version they currently are.
 	const pendingUpgradesGrouped = new Map<number, { feedbacks: string[]; actions: string[]; config: boolean }>()
 	const getPendingUpgradeGroup = (i: number) => {
@@ -59,7 +57,7 @@ export function runThroughUpgradeScripts(
 	}
 	if (!skipConfigUpgrade) {
 		// If there is config we still need to upgrade that
-		for (let i = defaultUpgradeIndex; i < upgradeScripts.length; i++) {
+		for (let i = defaultUpgradeIndex ?? -1; i < upgradeScripts.length; i++) {
 			// ensure the group is registered
 			getPendingUpgradeGroup(i).config = true
 		}
@@ -72,7 +70,7 @@ export function runThroughUpgradeScripts(
 	if (pendingUpgradesGrouped.size > 0) {
 		// Figure out which script to run first. Note: we track the last index we ran, so it is offset by one
 		const pendingUpgradeGroups = Array.from(pendingUpgradesGrouped.keys()).sort()
-		const firstUpgradeGroup = Math.min(...pendingUpgradeGroups, defaultUpgradeIndex) + 1
+		const firstUpgradeGroup = Math.min(...pendingUpgradeGroups, defaultUpgradeIndex ?? -1) + 1
 
 		// Start building arrays of the ids which we are upgrading as we go
 		const actionsIdsToUpgrade: string[] = []
