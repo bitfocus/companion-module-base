@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/bitfocus/companion-module-base/compare/v1.2.0...v1.2.1) (2023-02-22)
+
+
+### Bug Fixes
+
+* imported actions/feedbacks upgraded from -1 instead when not no scripts are needed ([32fa9b5](https://github.com/bitfocus/companion-module-base/commit/32fa9b564092664a2627f57f0309a7fb08d8f755))
+
 ## [1.2.0](https://github.com/bitfocus/companion-module-base/compare/v1.1.1...v1.2.0) (2023-02-21)
 
 
