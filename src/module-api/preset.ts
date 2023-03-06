@@ -59,6 +59,13 @@ export interface CompanionButtonPresetDefinition {
 	steps: CompanionButtonStepActions[]
 }
 
+export interface CompanionPresetActionsWithOptions {
+	options?: CompanionActionSetOptions
+	actions: CompanionPresetAction[]
+}
+export interface CompanionActionSetOptions {
+	runWhileHeld?: boolean
+}
 export interface CompanionButtonStepActions {
 	/** The button down actions */
 	down: CompanionPresetAction[]
@@ -67,6 +74,8 @@ export interface CompanionButtonStepActions {
 
 	rotate_left?: CompanionPresetAction[]
 	rotate_right?: CompanionPresetAction[]
+
+	[delay: number]: CompanionPresetActionsWithOptions | CompanionPresetAction[]
 }
 
 /**
