@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/bitfocus/companion-module-base/compare/v1.3.0...v1.4.0) (2023-03-27)
+
+
+### Features
+
+* add support for previewStyle parameter of CompanionButtonPresetDefinition class ([e63bfd8](https://github.com/bitfocus/companion-module-base/commit/e63bfd895367eecedfc05633231364a9a984bb34))
+
 ## [1.3.0](https://github.com/bitfocus/companion-module-base/compare/v1.2.1...v1.3.0) (2023-03-06)
 
 
