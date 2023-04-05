@@ -114,7 +114,7 @@ export function runThroughUpgradeScripts(
 									controlId: inst.controlId,
 
 									actionId: inst.actionId,
-									options: clone(inst.options),
+									options: clone(inst.options !== undefined ? clone(inst.options) : {}),
 								})
 							}
 						})
