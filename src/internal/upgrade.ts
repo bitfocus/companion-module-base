@@ -129,7 +129,7 @@ export function runThroughUpgradeScripts(
 									controlId: inst.controlId,
 
 									feedbackId: inst.feedbackId,
-									options: clone(inst.options),
+									options: clone(inst.options !== undefined ? clone(inst.options) : {}),
 									// TODO - style?
 								})
 							}
