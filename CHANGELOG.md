@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/bitfocus/companion-module-base/compare/v1.4.0...v1.4.1) (2023-04-12)
+
+
+### Bug Fixes
+
+* Add undefined checks to upgrade for missing options ([#48](https://github.com/bitfocus/companion-module-base/issues/48)) ([6690929](https://github.com/bitfocus/companion-module-base/commit/6690929aa19ff5104e55d235974fbc1610faca5e))
+
 ## [1.4.0](https://github.com/bitfocus/companion-module-base/compare/v1.3.0...v1.4.0) (2023-03-27)
 
 
