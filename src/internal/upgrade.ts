@@ -114,7 +114,7 @@ export function runThroughUpgradeScripts(
 									controlId: inst.controlId,
 
 									actionId: inst.actionId,
-									options: clone(inst.options),
+									options: inst.options !== undefined ? clone(inst.options) : {},
 								})
 							}
 						})
@@ -129,7 +129,7 @@ export function runThroughUpgradeScripts(
 									controlId: inst.controlId,
 
 									feedbackId: inst.feedbackId,
-									options: clone(inst.options),
+									options: inst.options !== undefined ? clone(inst.options) : {},
 									// TODO - style?
 								})
 							}
