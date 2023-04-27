@@ -19,6 +19,7 @@ import {
 	LearnFeedbackResponseMessage,
 	LogMessageMessage,
 	ModuleToHostEventsV0,
+	PropertySetMessage,
 	SendOscMessage,
 	SetPresetDefinitionsMessage,
 	SetStatusMessage,
@@ -43,6 +44,9 @@ import { FeedbackManager } from '../internal/feedback'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from './http'
 import { IpcWrapper } from '../host-api/ipc-wrapper'
 import { ActionManager } from '../internal/actions'
+import { CompanionPropertyDefinitions } from './properties'
+import { DropdownChoiceId } from './input'
+import { PropertyManager } from '../internal/properties'
 
 export interface InstanceBaseOptions {
 	/**
@@ -65,6 +69,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 	readonly #actionManager: ActionManager
 	readonly #feedbackManager: FeedbackManager
+	readonly #propertyManager: PropertyManager
 
 	readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
 
@@ -113,6 +118,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				learnFeedback: this._handleLearnFeedback.bind(this),
 				startStopRecordActions: this._handleStartStopRecordActions.bind(this),
 				variablesChanged: this._handleVariablesChanged.bind(this),
+				propertySet: this._handlePropertySet.bind(this),
 			},
 			(msg) => {
 				process.send!(msg)
@@ -132,6 +138,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', msg),
+			this.log.bind(this)
+		)
+		this.#propertyManager = new PropertyManager(
+			(msg) => this.#ipcWrapper.sendWithNoCb('setPropertyDefinitions', msg),
 			this.log.bind(this)
 		)
 
@@ -239,6 +249,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 	private async _handleExecuteAction(msg: ExecuteActionMessage): Promise<void> {
 		return this.#actionManager.handleExecuteAction(msg)
+	}
+
+	private async _handlePropertySet(msg: PropertySetMessage): Promise<void> {
+		return this.#propertyManager.propertySet(msg)
 	}
 
 	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
@@ -432,6 +446,19 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		}
 
 		this.#ipcWrapper.sendWithNoCb('setVariableDefinitions', { variables: hostVariables })
+	}
+
+	notifyPropertyChanged(propertyId: string, instanceIds: DropdownChoiceId[] | null): void {
+		this.#propertyManager.notifyPropertiesChanged({
+			[propertyId]: instanceIds,
+		})
+	}
+	notifyPropertiesChanged(changes: Record<string, DropdownChoiceId[] | null>): void {
+		this.#propertyManager.notifyPropertiesChanged(changes)
+	}
+
+	setPropertyDefinitions(properties: CompanionPropertyDefinitions): void {
+		this.#propertyManager.setPropertyDefinitions(properties)
 	}
 
 	/**

@@ -9,17 +9,25 @@ import { CompanionFeedbackButtonStyleResult, SomeCompanionFeedbackInputField } f
 import { OSCSomeArguments } from '../common/osc'
 import { SomeCompanionConfigField } from '../module-api/config'
 import { LogLevel, InstanceStatus } from '../module-api/enums'
-import { InputValue, CompanionOptionValues, CompanionInputFieldBase } from '../module-api/input'
+import {
+	InputValue,
+	CompanionOptionValues,
+	CompanionInputFieldBase,
+	DropdownChoice,
+	DropdownChoiceId,
+} from '../module-api/input'
 import { CompanionButtonPresetDefinition } from '../module-api/preset'
 import { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http'
 import { SomeCompanionActionInputField } from '../module-api/action'
 import { CompanionVariableValue } from '../module-api/variable'
+import { CompanionPropertyType, CompanionPropertyValue } from '../module-api/properties'
 
 export interface ModuleToHostEventsV0 {
 	'log-message': (msg: LogMessageMessage) => never
 	'set-status': (msg: SetStatusMessage) => never
 	setActionDefinitions: (msg: SetActionDefinitionsMessage) => never
 	setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => never
+	setPropertyDefinitions: (msg: SetPropertyDefinitionsMessage) => never
 	setVariableDefinitions: (msg: SetVariableDefinitionsMessage) => never
 	setPresetDefinitions: (msg: SetPresetDefinitionsMessage) => never
 	setVariableValues: (msg: SetVariableValuesMessage) => never
@@ -47,6 +55,7 @@ export interface HostToModuleEventsV0 {
 	learnFeedback: (msg: LearnFeedbackMessage) => LearnFeedbackResponseMessage
 	startStopRecordActions: (msg: StartStopRecordActionsMessage) => void
 	variablesChanged: (msg: VariablesChangedMessage) => never
+	propertySet: (msg: PropertySetMessage) => void
 }
 
 export type EncodeIsVisible<T extends CompanionInputFieldBase> = Omit<T, 'isVisible'> & {
@@ -120,6 +129,22 @@ export interface SetFeedbackDefinitionsMessage {
 	}>
 }
 
+export interface SetPropertyDefinitionsMessage {
+	properties: Array<{
+		id: string
+		name: string
+		description: string | undefined
+		type: CompanionPropertyType
+
+		instanceIds: DropdownChoice[] | null
+
+		hasSetter: boolean
+		hasGetter: boolean
+		// options: EncodeIsVisible<SomeCompanionActionInputField>[] // TODO module-lib - versioned types?
+		// hasLearn: boolean
+	}>
+}
+
 export interface SetVariableDefinitionsMessage {
 	variables: Array<{
 		id: string
@@ -146,6 +171,19 @@ export interface ExecuteActionMessage {
 
 	/** @deprecated will be removed in favor of `surfaceId` soon */
 	deviceId: string | undefined
+}
+
+export interface PropertySetMessage {
+	property: {
+		propertyId: string
+		instanceId: DropdownChoiceId | null
+		value: CompanionPropertyValue
+	}
+
+	/** Identifier of the surface which triggered this action */
+	surfaceId: string | undefined
+
+	controlId: string
 }
 
 export interface UpdateFeedbackValuesMessage {
