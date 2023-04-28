@@ -32,6 +32,7 @@ export interface ModuleToHostEventsV0 {
 	setPresetDefinitions: (msg: SetPresetDefinitionsMessage) => never
 	setVariableValues: (msg: SetVariableValuesMessage) => never
 	updateFeedbackValues: (msg: UpdateFeedbackValuesMessage) => never
+	updatePropertyValues: (msg: UpdatePropertyValuesMessage) => never
 	saveConfig: (msg: SaveConfigMessage) => never
 	'send-osc': (msg: SendOscMessage) => never
 	parseVariablesInString: (msg: ParseVariablesInStringMessage) => ParseVariablesInStringResponseMessage
@@ -191,6 +192,14 @@ export interface UpdateFeedbackValuesMessage {
 		id: string
 		controlId: string
 		value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined
+	}>
+}
+
+export interface UpdatePropertyValuesMessage {
+	values: Array<{
+		id: string
+		// TODO - this might be a performance problem, if properties have 'too many' instances
+		value: CompanionVariableValue | Record<DropdownChoiceId, CompanionVariableValue> | undefined
 	}>
 }
 

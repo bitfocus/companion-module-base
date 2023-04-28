@@ -23,8 +23,6 @@ import {
 	SendOscMessage,
 	SetPresetDefinitionsMessage,
 	SetStatusMessage,
-	SetVariableDefinitionsMessage,
-	SetVariableValuesMessage,
 	StartStopRecordActionsMessage,
 	UpdateActionInstancesMessage,
 	UpdateConfigAndLabelMessage,
@@ -34,7 +32,7 @@ import {
 import { literal } from '../util'
 import { InstanceBaseShared } from '../instance-base'
 import PQueue from 'p-queue'
-import { CompanionVariableDefinition, CompanionVariableValue, CompanionVariableValues } from './variable'
+import { CompanionVariableValue } from './variable'
 import { OSCSomeArguments } from '../common/osc'
 import { SomeCompanionConfigField } from './config'
 import { CompanionStaticUpgradeScript } from './upgrade'
@@ -54,6 +52,11 @@ export interface InstanceBaseOptions {
 	 * It is not recommended to set this, unless you know what you are doing.
 	 */
 	disableVariableValidation: boolean
+
+	/**
+	 * Use the experimental properties functionality instead of variables
+	 */
+	// experimentalProperties: boolean
 }
 
 export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
@@ -71,9 +74,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	readonly #feedbackManager: FeedbackManager
 	readonly #propertyManager: PropertyManager
 
-	readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
+	// readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
 
-	readonly #variableValues = new Map<string, CompanionVariableValue>()
+	// readonly #variableValues = new Map<string, CompanionVariableValue>()
 
 	readonly #options: InstanceBaseOptions
 	#label: string
@@ -101,6 +104,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		this.#options = {
 			disableVariableValidation: false,
+			// experimentalProperties: false,
 		}
 
 		this.#ipcWrapper = new IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>(
@@ -141,6 +145,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			this.log.bind(this)
 		)
 		this.#propertyManager = new PropertyManager(
+			(msg) => this.#ipcWrapper.sendWithNoCb('updatePropertyValues', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('setPropertyDefinitions', msg),
 			this.log.bind(this)
 		)
@@ -412,41 +417,41 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		this.#ipcWrapper.sendWithNoCb('setPresetDefinitions', { presets: hostPresets })
 	}
 
-	/**
-	 * Set the variable definitions for this instance
-	 * @param variables The variable definitions
-	 */
-	setVariableDefinitions(variables: CompanionVariableDefinition[]): void {
-		const hostVariables: SetVariableDefinitionsMessage['variables'] = []
+	// /**
+	//  * Set the variable definitions for this instance
+	//  * @param variables The variable definitions
+	//  */
+	// setVariableDefinitions(variables: CompanionVariableDefinition[]): void {
+	// 	const hostVariables: SetVariableDefinitionsMessage['variables'] = []
 
-		this.#variableDefinitions.clear()
+	// 	this.#variableDefinitions.clear()
 
-		for (const variable of variables) {
-			hostVariables.push({
-				id: variable.variableId,
-				name: variable.name,
-			})
+	// 	for (const variable of variables) {
+	// 		hostVariables.push({
+	// 			id: variable.variableId,
+	// 			name: variable.name,
+	// 		})
 
-			// Remember the definition locally
-			this.#variableDefinitions.set(variable.variableId, variable)
-			if (!this.#variableValues.has(variable.variableId)) {
-				// Give us a local cached value of something
-				this.#variableValues.set(variable.variableId, '')
-			}
-		}
+	// 		// Remember the definition locally
+	// 		this.#variableDefinitions.set(variable.variableId, variable)
+	// 		if (!this.#variableValues.has(variable.variableId)) {
+	// 			// Give us a local cached value of something
+	// 			this.#variableValues.set(variable.variableId, '')
+	// 		}
+	// 	}
 
-		if (!this.#options.disableVariableValidation) {
-			const validIds = new Set(this.#variableDefinitions.keys())
-			for (const id of this.#variableValues.keys()) {
-				if (!validIds.has(id)) {
-					// Delete any local cached value
-					this.#variableValues.delete(id)
-				}
-			}
-		}
+	// 	if (!this.#options.disableVariableValidation) {
+	// 		const validIds = new Set(this.#variableDefinitions.keys())
+	// 		for (const id of this.#variableValues.keys()) {
+	// 			if (!validIds.has(id)) {
+	// 				// Delete any local cached value
+	// 				this.#variableValues.delete(id)
+	// 			}
+	// 		}
+	// 	}
 
-		this.#ipcWrapper.sendWithNoCb('setVariableDefinitions', { variables: hostVariables })
-	}
+	// 	this.#ipcWrapper.sendWithNoCb('setVariableDefinitions', { variables: hostVariables })
+	// }
 
 	notifyPropertyChanged(propertyId: string, instanceIds: DropdownChoiceId[] | null): void {
 		this.#propertyManager.notifyPropertiesChanged({
@@ -461,54 +466,54 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		this.#propertyManager.setPropertyDefinitions(properties)
 	}
 
-	/**
-	 * Set the values of some variables
-	 * @param values The new values for the variables
-	 */
-	setVariableValues(values: CompanionVariableValues): void {
-		const hostValues: SetVariableValuesMessage['newValues'] = []
+	// /**
+	//  * Set the values of some variables
+	//  * @param values The new values for the variables
+	//  */
+	// setVariableValues(values: CompanionVariableValues): void {
+	// 	const hostValues: SetVariableValuesMessage['newValues'] = []
 
-		for (const [variableId, value] of Object.entries(values)) {
-			if (this.#options.disableVariableValidation) {
-				// update the cached value
-				if (value === undefined) {
-					this.#variableValues.delete(variableId)
-				} else {
-					this.#variableValues.set(variableId, value)
-				}
+	// 	for (const [variableId, value] of Object.entries(values)) {
+	// 		if (this.#options.disableVariableValidation) {
+	// 			// update the cached value
+	// 			if (value === undefined) {
+	// 				this.#variableValues.delete(variableId)
+	// 			} else {
+	// 				this.#variableValues.set(variableId, value)
+	// 			}
 
-				hostValues.push({
-					id: variableId,
-					value: value,
-				})
-			} else if (this.#variableDefinitions.has(variableId)) {
-				// update the cached value
-				this.#variableValues.set(variableId, value ?? '')
+	// 			hostValues.push({
+	// 				id: variableId,
+	// 				value: value,
+	// 			})
+	// 		} else if (this.#variableDefinitions.has(variableId)) {
+	// 			// update the cached value
+	// 			this.#variableValues.set(variableId, value ?? '')
 
-				hostValues.push({
-					id: variableId,
-					value: value ?? '',
-				})
-			} else {
-				// tell companion to delete the value
-				hostValues.push({
-					id: variableId,
-					value: undefined,
-				})
-			}
-		}
+	// 			hostValues.push({
+	// 				id: variableId,
+	// 				value: value ?? '',
+	// 			})
+	// 		} else {
+	// 			// tell companion to delete the value
+	// 			hostValues.push({
+	// 				id: variableId,
+	// 				value: undefined,
+	// 			})
+	// 		}
+	// 	}
 
-		this.#ipcWrapper.sendWithNoCb('setVariableValues', { newValues: hostValues })
-	}
+	// 	this.#ipcWrapper.sendWithNoCb('setVariableValues', { newValues: hostValues })
+	// }
 
-	/**
-	 * Get the last set value of a variable from this connection
-	 * @param variableId id of the variable
-	 * @returns The value
-	 */
-	getVariableValue(variableId: string): CompanionVariableValue | undefined {
-		return this.#variableValues.get(variableId)
-	}
+	// /**
+	//  * Get the last set value of a variable from this connection
+	//  * @param variableId id of the variable
+	//  * @returns The value
+	//  */
+	// getVariableValue(variableId: string): CompanionVariableValue | undefined {
+	// 	return this.#variableValues.get(variableId)
+	// }
 
 	/**
 	 * Parse and replace all the variables in a string

@@ -19,7 +19,7 @@ export interface CompanionPropertyDefinition<T extends CompanionPropertyValue = 
 	 */
 	instanceIds?: Array<DropdownChoice>
 
-	getValue?: (instanceId: DropdownChoiceId | null, context: unknown) => Promise<T>
+	getValues?: (context: unknown) => Promise<T | Record<DropdownChoiceId, T>>
 	setValue?: (instanceId: DropdownChoiceId | null, value: T, context: unknown) => Promise<void>
 
 	//   subscribe: () => {...},

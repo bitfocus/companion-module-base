@@ -1,18 +1,38 @@
-import { CompanionPropertyDefinition, CompanionPropertyDefinitions } from '../module-api/properties'
-import { PropertySetMessage, SetPropertyDefinitionsMessage } from '../host-api/api'
+import {
+	CompanionPropertyDefinition,
+	CompanionPropertyDefinitions,
+	CompanionPropertyValue,
+} from '../module-api/properties'
+import { PropertySetMessage, SetPropertyDefinitionsMessage, UpdatePropertyValuesMessage } from '../host-api/api'
 import { DropdownChoiceId, LogLevel } from '../module-api'
+import debounceFn from 'debounce-fn'
 
+interface PropertyCheckStatus {
+	/** whether a recheck has been requested while it was being checked */
+	needsRecheck: boolean
+
+	// /** the variables that changed while this feedback was being checked  */
+	// changedVariables: Set<string>
+}
 export class PropertyManager {
+	readonly #updatePropertyValues: (msg: UpdatePropertyValuesMessage) => void
 	readonly #setPropertyDefinitions: (msg: SetPropertyDefinitionsMessage) => void
 	readonly #log: (level: LogLevel, message: string) => void
 
 	readonly #propertyDefinitions = new Map<string, CompanionPropertyDefinition>()
 	// readonly #actionInstances = new Map<string, ActionInstance>()
 
+	// Property values waiting to be sent
+	#pendingPropertyValues = new Map<string, UpdatePropertyValuesMessage['values'][0]>()
+	// Properties currently being checked
+	#propertiesBeingChecked = new Map<string, PropertyCheckStatus>()
+
 	constructor(
+		updatePropertyValues: (msg: UpdatePropertyValuesMessage) => void,
 		setPropertyDefinitions: (msg: SetPropertyDefinitionsMessage) => void,
 		log: (level: LogLevel, message: string) => void
 	) {
+		this.#updatePropertyValues = updatePropertyValues
 		this.#setPropertyDefinitions = setPropertyDefinitions
 		this.#log = log
 	}
@@ -25,108 +45,120 @@ export class PropertyManager {
 		await propertyDefinition.setValue(msg.property.instanceId, msg.property.value, null)
 	}
 
-	// public handleUpdateActions(actions: { [id: string]: ActionInstance | null | undefined }): void {
-	// 	for (const [id, action] of Object.entries(actions)) {
-	// 		const existing = this.#actionInstances.get(id)
-	// 		if (existing) {
-	// 			// Call unsubscribe
-	// 			const definition = this.#actionDefinitions.get(existing.actionId)
-	// 			if (definition?.unsubscribe) {
-	// 				const context: CompanionActionContext = {
-	// 					parseVariablesInString: async (text: string): Promise<string> => {
-	// 						const res = await this.#parseVariablesInString({
-	// 							text: text,
-	// 							controlId: existing.controlId,
-	// 							actionInstanceId: existing.id,
-	// 							feedbackInstanceId: undefined,
-	// 						})
+	#triggerCheckProperty(id: string) {
+		const existingRecheck = this.#propertiesBeingChecked.get(id)
+		if (existingRecheck) {
+			// Already being checked
+			existingRecheck.needsRecheck = true
+			return
+		}
 
-	// 						return res.text
-	// 					},
-	// 				}
+		const propertyCheckStatus: PropertyCheckStatus = {
+			needsRecheck: false,
+			// changedVariables: new Set(),
+		}
+		// mark it as being checked
+		this.#propertiesBeingChecked.set(id, propertyCheckStatus)
 
-	// 				Promise.resolve(definition.unsubscribe(convertActionInstanceToEvent(existing), context)).catch((e) => {
-	// 					this.#log(
-	// 						'error',
-	// 						`Action unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`
-	// 					)
-	// 				})
-	// 			}
-	// 		}
+		Promise.resolve()
+			.then(async () => {
+				const definition = this.#propertyDefinitions.get(id)
 
-	// 		if (!action || action.disabled) {
-	// 			// Deleted
-	// 			this.#actionInstances.delete(id)
-	// 		} else {
-	// 			// TODO module-lib - deep freeze the action to avoid mutation?
-	// 			this.#actionInstances.set(id, action)
+				let values: Promise<CompanionPropertyValue | Record<DropdownChoiceId, CompanionPropertyValue> | undefined> =
+					Promise.resolve(undefined)
+				// const newReferencedVariables = new Set<string>()
 
-	// 			// Inserted or updated
-	// 			const definition = this.#actionDefinitions.get(action.actionId)
-	// 			if (definition?.subscribe) {
-	// 				const context: CompanionFeedbackContext = {
-	// 					parseVariablesInString: async (text: string): Promise<string> => {
-	// 						const res = await this.#parseVariablesInString({
-	// 							text: text,
-	// 							controlId: action.controlId,
-	// 							actionInstanceId: action.id,
-	// 							feedbackInstanceId: undefined,
-	// 						})
+				// Calculate the new value for the feedback
+				if (definition && definition.getValues) {
+					// Set this while the promise starts executing
+					// this.#parseVariablesContext = `Feedback ${property.feedbackId} (${id})`
 
-	// 						return res.text
-	// 					},
-	// 				}
+					// const context: CompanionFeedbackContext = {
+					// 	parseVariablesInString: async (text: string): Promise<string> => {
+					// 		const res = await this.#parseVariablesInString({
+					// 			text: text,
+					// 			controlId: property.controlId,
+					// 			actionInstanceId: undefined,
+					// 			feedbackInstanceId: id,
+					// 		})
 
-	// 				Promise.resolve(definition.subscribe(convertActionInstanceToEvent(action), context)).catch((e) => {
-	// 					this.#log('error', `Action subscribe failed: ${JSON.stringify(action)} - ${e?.message ?? e} ${e?.stack}`)
-	// 				})
-	// 			}
-	// 		}
-	// 	}
-	// }
+					// 		// Track which variables were referenced
+					// 		if (res.variableIds && res.variableIds.length) {
+					// 			for (const id of res.variableIds) {
+					// 				newReferencedVariables.add(id)
+					// 			}
+					// 		}
 
-	// public async handleLearnAction(msg: LearnActionMessage): Promise<LearnActionResponseMessage> {
-	// 	const definition = this.#actionDefinitions.get(msg.action.actionId)
-	// 	if (definition && definition.learn) {
-	// 		const context: CompanionFeedbackContext = {
-	// 			parseVariablesInString: async (text: string): Promise<string> => {
-	// 				const res = await this.#parseVariablesInString({
-	// 					text: text,
-	// 					controlId: msg.action.controlId,
-	// 					actionInstanceId: msg.action.id,
-	// 					feedbackInstanceId: undefined,
-	// 				})
+					// 		return res.text
+					// 	},
+					// }
 
-	// 				return res.text
-	// 			},
-	// 		}
+					values = definition.getValues(null)
 
-	// 		const newOptions = await definition.learn(
-	// 			{
-	// 				id: msg.action.id,
-	// 				actionId: msg.action.actionId,
-	// 				controlId: msg.action.controlId,
-	// 				options: msg.action.options,
+					// this.#parseVariablesContext = undefined
+				}
 
-	// 				surfaceId: undefined,
+				// Await the value before looking at this.#pendingFeedbackValues, to avoid race conditions
+				const resolvedValues = await values
+				this.#pendingPropertyValues.set(id, {
+					id: id,
+					// controlId: property.controlId,
+					value: resolvedValues,
+				})
+				this.#sendPropertyValues()
 
-	// 				_deviceId: undefined,
-	// 				_page: msg.action.page,
-	// 				_bank: msg.action.bank,
-	// 			},
-	// 			context
-	// 		)
+				// property.referencedVariables = newReferencedVariables.size > 0 ? Array.from(newReferencedVariables) : null
+			})
+			.catch((e) => {
+				console.error(`Property check failed: ${JSON.stringify({})} - ${e?.message ?? e} ${e?.stack}`)
+			})
+			.finally(() => {
+				// ensure this.#parseVariablesContext is cleared
+				// this.#parseVariablesContext = undefined
 
-	// 		return {
-	// 			options: newOptions,
-	// 		}
-	// 	} else {
-	// 		// Not supported
-	// 		return {
-	// 			options: undefined,
-	// 		}
-	// 	}
-	// }
+				// it is no longer being checked
+				this.#propertiesBeingChecked.delete(id)
+
+				// Check if any variables changed that should cause an immediate recheck
+				const recheckForVariableChanged = false
+				// if (property.referencedVariables) {
+				// 	for (const id of property.referencedVariables) {
+				// 		if (feedbackCheckStatus.changedVariables.has(id)) {
+				// 			recheckForVariableChanged = true
+				// 			break
+				// 		}
+				// 	}
+				// }
+
+				// If queued, trigger a check
+				if (recheckForVariableChanged || propertyCheckStatus.needsRecheck) {
+					setImmediate(() => {
+						this.#triggerCheckProperty(id)
+					})
+				}
+			})
+	}
+
+	/**
+	 * Send pending feedback values (from this.#pendingFeedbackValues) to companion, with a debounce
+	 */
+	#sendPropertyValues = debounceFn(
+		(): void => {
+			const newValues = this.#pendingPropertyValues
+			this.#pendingPropertyValues = new Map()
+
+			// Send the new values back
+			if (newValues.size > 0) {
+				this.#updatePropertyValues({
+					values: Array.from(newValues.values()),
+				})
+			}
+		},
+		{
+			wait: 5,
+			maxWait: 25,
+		}
+	)
 
 	setPropertyDefinitions(properties: CompanionPropertyDefinitions): void {
 		const hostProperties: SetPropertyDefinitionsMessage['properties'] = []
@@ -143,7 +175,7 @@ export class PropertyManager {
 
 					instanceIds: property.instanceIds ?? null,
 
-					hasGetter: !!property.getValue,
+					hasGetter: !!property.getValues,
 					hasSetter: !!property.setValue,
 				})
 
@@ -156,74 +188,8 @@ export class PropertyManager {
 	}
 
 	notifyPropertiesChanged(changes: Record<string, DropdownChoiceId[] | null>): void {
-		// TODO
+		for (const id of Object.keys(changes)) {
+			this.#triggerCheckProperty(id)
+		}
 	}
-
-	// /** @deprecated */
-	// _getAllActions(): Pick<ActionInstance, 'id' | 'actionId' | 'controlId' | 'options'>[] {
-	// 	return Array.from(this.#actionInstances.values()).map((act) => ({
-	// 		id: act.id,
-	// 		actionId: act.actionId,
-	// 		controlId: act.controlId,
-	// 		options: act.options,
-	// 	}))
-	// }
-
-	// subscribeActions(actionIds: string[]): void {
-	// 	let actions = Array.from(this.#actionInstances.values())
-
-	// 	const actionIdSet = new Set(actionIds)
-	// 	if (actionIdSet.size) actions = actions.filter((fb) => actionIdSet.has(fb.actionId))
-
-	// 	for (const act of actions) {
-	// 		const def = this.#actionDefinitions.get(act.actionId)
-	// 		if (def?.subscribe) {
-	// 			const context: CompanionActionContext = {
-	// 				parseVariablesInString: async (text: string): Promise<string> => {
-	// 					const res = await this.#parseVariablesInString({
-	// 						text: text,
-	// 						controlId: act.controlId,
-	// 						actionInstanceId: act.id,
-	// 						feedbackInstanceId: undefined,
-	// 					})
-
-	// 					return res.text
-	// 				},
-	// 			}
-
-	// 			Promise.resolve(def.subscribe(convertActionInstanceToEvent(act), context)).catch((e) => {
-	// 				this.#log('error', `Action subscribe failed: ${JSON.stringify(act)} - ${e?.message ?? e} ${e?.stack}`)
-	// 			})
-	// 		}
-	// 	}
-	// }
-
-	// unsubscribeActions(actionIds: string[]): void {
-	// 	let actions = Array.from(this.#actionInstances.values())
-
-	// 	const actionIdSet = new Set(actionIds)
-	// 	if (actionIdSet.size) actions = actions.filter((fb) => actionIdSet.has(fb.actionId))
-
-	// 	for (const act of actions) {
-	// 		const def = this.#actionDefinitions.get(act.actionId)
-	// 		if (def && def.unsubscribe) {
-	// 			const context: CompanionActionContext = {
-	// 				parseVariablesInString: async (text: string): Promise<string> => {
-	// 					const res = await this.#parseVariablesInString({
-	// 						text: text,
-	// 						controlId: act.controlId,
-	// 						actionInstanceId: act.id,
-	// 						feedbackInstanceId: undefined,
-	// 					})
-
-	// 					return res.text
-	// 				},
-	// 			}
-
-	// 			Promise.resolve(def.unsubscribe(convertActionInstanceToEvent(act), context)).catch((e) => {
-	// 				this.#log('error', `Action unsubscribe failed: ${JSON.stringify(act)} - ${e?.message ?? e} ${e?.stack}`)
-	// 			})
-	// 		}
-	// 	}
-	// }
 }
