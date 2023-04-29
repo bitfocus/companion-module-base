@@ -56,7 +56,7 @@ export interface InstanceBaseOptions {
 	/**
 	 * Use the experimental properties functionality instead of variables
 	 */
-	// experimentalProperties: boolean
+	experimentalProperties: boolean
 }
 
 export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
@@ -104,7 +104,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 		this.#options = {
 			disableVariableValidation: false,
-			// experimentalProperties: false,
+			experimentalProperties: false,
 		}
 
 		this.#ipcWrapper = new IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>(
@@ -228,6 +228,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			return {
 				hasHttpHandler: typeof this.handleHttpRequest === 'function',
 				hasRecordActionsHandler: typeof this.handleStartStopRecordActions == 'function',
+				usesProperties: this.#options.experimentalProperties,
 				newUpgradeIndex: this.#upgradeScripts.length - 1,
 				updatedConfig: this.#lastConfig,
 			}

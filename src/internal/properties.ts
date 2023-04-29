@@ -66,36 +66,10 @@ export class PropertyManager {
 
 				let values: Promise<CompanionPropertyValue | Record<DropdownChoiceId, CompanionPropertyValue> | undefined> =
 					Promise.resolve(undefined)
-				// const newReferencedVariables = new Set<string>()
 
 				// Calculate the new value for the feedback
 				if (definition && definition.getValues) {
-					// Set this while the promise starts executing
-					// this.#parseVariablesContext = `Feedback ${property.feedbackId} (${id})`
-
-					// const context: CompanionFeedbackContext = {
-					// 	parseVariablesInString: async (text: string): Promise<string> => {
-					// 		const res = await this.#parseVariablesInString({
-					// 			text: text,
-					// 			controlId: property.controlId,
-					// 			actionInstanceId: undefined,
-					// 			feedbackInstanceId: id,
-					// 		})
-
-					// 		// Track which variables were referenced
-					// 		if (res.variableIds && res.variableIds.length) {
-					// 			for (const id of res.variableIds) {
-					// 				newReferencedVariables.add(id)
-					// 			}
-					// 		}
-
-					// 		return res.text
-					// 	},
-					// }
-
 					values = definition.getValues(null)
-
-					// this.#parseVariablesContext = undefined
 				}
 
 				// Await the value before looking at this.#pendingFeedbackValues, to avoid race conditions
@@ -103,35 +77,20 @@ export class PropertyManager {
 				this.#pendingPropertyValues.set(id, {
 					id: id,
 					// controlId: property.controlId,
-					value: resolvedValues,
+					isSingleValue: !definition?.instanceIds,
+					values: resolvedValues,
 				})
 				this.#sendPropertyValues()
-
-				// property.referencedVariables = newReferencedVariables.size > 0 ? Array.from(newReferencedVariables) : null
 			})
 			.catch((e) => {
 				console.error(`Property check failed: ${JSON.stringify({})} - ${e?.message ?? e} ${e?.stack}`)
 			})
 			.finally(() => {
-				// ensure this.#parseVariablesContext is cleared
-				// this.#parseVariablesContext = undefined
-
 				// it is no longer being checked
 				this.#propertiesBeingChecked.delete(id)
 
-				// Check if any variables changed that should cause an immediate recheck
-				const recheckForVariableChanged = false
-				// if (property.referencedVariables) {
-				// 	for (const id of property.referencedVariables) {
-				// 		if (feedbackCheckStatus.changedVariables.has(id)) {
-				// 			recheckForVariableChanged = true
-				// 			break
-				// 		}
-				// 	}
-				// }
-
 				// If queued, trigger a check
-				if (recheckForVariableChanged || propertyCheckStatus.needsRecheck) {
+				if (propertyCheckStatus.needsRecheck) {
 					setImmediate(() => {
 						this.#triggerCheckProperty(id)
 					})
@@ -165,6 +124,7 @@ export class PropertyManager {
 
 		this.#propertyDefinitions.clear()
 
+		const propertyIds = new Set<string>()
 		for (const [propertyId, property] of Object.entries(properties)) {
 			if (property) {
 				hostProperties.push({
@@ -181,10 +141,15 @@ export class PropertyManager {
 
 				// Remember the definition locally
 				this.#propertyDefinitions.set(propertyId, property)
+				propertyIds.add(propertyId)
 			}
 		}
 
 		this.#setPropertyDefinitions({ properties: hostProperties })
+
+		for (const propertyId of propertyIds) {
+			this.#triggerCheckProperty(propertyId)
+		}
 	}
 
 	notifyPropertiesChanged(changes: Record<string, DropdownChoiceId[] | null>): void {

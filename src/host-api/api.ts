@@ -198,8 +198,9 @@ export interface UpdateFeedbackValuesMessage {
 export interface UpdatePropertyValuesMessage {
 	values: Array<{
 		id: string
+		isSingleValue: boolean
 		// TODO - this might be a performance problem, if properties have 'too many' instances
-		value: CompanionVariableValue | Record<DropdownChoiceId, CompanionVariableValue> | undefined
+		values: CompanionVariableValue | Record<DropdownChoiceId, CompanionVariableValue | undefined> | undefined
 	}>
 }
 
