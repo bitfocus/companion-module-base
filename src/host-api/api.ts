@@ -76,6 +76,7 @@ export interface InitMessage {
 export interface InitResponseMessage {
 	hasHttpHandler: boolean
 	hasRecordActionsHandler: boolean
+	usesProperties: boolean
 	newUpgradeIndex: number
 
 	updatedConfig: unknown | undefined
@@ -141,8 +142,6 @@ export interface SetPropertyDefinitionsMessage {
 
 		hasSetter: boolean
 		hasGetter: boolean
-		// options: EncodeIsVisible<SomeCompanionActionInputField>[] // TODO module-lib - versioned types?
-		// hasLearn: boolean
 	}>
 }
 

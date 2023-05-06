@@ -1,16 +1,10 @@
 import { DropdownChoice, DropdownChoiceId } from './input'
 
-/**
- * The definition of a variable
- */
-export interface CompanionPropertyDefinition<T extends CompanionPropertyValue = CompanionPropertyValue> {
+export interface CompanionPropertyDefinitionBase<TValue, TType extends CompanionPropertyType> {
 	name: string
 	description: string
 
-	/** Of type CompanionPropertyType */
-	type: CompanionPropertyValueToType<T>
-	// min: number
-	// max: number
+	type: TType
 
 	/**
 	 * Instances of this property.
@@ -18,34 +12,61 @@ export interface CompanionPropertyDefinition<T extends CompanionPropertyValue = 
 	 * null if no instances
 	 */
 	instanceIds?: Array<DropdownChoice>
+	// /**
+	//  * Whether to allow custom instanceIds to be used
+	//  * Can be set to either a regex to filter the allowed values, or true to allow any
+	//  */
+	// allowCustomInstanceIds?: string | boolean
 
-	getValues?: (context: unknown) => Promise<T | Record<DropdownChoiceId, T>>
-	setValue?: (instanceId: DropdownChoiceId | null, value: T, context: unknown) => Promise<void>
+	getValues?: (context: unknown) => Promise<TValue | Record<DropdownChoiceId, TValue>>
+	setValue?: (instanceId: DropdownChoiceId | null, value: TValue, context: unknown) => Promise<void>
 
 	//   subscribe: () => {...},
 	//   unsubscribe: () => {...},
 }
+
+/**
+ * The definition of a variable
+ */
+export type CompanionPropertyDefinition =
+	| CompanionNumberPropertyDefinition
+	| CompanionStringPropertyDefinition
+	| CompanionBooleanPropertyDefinition
+
+export interface CompanionNumberPropertyDefinition
+	extends CompanionPropertyDefinitionBase<number, CompanionPropertyType.Number> {
+	/**
+	 * The minimum value to allow
+	 * Note: values may not conform to this, it is a visual hint only
+	 */
+	min: number
+	/**
+	 * The maximum value to allow
+	 * Note: values may not conform to this, it is a visual hint only
+	 */
+	max: number
+
+	/** The stepping of the arrows */
+	step?: number
+
+	/** Whether to show a slider for the input */
+	range?: boolean
+}
+export interface CompanionStringPropertyDefinition
+	extends CompanionPropertyDefinitionBase<string, CompanionPropertyType.String> {
+	/**
+	 * A regex to use to inform the user if the current input is valid.
+	 * Note: values may not conform to this, it is a visual hint only
+	 */
+	regex?: string
+}
+export type CompanionBooleanPropertyDefinition = CompanionPropertyDefinitionBase<boolean, CompanionPropertyType.Boolean>
 
 export enum CompanionPropertyType {
 	String = 'string',
 	Number = 'number',
 	Boolean = 'boolean',
 }
-
-// /**
-//  * A set of values of some variables
-//  */
-// export interface CompanionVariableValues {
-// 	[variableId: string]: CompanionVariableValue | undefined
-// }
-
-export type CompanionPropertyValueToType<T extends CompanionPropertyValue> = T extends string
-	? CompanionPropertyType.String
-	: T extends number
-	? CompanionPropertyType.Number
-	: T extends boolean
-	? CompanionPropertyType.Boolean
-	: never
 
 /**
  * The value of a property

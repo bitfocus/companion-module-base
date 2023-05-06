@@ -10,9 +10,6 @@ import debounceFn from 'debounce-fn'
 interface PropertyCheckStatus {
 	/** whether a recheck has been requested while it was being checked */
 	needsRecheck: boolean
-
-	// /** the variables that changed while this feedback was being checked  */
-	// changedVariables: Set<string>
 }
 export class PropertyManager {
 	readonly #updatePropertyValues: (msg: UpdatePropertyValuesMessage) => void
@@ -20,7 +17,6 @@ export class PropertyManager {
 	readonly #log: (level: LogLevel, message: string) => void
 
 	readonly #propertyDefinitions = new Map<string, CompanionPropertyDefinition>()
-	// readonly #actionInstances = new Map<string, ActionInstance>()
 
 	// Property values waiting to be sent
 	#pendingPropertyValues = new Map<string, UpdatePropertyValuesMessage['values'][0]>()
@@ -55,7 +51,6 @@ export class PropertyManager {
 
 		const propertyCheckStatus: PropertyCheckStatus = {
 			needsRecheck: false,
-			// changedVariables: new Set(),
 		}
 		// mark it as being checked
 		this.#propertiesBeingChecked.set(id, propertyCheckStatus)
@@ -76,7 +71,6 @@ export class PropertyManager {
 				const resolvedValues = await values
 				this.#pendingPropertyValues.set(id, {
 					id: id,
-					// controlId: property.controlId,
 					isSingleValue: !definition?.instanceIds,
 					values: resolvedValues,
 				})
