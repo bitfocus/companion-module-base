@@ -142,6 +142,15 @@ export interface SetPropertyDefinitionsMessage {
 
 		hasSetter: boolean
 		hasGetter: boolean
+
+		// TODO - type these better...
+		choices?: DropdownChoice[]
+		allowCustom?: boolean
+		regex?: string
+		min?: number
+		max?: number
+		step?: number
+		range?: boolean
 	}>
 }
 

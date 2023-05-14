@@ -32,6 +32,7 @@ export type CompanionPropertyDefinition =
 	| CompanionNumberPropertyDefinition
 	| CompanionStringPropertyDefinition
 	| CompanionBooleanPropertyDefinition
+	| CompanionDropdownPropertyDefinition
 
 export interface CompanionNumberPropertyDefinition
 	extends CompanionPropertyDefinitionBase<number, CompanionPropertyType.Number> {
@@ -61,11 +62,29 @@ export interface CompanionStringPropertyDefinition
 	regex?: string
 }
 export type CompanionBooleanPropertyDefinition = CompanionPropertyDefinitionBase<boolean, CompanionPropertyType.Boolean>
+export interface CompanionDropdownPropertyDefinition
+	extends CompanionPropertyDefinitionBase<DropdownChoiceId, CompanionPropertyType.Dropdown> {
+	/** The possible choices */
+	choices: DropdownChoice[]
+
+	// TODO - refactor these to be tidier?
+
+	/** Allow custom values to be defined by the user */
+	allowCustom?: boolean
+	/** Check custom value against regex */
+	regex?: string
+
+	/** The minimum number of entries the dropdown must have before it allows searching */
+	// minChoicesForSearch?: number
+}
 
 export enum CompanionPropertyType {
 	String = 'string',
 	Number = 'number',
 	Boolean = 'boolean',
+	// ColorPicker = 'colorpicker', // TODO
+	Dropdown = 'dropdown',
+	// MultiDropdown = 'multidropdown', // TODO
 }
 
 /**

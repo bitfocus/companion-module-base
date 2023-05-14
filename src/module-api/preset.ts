@@ -28,6 +28,8 @@ export interface CompanionPresetFeedback {
 	style?: CompanionFeedbackButtonStyleResult
 }
 
+export type SomeCompanionPresetAction = CompanionPresetAction | CompanionPresetPropertyAction
+
 /**
  * The configuration of an action in a preset
  */
@@ -41,6 +43,22 @@ export interface CompanionPresetAction {
 }
 
 /**
+ * The configuration of an action in a preset
+ */
+export interface CompanionPresetPropertyAction {
+	/** The id of the property definition */
+	propertyId: string
+	/** The id of the property change action */
+	actionId: string
+	/** The execution delay of the action */
+	delay?: number
+	/** The id of the property instance */
+	instanceId: string | null
+	/** The valuee for the property */
+	value: string | number | boolean
+}
+
+/**
  * The definition of a press button preset
  */
 export interface CompanionButtonPresetDefinition {
@@ -50,10 +68,10 @@ export interface CompanionButtonPresetDefinition {
 	category: string
 	/** The name of this preset */
 	name: string
-    /** The base style of this preset, this will be copied to the button */
-    style: CompanionButtonStyleProps;
+	/** The base style of this preset, this will be copied to the button */
+	style: CompanionButtonStyleProps
 	/** Preview style for preset, will be used in GUI for preview */
-	previewStyle?: CompanionButtonStyleProps;
+	previewStyle?: CompanionButtonStyleProps
 	/** Options for this preset */
 	options?: CompanionButtonPresetOptions
 	/** The feedbacks on the button */
@@ -63,21 +81,21 @@ export interface CompanionButtonPresetDefinition {
 
 export interface CompanionPresetActionsWithOptions {
 	options?: CompanionActionSetOptions
-	actions: CompanionPresetAction[]
+	actions: SomeCompanionPresetAction[]
 }
 export interface CompanionActionSetOptions {
 	runWhileHeld?: boolean
 }
 export interface CompanionButtonStepActions {
 	/** The button down actions */
-	down: CompanionPresetAction[]
+	down: SomeCompanionPresetAction[]
 	/** The button up actions */
-	up: CompanionPresetAction[]
+	up: SomeCompanionPresetAction[]
 
-	rotate_left?: CompanionPresetAction[]
-	rotate_right?: CompanionPresetAction[]
+	rotate_left?: SomeCompanionPresetAction[]
+	rotate_right?: SomeCompanionPresetAction[]
 
-	[delay: number]: CompanionPresetActionsWithOptions | CompanionPresetAction[]
+	[delay: number]: CompanionPresetActionsWithOptions | SomeCompanionPresetAction[]
 }
 
 /**

@@ -1,5 +1,6 @@
 import {
 	CompanionPropertyDefinition,
+	CompanionPropertyDefinitionBase,
 	CompanionPropertyDefinitions,
 	CompanionPropertyValue,
 } from '../module-api/properties'
@@ -34,9 +35,14 @@ export class PropertyManager {
 	}
 
 	async propertySet(msg: PropertySetMessage): Promise<void> {
-		const propertyDefinition = this.#propertyDefinitions.get(msg.property.propertyId)
+		const propertyDefinition = this.#propertyDefinitions.get(msg.property.propertyId) as
+			| CompanionPropertyDefinitionBase<any, any>
+			| undefined
+
 		if (!propertyDefinition) throw new Error(`Unknown property: ${msg.property.propertyId}`)
 		if (!propertyDefinition.setValue) throw new Error(`Property is readonly: ${msg.property.propertyId}`)
+
+		// TODO - type safety?
 
 		await propertyDefinition.setValue(msg.property.instanceId, msg.property.value, null)
 	}
@@ -121,7 +127,7 @@ export class PropertyManager {
 		const propertyIds = new Set<string>()
 		for (const [propertyId, property] of Object.entries(properties)) {
 			if (property) {
-				hostProperties.push({
+				const newProperty: (typeof hostProperties)[0] = {
 					id: propertyId,
 					name: property.name,
 					description: property.description,
@@ -131,7 +137,19 @@ export class PropertyManager {
 
 					hasGetter: !!property.getValues,
 					hasSetter: !!property.setValue,
-				})
+
+					// type specific fields
+					// TODO - type these better
+					choices: (property as any).choices,
+					allowCustom: (property as any).allowCustom,
+					regex: (property as any).regex,
+					min: (property as any).min,
+					max: (property as any).max,
+					step: (property as any).step,
+					range: (property as any).range,
+				}
+
+				hostProperties.push(newProperty)
 
 				// Remember the definition locally
 				this.#propertyDefinitions.set(propertyId, property)
