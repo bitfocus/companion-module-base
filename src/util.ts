@@ -1,3 +1,5 @@
+import { DropdownChoiceId } from './module-api'
+
 /**
  * Assert a certain type for a literal.
  * This can be used to correctly type parts of an object in TypeScript.
@@ -70,4 +72,11 @@ export function splitRgb(dec: number): RgbComponents {
  */
 export type Complete<T> = {
 	[P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : T[P] | undefined
+}
+
+export function formatVariableId(name: string, subId?: DropdownChoiceId): string {
+	const fragments = ['mod', name]
+	if (subId !== undefined) fragments.push(subId + '')
+
+	return `$(${fragments.join(':')})`
 }

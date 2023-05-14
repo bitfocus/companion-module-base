@@ -1,5 +1,5 @@
 import { CompanionFeedbackButtonStyleResult } from './feedback'
-import { CompanionOptionValues } from './input'
+import { CompanionOptionValues, DropdownChoiceId } from './input'
 import { CompanionButtonStyleProps } from './style'
 
 /**
@@ -42,18 +42,19 @@ export interface CompanionPresetAction {
 	options: CompanionOptionValues
 }
 
-/**
- * The configuration of an action in a preset
- */
+export enum CompanionPresetPropertyActionId {
+	SetValue = 'set-value',
+}
+
 export interface CompanionPresetPropertyAction {
 	/** The id of the property definition */
 	propertyId: string
 	/** The id of the property change action */
-	actionId: string
+	actionId: CompanionPresetPropertyActionId
 	/** The execution delay of the action */
 	delay?: number
 	/** The id of the property instance */
-	instanceId: string | null
+	instanceId: DropdownChoiceId | null
 	/** The valuee for the property */
 	value: string | number | boolean
 }
