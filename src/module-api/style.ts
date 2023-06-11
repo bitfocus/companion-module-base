@@ -9,7 +9,7 @@ export type CompanionAlignment =
 	| 'center:bottom'
 	| 'right:bottom'
 
-export type CompanionTextSize = 'auto' | '7' | '14' | '18' | '24' | '30' | '44'
+export type CompanionTextSize = 'auto' | '7' | '14' | '18' | '24' | '30' | '44' | number
 
 /**
  * The basic style properties for a button
@@ -22,4 +22,5 @@ export interface CompanionButtonStyleProps {
 	alignment?: CompanionAlignment
 	pngalignment?: CompanionAlignment
 	png64?: string
+	show_topbar?: boolean
 }
