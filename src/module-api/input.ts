@@ -57,27 +57,74 @@ export interface CompanionInputFieldStaticText extends CompanionInputFieldBase {
 	value: string
 }
 
+export type CompanionColorPresetValue = string|{color: string, title: string}
+
 /**
  * A colour picker input
  *
- * Available for actions/feedbacks/config
- *
+ * Available for actions/feedbacks/config  
+ * Has three optional configuration properties:  
+ * - {boolean} `enableAlpha` will show the colour picker with an additional alpha entry
+ * - {'string'|'number'} `returnType` do you want to get the results as CSS string or Companion color number
+ * - {string[]} `presetColors` replace the default swatch with your own colors when set
+ * 
  * ### Example
  * ```js
  * {
  * 	id: 'bg',
  * 	type: 'colorpicker',
  * 	label: 'Background color',
- * 	'default': combineRgb(255, 0, 0)
+ * 	default: 'rgb(255, 0, 0)'
+ * }
+ * ```
+ * 
+ * ```js
+ * {
+ * 	id: 'overlay',
+ * 	type: 'colorpicker',
+ * 	label: 'Overlay color',
+ *  enableAlpha: true,
+ *  returnType: 'string',
+ * 	default: 'rgba(100, 100, 255, 0.3)',
+ *  presetColors: ['#000', '#ffffff', {color: 'rgba(255, 0, 0, 0.5)', title: 'semitransparent red'}]
  * }
  * ```
  */
 export interface CompanionInputFieldColor extends CompanionInputFieldBase {
 	type: 'colorpicker'
 	/**
-	 * The default color value to set when creating this action/feedback/instance
+	 * The default color value to set when creating this action/feedback/instance 
+	 * Can be a color string or a color number  
+	 * Valid strings are CSS color strings in Hex, RGB, HSL or HSV notation with ot without alpha  
+	 * Valid numbers are 0x0 - 0xffffffff, where the components are ttrrggbb, you can generate the number with combineRgb()
+	 * 
+	 * ### Examples for red
+	 * ```
+	 * '#f00'
+	 * '#ff0000'
+	 * '#ff0000ff'
+	 * 'rgb(255,0,0)
+	 * 'rgba(255, 0, 0, 1.0)
+	 * 'hsl(0, 100, 50)'
+	 * 'hsv(0, 100, 100)'
+	 * 0xff0000
+	 * ```
+ 	 */
+	default: string|number
+	/**
+	 * This will enable a alpha entry slider and input
 	 */
-	default: number
+	enableAlpha?: boolean
+	/**
+	 * Specify if you want the colorpicker returning it's value as a CSS string or as a color number.  
+	 * This will also be the format stored in the database for this value
+	 */
+	returnType?: 'string' | 'number'
+	/**
+	 * If set, this will override the default colors shown in the swatch.  
+	 * Enter an array of either color strings or objects with color strings and titles
+	 */
+	presetColors?: CompanionColorPresetValue[]
 }
 
 /**
