@@ -136,7 +136,7 @@
 						}
 					},
 					"required": ["type", "protocol"],
-					"additionalProperties": true
+					"additionalProperties": false
 				}
 			},
 			"additionalProperties": false
