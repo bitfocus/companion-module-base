@@ -3,6 +3,9 @@
 	"type": "object",
 	"title": "ModuleManifest",
 	"properties": {
+		"$schema": {
+			"type": "string"
+		},
 		"id": {
 			"type": "string",
 			"description": "Unique identifier for the module"
@@ -108,10 +111,6 @@
 		"bonjourQueries": {
 			"type": "object",
 			"description": "If the device or software for your module supports bonjour announcements, Companion will offer an easy way to watch for these announcements.\nEach query you define must have a matching config field of type 'bonjour-device' with the same name",
-			"uniqueItems": true,
-			"items": {
-				"type": "string"
-			},
 			"patternProperties": {
 				"": {
 					"type": "object",
@@ -143,6 +142,7 @@
 			"additionalProperties": false
 		}
 	},
+	"additionalProperties": false,
 	"required": [
 		"id",
 		"name",
