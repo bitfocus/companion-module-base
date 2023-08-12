@@ -29,7 +29,11 @@ export interface CompanionInputFieldBase {
 	 *
 	 * Note: This function must not depend on anything outside of its scope. If it does it will fail to compile and will be skipped.
 	 */
-	isVisible?: (options: CompanionOptionValues) => boolean
+	isVisible?: (options: CompanionOptionValues, data: any | undefined) => boolean
+	/**
+	 * JSON serializable data to provide to `isVisible`
+	 */
+	isVisibleData?: any
 }
 
 /**
