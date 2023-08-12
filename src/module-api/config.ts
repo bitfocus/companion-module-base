@@ -1,5 +1,6 @@
 import {
 	CompanionInputFieldBase,
+	CompanionInputFieldBonjourDevice,
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldColor,
 	CompanionInputFieldDropdown,
@@ -27,5 +28,6 @@ export type SomeCompanionConfigField = (
 	| CompanionInputFieldMultiDropdown
 	| CompanionInputFieldNumber
 	| CompanionInputFieldCheckbox
+	| CompanionInputFieldBonjourDevice
 ) &
 	CompanionConfigField

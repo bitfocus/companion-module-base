@@ -20,6 +20,7 @@ export interface CompanionInputFieldBase {
 		| 'number'
 		| 'checkbox'
 		| 'custom-variable'
+		| 'bonjour-device'
 	/** The label of the field */
 	label: string
 	/** A hover tooltip for this field */
@@ -53,17 +54,17 @@ export interface CompanionInputFieldStaticText extends CompanionInputFieldBase {
 	value: string
 }
 
-export type CompanionColorPresetValue = string|{color: string, title: string}
+export type CompanionColorPresetValue = string | { color: string; title: string }
 
 /**
  * A colour picker input
  *
- * Available for actions/feedbacks/config  
- * Has three optional configuration properties:  
+ * Available for actions/feedbacks/config
+ * Has three optional configuration properties:
  * - {boolean} `enableAlpha` will show the colour picker with an additional alpha entry
  * - {'string'|'number'} `returnType` do you want to get the results as CSS string or Companion color number
  * - {string[]} `presetColors` replace the default swatch with your own colors when set
- * 
+ *
  * ### Example
  * ```js
  * {
@@ -73,7 +74,7 @@ export type CompanionColorPresetValue = string|{color: string, title: string}
  * 	default: 'rgb(255, 0, 0)'
  * }
  * ```
- * 
+ *
  * ```js
  * {
  * 	id: 'overlay',
@@ -89,11 +90,11 @@ export type CompanionColorPresetValue = string|{color: string, title: string}
 export interface CompanionInputFieldColor extends CompanionInputFieldBase {
 	type: 'colorpicker'
 	/**
-	 * The default color value to set when creating this action/feedback/instance 
-	 * Can be a color string or a color number  
-	 * Valid strings are CSS color strings in Hex, RGB, HSL or HSV notation with ot without alpha  
+	 * The default color value to set when creating this action/feedback/instance
+	 * Can be a color string or a color number
+	 * Valid strings are CSS color strings in Hex, RGB, HSL or HSV notation with ot without alpha
 	 * Valid numbers are 0x0 - 0xffffffff, where the components are ttrrggbb, you can generate the number with combineRgb()
-	 * 
+	 *
 	 * ### Examples for red
 	 * ```
 	 * '#f00'
@@ -105,19 +106,19 @@ export interface CompanionInputFieldColor extends CompanionInputFieldBase {
 	 * 'hsv(0, 100, 100)'
 	 * 0xff0000
 	 * ```
- 	 */
-	default: string|number
+	 */
+	default: string | number
 	/**
 	 * This will enable a alpha entry slider and input
 	 */
 	enableAlpha?: boolean
 	/**
-	 * Specify if you want the colorpicker returning it's value as a CSS string or as a color number.  
+	 * Specify if you want the colorpicker returning it's value as a CSS string or as a color number.
 	 * This will also be the format stored in the database for this value
 	 */
 	returnType?: 'string' | 'number'
 	/**
-	 * If set, this will override the default colors shown in the swatch.  
+	 * If set, this will override the default colors shown in the swatch.
 	 * Enter an array of either color strings or objects with color strings and titles
 	 */
 	presetColors?: CompanionColorPresetValue[]
@@ -330,4 +331,25 @@ export interface CompanionInputFieldNumber extends CompanionInputFieldBase {
  */
 export interface CompanionInputFieldCustomVariable extends CompanionInputFieldBase {
 	type: 'custom-variable'
+}
+
+/**
+ * An input field to list and select devices discovered with a bonjour query
+ *
+ * Available for config
+ *
+ * Note: Bonjour does not work in all environments, so the user is always able to select 'Manual' (null).
+ * You must make sure to handle this, we recommend using the `isVisible` function to hide the manual input fields when a bonjour device is selected.
+ *
+ * ### Example
+ * ```js
+ * {
+ * 	id: 'my-device',
+ * 	type: 'bonjour-device',
+ * 	label: 'Device'
+ * }
+ * ```
+ */
+export interface CompanionInputFieldBonjourDevice extends CompanionInputFieldBase {
+	type: 'bonjour-device'
 }
