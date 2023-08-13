@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.2](https://github.com/bitfocus/companion-module-base/compare/v1.4.1...v1.4.2) (2023-08-13)
+
+
+### Bug Fixes
+
+* add `isVisibleData` parameter to `isVisible` functions ([ddb1b42](https://github.com/bitfocus/companion-module-base/commit/ddb1b427de4606e4417f79d83cf25d277480c427))
+* Don't crash if action/feedback options are missing [#53](https://github.com/bitfocus/companion-module-base/issues/53) ([d4e271d](https://github.com/bitfocus/companion-module-base/commit/d4e271ded4b70d69641fc1655f2c14555c8865b0))
+
 ## [1.4.1](https://github.com/bitfocus/companion-module-base/compare/v1.4.0...v1.4.1) (2023-04-12)
 
 
