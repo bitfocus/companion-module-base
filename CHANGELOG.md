@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.3](https://github.com/bitfocus/companion-module-base/compare/v1.4.2...v1.4.3) (2023-08-13)
+
+
+### Bug Fixes
+
+* inline modified debounce-fn into this package ([a068123](https://github.com/bitfocus/companion-module-base/commit/a06812312b2582361d4e0e5e75795c4451a83ae9))
+* simplify inlined debounce-fn ([cdc1f2b](https://github.com/bitfocus/companion-module-base/commit/cdc1f2b34913f6fd2008ab74b2dbdd7561d316ec))
+* simplify inlined debounce-fn ([9b2f437](https://github.com/bitfocus/companion-module-base/commit/9b2f437bc1e1170d97db488126fe8d7c40363013))
+
 ## [1.4.2](https://github.com/bitfocus/companion-module-base/compare/v1.4.1...v1.4.2) (2023-08-13)
 
 
