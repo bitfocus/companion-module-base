@@ -24,7 +24,8 @@
 		"CHANGELOG.md",
 		"dist",
 		"generated",
-		"assets"
+		"assets",
+		"lib"
 	],
 	"dependencies": {
 		"@sentry/node": "^7.63.0",

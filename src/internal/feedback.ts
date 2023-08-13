@@ -16,7 +16,7 @@ import {
 	VariablesChangedMessage,
 } from '../host-api/api'
 import { serializeIsVisibleFn } from './base'
-import debounceFn from '../lib/debounce-fn'
+import debounceFn from '../../lib/debounce-fn'
 import { LogLevel } from '../module-api/enums'
 
 function convertFeedbackInstanceToEvent(
