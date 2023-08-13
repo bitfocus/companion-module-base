@@ -3,7 +3,7 @@ import { EncodeIsVisible } from '../host-api/api'
 import { CompanionInputFieldBase } from '../module-api/input'
 
 export function serializeIsVisibleFn<T extends CompanionInputFieldBase>(options: T[]): EncodeIsVisible<T>[] {
-	return options.map((option) => {
+	return (options ?? []).map((option) => {
 		if ('isVisible' in option) {
 			if (typeof option.isVisible === 'function') {
 				return {
