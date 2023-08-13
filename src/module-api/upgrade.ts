@@ -88,6 +88,12 @@ export interface CompanionMigrationFeedback {
 	 * If it is already a boolean feedback or is a different type of feedback, this will be ignored.
 	 */
 	style?: Partial<CompanionFeedbackButtonStyleResult>
+
+	/**
+	 * Only valid for a boolean feedback.
+	 * True if this feedback has been inverted inside Companion, you do not have access to this when the feedback is executed.
+	 */
+	isInverted: boolean
 }
 
 /**

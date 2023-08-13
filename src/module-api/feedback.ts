@@ -127,6 +127,12 @@ export interface CompanionBooleanFeedbackDefinition extends CompanionFeedbackDef
 	defaultStyle: Partial<CompanionFeedbackButtonStyleResult>
 	/** Called to get the feedback value */
 	callback: (feedback: CompanionFeedbackBooleanEvent, context: CompanionFeedbackContext) => boolean | Promise<boolean>
+
+	/**
+	 * If `undefined` or true, Companion will add an 'Inverted' checkbox for your feedback, and handle the logic for you.
+	 * By setting this to false, you can disable this for your feedback. You should do this if it does not make sense for your feedback.
+	 */
+	showInvert?: boolean
 }
 
 /**

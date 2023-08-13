@@ -131,6 +131,8 @@ export function runThroughUpgradeScripts(
 									feedbackId: inst.feedbackId,
 									options: inst.options !== undefined ? clone(inst.options) : {},
 									// TODO - style?
+
+									isInverted: inst.isInverted,
 								})
 							}
 						})
@@ -165,6 +167,8 @@ export function runThroughUpgradeScripts(
 						updatedFeedbacks[feedback.id] = {
 							...instance,
 							style: updatedFeedbacks[feedback.id]?.style ?? feedback.style,
+
+							isInverted: feedback.isInverted ?? false,
 						}
 					}
 				}

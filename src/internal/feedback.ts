@@ -4,6 +4,7 @@ import {
 	CompanionFeedbackDefinition,
 	CompanionFeedbackDefinitions,
 	CompanionFeedbackInfo,
+	SomeCompanionFeedbackInputField,
 } from '../module-api/feedback'
 import {
 	FeedbackInstance,
@@ -390,8 +391,9 @@ export class FeedbackManager {
 					description: feedback.description,
 					options: serializeIsVisibleFn(feedback.options),
 					type: feedback.type,
-					defaultStyle: 'defaultStyle' in feedback ? feedback.defaultStyle : undefined,
+					defaultStyle: feedback.type === 'boolean' ? feedback.defaultStyle : undefined,
 					hasLearn: !!feedback.learn,
+					showInvert: feedback.type === 'boolean' ? feedback.showInvert : false,
 				})
 
 				// Remember the definition locally
