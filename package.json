@@ -24,16 +24,15 @@
 		"CHANGELOG.md",
 		"dist",
 		"generated",
-		"assets",
-		"vendor"
+		"assets"
 	],
 	"dependencies": {
 		"@sentry/node": "^7.63.0",
 		"@sentry/tracing": "^7.63.0",
 		"ajv": "^8.12.0",
-		"debounce-fn": "link:./vendor/debounce-fn",
 		"ejson": "^2.2.3",
 		"eventemitter3": "^4.0.7",
+		"mimic-fn": "^3.0.0",
 		"nanoid": "^3.3.4",
 		"p-queue": "^6.6.2",
 		"p-timeout": "^4.1.0",
