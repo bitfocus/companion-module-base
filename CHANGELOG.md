@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/bitfocus/companion-module-base/compare/v1.4.3...v1.5.0) (2023-08-27)
+
+
+### Features
+
+* boolean feedback invert ([#59](https://github.com/bitfocus/companion-module-base/issues/59)) ([aa28207](https://github.com/bitfocus/companion-module-base/commit/aa28207ee5f71f280a5c61d78424f9f6a03e12f9))
+
 ## [1.4.3](https://github.com/bitfocus/companion-module-base/compare/v1.4.2...v1.4.3) (2023-08-13)
 
 
