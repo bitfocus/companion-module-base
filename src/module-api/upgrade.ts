@@ -166,3 +166,38 @@ export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig = unknown>(
 		}
 	}
 }
+
+/**
+ * A helper script to automate the bulk of the process to upgrade feedbacks from having a module defined 'invert' field, to use the builtin one.
+ * The feedback definitions must be updated manually, this can only help update existing usages of the feedback.
+ * @param upgradeMap The feedbacks to upgrade and the id of the option to convert
+ */
+export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig = unknown>(
+	upgradeMap: Record<string, string>
+): CompanionStaticUpgradeScript<TConfig> {
+	// Warning: the unused parameters will often be null
+	return (_context, props) => {
+		const changedFeedbacks: CompanionStaticUpgradeResult<unknown>['updatedFeedbacks'] = []
+
+		for (const feedback of props.feedbacks) {
+			let propertyName = upgradeMap[feedback.feedbackId]
+			if (typeof propertyName !== 'string') continue
+
+			// Retrieve and delete the old value
+			const rawValue = feedback.options[propertyName]
+			if (rawValue === undefined) continue
+			delete feedback.options[propertyName]
+
+			// Interpret it to a boolean, it could be stored in a few ways
+			feedback.isInverted = rawValue === 'true' || rawValue === true || Number(rawValue) > 0
+
+			changedFeedbacks.push(feedback)
+		}
+
+		return {
+			updatedConfig: null,
+			updatedActions: [],
+			updatedFeedbacks: changedFeedbacks,
+		}
+	}
+}
