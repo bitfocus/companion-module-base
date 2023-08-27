@@ -26,6 +26,10 @@ export interface CompanionPresetFeedback {
 	 * If a boolean feedback, the style effect of the feedback
 	 */
 	style?: CompanionFeedbackButtonStyleResult
+	/**
+	 * If a boolean feedback, invert the value of the feedback
+	 */
+	isInverted?: boolean
 }
 
 /**
@@ -50,10 +54,10 @@ export interface CompanionButtonPresetDefinition {
 	category: string
 	/** The name of this preset */
 	name: string
-    /** The base style of this preset, this will be copied to the button */
-    style: CompanionButtonStyleProps;
+	/** The base style of this preset, this will be copied to the button */
+	style: CompanionButtonStyleProps
 	/** Preview style for preset, will be used in GUI for preview */
-	previewStyle?: CompanionButtonStyleProps;
+	previewStyle?: CompanionButtonStyleProps
 	/** Options for this preset */
 	options?: CompanionButtonPresetOptions
 	/** The feedbacks on the button */

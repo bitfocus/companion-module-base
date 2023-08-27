@@ -77,6 +77,7 @@ export interface UpgradedDataResponseMessage {
 			| (FeedbackInstanceBase & {
 					controlId: string
 					style?: Partial<CompanionFeedbackButtonStyleResult>
+					isInverted: boolean
 			  })
 			| undefined
 	}
@@ -117,6 +118,7 @@ export interface SetFeedbackDefinitionsMessage {
 		type: 'boolean' | 'advanced'
 		defaultStyle?: Partial<CompanionFeedbackButtonStyleResult>
 		hasLearn: boolean
+		showInvert: boolean | undefined
 	}>
 }
 
@@ -169,6 +171,8 @@ export interface FeedbackInstanceBase {
 
 export interface FeedbackInstance extends FeedbackInstanceBase {
 	controlId: string
+
+	isInverted: boolean
 
 	/** If control supports an imageBuffer, the dimensions the buffer must be */
 	image?: {
