@@ -1,7 +1,8 @@
 # Changelog
 
-## [1.5.0](https://github.com/bitfocus/companion-module-base/compare/v1.4.3...v1.5.0) (2023-08-27)
+## [1.5.0](https://github.com/bitfocus/companion-module-base/compare/v1.4.3...v1.5.0)  (2023-08-27)
 
+Requires Companion 3.1 or later
 
 ### Features
 
