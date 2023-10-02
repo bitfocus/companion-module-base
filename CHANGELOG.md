@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/bitfocus/companion-module-base/compare/v1.5.0...v1.5.1) (2023-10-02)
+
+
+### Bug Fixes
+
+* use sequential ids in ipcWrapper, to ensure nanoid doesn't drain the system entropy pool ([5b5c32c](https://github.com/bitfocus/companion-module-base/commit/5b5c32cf3b9a1fe5b9b900c90d02a1970fd0a7c1))
+
 ## [1.5.0](https://github.com/bitfocus/companion-module-base/compare/v1.4.3...v1.5.0)  (2023-08-27)
 
 Requires Companion 3.1 or later
