@@ -585,7 +585,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	/**
-	 * Experimental: This method may change without notice. Do not use!
+	 * @deprecated Experimental: This method may change without notice. Do not use!
 	 * Set the value of a custom variable
 	 * @param variableName
 	 * @param value
