@@ -15,7 +15,7 @@ type HandlerReturnType<T extends (...args: any) => any> = ReturnType<T> extends 
 type HandlerFunctionOrNever<T> = T extends (...args: any) => any ? HandlerFunction<T> : never
 
 /** Map of handler functions */
-type EventHandlers<T extends object> = {
+export type IpcEventHandlers<T extends object> = {
 	[K in keyof T]: HandlerFunctionOrNever<T[K]>
 }
 
@@ -42,7 +42,7 @@ interface PendingCallback {
 }
 
 export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound extends { [key: string]: any }> {
-	#handlers: EventHandlers<TInbound>
+	#handlers: IpcEventHandlers<TInbound>
 	#sendMessage: (message: IpcCallMessagePacket | IpcResponseMessagePacket) => void
 	#defaultTimeout: number
 
@@ -50,7 +50,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 	#pendingCallbacks = new Map<number, PendingCallback>()
 
 	constructor(
-		handlers: EventHandlers<TInbound>,
+		handlers: IpcEventHandlers<TInbound>,
 		sendMessage: (message: IpcCallMessagePacket | IpcResponseMessagePacket) => void,
 		defaultTimeout: number
 	) {
