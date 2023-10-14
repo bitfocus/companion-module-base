@@ -11,10 +11,11 @@ In the future it will be possible to write modules in other languages, but it is
 
 Each version of Companion supports a limited range of versions of this library listed below. Any patch version (the third number) are not relevant for the compatibility check, so are not listed here
 
-| Companion | Module-base |
-|-----------|-------------|
-| v3.0      | v1.0 - v1.4 |
-| v3.1      | v1.0 - v1.5 |
+| Companion | Module-base               |
+| --------- | ------------------------- |
+| v3.0      | v1.0 - v1.4               |
+| v3.1      | v1.0 - v1.5               |
+| v3.2      | v1.0 - v1.6 (unconfirmed) |
 
 ## Getting started with a new module
 
