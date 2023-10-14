@@ -17,10 +17,11 @@
 <h1>Function combineRgb</h1></div>
 <section class="tsd-panel">
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="combineRgb"><span class="tsd-kind-call-signature">combine<wbr/>Rgb</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">r</span>, <span class="tsd-kind-parameter">g</span>, <span class="tsd-kind-parameter">b</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><a href="#combineRgb" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="combineRgb"><span class="tsd-kind-call-signature">combine<wbr/>Rgb</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">r</span>, <span class="tsd-kind-parameter">g</span>, <span class="tsd-kind-parameter">b</span>, <span class="tsd-kind-parameter">a</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><a href="#combineRgb" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></li>
 <li class="tsd-description">
-<div class="tsd-comment tsd-typography"><p>Combine separate RGB component to one single value to be used in feedback styles</p>
-<a id="md:example" class="tsd-anchor"></a><h3><a href="#md:example">Example</a></h3><pre><code class="language-js"><span class="hl-4">defaultStyle</span><span class="hl-1">: {</span><br/><span class="hl-1"> </span><span class="hl-4">bgcolor</span><span class="hl-1">: </span><span class="hl-2">combineRgb</span><span class="hl-1">(</span><span class="hl-7">255</span><span class="hl-1">, </span><span class="hl-7">0</span><span class="hl-1">, </span><span class="hl-7">0</span><span class="hl-1">),</span><br/><span class="hl-1"> </span><span class="hl-4">color</span><span class="hl-1">: </span><span class="hl-2">combineRgb</span><span class="hl-1">(</span><span class="hl-7">255</span><span class="hl-1">, </span><span class="hl-7">255</span><span class="hl-1">, </span><span class="hl-7">255</span><span class="hl-1">),</span><br/><span class="hl-1">}</span>
+<div class="tsd-comment tsd-typography"><p>Combine separate RGB component to one single numerical value.<br>The RGB component have to be in a range of 0-255.<br>There can also be an alpha component in a range of 0.0-1.0 (0 = transparent).  </p>
+<p><strong>Note:</strong> Companion&#39;s components can use any CSS color string and you should prefer these strings. E.g.for a button style you can also use <code>&#39;#ff8800&#39;</code> or <code>&#39;rgb(255, 128, 0)&#39;</code> without calling a function.</p>
+<a id="md:example" class="tsd-anchor"></a><h3><a href="#md:example">Example</a></h3><pre><code class="language-js"><span class="hl-4">defaultStyle</span><span class="hl-1">: {</span><br/><span class="hl-1"> </span><span class="hl-4">bgcolor</span><span class="hl-1">: </span><span class="hl-2">combineRgb</span><span class="hl-1">(</span><span class="hl-8">255</span><span class="hl-1">, </span><span class="hl-8">0</span><span class="hl-1">, </span><span class="hl-8">0</span><span class="hl-1">),</span><br/><span class="hl-1"> </span><span class="hl-4">color</span><span class="hl-1">: </span><span class="hl-2">combineRgb</span><span class="hl-1">(</span><span class="hl-8">255</span><span class="hl-1">, </span><span class="hl-8">255</span><span class="hl-1">, </span><span class="hl-8">255</span><span class="hl-1">),</span><br/><span class="hl-1">}</span>
 </code><button>Copy</button></pre>
 </div>
 <div class="tsd-parameters">
@@ -31,11 +32,13 @@
 <li>
 <h5><span class="tsd-kind-parameter">g</span>: <span class="tsd-signature-type">number</span></h5></li>
 <li>
-<h5><span class="tsd-kind-parameter">b</span>: <span class="tsd-signature-type">number</span></h5></li></ul></div>
+<h5><span class="tsd-kind-parameter">b</span>: <span class="tsd-signature-type">number</span></h5></li>
+<li>
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">a</span>: <span class="tsd-signature-type">number</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/fffe705/src/util.ts#L52">src/util.ts:52</a></li></ul></aside></li></ul></section></div>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/util.ts#L60">src/util.ts:60</a></li></ul></aside></li></ul></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -88,6 +91,7 @@
 <li><a href="../interfaces/CompanionHTTPResponse.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>CompanionHTTPResponse</span></a></li>
 <li><a href="../interfaces/CompanionImageBufferPosition.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Image<wbr/>Buffer<wbr/>Position</span></a></li>
 <li><a href="../interfaces/CompanionInputFieldBase.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Base</span></a></li>
+<li><a href="../interfaces/CompanionInputFieldBonjourDevice.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Bonjour<wbr/>Device</span></a></li>
 <li><a href="../interfaces/CompanionInputFieldCheckbox.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Checkbox</span></a></li>
 <li><a href="../interfaces/CompanionInputFieldColor.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Color</span></a></li>
 <li><a href="../interfaces/CompanionInputFieldCustomVariable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Custom<wbr/>Variable</span></a></li>
@@ -122,6 +126,7 @@
 <li><a href="../interfaces/UDPHelperOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>UDPHelper<wbr/>Options</span></a></li>
 <li><a href="../types/CompanionActionContext.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4194304"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-type-alias)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M11.31 16V8.224H8.91V7.24H14.79V8.224H12.39V16H11.31Z" fill="var(--color-text)"></path></g></svg><span>Companion<wbr/>Action<wbr/>Context</span></a></li>
 <li><a href="../types/CompanionAlignment.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Companion<wbr/>Alignment</span></a></li>
+<li><a href="../types/CompanionColorPresetValue.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Companion<wbr/>Color<wbr/>Preset<wbr/>Value</span></a></li>
 <li><a href="../types/CompanionFeedbackButtonStyleResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Companion<wbr/>Feedback<wbr/>Button<wbr/>Style<wbr/>Result</span></a></li>
 <li><a href="../types/CompanionFeedbackContext.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Companion<wbr/>Feedback<wbr/>Context</span></a></li>
 <li><a href="../types/CompanionFeedbackDefinition.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Companion<wbr/>Feedback<wbr/>Definition</span></a></li>
@@ -145,6 +150,9 @@
 <li><a href="combineRgb.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>combine<wbr/>Rgb</span></a></li>
 <li><a href="literal.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>literal</span></a></li>
 <li><a href="runEntrypoint.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>run<wbr/>Entrypoint</span></a></li>
+<li><a href="splitHex.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>split<wbr/>Hex</span></a></li>
+<li><a href="splitHsl.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>split<wbr/>Hsl</span></a></li>
+<li><a href="splitHsv.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>split<wbr/>Hsv</span></a></li>
 <li><a href="splitRgb.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>split<wbr/>Rgb</span></a></li>
 <li><a href="validateManifest.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>validate<wbr/>Manifest</span></a></li></ul></nav></div></div></div>
 <div class="tsd-generator">

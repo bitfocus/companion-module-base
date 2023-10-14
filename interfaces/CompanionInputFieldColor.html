@@ -17,8 +17,16 @@
 <h1>Interface CompanionInputFieldColor</h1></div>
 <section class="tsd-panel tsd-comment">
 <div class="tsd-comment tsd-typography"><p>A colour picker input</p>
-<p>Available for actions/feedbacks/config</p>
-<a id="md:example" class="tsd-anchor"></a><h3><a href="#md:example">Example</a></h3><pre><code class="language-js"><span class="hl-1">{</span><br/><span class="hl-1">    </span><span class="hl-4">id</span><span class="hl-1">: </span><span class="hl-5">&#39;bg&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">type</span><span class="hl-1">: </span><span class="hl-5">&#39;colorpicker&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">label</span><span class="hl-1">: </span><span class="hl-5">&#39;Background color&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-5">&#39;default&#39;</span><span class="hl-1">: </span><span class="hl-2">combineRgb</span><span class="hl-1">(</span><span class="hl-7">255</span><span class="hl-1">, </span><span class="hl-7">0</span><span class="hl-1">, </span><span class="hl-7">0</span><span class="hl-1">)</span><br/><span class="hl-1">}</span>
+<p>Available for actions/feedbacks/config
+Has three optional configuration properties:</p>
+<ul>
+<li>{boolean} <code>enableAlpha</code> will show the colour picker with an additional alpha entry</li>
+<li>{&#39;string&#39;|&#39;number&#39;} <code>returnType</code> do you want to get the results as CSS string or Companion color number</li>
+<li>{string[]} <code>presetColors</code> replace the default swatch with your own colors when set</li>
+</ul>
+<a id="md:example" class="tsd-anchor"></a><h3><a href="#md:example">Example</a></h3><pre><code class="language-js"><span class="hl-1">{</span><br/><span class="hl-1">    </span><span class="hl-4">id</span><span class="hl-1">: </span><span class="hl-5">&#39;bg&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">type</span><span class="hl-1">: </span><span class="hl-5">&#39;colorpicker&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">label</span><span class="hl-1">: </span><span class="hl-5">&#39;Background color&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-6">default</span><span class="hl-1">: </span><span class="hl-5">&#39;rgb(255, 0, 0)&#39;</span><br/><span class="hl-1">}</span>
+</code><button>Copy</button></pre>
+<pre><code class="language-js"><span class="hl-1">{</span><br/><span class="hl-1">    </span><span class="hl-4">id</span><span class="hl-1">: </span><span class="hl-5">&#39;overlay&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">type</span><span class="hl-1">: </span><span class="hl-5">&#39;colorpicker&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">label</span><span class="hl-1">: </span><span class="hl-5">&#39;Overlay color&#39;</span><span class="hl-1">,</span><br/><span class="hl-1"> </span><span class="hl-4">enableAlpha</span><span class="hl-1">: </span><span class="hl-0">true</span><span class="hl-1">,</span><br/><span class="hl-1"> </span><span class="hl-4">returnType</span><span class="hl-1">: </span><span class="hl-5">&#39;string&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-6">default</span><span class="hl-1">: </span><span class="hl-5">&#39;rgba(100, 100, 255, 0.3)&#39;</span><span class="hl-1">,</span><br/><span class="hl-1"> </span><span class="hl-4">presetColors</span><span class="hl-1">: [</span><span class="hl-5">&#39;#000&#39;</span><span class="hl-1">, </span><span class="hl-5">&#39;#ffffff&#39;</span><span class="hl-1">, {</span><span class="hl-3">color:</span><span class="hl-1"> </span><span class="hl-5">&#39;rgba(255, 0, 0, 0.5)&#39;</span><span class="hl-1">, </span><span class="hl-3">title:</span><span class="hl-1"> </span><span class="hl-5">&#39;semitransparent red&#39;</span><span class="hl-1">}]</span><br/><span class="hl-1">}</span>
 </code><button>Copy</button></pre>
 </div>
 <div class="tsd-comment tsd-typography"></div></section>
@@ -29,7 +37,7 @@
 <ul class="tsd-hierarchy">
 <li><span class="target">CompanionInputFieldColor</span></li></ul></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/fffe705/src/module-api/input.ts#L75">src/module-api/input.ts:75</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L94">src/module-api/input.ts:94</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -38,10 +46,13 @@
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Properties</h3>
 <div class="tsd-index-list"><a href="CompanionInputFieldColor.html#default" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-1024"><rect fill="var(--color-icon-background)" stroke="#FF984D" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M9.354 16V7.24H12.174C12.99 7.24 13.638 7.476 14.118 7.948C14.606 8.412 14.85 9.036 14.85 9.82C14.85 10.604 14.606 11.232 14.118 11.704C13.638 12.168 12.99 12.4 12.174 12.4H10.434V16H9.354ZM10.434 11.428H12.174C12.646 11.428 13.022 11.284 13.302 10.996C13.59 10.7 13.734 10.308 13.734 9.82C13.734 9.324 13.59 8.932 13.302 8.644C13.022 8.356 12.646 8.212 12.174 8.212H10.434V11.428Z" fill="var(--color-text)"></path></g></svg><span>default</span></a>
+<a href="CompanionInputFieldColor.html#enableAlpha" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>enable<wbr/>Alpha?</span></a>
 <a href="CompanionInputFieldColor.html#id" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>id</span></a>
 <a href="CompanionInputFieldColor.html#isVisible" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>is<wbr/>Visible?</span></a>
 <a href="CompanionInputFieldColor.html#isVisibleData" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>is<wbr/>Visible<wbr/>Data?</span></a>
 <a href="CompanionInputFieldColor.html#label" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>label</span></a>
+<a href="CompanionInputFieldColor.html#presetColors" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>preset<wbr/>Colors?</span></a>
+<a href="CompanionInputFieldColor.html#returnType" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>return<wbr/>Type?</span></a>
 <a href="CompanionInputFieldColor.html#tooltip" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>tooltip?</span></a>
 <a href="CompanionInputFieldColor.html#type" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>type</span></a>
 </div></section></div></details></section></section>
@@ -49,12 +60,25 @@
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member"><a id="default" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>default</span><a href="#default" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">default</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
-<div class="tsd-comment tsd-typography"><p>The default color value to set when creating this action/feedback/instance</p>
+<div class="tsd-signature"><span class="tsd-kind-property">default</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p>The default color value to set when creating this action/feedback/instance
+Can be a color string or a color number
+Valid strings are CSS color strings in Hex, RGB, HSL or HSV notation with ot without alpha
+Valid numbers are 0x0 - 0xffffffff, where the components are ttrrggbb, you can generate the number with combineRgb()</p>
+<a id="md:examples-for-red" class="tsd-anchor"></a><h3><a href="#md:examples-for-red">Examples for red</a></h3><pre><code><span class="hl-5">&#39;#f00&#39;</span><br/><span class="hl-5">&#39;#ff0000&#39;</span><br/><span class="hl-5">&#39;#ff0000ff&#39;</span><br/><span class="hl-5">&#39;rgb(255,0,0</span><span class="hl-7">)</span><br/><span class="hl-5">&#39;rgba(255, 0, 0, 1.0</span><span class="hl-7">)</span><br/><span class="hl-5">&#39;hsl(0, 100, 50)&#39;</span><br/><span class="hl-5">&#39;hsv(0, 100, 100)&#39;</span><br/><span class="hl-8">0xff0000</span>
+</code><button>Copy</button></pre>
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/fffe705/src/module-api/input.ts#L80">src/module-api/input.ts:80</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L114">src/module-api/input.ts:114</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="enableAlpha" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>enable<wbr/>Alpha</span><a href="#enableAlpha" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">enable<wbr/>Alpha</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
+<div class="tsd-comment tsd-typography"><p>This will enable a alpha entry slider and input</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L118">src/module-api/input.ts:118</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="id" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>id</span><a href="#id" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
@@ -63,7 +87,7 @@
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="CompanionInputFieldBase.html">CompanionInputFieldBase</a>.<a href="CompanionInputFieldBase.html#id">id</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/fffe705/src/module-api/input.ts#L12">src/module-api/input.ts:12</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L12">src/module-api/input.ts:12</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="isVisible" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>is<wbr/>Visible</span><a href="#isVisible" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">is<wbr/>Visible</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">options</span>, <span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span></div>
@@ -88,7 +112,7 @@
 <div class="tsd-comment tsd-typography"></div></li></ul></li></ul></div><aside class="tsd-sources">
 <p>Inherited from <a href="CompanionInputFieldBase.html">CompanionInputFieldBase</a>.<a href="CompanionInputFieldBase.html#isVisible">isVisible</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/fffe705/src/module-api/input.ts#L32">src/module-api/input.ts:32</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L33">src/module-api/input.ts:33</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="isVisibleData" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>is<wbr/>Visible<wbr/>Data</span><a href="#isVisibleData" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">is<wbr/>Visible<wbr/>Data</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">any</span></div>
@@ -97,7 +121,7 @@
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="CompanionInputFieldBase.html">CompanionInputFieldBase</a>.<a href="CompanionInputFieldBase.html#isVisibleData">isVisibleData</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/fffe705/src/module-api/input.ts#L36">src/module-api/input.ts:36</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L37">src/module-api/input.ts:37</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="label" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>label</span><a href="#label" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">label</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
@@ -106,7 +130,25 @@
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="CompanionInputFieldBase.html">CompanionInputFieldBase</a>.<a href="CompanionInputFieldBase.html#label">label</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/fffe705/src/module-api/input.ts#L24">src/module-api/input.ts:24</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L25">src/module-api/input.ts:25</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="presetColors" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>preset<wbr/>Colors</span><a href="#presetColors" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">preset<wbr/>Colors</span><span class="tsd-signature-symbol">?:</span> <a href="../types/CompanionColorPresetValue.html" class="tsd-signature-type tsd-kind-type-alias">CompanionColorPresetValue</a><span class="tsd-signature-symbol">[]</span></div>
+<div class="tsd-comment tsd-typography"><p>If set, this will override the default colors shown in the swatch.
+Enter an array of either color strings or objects with color strings and titles</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L128">src/module-api/input.ts:128</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="returnType" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>return<wbr/>Type</span><a href="#returnType" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">return<wbr/>Type</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">&quot;string&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;number&quot;</span></div>
+<div class="tsd-comment tsd-typography"><p>Specify if you want the colorpicker returning it&#39;s value as a CSS string or as a color number.
+This will also be the format stored in the database for this value</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L123">src/module-api/input.ts:123</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="tooltip" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>tooltip</span><a href="#tooltip" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">tooltip</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div>
@@ -115,7 +157,7 @@
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="CompanionInputFieldBase.html">CompanionInputFieldBase</a>.<a href="CompanionInputFieldBase.html#tooltip">tooltip</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/fffe705/src/module-api/input.ts#L26">src/module-api/input.ts:26</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L27">src/module-api/input.ts:27</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="type" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>type</span><a href="#type" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;colorpicker&quot;</span></div>
@@ -124,7 +166,7 @@
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Overrides <a href="CompanionInputFieldBase.html">CompanionInputFieldBase</a>.<a href="CompanionInputFieldBase.html#type">type</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/fffe705/src/module-api/input.ts#L76">src/module-api/input.ts:76</a></li></ul></aside></section></section></div>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L95">src/module-api/input.ts:95</a></li></ul></aside></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -147,10 +189,16 @@
 <ul>
 <li><a href="#md:example"><span>Example</span></a></li></ul></li>
 <li><a href="#default" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>default</span></a></li>
+<li>
+<ul>
+<li><a href="#md:examples-for-red"><span>Examples for red</span></a></li></ul></li>
+<li><a href="#enableAlpha" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>enable<wbr/>Alpha</span></a></li>
 <li><a href="#id" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>id</span></a></li>
 <li><a href="#isVisible" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>is<wbr/>Visible</span></a></li>
 <li><a href="#isVisibleData" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>is<wbr/>Visible<wbr/>Data</span></a></li>
 <li><a href="#label" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>label</span></a></li>
+<li><a href="#presetColors" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>preset<wbr/>Colors</span></a></li>
+<li><a href="#returnType" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>return<wbr/>Type</span></a></li>
 <li><a href="#tooltip" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>tooltip</span></a></li>
 <li><a href="#type" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>type</span></a></li></ul></div></details></div>
 <div class="site-menu">
@@ -184,6 +232,7 @@
 <li><a href="CompanionHTTPResponse.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>CompanionHTTPResponse</span></a></li>
 <li><a href="CompanionImageBufferPosition.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Image<wbr/>Buffer<wbr/>Position</span></a></li>
 <li><a href="CompanionInputFieldBase.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Base</span></a></li>
+<li><a href="CompanionInputFieldBonjourDevice.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Bonjour<wbr/>Device</span></a></li>
 <li><a href="CompanionInputFieldCheckbox.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Checkbox</span></a></li>
 <li><a href="CompanionInputFieldColor.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Color</span></a></li>
 <li><a href="CompanionInputFieldCustomVariable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Custom<wbr/>Variable</span></a></li>
@@ -218,6 +267,7 @@
 <li><a href="UDPHelperOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>UDPHelper<wbr/>Options</span></a></li>
 <li><a href="../types/CompanionActionContext.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4194304"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-type-alias)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M11.31 16V8.224H8.91V7.24H14.79V8.224H12.39V16H11.31Z" fill="var(--color-text)"></path></g></svg><span>Companion<wbr/>Action<wbr/>Context</span></a></li>
 <li><a href="../types/CompanionAlignment.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Companion<wbr/>Alignment</span></a></li>
+<li><a href="../types/CompanionColorPresetValue.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Companion<wbr/>Color<wbr/>Preset<wbr/>Value</span></a></li>
 <li><a href="../types/CompanionFeedbackButtonStyleResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Companion<wbr/>Feedback<wbr/>Button<wbr/>Style<wbr/>Result</span></a></li>
 <li><a href="../types/CompanionFeedbackContext.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Companion<wbr/>Feedback<wbr/>Context</span></a></li>
 <li><a href="../types/CompanionFeedbackDefinition.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Companion<wbr/>Feedback<wbr/>Definition</span></a></li>
@@ -241,6 +291,9 @@
 <li><a href="../functions/combineRgb.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>combine<wbr/>Rgb</span></a></li>
 <li><a href="../functions/literal.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>literal</span></a></li>
 <li><a href="../functions/runEntrypoint.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>run<wbr/>Entrypoint</span></a></li>
+<li><a href="../functions/splitHex.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>split<wbr/>Hex</span></a></li>
+<li><a href="../functions/splitHsl.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>split<wbr/>Hsl</span></a></li>
+<li><a href="../functions/splitHsv.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>split<wbr/>Hsv</span></a></li>
 <li><a href="../functions/splitRgb.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>split<wbr/>Rgb</span></a></li>
 <li><a href="../functions/validateManifest.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>validate<wbr/>Manifest</span></a></li></ul></nav></div></div></div>
 <div class="tsd-generator">

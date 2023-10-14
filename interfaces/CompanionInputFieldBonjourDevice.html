@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>CompanionAdvancedFeedbackResult | @companion-module/base</title><meta name="description" content="Documentation for @companion-module/base"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>CompanionInputFieldBonjourDevice | @companion-module/base</title><meta name="description" content="Documentation for @companion-module/base"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container">
 <div class="table-cell" id="tsd-search" data-base="..">
 <div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
@@ -13,20 +13,25 @@
 <div class="tsd-page-title">
 <ul class="tsd-breadcrumb">
 <li><a href="../modules.html">@companion-module/base</a></li>
-<li><a href="CompanionAdvancedFeedbackResult.html">CompanionAdvancedFeedbackResult</a></li></ul>
-<h1>Interface CompanionAdvancedFeedbackResult</h1></div>
+<li><a href="CompanionInputFieldBonjourDevice.html">CompanionInputFieldBonjourDevice</a></li></ul>
+<h1>Interface CompanionInputFieldBonjourDevice</h1></div>
 <section class="tsd-panel tsd-comment">
-<div class="tsd-comment tsd-typography"><p>The resulting style of an advanced feedback</p>
+<div class="tsd-comment tsd-typography"><p>An input field to list and select devices discovered with a bonjour query</p>
+<p>Available for config</p>
+<p>Note: Bonjour does not work in all environments, so the user is always able to select &#39;Manual&#39; (null).
+You must make sure to handle this, we recommend using the <code>isVisible</code> function to hide the manual input fields when a bonjour device is selected.</p>
+<a id="md:example" class="tsd-anchor"></a><h3><a href="#md:example">Example</a></h3><pre><code class="language-js"><span class="hl-1">{</span><br/><span class="hl-1">    </span><span class="hl-4">id</span><span class="hl-1">: </span><span class="hl-5">&#39;my-device&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">type</span><span class="hl-1">: </span><span class="hl-5">&#39;bonjour-device&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">label</span><span class="hl-1">: </span><span class="hl-5">&#39;Device&#39;</span><br/><span class="hl-1">}</span>
+</code><button>Copy</button></pre>
 </div>
 <div class="tsd-comment tsd-typography"></div></section>
 <section class="tsd-panel tsd-hierarchy">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
-<li><a href="../types/CompanionFeedbackButtonStyleResult.html" class="tsd-signature-type tsd-kind-type-alias">CompanionFeedbackButtonStyleResult</a>
+<li><a href="CompanionInputFieldBase.html" class="tsd-signature-type tsd-kind-interface">CompanionInputFieldBase</a>
 <ul class="tsd-hierarchy">
-<li><span class="target">CompanionAdvancedFeedbackResult</span></li></ul></li></ul></section><aside class="tsd-sources">
+<li><span class="target">CompanionInputFieldBonjourDevice</span></li></ul></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/feedback.ts#L84">src/module-api/feedback.ts:84</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L357">src/module-api/input.ts:357</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -34,77 +39,85 @@
 <div class="tsd-accordion-details">
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Properties</h3>
-<div class="tsd-index-list"><a href="CompanionAdvancedFeedbackResult.html#alignment" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-1024"><rect fill="var(--color-icon-background)" stroke="#FF984D" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M9.354 16V7.24H12.174C12.99 7.24 13.638 7.476 14.118 7.948C14.606 8.412 14.85 9.036 14.85 9.82C14.85 10.604 14.606 11.232 14.118 11.704C13.638 12.168 12.99 12.4 12.174 12.4H10.434V16H9.354ZM10.434 11.428H12.174C12.646 11.428 13.022 11.284 13.302 10.996C13.59 10.7 13.734 10.308 13.734 9.82C13.734 9.324 13.59 8.932 13.302 8.644C13.022 8.356 12.646 8.212 12.174 8.212H10.434V11.428Z" fill="var(--color-text)"></path></g></svg><span>alignment?</span></a>
-<a href="CompanionAdvancedFeedbackResult.html#bgcolor" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>bgcolor?</span></a>
-<a href="CompanionAdvancedFeedbackResult.html#color" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>color?</span></a>
-<a href="CompanionAdvancedFeedbackResult.html#imageBuffer" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>image<wbr/>Buffer?</span></a>
-<a href="CompanionAdvancedFeedbackResult.html#imageBufferPosition" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>image<wbr/>Buffer<wbr/>Position?</span></a>
-<a href="CompanionAdvancedFeedbackResult.html#png64" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>png64?</span></a>
-<a href="CompanionAdvancedFeedbackResult.html#pngalignment" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>pngalignment?</span></a>
-<a href="CompanionAdvancedFeedbackResult.html#show_topbar" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>show_<wbr/>topbar?</span></a>
-<a href="CompanionAdvancedFeedbackResult.html#size" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>size?</span></a>
-<a href="CompanionAdvancedFeedbackResult.html#text" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>text?</span></a>
+<div class="tsd-index-list"><a href="CompanionInputFieldBonjourDevice.html#id" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-1024"><rect fill="var(--color-icon-background)" stroke="#FF984D" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M9.354 16V7.24H12.174C12.99 7.24 13.638 7.476 14.118 7.948C14.606 8.412 14.85 9.036 14.85 9.82C14.85 10.604 14.606 11.232 14.118 11.704C13.638 12.168 12.99 12.4 12.174 12.4H10.434V16H9.354ZM10.434 11.428H12.174C12.646 11.428 13.022 11.284 13.302 10.996C13.59 10.7 13.734 10.308 13.734 9.82C13.734 9.324 13.59 8.932 13.302 8.644C13.022 8.356 12.646 8.212 12.174 8.212H10.434V11.428Z" fill="var(--color-text)"></path></g></svg><span>id</span></a>
+<a href="CompanionInputFieldBonjourDevice.html#isVisible" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>is<wbr/>Visible?</span></a>
+<a href="CompanionInputFieldBonjourDevice.html#isVisibleData" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>is<wbr/>Visible<wbr/>Data?</span></a>
+<a href="CompanionInputFieldBonjourDevice.html#label" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>label</span></a>
+<a href="CompanionInputFieldBonjourDevice.html#tooltip" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>tooltip?</span></a>
+<a href="CompanionInputFieldBonjourDevice.html#type" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>type</span></a>
 </div></section></div></details></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
-<section class="tsd-panel tsd-member tsd-is-inherited"><a id="alignment" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>alignment</span><a href="#alignment" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">alignment</span><span class="tsd-signature-symbol">?:</span> <a href="../types/CompanionAlignment.html" class="tsd-signature-type tsd-kind-type-alias">CompanionAlignment</a></div><aside class="tsd-sources">
-<p>Inherited from CompanionFeedbackButtonStyleResult.alignment</p>
+<section class="tsd-panel tsd-member tsd-is-inherited"><a id="id" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>id</span><a href="#id" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p>The unique id of this input field within the input group</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<p>Inherited from <a href="CompanionInputFieldBase.html">CompanionInputFieldBase</a>.<a href="CompanionInputFieldBase.html#id">id</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/style.ts#L22">src/module-api/style.ts:22</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member tsd-is-inherited"><a id="bgcolor" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>bgcolor</span><a href="#bgcolor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">bgcolor</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
-<p>Inherited from CompanionFeedbackButtonStyleResult.bgcolor</p>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L12">src/module-api/input.ts:12</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-inherited"><a id="isVisible" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>is<wbr/>Visible</span><a href="#isVisible" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">is<wbr/>Visible</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">options</span>, <span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span></div>
+<div class="tsd-type-declaration">
+<h4>Type declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter-signature">
+<ul class="tsd-signatures">
+<li class="tsd-signature" id="isVisible.__type.__type-1"><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">options</span>, <span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>A function called to check whether this input should be visible, based on the current options selections within the input group</p>
+<p>Note: This function must not depend on anything outside of its scope. If it does it will fail to compile and will be skipped.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><span class="tsd-kind-parameter">options</span>: <a href="CompanionOptionValues.html" class="tsd-signature-type tsd-kind-interface">CompanionOptionValues</a></h5></li>
+<li>
+<h5><span class="tsd-kind-parameter">data</span>: <span class="tsd-signature-type">any</span></h5></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+<div class="tsd-comment tsd-typography"></div></li></ul></li></ul></div><aside class="tsd-sources">
+<p>Inherited from <a href="CompanionInputFieldBase.html">CompanionInputFieldBase</a>.<a href="CompanionInputFieldBase.html#isVisible">isVisible</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/style.ts#L21">src/module-api/style.ts:21</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member tsd-is-inherited"><a id="color" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>color</span><a href="#color" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">color</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
-<p>Inherited from CompanionFeedbackButtonStyleResult.color</p>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L33">src/module-api/input.ts:33</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-inherited"><a id="isVisibleData" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>is<wbr/>Visible<wbr/>Data</span><a href="#isVisibleData" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">is<wbr/>Visible<wbr/>Data</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">any</span></div>
+<div class="tsd-comment tsd-typography"><p>JSON serializable data to provide to <code>isVisible</code></p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<p>Inherited from <a href="CompanionInputFieldBase.html">CompanionInputFieldBase</a>.<a href="CompanionInputFieldBase.html#isVisibleData">isVisibleData</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/style.ts#L20">src/module-api/style.ts:20</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member"><a id="imageBuffer" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>image<wbr/>Buffer</span><a href="#imageBuffer" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">image<wbr/>Buffer</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type ">Uint8Array</span></div><aside class="tsd-sources">
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L37">src/module-api/input.ts:37</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-inherited"><a id="label" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>label</span><a href="#label" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">label</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p>The label of the field</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<p>Inherited from <a href="CompanionInputFieldBase.html">CompanionInputFieldBase</a>.<a href="CompanionInputFieldBase.html#label">label</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/feedback.ts#L85">src/module-api/feedback.ts:85</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member"><a id="imageBufferPosition" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>image<wbr/>Buffer<wbr/>Position</span><a href="#imageBufferPosition" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">image<wbr/>Buffer<wbr/>Position</span><span class="tsd-signature-symbol">?:</span> <a href="CompanionImageBufferPosition.html" class="tsd-signature-type tsd-kind-interface">CompanionImageBufferPosition</a></div><aside class="tsd-sources">
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L25">src/module-api/input.ts:25</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-inherited"><a id="tooltip" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>tooltip</span><a href="#tooltip" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">tooltip</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p>A hover tooltip for this field</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<p>Inherited from <a href="CompanionInputFieldBase.html">CompanionInputFieldBase</a>.<a href="CompanionInputFieldBase.html#tooltip">tooltip</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/feedback.ts#L86">src/module-api/feedback.ts:86</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member tsd-is-inherited"><a id="png64" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>png64</span><a href="#png64" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">png64</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
-<p>Inherited from CompanionFeedbackButtonStyleResult.png64</p>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L27">src/module-api/input.ts:27</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="type" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>type</span><a href="#type" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;bonjour-device&quot;</span></div>
+<div class="tsd-comment tsd-typography"><p>The type of this input field</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<p>Overrides <a href="CompanionInputFieldBase.html">CompanionInputFieldBase</a>.<a href="CompanionInputFieldBase.html#type">type</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/style.ts#L24">src/module-api/style.ts:24</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member tsd-is-inherited"><a id="pngalignment" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>pngalignment</span><a href="#pngalignment" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">pngalignment</span><span class="tsd-signature-symbol">?:</span> <a href="../types/CompanionAlignment.html" class="tsd-signature-type tsd-kind-type-alias">CompanionAlignment</a></div><aside class="tsd-sources">
-<p>Inherited from CompanionFeedbackButtonStyleResult.pngalignment</p>
-<ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/style.ts#L23">src/module-api/style.ts:23</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member tsd-is-inherited"><a id="show_topbar" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>show_<wbr/>topbar</span><a href="#show_topbar" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">show_<wbr/>topbar</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div><aside class="tsd-sources">
-<p>Inherited from CompanionFeedbackButtonStyleResult.show_topbar</p>
-<ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/style.ts#L25">src/module-api/style.ts:25</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member tsd-is-inherited"><a id="size" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>size</span><a href="#size" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">size</span><span class="tsd-signature-symbol">?:</span> <a href="../types/CompanionTextSize.html" class="tsd-signature-type tsd-kind-type-alias">CompanionTextSize</a></div><aside class="tsd-sources">
-<p>Inherited from CompanionFeedbackButtonStyleResult.size</p>
-<ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/style.ts#L19">src/module-api/style.ts:19</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member tsd-is-inherited"><a id="text" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>text</span><a href="#text" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">text</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
-<p>Inherited from CompanionFeedbackButtonStyleResult.text</p>
-<ul>
-<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/style.ts#L18">src/module-api/style.ts:18</a></li></ul></aside></section></section></div>
+<li>Defined in <a href="https://github.com/bitfocus/companion-module-base/blob/3278f2c/src/module-api/input.ts#L358">src/module-api/input.ts:358</a></li></ul></aside></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -123,16 +136,15 @@
 <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><use href="#icon-chevronDown"></use></svg>On This Page</h3></summary>
 <div class="tsd-accordion-details">
 <ul>
-<li><a href="#alignment" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>alignment</span></a></li>
-<li><a href="#bgcolor" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>bgcolor</span></a></li>
-<li><a href="#color" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>color</span></a></li>
-<li><a href="#imageBuffer" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>image<wbr/>Buffer</span></a></li>
-<li><a href="#imageBufferPosition" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>image<wbr/>Buffer<wbr/>Position</span></a></li>
-<li><a href="#png64" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>png64</span></a></li>
-<li><a href="#pngalignment" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>pngalignment</span></a></li>
-<li><a href="#show_topbar" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>show_<wbr/>topbar</span></a></li>
-<li><a href="#size" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>size</span></a></li>
-<li><a href="#text" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>text</span></a></li></ul></div></details></div>
+<li>
+<ul>
+<li><a href="#md:example"><span>Example</span></a></li></ul></li>
+<li><a href="#id" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>id</span></a></li>
+<li><a href="#isVisible" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>is<wbr/>Visible</span></a></li>
+<li><a href="#isVisibleData" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>is<wbr/>Visible<wbr/>Data</span></a></li>
+<li><a href="#label" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>label</span></a></li>
+<li><a href="#tooltip" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>tooltip</span></a></li>
+<li><a href="#type" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>type</span></a></li></ul></div></details></div>
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="../modules.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-namespace)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.33 16V7.24H10.77L13.446 14.74C13.43 14.54 13.41 14.296 13.386 14.008C13.37 13.712 13.354 13.404 13.338 13.084C13.33 12.756 13.326 12.448 13.326 12.16V7.24H14.37V16H12.93L10.266 8.5C10.282 8.692 10.298 8.936 10.314 9.232C10.33 9.52 10.342 9.828 10.35 10.156C10.366 10.476 10.374 10.784 10.374 11.08V16H9.33Z" fill="var(--color-text)"></path></g></svg><span>@companion-<wbr/>module/base</span></a>
 <ul class="tsd-small-nested-navigation">
@@ -148,7 +160,7 @@
 <li><a href="CompanionActionInfo.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Action<wbr/>Info</span></a></li>
 <li><a href="CompanionActionSetOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Action<wbr/>Set<wbr/>Options</span></a></li>
 <li><a href="CompanionAdvancedFeedbackDefinition.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Advanced<wbr/>Feedback<wbr/>Definition</span></a></li>
-<li><a href="CompanionAdvancedFeedbackResult.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Advanced<wbr/>Feedback<wbr/>Result</span></a></li>
+<li><a href="CompanionAdvancedFeedbackResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Advanced<wbr/>Feedback<wbr/>Result</span></a></li>
 <li><a href="CompanionBooleanFeedbackDefinition.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Boolean<wbr/>Feedback<wbr/>Definition</span></a></li>
 <li><a href="CompanionButtonPresetDefinition.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Button<wbr/>Preset<wbr/>Definition</span></a></li>
 <li><a href="CompanionButtonPresetOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Button<wbr/>Preset<wbr/>Options</span></a></li>
@@ -164,7 +176,7 @@
 <li><a href="CompanionHTTPResponse.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>CompanionHTTPResponse</span></a></li>
 <li><a href="CompanionImageBufferPosition.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Image<wbr/>Buffer<wbr/>Position</span></a></li>
 <li><a href="CompanionInputFieldBase.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Base</span></a></li>
-<li><a href="CompanionInputFieldBonjourDevice.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Bonjour<wbr/>Device</span></a></li>
+<li><a href="CompanionInputFieldBonjourDevice.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Bonjour<wbr/>Device</span></a></li>
 <li><a href="CompanionInputFieldCheckbox.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Checkbox</span></a></li>
 <li><a href="CompanionInputFieldColor.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Color</span></a></li>
 <li><a href="CompanionInputFieldCustomVariable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Companion<wbr/>Input<wbr/>Field<wbr/>Custom<wbr/>Variable</span></a></li>
