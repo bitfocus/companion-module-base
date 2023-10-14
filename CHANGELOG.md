@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/bitfocus/companion-module-base/compare/v1.5.1...v1.6.0) (2023-10-14)
+
+
+### Features
+
+* bonjour discovery config fields ([#57](https://github.com/bitfocus/companion-module-base/issues/57)) ([37d3cd9](https://github.com/bitfocus/companion-module-base/commit/37d3cd91aea400eb2685954ba6b792fd58559973))
+* support css colors and alpha colorpicker ([1660c3b](https://github.com/bitfocus/companion-module-base/commit/1660c3b37395c5fd240579b3ae4ed864c3f337a1))
+
+
+### Bug Fixes
+
+* expose ipc type ([c66d6f2](https://github.com/bitfocus/companion-module-base/commit/c66d6f2344ee5f4f239256765a9ec0fe559dc556))
+
 ## [1.5.1](https://github.com/bitfocus/companion-module-base/compare/v1.5.0...v1.5.1) (2023-10-02)
 
 
