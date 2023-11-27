@@ -115,6 +115,13 @@ export interface CompanionFeedbackDefinitionBase {
 		action: CompanionFeedbackInfo,
 		context: CompanionFeedbackContext
 	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
+
+	/**
+	 * Timeout for the 'learn' function (in milliseconds)
+	 * Companion sets a default value of 5s, to ensure that the learn does not get stuck never completing
+	 * You can change this if this number does not work for you, but you should keep it to a sensible value
+	 */
+	learnTimeout?: number
 }
 
 /**

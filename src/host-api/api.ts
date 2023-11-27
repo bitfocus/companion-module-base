@@ -103,9 +103,10 @@ export interface SetActionDefinitionsMessage {
 	actions: Array<{
 		id: string
 		name: string
-		description?: string
+		description: string | undefined
 		options: EncodeIsVisible<SomeCompanionActionInputField>[] // TODO module-lib - versioned types?
 		hasLearn: boolean
+		learnTimeout: number | undefined
 	}>
 }
 
@@ -113,12 +114,13 @@ export interface SetFeedbackDefinitionsMessage {
 	feedbacks: Array<{
 		id: string
 		name: string
-		description?: string
+		description: string | undefined
 		options: EncodeIsVisible<SomeCompanionFeedbackInputField>[] // TODO module-lib - versioned types?
 		type: 'boolean' | 'advanced'
-		defaultStyle?: Partial<CompanionFeedbackButtonStyleResult>
+		defaultStyle?: CompanionFeedbackButtonStyleResult
 		hasLearn: boolean
 		showInvert: boolean | undefined
+		learnTimeout: number | undefined
 	}>
 }
 

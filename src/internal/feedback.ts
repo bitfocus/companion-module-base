@@ -393,6 +393,7 @@ export class FeedbackManager {
 					type: feedback.type,
 					defaultStyle: feedback.type === 'boolean' ? feedback.defaultStyle : undefined,
 					hasLearn: !!feedback.learn,
+					learnTimeout: feedback.learnTimeout,
 					showInvert: feedback.type === 'boolean' ? feedback.showInvert : false,
 				})
 

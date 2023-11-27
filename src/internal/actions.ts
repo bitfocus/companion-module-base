@@ -196,6 +196,7 @@ export class ActionManager {
 					description: action.description,
 					options: serializeIsVisibleFn(action.options),
 					hasLearn: !!action.learn,
+					learnTimeout: action.learnTimeout,
 				})
 
 				// Remember the definition locally
