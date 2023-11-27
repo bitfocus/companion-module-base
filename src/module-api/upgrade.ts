@@ -1,5 +1,5 @@
-import { CompanionFeedbackButtonStyleResult } from './feedback'
-import { CompanionOptionValues } from './input'
+import type { CompanionFeedbackButtonStyleResult } from './feedback.js'
+import type { CompanionOptionValues } from './input.js'
 
 /** Additional utilities for Upgrade Scripts */
 export interface CompanionUpgradeContext<TConfig> {
@@ -180,7 +180,7 @@ export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig = unknow
 		const changedFeedbacks: CompanionStaticUpgradeResult<unknown>['updatedFeedbacks'] = []
 
 		for (const feedback of props.feedbacks) {
-			let propertyName = upgradeMap[feedback.feedbackId]
+			const propertyName = upgradeMap[feedback.feedbackId]
 			if (typeof propertyName !== 'string') continue
 
 			// Retrieve and delete the old value

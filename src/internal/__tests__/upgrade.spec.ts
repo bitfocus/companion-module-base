@@ -1,13 +1,14 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
-import { literal } from '../../util'
+import { literal } from '../../util.js'
 import {
 	CompanionMigrationAction,
 	CompanionStaticUpgradeProps,
 	CompanionStaticUpgradeResult,
 	CompanionStaticUpgradeScript,
-} from '../../module-api'
-import { runThroughUpgradeScripts } from '../upgrade'
-import { ActionInstance } from '../../host-api/api'
+} from '../../module-api/upgrade.js'
+import { runThroughUpgradeScripts } from '../upgrade.js'
+import { ActionInstance } from '../../host-api/api.js'
 
 type MockUpgradeScript<TConfig> = jest.Mock<
 	ReturnType<CompanionStaticUpgradeScript<TConfig>>,

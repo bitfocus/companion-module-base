@@ -1,6 +1,6 @@
-import type { ModuleManifest, ModuleManifestMaintainer, ModuleManifestRuntime } from '../generated/manifest'
+import type { ModuleManifest, ModuleManifestMaintainer, ModuleManifestRuntime } from '../generated/manifest.d.ts'
 // @ts-expect-error no typings
-import validateManifestSchema from '../generated/validate_manifest'
+import validateManifestSchema from '../generated/validate_manifest.js'
 
 export { ModuleManifest, ModuleManifestMaintainer, ModuleManifestRuntime }
 

@@ -1,10 +1,10 @@
-import {
+import type {
 	CompanionMigrationAction,
 	CompanionMigrationFeedback,
 	CompanionStaticUpgradeScript,
-} from '../module-api/upgrade'
-import { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '../host-api/api'
-import { Complete, literal } from '../util'
+} from '../module-api/upgrade.js'
+import type { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '../host-api/api.js'
+import { Complete, literal } from '../util.js'
 
 function clone<T>(val: T): T {
 	return JSON.parse(JSON.stringify(val))

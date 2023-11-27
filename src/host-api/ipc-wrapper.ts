@@ -1,4 +1,4 @@
-import { assertNever } from '../util'
+import { assertNever } from '../util.js'
 import ejson from 'ejson'
 
 const MAX_CALLBACK_ID = 1 << 28
@@ -36,7 +36,7 @@ interface IpcResponseMessagePacket {
 }
 
 interface PendingCallback {
-	timeout: NodeJS.Timer | undefined
+	timeout: NodeJS.Timeout | undefined
 	resolve: (v: any) => void
 	reject: (e: any) => void
 }

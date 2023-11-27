@@ -1,4 +1,4 @@
-import {
+import type {
 	CompanionInputFieldBase,
 	CompanionInputFieldBonjourDevice,
 	CompanionInputFieldCheckbox,
@@ -8,7 +8,7 @@ import {
 	CompanionInputFieldNumber,
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
-} from './input'
+} from './input.js'
 
 /**
  * A configuration input field

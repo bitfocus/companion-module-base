@@ -1,12 +1,11 @@
-import {
+import type {
 	CompanionAdvancedFeedbackResult,
 	CompanionFeedbackContext,
 	CompanionFeedbackDefinition,
 	CompanionFeedbackDefinitions,
 	CompanionFeedbackInfo,
-	SomeCompanionFeedbackInputField,
-} from '../module-api/feedback'
-import {
+} from '../module-api/feedback.js'
+import type {
 	FeedbackInstance,
 	LearnFeedbackMessage,
 	LearnFeedbackResponseMessage,
@@ -15,10 +14,10 @@ import {
 	SetFeedbackDefinitionsMessage,
 	UpdateFeedbackValuesMessage,
 	VariablesChangedMessage,
-} from '../host-api/api'
-import { serializeIsVisibleFn } from './base'
-import debounceFn from '../../lib/debounce-fn'
-import { LogLevel } from '../module-api/enums'
+} from '../host-api/api.js'
+import { serializeIsVisibleFn } from './base.js'
+import debounceFn from '../../lib/debounce-fn/index.js'
+import type { LogLevel } from '../module-api/enums.js'
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'advanced',

@@ -1,14 +1,14 @@
-/* eslint-disable no-process-exit */
-import { HostApiNodeJsIpc, HostToModuleEventsInit, ModuleToHostEventsInit } from './host-api/versions'
+/* eslint-disable n/no-process-exit */
+import { HostApiNodeJsIpc, HostToModuleEventsInit, ModuleToHostEventsInit } from './host-api/versions.js'
 import fs from 'fs/promises'
-import { ModuleManifest } from './manifest'
-import { CompanionStaticUpgradeScript } from './module-api/upgrade'
-import { InstanceBase } from './module-api/base'
-import { literal } from './util'
-import { InstanceBaseProps } from './internal/base'
+import type { ModuleManifest } from './manifest.js'
+import type { CompanionStaticUpgradeScript } from './module-api/upgrade.js'
+import type { InstanceBase } from './module-api/base.js'
+import { literal } from './util.js'
+import type { InstanceBaseProps } from './internal/base.js'
 import { init, configureScope } from '@sentry/node'
 import '@sentry/tracing'
-import { IpcWrapper } from './host-api/ipc-wrapper'
+import { IpcWrapper } from './host-api/ipc-wrapper.js'
 import path from 'path'
 
 let hasEntrypoint = false
@@ -117,6 +117,7 @@ export function runEntrypoint<TConfig>(
 			const ipcWrapper = new IpcWrapper<ModuleToHostEventsInit, HostToModuleEventsInit>(
 				{},
 				(msg) => {
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					process.send!(msg)
 				},
 				5000

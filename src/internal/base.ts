@@ -1,6 +1,6 @@
-import { CompanionStaticUpgradeScript } from '../module-api/upgrade'
-import { EncodeIsVisible } from '../host-api/api'
-import { CompanionInputFieldBase } from '../module-api/input'
+import type { CompanionStaticUpgradeScript } from '../module-api/upgrade.js'
+import type { EncodeIsVisible } from '../host-api/api.js'
+import type { CompanionInputFieldBase } from '../module-api/input.js'
 
 export function serializeIsVisibleFn<T extends CompanionInputFieldBase>(options: T[]): EncodeIsVisible<T>[] {
 	return (options ?? []).map((option) => {

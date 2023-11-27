@@ -5,11 +5,12 @@ import {
 	ParseVariablesInStringMessage,
 	SetFeedbackDefinitionsMessage,
 	UpdateFeedbackValuesMessage,
-} from '../../host-api/api'
-import { runAllTimers } from '../../__mocks__/util'
-import { FeedbackManager } from '../feedback'
-import { CompanionFeedbackDefinition, LogLevel } from '../../module-api'
-import { literal } from '../../util'
+} from '../../host-api/api.js'
+import { runAllTimers } from '../../__mocks__/util.js'
+import { FeedbackManager } from '../feedback.js'
+import { CompanionFeedbackDefinition } from '../../module-api/feedback.js'
+import { LogLevel } from '../../module-api/enums.js'
+import { literal } from '../../util.js'
 
 const mockDefinitionId = 'definition0'
 const mockDefinitionId2 = 'definition1'

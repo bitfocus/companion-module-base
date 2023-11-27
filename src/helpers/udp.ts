@@ -17,7 +17,7 @@
 
 import dgram from 'dgram'
 import { EventEmitter } from 'eventemitter3'
-import { InstanceStatus } from '../module-api/enums'
+import { InstanceStatus } from '../module-api/enums.js'
 
 type UDPStatuses = InstanceStatus.Ok | InstanceStatus.UnknownError
 

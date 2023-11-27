@@ -1,5 +1,5 @@
-import { CompanionCommonCallbackContext } from './common'
-import {
+import type { CompanionCommonCallbackContext } from './common.js'
+import type {
 	CompanionOptionValues,
 	CompanionInputFieldStaticText,
 	CompanionInputFieldCheckbox,
@@ -8,8 +8,8 @@ import {
 	CompanionInputFieldMultiDropdown,
 	CompanionInputFieldNumber,
 	CompanionInputFieldTextInput,
-} from './input'
-import { CompanionButtonStyleProps } from './style'
+} from './input.js'
+import type { CompanionButtonStyleProps } from './style.js'
 
 export type SomeCompanionFeedbackInputField =
 	| CompanionInputFieldStaticText
