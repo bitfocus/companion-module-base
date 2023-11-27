@@ -1,5 +1,4 @@
-import {HslaColor, HsvaColor, colord} from 'colord'
-import { TransformStreamDefaultController } from 'node:stream/web'
+import { HslaColor, HsvaColor, colord } from 'colord'
 
 /**
  * Assert a certain type for a literal.
@@ -42,10 +41,10 @@ export interface RgbComponents {
 }
 
 /**
- * Combine separate RGB component to one single numerical value.  
- * The RGB component have to be in a range of 0-255.  
- * There can also be an alpha component in a range of 0.0-1.0 (0 = transparent).  
- * 
+ * Combine separate RGB component to one single numerical value.
+ * The RGB component have to be in a range of 0-255.
+ * There can also be an alpha component in a range of 0.0-1.0 (0 = transparent).
+ *
  * **Note:** Companion's components can use any CSS color string and you should prefer these strings. E.g.for a button style you can also use `'#ff8800'` or `'rgb(255, 128, 0)'` without calling a function.
  *
  * ### Example
@@ -66,11 +65,11 @@ export function combineRgb(r: number, g: number, b: number, a?: number): number 
 }
 
 /**
- * Split a combined color value to separate RGBA component values  
- * the color can be either the Companion color number or a CSS compatible color string  
- * return object will always include an alpha value (0.0-1.0), defaulting to 1 if input has no alpha information 
+ * Split a combined color value to separate RGBA component values
+ * the color can be either the Companion color number or a CSS compatible color string
+ * return object will always include an alpha value (0.0-1.0), defaulting to 1 if input has no alpha information
  */
-export function splitRgb(color: number|string): RgbComponents {
+export function splitRgb(color: number | string): RgbComponents {
 	if (typeof color === 'number') {
 		if (color > 0xffffff) {
 			return {
@@ -106,9 +105,9 @@ export function splitRgb(color: number|string): RgbComponents {
 }
 
 /**
- * Split a combined color value to separate HSLA component values  
- * the color can be either the Companion color number or a CSS compatible color string  
- * return object will always include an alpha value (0.0-1.0), defaulting to 1 if input has no alpha information 
+ * Split a combined color value to separate HSLA component values
+ * the color can be either the Companion color number or a CSS compatible color string
+ * return object will always include an alpha value (0.0-1.0), defaulting to 1 if input has no alpha information
  */
 export function splitHsl(color: number | string): HslaColor {
 	const rgb = splitRgb(color)
@@ -117,9 +116,9 @@ export function splitHsl(color: number | string): HslaColor {
 }
 
 /**
- * Split a combined color value to separate HSVA component values  
- * the color can be either the Companion color number or a CSS compatible color string  
- * return object will always include an alpha value (0.0-1.0), defaulting to 1 if input has no alpha information 
+ * Split a combined color value to separate HSVA component values
+ * the color can be either the Companion color number or a CSS compatible color string
+ * return object will always include an alpha value (0.0-1.0), defaulting to 1 if input has no alpha information
  */
 export function splitHsv(color: number | string): HsvaColor {
 	const rgb = splitRgb(color)
@@ -128,8 +127,8 @@ export function splitHsv(color: number | string): HsvaColor {
 }
 
 /**
- * Takes a color value and returns a string with Hex notation of that color  
- * the color can be either the Companion color number or a CSS compatible color string  
+ * Takes a color value and returns a string with Hex notation of that color
+ * the color can be either the Companion color number or a CSS compatible color string
  * if input color has no alpha or alpha of 1, return will be in format '#rrggbb', else '#rrggbbaa'
  */
 export function splitHex(color: number | string): string {

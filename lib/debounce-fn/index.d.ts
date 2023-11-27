@@ -5,7 +5,7 @@ declare namespace debounceFn {
 
 		@default 0
 		*/
-		readonly wait?: number;
+		readonly wait?: number
 
 		/**
 		Maximum time to wait until the `input` function is called.
@@ -14,7 +14,7 @@ declare namespace debounceFn {
 
 		@default 0
 		*/
-		readonly maxWait?: number;
+		readonly maxWait?: number
 
 		/**
 		Trigger the function on the leading edge of the `wait` interval.
@@ -23,28 +23,28 @@ declare namespace debounceFn {
 
 		@default false
 		*/
-		readonly before?: boolean;
+		readonly before?: boolean
 
 		/**
 		Trigger the function on the trailing edge of the `wait` interval.
 
 		@default true
 		*/
-		readonly after?: boolean;
+		readonly after?: boolean
 	}
 
 	interface BeforeOptions extends Options {
-		readonly before: true;
+		readonly before: true
 	}
 
 	interface NoBeforeNoAfterOptions extends Options {
-		readonly after: false;
-		readonly before?: false;
+		readonly after: false
+		readonly before?: false
 	}
 
 	interface DebouncedFunction<ArgumentsType extends unknown[], ReturnType> {
-		(...arguments: ArgumentsType): ReturnType;
-		cancel(): void;
+		(...arguments: ArgumentsType): ReturnType
+		cancel(): void
 	}
 }
 
@@ -68,16 +68,16 @@ window.onresize = debounceFn(() => {
 declare function debounceFn<ArgumentsType extends unknown[], ReturnType>(
 	input: (...arguments: ArgumentsType) => ReturnType,
 	options: debounceFn.BeforeOptions
-): debounceFn.DebouncedFunction<ArgumentsType, ReturnType>;
+): debounceFn.DebouncedFunction<ArgumentsType, ReturnType>
 
 declare function debounceFn<ArgumentsType extends unknown[], ReturnType>(
 	input: (...arguments: ArgumentsType) => ReturnType,
 	options: debounceFn.NoBeforeNoAfterOptions
-): debounceFn.DebouncedFunction<ArgumentsType, undefined>;
+): debounceFn.DebouncedFunction<ArgumentsType, undefined>
 
 declare function debounceFn<ArgumentsType extends unknown[], ReturnType>(
 	input: (...arguments: ArgumentsType) => ReturnType,
 	options?: debounceFn.Options
-): debounceFn.DebouncedFunction<ArgumentsType, ReturnType | undefined>;
+): debounceFn.DebouncedFunction<ArgumentsType, ReturnType | undefined>
 
-export = debounceFn;
+export = debounceFn
