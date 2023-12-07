@@ -10,6 +10,18 @@ export function validateManifest(manifest: ModuleManifest): void {
 	if (manifestStr.includes('companion-module-your-module-name'))
 		throw new Error(`Manifest incorrectly references template module 'companion-module-your-module-name'`)
 
+	if (manifestStr.includes('Your name'))
+		throw new Error(`Manifest incorrectly references template module 'Your name'`)
+
+	if (manifestStr.includes('Your email'))
+		throw new Error(`Manifest incorrectly references template module 'Your email'`)
+
+	if (manifestStr.includes('Your company'))
+		throw new Error(`Manifest incorrectly references template module 'Your company'`)
+
+	if (manifestStr.includes('Your product'))
+		throw new Error(`Manifest incorrectly references template module 'Your product'`)
+
 	if (!validateManifestSchema(manifest)) {
 		const errors = validateManifestSchema.errors
 		if (!errors) throw new Error(`Manifest failed validation with unknown reason`)
