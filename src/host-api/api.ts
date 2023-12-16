@@ -129,6 +129,11 @@ export interface SetVariableDefinitionsMessage {
 		id: string
 		name: string
 	}>
+	/** New in v1.7, optionally set values for variables at the same tiem */
+	newValues?: Array<{
+		id: string
+		value: string | number | boolean | undefined
+	}>
 }
 
 export interface SetPresetDefinitionsMessage {

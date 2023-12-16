@@ -405,6 +405,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 */
 	setVariableDefinitions(variables: CompanionVariableDefinition[]): void {
 		const hostVariables: SetVariableDefinitionsMessage['variables'] = []
+		const hostValues: SetVariableDefinitionsMessage['newValues'] = []
 
 		this.#variableDefinitions.clear()
 
@@ -419,6 +420,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			if (!this.#variableValues.has(variable.variableId)) {
 				// Give us a local cached value of something
 				this.#variableValues.set(variable.variableId, '')
+				hostValues.push({
+					id: variable.variableId,
+					value: '',
+				})
 			}
 		}
 
@@ -428,11 +433,15 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				if (!validIds.has(id)) {
 					// Delete any local cached value
 					this.#variableValues.delete(id)
+					hostValues.push({
+						id: id,
+						value: undefined,
+					})
 				}
 			}
 		}
 
-		this.#ipcWrapper.sendWithNoCb('setVariableDefinitions', { variables: hostVariables })
+		this.#ipcWrapper.sendWithNoCb('setVariableDefinitions', { variables: hostVariables, newValues: hostValues })
 	}
 
 	/**
