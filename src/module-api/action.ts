@@ -1,5 +1,5 @@
-import { CompanionCommonCallbackContext } from './common'
-import {
+import type { CompanionCommonCallbackContext } from './common.js'
+import type {
 	CompanionOptionValues,
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldColor,
@@ -9,7 +9,7 @@ import {
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
 	CompanionInputFieldCustomVariable,
-} from './input'
+} from './input.js'
 
 export type SomeCompanionActionInputField =
 	| CompanionInputFieldStaticText
@@ -56,6 +56,13 @@ export interface CompanionActionDefinition {
 		action: CompanionActionEvent,
 		context: CompanionActionContext
 	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
+
+	/**
+	 * Timeout for the 'learn' function (in milliseconds)
+	 * Companion sets a default value of 5s, to ensure that the learn does not get stuck never completing
+	 * You can change this if this number does not work for you, but you should keep it to a sensible value
+	 */
+	learnTimeout?: number
 }
 
 /**

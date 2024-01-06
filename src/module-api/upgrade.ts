@@ -1,5 +1,5 @@
-import { CompanionFeedbackButtonStyleResult } from './feedback'
-import { CompanionOptionValues } from './input'
+import type { CompanionFeedbackButtonStyleResult } from './feedback.js'
+import type { CompanionOptionValues } from './input.js'
 
 /** Additional utilities for Upgrade Scripts */
 export interface CompanionUpgradeContext<TConfig> {
@@ -88,6 +88,12 @@ export interface CompanionMigrationFeedback {
 	 * If it is already a boolean feedback or is a different type of feedback, this will be ignored.
 	 */
 	style?: Partial<CompanionFeedbackButtonStyleResult>
+
+	/**
+	 * Only valid for a boolean feedback.
+	 * True if this feedback has been inverted inside Companion, you do not have access to this when the feedback is executed.
+	 */
+	isInverted: boolean
 }
 
 /**
@@ -151,6 +157,41 @@ export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig = unknown>(
 					}
 				}
 			}
+		}
+
+		return {
+			updatedConfig: null,
+			updatedActions: [],
+			updatedFeedbacks: changedFeedbacks,
+		}
+	}
+}
+
+/**
+ * A helper script to automate the bulk of the process to upgrade feedbacks from having a module defined 'invert' field, to use the builtin one.
+ * The feedback definitions must be updated manually, this can only help update existing usages of the feedback.
+ * @param upgradeMap The feedbacks to upgrade and the id of the option to convert
+ */
+export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig = unknown>(
+	upgradeMap: Record<string, string>
+): CompanionStaticUpgradeScript<TConfig> {
+	// Warning: the unused parameters will often be null
+	return (_context, props) => {
+		const changedFeedbacks: CompanionStaticUpgradeResult<unknown>['updatedFeedbacks'] = []
+
+		for (const feedback of props.feedbacks) {
+			const propertyName = upgradeMap[feedback.feedbackId]
+			if (typeof propertyName !== 'string') continue
+
+			// Retrieve and delete the old value
+			const rawValue = feedback.options[propertyName]
+			if (rawValue === undefined) continue
+			delete feedback.options[propertyName]
+
+			// Interpret it to a boolean, it could be stored in a few ways
+			feedback.isInverted = rawValue === 'true' || rawValue === true || Number(rawValue) > 0
+
+			changedFeedbacks.push(feedback)
 		}
 
 		return {

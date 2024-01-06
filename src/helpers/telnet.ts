@@ -17,7 +17,7 @@
 
 import EventEmitter from 'eventemitter3'
 import { Transform, TransformCallback, TransformOptions } from 'stream'
-import { TCPHelper, TCPHelperEvents, TCPHelperOptions } from './tcp'
+import { TCPHelper, TCPHelperEvents, TCPHelperOptions } from './tcp.js'
 
 // const NULL = 0
 const DATA = 0

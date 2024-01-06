@@ -1,6 +1,7 @@
-import { nanoid } from 'nanoid'
-import { assertNever } from '../util'
+import { assertNever } from '../util.js'
 import ejson from 'ejson'
+
+const MAX_CALLBACK_ID = 1 << 28
 
 /**
  * Signature for the handler functions
@@ -14,7 +15,7 @@ type HandlerReturnType<T extends (...args: any) => any> = ReturnType<T> extends 
 type HandlerFunctionOrNever<T> = T extends (...args: any) => any ? HandlerFunction<T> : never
 
 /** Map of handler functions */
-type EventHandlers<T extends object> = {
+export type IpcEventHandlers<T extends object> = {
 	[K in keyof T]: HandlerFunctionOrNever<T[K]>
 }
 
@@ -25,30 +26,31 @@ interface IpcCallMessagePacket {
 	direction: 'call'
 	name: string
 	payload: string
-	callbackId: string | undefined
+	callbackId: number | undefined
 }
 interface IpcResponseMessagePacket {
 	direction: 'response'
-	callbackId: string
+	callbackId: number
 	success: boolean
 	payload: string
 }
 
 interface PendingCallback {
-	timeout: NodeJS.Timer | undefined
+	timeout: NodeJS.Timeout | undefined
 	resolve: (v: any) => void
 	reject: (e: any) => void
 }
 
 export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound extends { [key: string]: any }> {
-	#handlers: EventHandlers<TInbound>
+	#handlers: IpcEventHandlers<TInbound>
 	#sendMessage: (message: IpcCallMessagePacket | IpcResponseMessagePacket) => void
 	#defaultTimeout: number
 
-	#pendingCallbacks: Record<string, PendingCallback> = {}
+	#nextCallbackId = 1
+	#pendingCallbacks = new Map<number, PendingCallback>()
 
 	constructor(
-		handlers: EventHandlers<TInbound>,
+		handlers: IpcEventHandlers<TInbound>,
 		sendMessage: (message: IpcCallMessagePacket | IpcResponseMessagePacket) => void,
 		defaultTimeout: number
 	) {
@@ -71,8 +73,11 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 			callbacks.reject = reject
 		})
 
-		const id = nanoid()
-		this.#pendingCallbacks[id] = callbacks
+		// Reset the id when it gets really high
+		if (this.#nextCallbackId > MAX_CALLBACK_ID) this.#nextCallbackId = 1
+
+		const id = this.#nextCallbackId++
+		this.#pendingCallbacks.set(id, callbacks)
 
 		this.#sendMessage({
 			direction: 'call',
@@ -85,7 +90,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 		const timeoutError = new Error('Call timed out')
 		callbacks.timeout = setTimeout(() => {
 			callbacks.reject(defaultResponse ? defaultResponse() : timeoutError)
-			delete this.#pendingCallbacks[id]
+			this.#pendingCallbacks.delete(id)
 		}, timeout)
 
 		return promise
@@ -150,8 +155,8 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 					console.error(`Ipc: Response message has no callbackId`)
 					return
 				}
-				const callbacks = this.#pendingCallbacks[msg.callbackId]
-				delete this.#pendingCallbacks[msg.callbackId]
+				const callbacks = this.#pendingCallbacks.get(msg.callbackId)
+				this.#pendingCallbacks.delete(msg.callbackId)
 				if (!callbacks) {
 					// Likely timed out, we should ignore
 					return

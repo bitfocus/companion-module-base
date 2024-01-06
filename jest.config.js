@@ -8,6 +8,9 @@ module.exports = {
 			},
 		],
 	},
+	moduleNameMapper: {
+		'^(.+)\\.js$': '$1',
+	},
 	testMatch: ['**/__tests__/**/*.spec.(ts|js)'],
 	testEnvironment: 'node',
 	coverageThreshold: {

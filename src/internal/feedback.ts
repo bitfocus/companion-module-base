@@ -1,11 +1,11 @@
-import {
+import type {
 	CompanionAdvancedFeedbackResult,
 	CompanionFeedbackContext,
 	CompanionFeedbackDefinition,
 	CompanionFeedbackDefinitions,
 	CompanionFeedbackInfo,
-} from '../module-api/feedback'
-import {
+} from '../module-api/feedback.js'
+import type {
 	FeedbackInstance,
 	LearnFeedbackMessage,
 	LearnFeedbackResponseMessage,
@@ -14,10 +14,10 @@ import {
 	SetFeedbackDefinitionsMessage,
 	UpdateFeedbackValuesMessage,
 	VariablesChangedMessage,
-} from '../host-api/api'
-import { serializeIsVisibleFn } from './base'
-import debounceFn from 'debounce-fn'
-import { LogLevel } from '../module-api/enums'
+} from '../host-api/api.js'
+import { serializeIsVisibleFn } from './base.js'
+import debounceFn from '../../lib/debounce-fn/index.js'
+import type { LogLevel } from '../module-api/enums.js'
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'advanced',
@@ -390,8 +390,10 @@ export class FeedbackManager {
 					description: feedback.description,
 					options: serializeIsVisibleFn(feedback.options),
 					type: feedback.type,
-					defaultStyle: 'defaultStyle' in feedback ? feedback.defaultStyle : undefined,
+					defaultStyle: feedback.type === 'boolean' ? feedback.defaultStyle : undefined,
 					hasLearn: !!feedback.learn,
+					learnTimeout: feedback.learnTimeout,
+					showInvert: feedback.type === 'boolean' ? feedback.showInvert : false,
 				})
 
 				// Remember the definition locally

@@ -17,7 +17,7 @@
 
 import net from 'net'
 import { EventEmitter } from 'eventemitter3'
-import { InstanceStatus } from '../module-api/enums'
+import { InstanceStatus } from '../module-api/enums.js'
 
 type TCPStatuses =
 	| InstanceStatus.Ok
@@ -59,7 +59,7 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 	#connecting = false
 	#destroyed = false
 	#lastStatus: InstanceStatus | undefined
-	#reconnectTimer: NodeJS.Timer | undefined
+	#reconnectTimer: NodeJS.Timeout | undefined
 
 	get isConnected(): boolean {
 		return this.#connected

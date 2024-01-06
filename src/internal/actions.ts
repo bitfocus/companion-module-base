@@ -1,4 +1,5 @@
-import {
+import type { LogLevel } from '../module-api/enums.js'
+import type {
 	ParseVariablesInStringMessage,
 	ParseVariablesInStringResponseMessage,
 	SetActionDefinitionsMessage,
@@ -6,16 +7,15 @@ import {
 	ExecuteActionMessage,
 	LearnActionMessage,
 	LearnActionResponseMessage,
-} from '../host-api/api'
-import {
+} from '../host-api/api.js'
+import type {
 	CompanionActionContext,
 	CompanionActionDefinition,
 	CompanionActionDefinitions,
 	CompanionActionInfo,
-	CompanionFeedbackContext,
-	LogLevel,
-} from '../module-api'
-import { serializeIsVisibleFn } from './base'
+} from '../module-api/action.js'
+import type { CompanionFeedbackContext } from '../module-api/feedback.js'
+import { serializeIsVisibleFn } from './base.js'
 
 function convertActionInstanceToEvent(action: ActionInstance): CompanionActionInfo {
 	return {
@@ -196,6 +196,7 @@ export class ActionManager {
 					description: action.description,
 					options: serializeIsVisibleFn(action.options),
 					hasLearn: !!action.learn,
+					learnTimeout: action.learnTimeout,
 				})
 
 				// Remember the definition locally

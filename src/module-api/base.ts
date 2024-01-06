@@ -1,8 +1,8 @@
-import { CompanionActionDefinitions, CompanionActionInfo } from './action'
-import { CompanionFeedbackDefinitions } from './feedback'
-import { CompanionPresetDefinitions } from './preset'
-import { InstanceStatus, LogLevel } from './enums'
-import {
+import type { CompanionActionDefinitions, CompanionActionInfo } from './action.js'
+import type { CompanionFeedbackDefinitions } from './feedback.js'
+import type { CompanionPresetDefinitions } from './preset.js'
+import type { InstanceStatus, LogLevel } from './enums.js'
+import type {
 	ActionInstance,
 	ExecuteActionMessage,
 	FeedbackInstance,
@@ -29,20 +29,20 @@ import {
 	UpdateConfigAndLabelMessage,
 	UpdateFeedbackInstancesMessage,
 	VariablesChangedMessage,
-} from '../host-api/api'
-import { literal } from '../util'
-import { InstanceBaseShared } from '../instance-base'
+} from '../host-api/api.js'
+import { literal } from '../util.js'
+import type { InstanceBaseShared } from '../instance-base.js'
 import PQueue from 'p-queue'
-import { CompanionVariableDefinition, CompanionVariableValue, CompanionVariableValues } from './variable'
-import { OSCSomeArguments } from '../common/osc'
-import { SomeCompanionConfigField } from './config'
-import { CompanionStaticUpgradeScript } from './upgrade'
-import { isInstanceBaseProps, serializeIsVisibleFn } from '../internal/base'
-import { runThroughUpgradeScripts } from '../internal/upgrade'
-import { FeedbackManager } from '../internal/feedback'
-import { CompanionHTTPRequest, CompanionHTTPResponse } from './http'
-import { IpcWrapper } from '../host-api/ipc-wrapper'
-import { ActionManager } from '../internal/actions'
+import type { CompanionVariableDefinition, CompanionVariableValue, CompanionVariableValues } from './variable.js'
+import type { OSCSomeArguments } from '../common/osc.js'
+import type { SomeCompanionConfigField } from './config.js'
+import type { CompanionStaticUpgradeScript } from './upgrade.js'
+import { isInstanceBaseProps, serializeIsVisibleFn } from '../internal/base.js'
+import { runThroughUpgradeScripts } from '../internal/upgrade.js'
+import { FeedbackManager } from '../internal/feedback.js'
+import type { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
+import { IpcWrapper } from '../host-api/ipc-wrapper.js'
+import { ActionManager } from '../internal/actions.js'
 
 export interface InstanceBaseOptions {
 	/**
@@ -115,6 +115,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				variablesChanged: this._handleVariablesChanged.bind(this),
 			},
 			(msg) => {
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				process.send!(msg)
 			},
 			5000
@@ -404,6 +405,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 */
 	setVariableDefinitions(variables: CompanionVariableDefinition[]): void {
 		const hostVariables: SetVariableDefinitionsMessage['variables'] = []
+		const hostValues: SetVariableDefinitionsMessage['newValues'] = []
 
 		this.#variableDefinitions.clear()
 
@@ -418,6 +420,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			if (!this.#variableValues.has(variable.variableId)) {
 				// Give us a local cached value of something
 				this.#variableValues.set(variable.variableId, '')
+				hostValues.push({
+					id: variable.variableId,
+					value: '',
+				})
 			}
 		}
 
@@ -427,11 +433,15 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				if (!validIds.has(id)) {
 					// Delete any local cached value
 					this.#variableValues.delete(id)
+					hostValues.push({
+						id: id,
+						value: undefined,
+					})
 				}
 			}
 		}
 
-		this.#ipcWrapper.sendWithNoCb('setVariableDefinitions', { variables: hostVariables })
+		this.#ipcWrapper.sendWithNoCb('setVariableDefinitions', { variables: hostVariables, newValues: hostValues })
 	}
 
 	/**
@@ -585,7 +595,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	/**
-	 * Experimental: This method may change without notice. Do not use!
+	 * @deprecated Experimental: This method may change without notice. Do not use!
 	 * Set the value of a custom variable
 	 * @param variableName
 	 * @param value

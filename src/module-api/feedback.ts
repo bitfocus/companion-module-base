@@ -1,5 +1,5 @@
-import { CompanionCommonCallbackContext } from './common'
-import {
+import type { CompanionCommonCallbackContext } from './common.js'
+import type {
 	CompanionOptionValues,
 	CompanionInputFieldStaticText,
 	CompanionInputFieldCheckbox,
@@ -8,8 +8,8 @@ import {
 	CompanionInputFieldMultiDropdown,
 	CompanionInputFieldNumber,
 	CompanionInputFieldTextInput,
-} from './input'
-import { CompanionButtonStyleProps } from './style'
+} from './input.js'
+import type { CompanionButtonStyleProps } from './style.js'
 
 export type SomeCompanionFeedbackInputField =
 	| CompanionInputFieldStaticText
@@ -115,6 +115,13 @@ export interface CompanionFeedbackDefinitionBase {
 		action: CompanionFeedbackInfo,
 		context: CompanionFeedbackContext
 	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
+
+	/**
+	 * Timeout for the 'learn' function (in milliseconds)
+	 * Companion sets a default value of 5s, to ensure that the learn does not get stuck never completing
+	 * You can change this if this number does not work for you, but you should keep it to a sensible value
+	 */
+	learnTimeout?: number
 }
 
 /**
@@ -127,6 +134,12 @@ export interface CompanionBooleanFeedbackDefinition extends CompanionFeedbackDef
 	defaultStyle: Partial<CompanionFeedbackButtonStyleResult>
 	/** Called to get the feedback value */
 	callback: (feedback: CompanionFeedbackBooleanEvent, context: CompanionFeedbackContext) => boolean | Promise<boolean>
+
+	/**
+	 * If `undefined` or true, Companion will add an 'Inverted' checkbox for your feedback, and handle the logic for you.
+	 * By setting this to false, you can disable this for your feedback. You should do this if it does not make sense for your feedback.
+	 */
+	showInvert?: boolean
 }
 
 /**

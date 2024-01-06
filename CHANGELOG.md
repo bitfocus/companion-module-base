@@ -1,5 +1,51 @@
 # Changelog
 
+## [1.6.0](https://github.com/bitfocus/companion-module-base/compare/v1.5.1...v1.6.0) (2023-10-14)
+
+Requires Companion 3.2 or later
+
+### Features
+
+* bonjour discovery config fields ([#57](https://github.com/bitfocus/companion-module-base/issues/57)) ([37d3cd9](https://github.com/bitfocus/companion-module-base/commit/37d3cd91aea400eb2685954ba6b792fd58559973))
+* support css colors and alpha colorpicker ([1660c3b](https://github.com/bitfocus/companion-module-base/commit/1660c3b37395c5fd240579b3ae4ed864c3f337a1))
+
+
+### Bug Fixes
+
+* expose ipc type ([c66d6f2](https://github.com/bitfocus/companion-module-base/commit/c66d6f2344ee5f4f239256765a9ec0fe559dc556))
+
+## [1.5.1](https://github.com/bitfocus/companion-module-base/compare/v1.5.0...v1.5.1) (2023-10-02)
+
+
+### Bug Fixes
+
+* use sequential ids in ipcWrapper, to ensure nanoid doesn't drain the system entropy pool ([5b5c32c](https://github.com/bitfocus/companion-module-base/commit/5b5c32cf3b9a1fe5b9b900c90d02a1970fd0a7c1))
+
+## [1.5.0](https://github.com/bitfocus/companion-module-base/compare/v1.4.3...v1.5.0)  (2023-08-27)
+
+Requires Companion 3.1 or later
+
+### Features
+
+* boolean feedback invert ([#59](https://github.com/bitfocus/companion-module-base/issues/59)) ([aa28207](https://github.com/bitfocus/companion-module-base/commit/aa28207ee5f71f280a5c61d78424f9f6a03e12f9))
+
+## [1.4.3](https://github.com/bitfocus/companion-module-base/compare/v1.4.2...v1.4.3) (2023-08-13)
+
+
+### Bug Fixes
+
+* inline modified debounce-fn into this package ([a068123](https://github.com/bitfocus/companion-module-base/commit/a06812312b2582361d4e0e5e75795c4451a83ae9))
+* simplify inlined debounce-fn ([cdc1f2b](https://github.com/bitfocus/companion-module-base/commit/cdc1f2b34913f6fd2008ab74b2dbdd7561d316ec))
+* simplify inlined debounce-fn ([9b2f437](https://github.com/bitfocus/companion-module-base/commit/9b2f437bc1e1170d97db488126fe8d7c40363013))
+
+## [1.4.2](https://github.com/bitfocus/companion-module-base/compare/v1.4.1...v1.4.2) (2023-08-13)
+
+
+### Bug Fixes
+
+* add `isVisibleData` parameter to `isVisible` functions ([ddb1b42](https://github.com/bitfocus/companion-module-base/commit/ddb1b427de4606e4417f79d83cf25d277480c427))
+* Don't crash if action/feedback options are missing [#53](https://github.com/bitfocus/companion-module-base/issues/53) ([d4e271d](https://github.com/bitfocus/companion-module-base/commit/d4e271ded4b70d69641fc1655f2c14555c8865b0))
+
 ## [1.4.1](https://github.com/bitfocus/companion-module-base/compare/v1.4.0...v1.4.1) (2023-04-12)
 
 

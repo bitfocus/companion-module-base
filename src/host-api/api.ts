@@ -5,15 +5,15 @@
  * This will allow for cleaner and more stable apis which can both evolve at different rates
  */
 
-import { CompanionFeedbackButtonStyleResult, SomeCompanionFeedbackInputField } from '../module-api/feedback'
-import { OSCSomeArguments } from '../common/osc'
-import { SomeCompanionConfigField } from '../module-api/config'
-import { LogLevel, InstanceStatus } from '../module-api/enums'
-import { InputValue, CompanionOptionValues, CompanionInputFieldBase } from '../module-api/input'
-import { CompanionButtonPresetDefinition } from '../module-api/preset'
-import { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http'
-import { SomeCompanionActionInputField } from '../module-api/action'
-import { CompanionVariableValue } from '../module-api/variable'
+import type { CompanionFeedbackButtonStyleResult, SomeCompanionFeedbackInputField } from '../module-api/feedback.js'
+import type { OSCSomeArguments } from '../common/osc.js'
+import type { SomeCompanionConfigField } from '../module-api/config.js'
+import type { LogLevel, InstanceStatus } from '../module-api/enums.js'
+import type { InputValue, CompanionOptionValues, CompanionInputFieldBase } from '../module-api/input.js'
+import type { CompanionButtonPresetDefinition } from '../module-api/preset.js'
+import type { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http.js'
+import type { SomeCompanionActionInputField } from '../module-api/action.js'
+import type { CompanionVariableValue } from '../module-api/variable.js'
 
 export interface ModuleToHostEventsV0 {
 	'log-message': (msg: LogMessageMessage) => never
@@ -77,6 +77,7 @@ export interface UpgradedDataResponseMessage {
 			| (FeedbackInstanceBase & {
 					controlId: string
 					style?: Partial<CompanionFeedbackButtonStyleResult>
+					isInverted: boolean
 			  })
 			| undefined
 	}
@@ -102,9 +103,10 @@ export interface SetActionDefinitionsMessage {
 	actions: Array<{
 		id: string
 		name: string
-		description?: string
+		description: string | undefined
 		options: EncodeIsVisible<SomeCompanionActionInputField>[] // TODO module-lib - versioned types?
 		hasLearn: boolean
+		learnTimeout: number | undefined
 	}>
 }
 
@@ -112,11 +114,13 @@ export interface SetFeedbackDefinitionsMessage {
 	feedbacks: Array<{
 		id: string
 		name: string
-		description?: string
+		description: string | undefined
 		options: EncodeIsVisible<SomeCompanionFeedbackInputField>[] // TODO module-lib - versioned types?
 		type: 'boolean' | 'advanced'
-		defaultStyle?: Partial<CompanionFeedbackButtonStyleResult>
+		defaultStyle?: CompanionFeedbackButtonStyleResult
 		hasLearn: boolean
+		showInvert: boolean | undefined
+		learnTimeout: number | undefined
 	}>
 }
 
@@ -124,6 +128,11 @@ export interface SetVariableDefinitionsMessage {
 	variables: Array<{
 		id: string
 		name: string
+	}>
+	/** New in v1.7, optionally set values for variables at the same tiem */
+	newValues?: Array<{
+		id: string
+		value: string | number | boolean | undefined
 	}>
 }
 
@@ -169,6 +178,8 @@ export interface FeedbackInstanceBase {
 
 export interface FeedbackInstance extends FeedbackInstanceBase {
 	controlId: string
+
+	isInverted: boolean
 
 	/** If control supports an imageBuffer, the dimensions the buffer must be */
 	image?: {
