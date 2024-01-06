@@ -26,9 +26,6 @@ const feedback: FeedbackInstance = {
 
 	controlId: 'control0',
 	image: undefined,
-	page: 0,
-	bank: 0,
-	rawBank: 'test' as any,
 }
 
 const feedbackId2 = 'abc123'
@@ -43,9 +40,6 @@ const feedback2: FeedbackInstance = {
 
 	controlId: 'control1',
 	image: undefined,
-	page: 0,
-	bank: 0,
-	rawBank: 'test' as any,
 }
 
 const unimplementedAsyncFunction = async () => {
@@ -160,7 +154,6 @@ describe('FeedbackManager', () => {
 				feedbackId: feedback.feedbackId,
 				controlId: feedback.controlId,
 				options: feedback.options,
-				_rawBank: feedback.rawBank,
 			},
 			expect.anything()
 		)

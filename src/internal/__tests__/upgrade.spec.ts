@@ -149,8 +149,6 @@ describe('runThroughUpgradeScripts', () => {
 			actionId: 'my-action',
 			options: { a: 1, b: 2 },
 			controlId: 'control0',
-			page: null,
-			bank: null,
 		}
 		const action1Before: ActionInstance = {
 			id: 'act1',
@@ -159,8 +157,6 @@ describe('runThroughUpgradeScripts', () => {
 			actionId: 'my-action',
 			options: { c: 1, d: 2 },
 			controlId: 'control1',
-			page: null,
-			bank: null,
 		}
 
 		const scripts = createMockScripts(2)
@@ -215,8 +211,6 @@ describe('runThroughUpgradeScripts', () => {
 			actionId: 'my-action',
 			options: { a: 1, b: 2 },
 			controlId: 'control0',
-			page: null,
-			bank: null,
 		}
 		const action1Before: ActionInstance = {
 			id: 'act1',
@@ -225,8 +219,6 @@ describe('runThroughUpgradeScripts', () => {
 			actionId: 'my-action',
 			options: { c: 1, d: 2 },
 			controlId: 'control1',
-			page: null,
-			bank: null,
 		}
 
 		const scripts = createMockScripts(2)

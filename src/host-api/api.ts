@@ -152,9 +152,6 @@ export interface ExecuteActionMessage {
 
 	/** Identifier of the surface which triggered this action */
 	surfaceId: string | undefined
-
-	/** @deprecated will be removed in favor of `surfaceId` soon */
-	deviceId: string | undefined
 }
 
 export interface UpdateFeedbackValuesMessage {
@@ -186,14 +183,6 @@ export interface FeedbackInstance extends FeedbackInstanceBase {
 		width: number
 		height: number
 	}
-
-	/** @deprecated */
-	page: number
-	/** @deprecated */
-	bank: number
-
-	/** @deprecated */
-	rawBank: any
 }
 
 export interface UpdateConfigAndLabelMessage {
@@ -217,11 +206,6 @@ export interface ActionInstanceBase {
 }
 export interface ActionInstance extends ActionInstanceBase {
 	controlId: string
-
-	/** @deprecated */
-	page: number | null
-	/** @deprecated */
-	bank: number | null
 }
 
 export interface UpdateActionInstancesMessage {

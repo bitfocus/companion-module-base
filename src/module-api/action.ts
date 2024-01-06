@@ -92,11 +92,4 @@ export interface CompanionActionInfo {
 export interface CompanionActionEvent extends CompanionActionInfo {
 	/** Identifier of the surface which triggered this action */
 	readonly surfaceId: string | undefined
-
-	/** @deprecated use `surfaceId` instead */
-	readonly _deviceId: string | undefined
-	/** @deprecated */
-	readonly _page: number | null
-	/** @deprecated */
-	readonly _bank: number | null
 }

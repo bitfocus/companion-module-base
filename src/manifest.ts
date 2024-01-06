@@ -16,8 +16,7 @@ export function validateManifest(manifest: ModuleManifest): void {
 	if (manifestStr.includes('A short one line description of your module'))
 		throw new Error(`Manifest incorrectly references template module 'A short one line description of your module'`)
 
-	if (manifestStr.includes('Your name'))
-		throw new Error(`Manifest incorrectly references template module 'Your name'`)
+	if (manifestStr.includes('Your name')) throw new Error(`Manifest incorrectly references template module 'Your name'`)
 
 	if (manifestStr.includes('Your email'))
 		throw new Error(`Manifest incorrectly references template module 'Your email'`)

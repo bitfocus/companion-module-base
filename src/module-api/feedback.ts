@@ -39,11 +39,9 @@ export interface CompanionFeedbackInfo {
 /**
  * Extended information for execution of a boolean feedback
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface CompanionFeedbackBooleanEvent extends CompanionFeedbackInfo {
 	// readonly type: 'boolean'
-
-	/** @deprecated */
-	readonly _rawBank: any
 }
 
 /**
@@ -57,14 +55,6 @@ export interface CompanionFeedbackAdvancedEvent extends CompanionFeedbackInfo {
 		readonly width: number
 		readonly height: number
 	}
-
-	/** @deprecated */
-	readonly _page: number
-	/** @deprecated */
-	readonly _bank: number
-
-	/** @deprecated */
-	readonly _rawBank: any
 }
 
 /**

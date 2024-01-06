@@ -294,7 +294,6 @@ export class FeedbackManager {
 							{
 								...convertFeedbackInstanceToEvent('boolean', feedback),
 								type: 'boolean',
-								_rawBank: feedback.rawBank,
 							},
 							context
 						)
@@ -304,9 +303,6 @@ export class FeedbackManager {
 								...convertFeedbackInstanceToEvent('advanced', feedback),
 								type: 'advanced',
 								image: feedback.image,
-								_page: feedback.page,
-								_bank: feedback.bank,
-								_rawBank: feedback.rawBank,
 							},
 							context
 						)
