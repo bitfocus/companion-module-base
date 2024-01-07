@@ -12,7 +12,8 @@ Each version of Companion supports a limited range of versions of this library l
 | --------- | ------------------------- |
 | v3.0      | v1.0 - v1.4               |
 | v3.1      | v1.0 - v1.5               |
-| v3.2      | v1.0 - v1.6 (unconfirmed) |
+| v3.2      | v1.0 - v1.7               |
+| v3.3      | v1.0 - v1.7 (unconfirmed) |
 
 ## Getting started with a new module
 
