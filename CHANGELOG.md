@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.7.0](https://github.com/bitfocus/companion-module-base/compare/v1.6.0...v1.7.0) (2024-01-06)
+
+
+### Features
+
+* Add a MAC Address regex ([#54](https://github.com/bitfocus/companion-module-base/issues/54)) ([27ea96c](https://github.com/bitfocus/companion-module-base/commit/27ea96cf2c478d759af793090a1e32ad2304c292))
+* allow specifying 'learn' function timeout ([d6b2f72](https://github.com/bitfocus/companion-module-base/commit/d6b2f72b379a4ce54f12d7720c7ad8113b2ccd8b))
+* remove some deprecated fields ([aabc536](https://github.com/bitfocus/companion-module-base/commit/aabc536d1073d5fb014980f80bc0da1fd6bae0b3))
+
+
+### Bug Fixes
+
+* clear variable values when variable is removed https://github.com/bitfocus/companion/issues/2638 ([9e33afd](https://github.com/bitfocus/companion-module-base/commit/9e33afdbe91b7a5ff594a603412f16df6f307e20))
+* ensure module manifest doesn't reference template module name ([af517e4](https://github.com/bitfocus/companion-module-base/commit/af517e453f89c9faf95707c996a181a58db97458))
+* Validate more manifest fields which might be duplicated from the template ([#67](https://github.com/bitfocus/companion-module-base/issues/67)) ([11e4f00](https://github.com/bitfocus/companion-module-base/commit/11e4f00ddc829611b9d01d44e56b86a9149bdb5d))
+
 ## [1.6.0](https://github.com/bitfocus/companion-module-base/compare/v1.5.1...v1.6.0) (2023-10-14)
 
 Requires Companion 3.2 or later
