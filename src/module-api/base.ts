@@ -690,8 +690,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		)
 	}
 
-	createSharedUdpSocket(options: SharedUdpSocketOptions, callback?: SharedUdpSocketMessageCallback): SharedUdpSocket
+	/**
+	 * Create a shared udp socket.
+	 * This can be neccessary for modules where the device/software sends UDP messages to a hardcoded port number. In those
+	 * cases if you don't use this then it won't be possible to use multiple instances of you module.
+	 * The api here is a subset of the `Socket` from the builtin `node:dgram`, but with Companion hosting the sockets instead of the module.
+	 * @param type Type of udp to use
+	 * @param callback Message received callback
+	 */
 	createSharedUdpSocket(type: 'udp4' | 'udp6', callback?: SharedUdpSocketMessageCallback): SharedUdpSocket
+	createSharedUdpSocket(options: SharedUdpSocketOptions, callback?: SharedUdpSocketMessageCallback): SharedUdpSocket
 	createSharedUdpSocket(
 		typeOrOptions: 'udp4' | 'udp6' | SharedUdpSocketOptions,
 		callback?: SharedUdpSocketMessageCallback

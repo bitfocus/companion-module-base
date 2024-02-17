@@ -1,4 +1,4 @@
-import type { /* Socket as DgramSocket, */ RemoteInfo } from 'dgram'
+import type { RemoteInfo } from 'dgram'
 import type { ModuleToHostEventsV0, HostToModuleEventsV0, SharedUdpSocketMessage } from '../host-api/api.js'
 import type { IpcWrapper } from '../host-api/ipc-wrapper.js'
 import EventEmitter from 'eventemitter3'
@@ -18,20 +18,46 @@ export interface SharedUdpSocketEvents {
 export interface SharedUdpSocket extends EventEmitter<SharedUdpSocketEvents> {
 	// address()
 
-	bind(port: number, _address?: string, callback?: () => void): void
+	/**
+	 * Bind to the shared socket. Until you call this, the shared socket will be inactive
+	 * @param port Port number to listen on
+	 * @param address (Unused) Local address to listen on
+	 * @param callback Added to the `listening` event. Called once the socket is listening
+	 */
+	bind(port: number, address?: string, callback?: () => void): void
 
+	/**
+	 * Close your reference to the shared socket.
+	 * @param callback Called once the socket has closed
+	 */
 	close(callback?: () => void): void
 
+	/**
+	 * Send a message from the shared socket
+	 * @param bufferOrList Data to send
+	 * @param port Target port number
+	 * @param address Target address
+	 * @param callback Callback to execute once the data has been sent
+	 */
 	send(
-		buffer: Buffer | DataView | string,
-		offset: number,
-		length: number,
+		bufferOrList: Buffer | DataView | string | Array<number>,
 		port: number,
 		address: string,
 		callback?: () => void
 	): void
+	/**
+	 * Send a message from the shared socket
+	 * @param bufferOrList Data to send
+	 * @param offset Offset in the buffer to start sending from
+	 * @param length Length of the data to send. Limited to the length of the bufer
+	 * @param port Target port number
+	 * @param address Target address
+	 * @param callback Callback to execute once the data has been sent
+	 */
 	send(
-		bufferOrList: Buffer | DataView | string | Array<number>,
+		buffer: Buffer | DataView | string,
+		offset: number,
+		length: number,
 		port: number,
 		address: string,
 		callback?: () => void
