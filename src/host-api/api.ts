@@ -14,6 +14,7 @@ import type { CompanionButtonPresetDefinition } from '../module-api/preset.js'
 import type { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http.js'
 import type { SomeCompanionActionInputField } from '../module-api/action.js'
 import type { CompanionVariableValue } from '../module-api/variable.js'
+import type { RemoteInfo } from 'dgram'
 
 export interface ModuleToHostEventsV0 {
 	'log-message': (msg: LogMessageMessage) => never
@@ -30,6 +31,9 @@ export interface ModuleToHostEventsV0 {
 	upgradedItems: (msg: UpgradedDataResponseMessage) => void
 	recordAction: (msg: RecordActionMessage) => never
 	setCustomVariable: (msg: SetCustomVariableMessage) => never
+	sharedUdpSocketJoin: (msg: SharedUdpSocketMessageJoin) => string
+	sharedUdpSocketLeave: (msg: SharedUdpSocketMessageLeave) => void
+	sharedUdpSocketSend: (msg: SharedUdpSocketMessageSend) => void
 }
 
 export interface HostToModuleEventsV0 {
@@ -47,6 +51,8 @@ export interface HostToModuleEventsV0 {
 	learnFeedback: (msg: LearnFeedbackMessage) => LearnFeedbackResponseMessage
 	startStopRecordActions: (msg: StartStopRecordActionsMessage) => void
 	variablesChanged: (msg: VariablesChangedMessage) => never
+	sharedUdpSocketMessage: (msg: SharedUdpSocketMessage) => never
+	sharedUdpSocketError: (msg: SharedUdpSocketError) => never
 }
 
 export type EncodeIsVisible<T extends CompanionInputFieldBase> = Omit<T, 'isVisible'> & {
@@ -272,4 +278,35 @@ export interface SetCustomVariableMessage {
 
 export interface VariablesChangedMessage {
 	variablesIds: string[]
+}
+
+export interface SharedUdpSocketMessageJoin {
+	family: 'udp4' | 'udp6'
+	portNumber: number
+	// TODO - more props?
+}
+export interface SharedUdpSocketMessageLeave {
+	handleId: string
+}
+export interface SharedUdpSocketMessageSend {
+	handleId: string
+	message: Buffer
+
+	address: string
+	port: number
+}
+
+export interface SharedUdpSocketMessage {
+	handleId: string
+	portNumber: number
+
+	message: Buffer
+	source: RemoteInfo
+}
+
+export interface SharedUdpSocketError {
+	handleId: string
+	portNumber: number
+
+	error: Error
 }
