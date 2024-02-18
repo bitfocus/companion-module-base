@@ -16,7 +16,7 @@ import type { SomeCompanionActionInputField } from '../module-api/action.js'
 import type { CompanionVariableValue } from '../module-api/variable.js'
 import type { RemoteInfo } from 'dgram'
 
-export interface ModuleToHostEventsV0 {
+export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	'log-message': (msg: LogMessageMessage) => never
 	'set-status': (msg: SetStatusMessage) => never
 	setActionDefinitions: (msg: SetActionDefinitionsMessage) => never
@@ -31,12 +31,14 @@ export interface ModuleToHostEventsV0 {
 	upgradedItems: (msg: UpgradedDataResponseMessage) => void
 	recordAction: (msg: RecordActionMessage) => never
 	setCustomVariable: (msg: SetCustomVariableMessage) => never
+}
+export interface ModuleToHostEventsV0SharedSocket {
 	sharedUdpSocketJoin: (msg: SharedUdpSocketMessageJoin) => string
 	sharedUdpSocketLeave: (msg: SharedUdpSocketMessageLeave) => void
 	sharedUdpSocketSend: (msg: SharedUdpSocketMessageSend) => void
 }
 
-export interface HostToModuleEventsV0 {
+export interface HostToModuleEventsV0 extends HostToModuleEventsV0SharedSocket {
 	init: (msg: InitMessage) => InitResponseMessage
 	destroy: (msg: Record<string, never>) => void
 	/** @deprecated */
@@ -51,6 +53,8 @@ export interface HostToModuleEventsV0 {
 	learnFeedback: (msg: LearnFeedbackMessage) => LearnFeedbackResponseMessage
 	startStopRecordActions: (msg: StartStopRecordActionsMessage) => void
 	variablesChanged: (msg: VariablesChangedMessage) => never
+}
+export interface HostToModuleEventsV0SharedSocket {
 	sharedUdpSocketMessage: (msg: SharedUdpSocketMessage) => never
 	sharedUdpSocketError: (msg: SharedUdpSocketError) => never
 }

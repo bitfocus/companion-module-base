@@ -22,13 +22,13 @@ export type IpcEventHandlers<T extends object> = {
 type ParamsIfReturnIsNever<T extends (...args: any[]) => any> = ReturnType<T> extends never ? Parameters<T> : never
 type ParamsIfReturnIsValid<T extends (...args: any[]) => any> = ReturnType<T> extends never ? never : Parameters<T>
 
-interface IpcCallMessagePacket {
+export interface IpcCallMessagePacket {
 	direction: 'call'
 	name: string
 	payload: string
 	callbackId: number | undefined
 }
-interface IpcResponseMessagePacket {
+export interface IpcResponseMessagePacket {
 	direction: 'response'
 	callbackId: number
 	success: boolean

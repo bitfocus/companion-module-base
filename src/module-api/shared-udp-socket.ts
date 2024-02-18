@@ -1,5 +1,9 @@
 import type { RemoteInfo } from 'dgram'
-import type { ModuleToHostEventsV0, HostToModuleEventsV0, SharedUdpSocketMessage } from '../host-api/api.js'
+import type {
+	SharedUdpSocketMessage,
+	ModuleToHostEventsV0SharedSocket,
+	HostToModuleEventsV0SharedSocket,
+} from '../host-api/api.js'
 import type { IpcWrapper } from '../host-api/ipc-wrapper.js'
 import EventEmitter from 'eventemitter3'
 import { assertNever } from '../util.js'
@@ -76,7 +80,7 @@ interface BoundState {
 }
 
 export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> implements SharedUdpSocket {
-	readonly #ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>
+	readonly #ipcWrapper: IpcWrapper<ModuleToHostEventsV0SharedSocket, HostToModuleEventsV0SharedSocket>
 	readonly #moduleUdpSockets: Map<string, SharedUdpSocketImpl>
 	readonly #options: SharedUdpSocketOptions
 
@@ -98,7 +102,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 	#state: BoundState | 'pending' | 'binding' | 'fatalError' | 'closed' = 'pending'
 
 	constructor(
-		ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>,
+		ipcWrapper: IpcWrapper<ModuleToHostEventsV0SharedSocket, HostToModuleEventsV0SharedSocket>,
 		moduleUdpSockets: Map<string, SharedUdpSocketImpl>,
 		options: SharedUdpSocketOptions
 	) {
@@ -181,6 +185,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 					this.emit('close')
 				},
 				(err) => {
+					this.#moduleUdpSockets.delete(handleId)
 					this.emit('error', err instanceof Error ? err : new Error(err))
 				}
 			)
@@ -188,18 +193,18 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 	}
 
 	send(
+		bufferOrList: string | Buffer | DataView | number[],
+		port: number,
+		address: string,
+		callback?: (() => void) | undefined
+	): void
+	send(
 		buffer: string | Buffer | DataView,
 		offset: number,
 		length: number,
 		port: number,
 		address: string,
 		callback?: () => void
-	): void
-	send(
-		bufferOrList: string | Buffer | DataView | number[],
-		port: number,
-		address: string,
-		callback?: (() => void) | undefined
 	): void
 	send(
 		bufferOrList: string | Buffer | DataView | number[],
