@@ -24,6 +24,8 @@ import type {
 	SetStatusMessage,
 	SetVariableDefinitionsMessage,
 	SetVariableValuesMessage,
+	SharedUdpSocketError,
+	SharedUdpSocketMessage,
 	StartStopRecordActionsMessage,
 	UpdateActionInstancesMessage,
 	UpdateConfigAndLabelMessage,
@@ -43,6 +45,12 @@ import { FeedbackManager } from '../internal/feedback.js'
 import type { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 import { IpcWrapper } from '../host-api/ipc-wrapper.js'
 import { ActionManager } from '../internal/actions.js'
+import {
+	SharedUdpSocket,
+	SharedUdpSocketImpl,
+	SharedUdpSocketMessageCallback,
+	SharedUdpSocketOptions,
+} from './shared-udp-socket.js'
 
 export interface InstanceBaseOptions {
 	/**
@@ -66,6 +74,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	readonly #actionManager: ActionManager
 	readonly #feedbackManager: FeedbackManager
 
+	readonly #sharedUdpSocketHandlers = new Map<string, SharedUdpSocketImpl>()
 	readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
 
 	readonly #variableValues = new Map<string, CompanionVariableValue>()
@@ -94,6 +103,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`
 			)
 
+		this.createSharedUdpSocket = this.createSharedUdpSocket.bind(this)
+
 		this.#options = {
 			disableVariableValidation: false,
 		}
@@ -113,6 +124,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				learnFeedback: this._handleLearnFeedback.bind(this),
 				startStopRecordActions: this._handleStartStopRecordActions.bind(this),
 				variablesChanged: this._handleVariablesChanged.bind(this),
+				sharedUdpSocketMessage: this._handleSharedUdpSocketMessage.bind(this),
+				sharedUdpSocketError: this._handleSharedUdpSocketError.bind(this),
 			},
 			(msg) => {
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -319,6 +332,21 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 	private async _handleVariablesChanged(msg: VariablesChangedMessage): Promise<void> {
 		this.#feedbackManager.handleVariablesChanged(msg)
+	}
+
+	private async _handleSharedUdpSocketMessage(msg: SharedUdpSocketMessage): Promise<void> {
+		for (const socket of this.#sharedUdpSocketHandlers.values()) {
+			if (socket.handleId === msg.handleId) {
+				socket.receiveSocketMessage(msg)
+			}
+		}
+	}
+	private async _handleSharedUdpSocketError(msg: SharedUdpSocketError): Promise<void> {
+		for (const socket of this.#sharedUdpSocketHandlers.values()) {
+			if (socket.handleId === msg.handleId) {
+				socket.receiveSocketError(msg.error)
+			}
+		}
 	}
 
 	/**
@@ -660,5 +688,27 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				message,
 			})
 		)
+	}
+
+	/**
+	 * Create a shared udp socket.
+	 * This can be neccessary for modules where the device/software sends UDP messages to a hardcoded port number. In those
+	 * cases if you don't use this then it won't be possible to use multiple instances of you module.
+	 * The api here is a subset of the `Socket` from the builtin `node:dgram`, but with Companion hosting the sockets instead of the module.
+	 * @param type Type of udp to use
+	 * @param callback Message received callback
+	 */
+	createSharedUdpSocket(type: 'udp4' | 'udp6', callback?: SharedUdpSocketMessageCallback): SharedUdpSocket
+	createSharedUdpSocket(options: SharedUdpSocketOptions, callback?: SharedUdpSocketMessageCallback): SharedUdpSocket
+	createSharedUdpSocket(
+		typeOrOptions: 'udp4' | 'udp6' | SharedUdpSocketOptions,
+		callback?: SharedUdpSocketMessageCallback
+	): SharedUdpSocket {
+		const options: SharedUdpSocketOptions = typeof typeOrOptions === 'string' ? { type: typeOrOptions } : typeOrOptions
+
+		const socket = new SharedUdpSocketImpl(this.#ipcWrapper, this.#sharedUdpSocketHandlers, options)
+		if (callback) socket.on('message', callback)
+
+		return socket
 	}
 }
