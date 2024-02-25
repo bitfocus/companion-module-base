@@ -161,8 +161,14 @@ export interface CompanionInputFieldTextInput extends CompanionInputFieldBase {
 	regex?: string
 	/**
 	 * Whether to suggest variables to the user
+	 * This can either be a boolean for minimal support, or an object defining additional values
 	 */
-	useVariables?: boolean
+	useVariables?: boolean | CompanionFieldVariablesSupport
+}
+
+export interface CompanionFieldVariablesSupport {
+	/** Whether to include location based variables */
+	locationBased?: boolean
 }
 
 export type DropdownChoiceId = string | number
