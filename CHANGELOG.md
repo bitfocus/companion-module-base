@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.0](https://github.com/bitfocus/companion-module-base/compare/v1.7.0...v1.8.0) (2024-02-27)
+
+
+### Features
+
+* indicate support for location based variables ([4473e9b](https://github.com/bitfocus/companion-module-base/commit/4473e9bc125292c00dfeb72c53080161e85b4739))
+* shared udp listener https://github.com/bitfocus/companion/issues/2399 ([#72](https://github.com/bitfocus/companion-module-base/issues/72)) ([75774b0](https://github.com/bitfocus/companion-module-base/commit/75774b05a1df4d4c2dff0245bbf2d23df0c9c0da))
+
 ## [1.7.0](https://github.com/bitfocus/companion-module-base/compare/v1.6.0...v1.7.0) (2024-01-06)
 
 
