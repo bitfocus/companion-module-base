@@ -90,3 +90,74 @@ export interface CompanionButtonStepActions {
 export interface CompanionPresetDefinitions {
 	[id: string]: CompanionButtonPresetDefinition | undefined
 }
+
+export type StrictPresetDefinitions<TActions, TFeedbacks> = StrictPresetDefinitionCategory<TActions, TFeedbacks>[]
+export type StrictPresetDefinitionCategory<TActions, TFeedbacks> = {
+	name: string
+	presets: Record<string, StrictButtonPresetDefinition<TActions, TFeedbacks>>
+}
+
+export interface StrictButtonPresetDefinition<TActions, TFeedbacks> {
+	/** The type of this preset */
+	type: 'button-strict'
+	/** The category of this preset, for grouping */
+	// category: string
+	/** The name of this preset */
+	name: string
+	/** The base style of this preset, this will be copied to the button */
+	style: CompanionButtonStyleProps
+	/** Preview style for preset, will be used in GUI for preview */
+	previewStyle?: CompanionButtonStyleProps
+	/** Options for this preset */
+	options?: CompanionButtonPresetOptions
+	/** The feedbacks on the button */
+	feedbacks: StrictPresetFeedback<TFeedbacks>[]
+	steps: StrictButtonStepActions<TActions>[]
+}
+
+type StrictPresetFeedbackInner<TTypes, Id extends keyof TTypes> = Id extends any
+	? {
+			/** The id of the feedback definition */
+			feedbackId: Id
+			/** The option values for the feedback */
+			options: TTypes[Id]
+			/**
+			 * If a boolean feedback, the style effect of the feedback
+			 */
+			style?: CompanionFeedbackButtonStyleResult
+			/**
+			 * If a boolean feedback, invert the value of the feedback
+			 */
+			isInverted?: boolean
+	  }
+	: never
+
+export type StrictPresetFeedback<TFeedbacks> = StrictPresetFeedbackInner<TFeedbacks, keyof TFeedbacks>
+
+type StrictPresetActionInner<TTypes, Id extends keyof TTypes> = Id extends any
+	? {
+			/** The id of the action definition */
+			actionId: Id
+			/** The option values for the action */
+			options: TTypes[Id]
+			/** The execution delay of the action */
+			delay?: number
+	  }
+	: never
+
+export type StrictPresetAction<TActions> = StrictPresetActionInner<TActions, keyof TActions>
+
+export interface StrictButtonStepActions<TActions> {
+	/** The button down actions */
+	down: StrictPresetAction<TActions>[]
+	/** The button up actions */
+	up: StrictPresetAction<TActions>[]
+	rotateLeft?: StrictPresetAction<TActions>[]
+	rotateRight?: StrictPresetAction<TActions>[]
+	[delay: number]: StrictPresetActionsWithOptions<TActions> | StrictPresetAction<TActions>[]
+}
+
+export interface StrictPresetActionsWithOptions<TActions> {
+	options?: CompanionActionSetOptions
+	actions: StrictPresetAction<TActions>[]
+}
