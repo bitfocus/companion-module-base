@@ -167,8 +167,8 @@ export interface CompanionInputFieldTextInput extends CompanionInputFieldBase {
 }
 
 export interface CompanionFieldVariablesSupport {
-	/** Whether to include location based variables */
-	locationBased?: boolean
+	/** Whether to include local variables */
+	local?: boolean
 }
 
 export type DropdownChoiceId = string | number
