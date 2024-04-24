@@ -38,6 +38,7 @@ export type TelnetHelperOptions = TCPHelperOptions
 export class TelnetHelper extends EventEmitter<TelnetHelperEvents> {
 	readonly #tcp: TCPHelper
 	readonly #stream: TelnetStream
+	#missingErrorHandlerTimer: NodeJS.Timeout | undefined
 
 	get isConnected(): boolean {
 		return this.#tcp.isConnected
@@ -68,7 +69,8 @@ export class TelnetHelper extends EventEmitter<TelnetHelperEvents> {
 		this.#stream.on('data', (data) => this.emit('data', data))
 		this.#stream.on('drain', () => this.emit('drain'))
 
-		setTimeout(() => {
+		this.#missingErrorHandlerTimer = setTimeout(() => {
+			this.#missingErrorHandlerTimer = undefined
 			if (!this.isDestroyed && !this.listenerCount('error')) {
 				// The socket is active and has no listeners. Log an error for the module devs!
 				console.error(`Danger: Telnet client for ${host}:${port} is missing an error handler!`)
@@ -85,6 +87,11 @@ export class TelnetHelper extends EventEmitter<TelnetHelperEvents> {
 
 	destroy(): void {
 		this.#tcp.destroy()
+
+		if (this.#missingErrorHandlerTimer !== undefined) {
+			clearTimeout(this.#missingErrorHandlerTimer)
+			this.#missingErrorHandlerTimer = undefined
+		}
 
 		this.#stream.removeAllListeners()
 		this.#stream.destroy()
