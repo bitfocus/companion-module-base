@@ -18,3 +18,4 @@ dist
 generated
 *.log
 node_modules
+.yarn
