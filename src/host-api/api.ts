@@ -10,7 +10,7 @@ import type { OSCSomeArguments } from '../common/osc.js'
 import type { SomeCompanionConfigField } from '../module-api/config.js'
 import type { LogLevel, InstanceStatus } from '../module-api/enums.js'
 import type { InputValue, CompanionOptionValues, CompanionInputFieldBase } from '../module-api/input.js'
-import type { CompanionButtonPresetDefinition } from '../module-api/preset.js'
+import type { CompanionButtonPresetDefinition, CompanionTextPresetDefinition } from '../module-api/preset.js'
 import type { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http.js'
 import type { SomeCompanionActionInputField } from '../module-api/action.js'
 import type { CompanionVariableValue } from '../module-api/variable.js'
@@ -147,7 +147,7 @@ export interface SetVariableDefinitionsMessage {
 }
 
 export interface SetPresetDefinitionsMessage {
-	presets: Array<CompanionButtonPresetDefinition & { id: string }>
+	presets: Array<(CompanionButtonPresetDefinition | CompanionTextPresetDefinition) & { id: string }>
 }
 
 export interface SetVariableValuesMessage {

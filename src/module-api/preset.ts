@@ -44,6 +44,8 @@ export interface CompanionPresetAction {
 	options: CompanionOptionValues
 }
 
+export type CompanionPresetDefinition = CompanionButtonPresetDefinition | CompanionTextPresetDefinition
+
 /**
  * The definition of a press button preset
  */
@@ -63,6 +65,20 @@ export interface CompanionButtonPresetDefinition {
 	/** The feedbacks on the button */
 	feedbacks: CompanionPresetFeedback[]
 	steps: CompanionButtonStepActions[]
+}
+
+/**
+ * The definition of a text preset
+ */
+export interface CompanionTextPresetDefinition {
+		/** The type of this preset */
+		type: 'text'
+		/** The category of this preset, for grouping */
+		category: string
+		/** The name of this preset */
+		name: string
+		/** The text to display */
+		text: string
 }
 
 export interface CompanionPresetActionsWithOptions {
@@ -88,5 +104,5 @@ export interface CompanionButtonStepActions {
  * The definitions of a group of feedbacks
  */
 export interface CompanionPresetDefinitions {
-	[id: string]: CompanionButtonPresetDefinition | undefined
+	[id: string]: CompanionButtonPresetDefinition | CompanionTextPresetDefinition | undefined
 }
