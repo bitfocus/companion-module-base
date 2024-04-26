@@ -60,6 +60,7 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 	#destroyed = false
 	#lastStatus: InstanceStatus | undefined
 	#reconnectTimer: NodeJS.Timeout | undefined
+	#missingErrorHandlerTimer: NodeJS.Timeout | undefined
 
 	get isConnected(): boolean {
 		return this.#connected
@@ -123,7 +124,8 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 		// Let caller install event handlers first
 		setImmediate(() => this.connect())
 
-		setTimeout(() => {
+		this.#missingErrorHandlerTimer = setTimeout(() => {
+			this.#missingErrorHandlerTimer = undefined
 			if (!this.#destroyed && !this.listenerCount('error')) {
 				// The socket is active and has no listeners. Log an error for the module devs!
 				console.error(`Danger: TCP client for ${this.#host}:${this.#port} is missing an error handler!`)
@@ -175,6 +177,11 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 
 		if (this.#reconnectTimer !== undefined) {
 			clearTimeout(this.#reconnectTimer)
+			this.#reconnectTimer = undefined
+		}
+		if (this.#missingErrorHandlerTimer !== undefined) {
+			clearTimeout(this.#missingErrorHandlerTimer)
+			this.#missingErrorHandlerTimer = undefined
 		}
 
 		this._socket.removeAllListeners()

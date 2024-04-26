@@ -58,6 +58,7 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 
 	#destroyed = false
 	#lastStatus: InstanceStatus | undefined
+	#missingErrorHandlerTimer: NodeJS.Timeout | undefined
 
 	get isDestroyed(): boolean {
 		return this.#destroyed
@@ -117,7 +118,7 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 
 		this.#socket.on('message', (data) => this.emit('data', data))
 
-		setTimeout(() => {
+		this.#missingErrorHandlerTimer = setTimeout(() => {
 			if (!this.#destroyed && !this.listenerCount('error')) {
 				// The socket is active and has no listeners. Log an error for the module devs!
 				console.error(`Danger: UDP socket for ${this.#host}:${this.#port} is missing an error handler!`)
@@ -149,6 +150,11 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 	// }
 	destroy(): void {
 		this.#destroyed = true
+
+		if (this.#missingErrorHandlerTimer !== undefined) {
+			clearTimeout(this.#missingErrorHandlerTimer)
+			this.#missingErrorHandlerTimer = undefined
+		}
 
 		this.#socket.removeAllListeners()
 		this.#socket.close()
