@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/bitfocus/companion-module-base/compare/v1.7.0...v1.7.1) (2024-04-26)
+
+### Bug Fixes
+
+* ipc-wrapper failed when receiving a non-error failure ([fe87955](https://github.com/bitfocus/companion-module-base/commit/fe879555c2ff7be04c178bece151e05301e1180f))
+* Record the missing-error-handler timers and clear them on helper destroy() ([#79](https://github.com/bitfocus/companion-module-base/issues/79)) ([5142a62](https://github.com/bitfocus/companion-module-base/commit/5142a62d532838459c1965336b2a59af26204be0))
+
 ## [1.7.0](https://github.com/bitfocus/companion-module-base/compare/v1.6.0...v1.7.0) (2024-01-06)
 
 
