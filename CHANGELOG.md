@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.8.0](https://github.com/bitfocus/companion-module-base/compare/v1.7.0...v1.8.0) (2024-04-26)
+
+
+### Features
+
+* indicate support for location based variables ([4473e9b](https://github.com/bitfocus/companion-module-base/commit/4473e9bc125292c00dfeb72c53080161e85b4739))
+* shared udp listener https://github.com/bitfocus/companion/issues/2399 ([#72](https://github.com/bitfocus/companion-module-base/issues/72)) ([75774b0](https://github.com/bitfocus/companion-module-base/commit/75774b05a1df4d4c2dff0245bbf2d23df0c9c0da))
+* Text preset type ([#80](https://github.com/bitfocus/companion-module-base/issues/80)) ([34c03db](https://github.com/bitfocus/companion-module-base/commit/34c03db5f69dca96e00effd15e2e0aa812f00647))
+
+
+### Bug Fixes
+
+* ipc-wrapper failed when receiving a non-error failure ([fe87955](https://github.com/bitfocus/companion-module-base/commit/fe879555c2ff7be04c178bece151e05301e1180f))
+* Record the missing-error-handler timers and clear them on helper destroy() ([#79](https://github.com/bitfocus/companion-module-base/issues/79)) ([5142a62](https://github.com/bitfocus/companion-module-base/commit/5142a62d532838459c1965336b2a59af26204be0))
+* rename 'locationBased' to 'local' variables ([71e5b33](https://github.com/bitfocus/companion-module-base/commit/71e5b3325a5386e49ef84644479ca229f999a84a))
+
 ## [1.7.0](https://github.com/bitfocus/companion-module-base/compare/v1.6.0...v1.7.0) (2024-01-06)
 
 
