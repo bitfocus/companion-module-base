@@ -99,7 +99,8 @@
 			"uniqueItems": true,
 			"items": {
 				"type": "string"
-			}
+			},
+			"minItems": 1
 		},
 		"keywords": {
 			"type": "array",
