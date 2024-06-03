@@ -39,7 +39,8 @@
 		"nanoid": "^3.3.4",
 		"p-queue": "^6.6.2",
 		"p-timeout": "^4.1.0",
-		"tslib": "^2.6.2"
+		"tslib": "^2.6.2",
+		"type-fest": "^4.15.0"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^1.5.0",

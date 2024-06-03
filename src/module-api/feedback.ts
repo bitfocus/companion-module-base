@@ -1,4 +1,4 @@
-import type { CompanionCommonCallbackContext } from './common.js'
+import type { CompanionCommonCallbackContext, StrictOptions, StrictOptionsObject } from './common.js'
 import type {
 	CompanionOptionValues,
 	CompanionInputFieldStaticText,
@@ -160,4 +160,98 @@ export type CompanionFeedbackDefinition = CompanionBooleanFeedbackDefinition | C
  */
 export interface CompanionFeedbackDefinitions {
 	[id: string]: CompanionFeedbackDefinition | undefined
+}
+
+/**
+ * Basic information about an instance of an Feedback
+ */
+export interface StrictFeedbackInfo<TOptions> {
+	/** The type of the feedback */
+	readonly type: 'boolean-strict' | 'advanced-strict'
+	/** The unique id for this feedback */
+	readonly id: string
+	/** The unique id for the location of this feedback */
+	readonly controlId: string
+	/** The id of the feedback definition */
+	readonly feedbackId: string
+	/** The user selected options for the feedback */
+	readonly options: StrictOptions<TOptions>
+}
+/**
+ * Extended information for execution of an Feedback
+ */
+export type StrictBooleanFeedbackEvent<TOptions> = StrictFeedbackInfo<TOptions>
+
+/**
+ * Extended information for execution of an advanced feedback
+ */
+export interface StrictAdvancedFeedbackEvent<TOptions> extends StrictFeedbackInfo<TOptions> {
+	/** If control supports an imageBuffer, the dimensions the buffer should be */
+	readonly image?: {
+		readonly width: number
+		readonly height: number
+	}
+}
+
+export interface StrictFeedbackDefinitionBase<TOptions> {
+	/** Name to show in the Feedbacks list */
+	name: string
+	/** Additional description of the Feedback */
+	description?: string
+	/** The input fields for the Feedback */
+	options: StrictOptionsObject<TOptions, SomeCompanionFeedbackInputField>
+
+	/**
+	 * Called to report the existence of an Feedback
+	 * Useful to ensure necessary data is loaded
+	 */
+	subscribe?: (Feedback: StrictFeedbackInfo<TOptions>, context: CompanionFeedbackContext) => Promise<void> | void
+	/**
+	 * Called to report an Feedback has been edited/removed
+	 * Useful to cleanup subscriptions setup in subscribe
+	 */
+	unsubscribe?: (Feedback: StrictFeedbackInfo<TOptions>, context: CompanionFeedbackContext) => Promise<void> | void
+	/**
+	 * The user requested to 'learn' the values for this Feedback.
+	 */
+	learn?: (
+		Feedback: StrictFeedbackInfo<TOptions>,
+		context: CompanionFeedbackContext
+	) => TOptions | undefined | Promise<TOptions | undefined>
+}
+
+export interface StrictBooleanFeedbackDefinition<TOptions> extends StrictFeedbackDefinitionBase<TOptions> {
+	type: 'boolean-strict'
+
+	/** The default style properties for this feedback */
+	defaultStyle: Partial<CompanionFeedbackButtonStyleResult>
+
+	/**
+	 * If `undefined` or true, Companion will add an 'Inverted' checkbox for your feedback, and handle the logic for you.
+	 * By setting this to false, you can disable this for your feedback. You should do this if it does not make sense for your feedback.
+	 */
+	showInvert?: boolean
+
+	/** Called to execute the Feedback */
+	callback: (
+		Feedback: StrictBooleanFeedbackEvent<TOptions>,
+		context: CompanionFeedbackContext
+	) => Promise<boolean> | boolean
+}
+export interface StrictAdvancedFeedbackDefinition<TOptions> extends StrictFeedbackDefinitionBase<TOptions> {
+	type: 'advanced-strict'
+
+	/** Called to execute the Feedback */
+	callback: (
+		Feedback: StrictAdvancedFeedbackEvent<TOptions>,
+		context: CompanionFeedbackContext
+	) => Promise<CompanionAdvancedFeedbackResult> | CompanionAdvancedFeedbackResult
+}
+
+export declare type StrictFeedbackDefinition<TOption> =
+	| StrictBooleanFeedbackDefinition<TOption>
+	| StrictAdvancedFeedbackDefinition<TOption>
+
+export type StrictFeedbackDefinitions<TTypes> = {
+	[Key in keyof TTypes]: StrictFeedbackDefinition<TTypes[Key]> | undefined
 }
