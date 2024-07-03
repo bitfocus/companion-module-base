@@ -6,8 +6,7 @@ import type { CompanionStaticUpgradeScript } from './module-api/upgrade.js'
 import type { InstanceBase } from './module-api/base.js'
 import { literal } from './util.js'
 import type { InstanceBaseProps } from './internal/base.js'
-import { init, configureScope } from '@sentry/node'
-import '@sentry/tracing'
+import { getCurrentScope, init } from '@sentry/node'
 import { IpcWrapper } from './host-api/ipc-wrapper.js'
 import path from 'path'
 
@@ -106,10 +105,11 @@ export function runEntrypoint<TConfig>(
 					},
 				})
 
-				configureScope((scope) => {
+				{
+					const scope = getCurrentScope()
 					scope.setUser({ id: sentryUserId })
 					scope.setTag('companion', sentryCompanionVersion)
-				})
+				}
 			} else {
 				console.log('Sentry disabled')
 			}

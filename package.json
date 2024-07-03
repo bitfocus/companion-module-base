@@ -13,7 +13,7 @@
 		"build:json-schema": "json2ts --input assets/manifest.schema.json --output generated/manifest.d.ts",
 		"build:ajv-validator": "ajv compile -s assets/manifest.schema.json -o generated/validate_manifest.js",
 		"docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/index.ts --excludePrivate --theme default --out docs",
-		"lint:raw": "eslint --ext .ts --ext .js",
+		"lint:raw": "./node_modules/.bin/eslint --ext .ts --ext .js",
 		"lint": "yarn lint:raw .",
 		"unit": "jest"
 	},
@@ -29,8 +29,7 @@
 		"lib"
 	],
 	"dependencies": {
-		"@sentry/node": "^7.118.0",
-		"@sentry/tracing": "^7.118.0",
+		"@sentry/node": "^8.13.0",
 		"ajv": "^8.16.0",
 		"colord": "^2.9.3",
 		"ejson": "^2.2.3",
