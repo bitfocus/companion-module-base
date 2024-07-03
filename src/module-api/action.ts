@@ -93,3 +93,16 @@ export interface CompanionActionEvent extends CompanionActionInfo {
 	/** Identifier of the surface which triggered this action */
 	readonly surfaceId: string | undefined
 }
+
+/**
+ * Information about an action which has been recorded
+ */
+export interface CompanionRecordedAction {
+	/** The id of the action definition */
+	actionId: string
+	/** The user selected options for the action */
+	options: CompanionOptionValues
+
+	/** Delay to give to this action */
+	// delay?: number
+}

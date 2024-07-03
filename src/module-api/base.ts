@@ -1,4 +1,4 @@
-import type { CompanionActionDefinitions, CompanionActionInfo } from './action.js'
+import type { CompanionActionDefinitions, CompanionRecordedAction } from './action.js'
 import type { CompanionFeedbackDefinitions } from './feedback.js'
 import type { CompanionPresetDefinitions } from './preset.js'
 import type { InstanceStatus, LogLevel } from './enums.js'
@@ -612,7 +612,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * @param action The action to be added to the recording session
 	 * @param uniquenessId A unique id for the action being recorded. This should be different for each action, but by passing the same as a previous call will replace the previous value.
 	 */
-	recordAction(action: Omit<CompanionActionInfo, 'id' | 'controlId'>, uniquenessId?: string): void {
+	recordAction(action: CompanionRecordedAction, uniquenessId?: string): void {
 		if (!this.#recordingActions) throw new Error('Not currently recording actions')
 
 		this.#ipcWrapper.sendWithNoCb('recordAction', {
