@@ -20,6 +20,7 @@ jobs:
 
       - name: Prepare build
         run: |
+          corepack enable
           yarn install
           yarn build
         env:

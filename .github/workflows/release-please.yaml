@@ -54,6 +54,7 @@ jobs:
       - name: Prepare build
         if: ${{ steps.do-publish.outputs.tag }}
         run: |
+          corepack enable
           yarn install
           yarn build
         env:
