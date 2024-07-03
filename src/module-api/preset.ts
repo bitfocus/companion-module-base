@@ -71,14 +71,14 @@ export interface CompanionButtonPresetDefinition {
  * The definition of a text preset
  */
 export interface CompanionTextPresetDefinition {
-		/** The type of this preset */
-		type: 'text'
-		/** The category of this preset, for grouping */
-		category: string
-		/** The name of this preset */
-		name: string
-		/** The text to display */
-		text: string
+	/** The type of this preset */
+	type: 'text'
+	/** The category of this preset, for grouping */
+	category: string
+	/** The name of this preset */
+	name: string
+	/** The text to display */
+	text: string
 }
 
 export interface CompanionPresetActionsWithOptions {
