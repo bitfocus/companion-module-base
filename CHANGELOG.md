@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/bitfocus/companion-module-base/compare/v1.8.0...v1.8.1) (2024-07-03)
+
+
+### Bug Fixes
+
+* require at least one product to be defined in manifest.schema.json ([#82](https://github.com/bitfocus/companion-module-base/issues/82)) ([7816348](https://github.com/bitfocus/companion-module-base/commit/78163482b172dddac703bea44a98f72dd43b4ca4))
+
 ## [1.8.0](https://github.com/bitfocus/companion-module-base/compare/v1.7.0...v1.8.0) (2024-04-26)
 
 
