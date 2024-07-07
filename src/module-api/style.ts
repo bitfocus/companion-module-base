@@ -16,6 +16,10 @@ export type CompanionTextSize = 'auto' | '7' | '14' | '18' | '24' | '30' | '44' 
  */
 export interface CompanionButtonStyleProps {
 	text: string
+	/**
+	 * Whether the text should be treated as an expression
+	 */
+	textExpression?: boolean
 	size: CompanionTextSize
 	color: number
 	bgcolor: number
