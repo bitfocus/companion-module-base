@@ -103,6 +103,10 @@ export interface CompanionRecordedAction {
 	/** The user selected options for the action */
 	options: CompanionOptionValues
 
-	/** Delay to give to this action */
-	// delay?: number
+	/**
+	 * Delay to give to this action
+	 * Note: it is currently not possible to know if the button is in absolute or relative delays mode, so the way this value will be interpreted is unpredictable.
+	 * In the future, this will change. For now we advise using relative delays, as that is easier to reason about and will be easier for us to handle as a default.
+	 */
+	delay?: number
 }
