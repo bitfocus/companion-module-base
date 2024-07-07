@@ -273,6 +273,7 @@ export interface RecordActionMessage {
 	uniquenessId: string | null
 	actionId: string
 	options: CompanionOptionValues
+	delay: number | undefined
 }
 
 export interface SetCustomVariableMessage {

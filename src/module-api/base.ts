@@ -619,6 +619,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			uniquenessId: uniquenessId ?? null,
 			actionId: action.actionId,
 			options: action.options,
+			delay: action.delay,
 		})
 	}
 
