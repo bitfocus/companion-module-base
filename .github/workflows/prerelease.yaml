@@ -8,6 +8,8 @@ on:
         default: ''
 
 name: prerelease
+run-name: prerelease ${{ github.event.inputs.tag }}
+
 jobs:
   prerelease:
     runs-on: ubuntu-latest
