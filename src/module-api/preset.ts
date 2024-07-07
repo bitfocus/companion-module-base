@@ -30,6 +30,11 @@ export interface CompanionPresetFeedback {
 	 * If a boolean feedback, invert the value of the feedback
 	 */
 	isInverted?: boolean
+	/**
+	 * User editable description/comment for the feedback.
+	 * Intended to descibe the purpose/intent of the feedback.
+	 */
+	headline?: string
 }
 
 /**
@@ -42,6 +47,11 @@ export interface CompanionPresetAction {
 	delay?: number
 	/** The option values for the action */
 	options: CompanionOptionValues
+	/**
+	 * User editable description/comment for the action.
+	 * Intended to descibe the purpose/intent of the action.
+	 */
+	headline?: string
 }
 
 export type CompanionPresetDefinition = CompanionButtonPresetDefinition | CompanionTextPresetDefinition
