@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.9.0](https://github.com/bitfocus/companion-module-base/compare/v1.8.1...v1.9.0) (2024-07-28)
+
+
+### Features
+
+* add delay property to `CompanionRecordedAction` with warning about lack of predictability ([82d964c](https://github.com/bitfocus/companion-module-base/commit/82d964cb80845e8551fd3c859520737b9e4ca98c))
+* allow presets to define action/feedback headlines ([b717953](https://github.com/bitfocus/companion-module-base/commit/b717953f421f068b6f1deb47bbcbcd2b5c1bfee0))
+* allow presets to define step names ([6732a7a](https://github.com/bitfocus/companion-module-base/commit/6732a7a0acf201be9ef6be1cefd08a8278ae5287))
+* propogate recorded action delay ([d067603](https://github.com/bitfocus/companion-module-base/commit/d0676037de2a4e5923f04525a3881f6cb91f23e0))
+
+
+### Bug Fixes
+
+* add missing `textExpression` style property ([799fb67](https://github.com/bitfocus/companion-module-base/commit/799fb67b3ef64670c76192accb6e7957528000cb))
+
 ## [1.8.1](https://github.com/bitfocus/companion-module-base/compare/v1.8.0...v1.8.1) (2024-07-03)
 
 
