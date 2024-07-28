@@ -99,6 +99,9 @@ export interface CompanionActionSetOptions {
 	runWhileHeld?: boolean
 }
 export interface CompanionButtonStepActions {
+	/** Name of this step */
+	name?: string
+
 	/** The button down actions */
 	down: CompanionPresetAction[]
 	/** The button up actions */
