@@ -122,7 +122,9 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 		this._socket.on('drain', () => this.emit('drain'))
 
 		// Let caller install event handlers first
-		setImmediate(() => this.connect())
+		setImmediate(() => {
+			if (!this.#destroyed) this.connect()
+		})
 
 		this.#missingErrorHandlerTimer = setTimeout(() => {
 			this.#missingErrorHandlerTimer = undefined

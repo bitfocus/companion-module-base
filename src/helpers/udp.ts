@@ -79,7 +79,9 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 		try {
 			this.#socket.bind(this.#options.bind_port || 0, this.#options.bind_ip)
 		} catch (e) {
-			throw new Error(`Unable to bind to ip/port: ${this.#options.bind_ip}:${this.#options.bind_port}`)
+			throw new Error(
+				`Unable to bind to ip/port: ${this.#options.bind_ip || '0.0.0.0'}:${this.#options.bind_port || 0}`
+			)
 		}
 
 		if (this.#options.broadcast) {
@@ -130,7 +132,7 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 		if (this.#destroyed) throw new Error('Cannot write to destroyed socket')
 		if (!message || !message.length) throw new Error('No message to send')
 
-		return new Promise((resolve, reject) => {
+		return new Promise<void>((resolve, reject) => {
 			this.#socket.send(message, this.#port, this.#host, (error) => {
 				if (error) {
 					reject(error)
