@@ -6,7 +6,6 @@ import type { CompanionStaticUpgradeScript } from './module-api/upgrade.js'
 import type { InstanceBase } from './module-api/base.js'
 import { literal } from './util.js'
 import type { InstanceBaseProps } from './internal/base.js'
-import { getCurrentScope, init } from '@sentry/node'
 import { IpcWrapper } from './host-api/ipc-wrapper.js'
 import path from 'path'
 
@@ -88,31 +87,31 @@ export function runEntrypoint<TConfig>(
 				throw new Error('Module initialise is missing VERIFICATION_TOKEN')
 
 			// Allow the DSN to be provided as an env variable
-			const sentryDsn = process.env.SENTRY_DSN
-			const sentryUserId = process.env.SENTRY_USERID
-			const sentryCompanionVersion = process.env.SENTRY_COMPANION_VERSION
-			if (sentryDsn && sentryUserId && sentryDsn.substring(0, 8) == 'https://') {
-				console.log('Sentry enabled')
+			// const sentryDsn = process.env.SENTRY_DSN
+			// const sentryUserId = process.env.SENTRY_USERID
+			// const sentryCompanionVersion = process.env.SENTRY_COMPANION_VERSION
+			// if (sentryDsn && sentryUserId && sentryDsn.substring(0, 8) == 'https://') {
+			// 	console.log('Sentry enabled')
 
-				init({
-					dsn: sentryDsn,
-					release: `${manifestJson.name}@${manifestJson.version}`,
-					beforeSend(event) {
-						if (event.exception) {
-							console.log('sentry', 'error', event.exception)
-						}
-						return event
-					},
-				})
+			// 	init({
+			// 		dsn: sentryDsn,
+			// 		release: `${manifestJson.name}@${manifestJson.version}`,
+			// 		beforeSend(event) {
+			// 			if (event.exception) {
+			// 				console.log('sentry', 'error', event.exception)
+			// 			}
+			// 			return event
+			// 		},
+			// 	})
 
-				{
-					const scope = getCurrentScope()
-					scope.setUser({ id: sentryUserId })
-					scope.setTag('companion', sentryCompanionVersion)
-				}
-			} else {
-				console.log('Sentry disabled')
-			}
+			// 	{
+			// 		const scope = getCurrentScope()
+			// 		scope.setUser({ id: sentryUserId })
+			// 		scope.setTag('companion', sentryCompanionVersion)
+			// 	}
+			// } else {
+			// 	console.log('Sentry disabled')
+			// }
 
 			const ipcWrapper = new IpcWrapper<ModuleToHostEventsInit, HostToModuleEventsInit>(
 				{},
