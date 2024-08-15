@@ -68,11 +68,25 @@ export interface CompanionImageBufferPosition {
 	y: number
 	width: number
 	height: number
+
+	/**
+	 * The scale to draw this buffer at.
+	 * This can be useful to ensure that drawn buffers are sharp, as they can be drawn at a higher resolution than the buffer itself.
+	 * Note: This is a multiplier, so 1 is the default size, 0.5 is half size, 2 is double size, etc.
+	 * Warning: Be careful to not use buffers too large, as that can cause performance issues.
+	 */
+	drawScale?: number
+}
+
+/** Encoding information for an ImageBuffer */
+export interface CompanionImageBufferEncoding {
+	pixelFormat: 'RGB' | 'RGBA' | 'ARGB'
 }
 
 /** The resulting style of an advanced feedback */
 export interface CompanionAdvancedFeedbackResult extends CompanionFeedbackButtonStyleResult {
 	imageBuffer?: Uint8Array | string
+	imageBufferEncoding?: CompanionImageBufferEncoding
 	imageBufferPosition?: CompanionImageBufferPosition
 }
 
