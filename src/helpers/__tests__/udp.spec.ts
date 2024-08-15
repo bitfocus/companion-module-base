@@ -106,8 +106,8 @@ describe('UDP', () => {
 		try {
 			expect(socket).toBeTruthy()
 
-			const errorHandler = jest.fn(() => {})
-			const statusHandler = jest.fn(() => {})
+			const errorHandler = jest.fn(() => null)
+			const statusHandler = jest.fn(() => null)
 			socket.on('error', errorHandler)
 			socket.on('status_change', statusHandler)
 
@@ -135,8 +135,8 @@ describe('UDP', () => {
 			try {
 				expect(socket).toBeTruthy()
 
-				const listeningHandler = jest.fn(() => {})
-				const statusHandler = jest.fn(() => {})
+				const listeningHandler = jest.fn(() => null)
+				const statusHandler = jest.fn(() => null)
 				socket.on('listening', listeningHandler)
 				socket.on('status_change', statusHandler)
 

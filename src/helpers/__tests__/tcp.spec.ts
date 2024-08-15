@@ -1,7 +1,4 @@
-import { nanoid } from 'nanoid'
 import { TCPHelper } from '../tcp.js'
-import EventEmitter from 'events'
-import { InstanceStatus } from '../../module-api/enums.js'
 import type { Socket as TMockSocket } from '../../__mocks__/net.js'
 import { Socket } from 'net'
 
@@ -9,9 +6,9 @@ const MockSocket = Socket as unknown as typeof TMockSocket
 
 jest.mock('net')
 
-async function sleepImmediate() {
-	return new Promise((resolve) => setImmediate(resolve))
-}
+// async function sleepImmediate() {
+// 	return new Promise((resolve) => setImmediate(resolve))
+// }
 
 describe('TCP', () => {
 	// beforeEach(() => {

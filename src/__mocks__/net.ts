@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 const sockets: Array<Socket> = []
-const onNextSocket: Array<Function> = []
+const onNextSocket: Array<(s: Socket) => void> = []
 
 const orgSetImmediate = setImmediate
 
@@ -28,20 +28,20 @@ export class Socket extends EventEmitter {
 		sockets.push(this)
 	}
 
-	public static mockSockets() {
+	public static mockSockets(): Socket[] {
 		return sockets
 	}
-	public static mockClearSockets() {
+	public static mockClearSockets(): void {
 		sockets.length = 0
 	}
-	public static mockOnNextSocket(cb: (s: Socket) => void) {
+	public static mockOnNextSocket(cb: (s: Socket) => void): void {
 		onNextSocket.push(cb)
 	}
 	// this.emit('connect')
 	// this.emit('close')
 	// this.emit('end')
 
-	public connect(port: number, host = 'localhost', cb?: () => void) {
+	public connect(port: number, host = 'localhost', cb?: () => void): void {
 		// this._port = port
 		// this._host = host
 
@@ -64,34 +64,34 @@ export class Socket extends EventEmitter {
 		}
 		if (cb) cb()
 	}
-	public end() {
+	public end(): void {
 		this.setEnd()
 		this.setClosed()
 	}
 
-	public mockClose() {
+	public mockClose(): void {
 		this.setClosed()
 	}
-	public mockData(data: string) {
+	public mockData(data: string): void {
 		this.emit('data', data)
 	}
 
-	public setNoDelay(noDelay?: boolean) {
+	public setNoDelay(noDelay?: boolean): void {
 		// noop
 		this.configOps.push(['setNoDelay', noDelay])
 	}
 
-	public setEncoding(encoding?: BufferEncoding) {
+	public setEncoding(encoding?: BufferEncoding): void {
 		// noop
 		this.configOps.push(['setEncoding', encoding])
 	}
 
-	public setKeepAlive(enable?: boolean, initialDelay?: number) {
+	public setKeepAlive(enable?: boolean, initialDelay?: number): void {
 		// noop
 		this.configOps.push(['setKeepAlive', enable, initialDelay])
 	}
 
-	public destroy() {
+	public destroy(): void {
 		this.destroyed = true
 	}
 
