@@ -114,30 +114,17 @@
 			"description": "If the device or software for your module supports bonjour announcements, Companion will offer an easy way to watch for these announcements.\nEach query you define must have a matching config field of type 'bonjour-device' with the same name",
 			"patternProperties": {
 				"": {
-					"type": "object",
-					"title": "ModuleBonjourQuery",
-					"description": "",
-					"properties": {
-						"type": {
-							"type": "string"
+					"oneOf": [
+						{
+							"$ref": "#/definitions/bonjourQuery"
 						},
-						"protocol": {
-							"type": "string",
-							"enum": ["tcp", "udp"]
-						},
-						"txt": {
-							"type": "object",
-							"description": "Match on any txt values returned in the query. This is useful to filter out devices of the same 'type' that are not supported",
-							"patternProperties": {
-								"": {
-									"type": "string"
-								}
-							},
-							"additionalProperties": false
+						{
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/bonjourQuery"
+							}
 						}
-					},
-					"required": ["type", "protocol"],
-					"additionalProperties": false
+					]
 				}
 			},
 			"additionalProperties": false
@@ -159,5 +146,33 @@
 		"manufacturer",
 		"products",
 		"keywords"
-	]
+	],
+	"definitions": {
+		"bonjourQuery": {
+			"type": "object",
+			"title": "ModuleBonjourQuery",
+			"description": "",
+			"properties": {
+				"type": {
+					"type": "string"
+				},
+				"protocol": {
+					"type": "string",
+					"enum": ["tcp", "udp"]
+				},
+				"txt": {
+					"type": "object",
+					"description": "Match on any txt values returned in the query. This is useful to filter out devices of the same 'type' that are not supported",
+					"patternProperties": {
+						"": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				}
+			},
+			"required": ["type", "protocol"],
+			"additionalProperties": false
+		}
+	}
 }
