@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.10.0](https://github.com/bitfocus/companion-module-base/compare/v1.9.0...v1.10.0) (2024-08-24)
+
+
+### Features
+
+* add `AuthenticationFailure` status [#86](https://github.com/bitfocus/companion-module-base/issues/86) ([5e71bf9](https://github.com/bitfocus/companion-module-base/commit/5e71bf92471d4671dc98f95de9492f06f0f9b59c))
+* support additional imageBuffer properties ([2c96af2](https://github.com/bitfocus/companion-module-base/commit/2c96af223e424f184b424fd8daa3acce30f3dbb0))
+* support multiple bonjourQueries per query input field [#87](https://github.com/bitfocus/companion-module-base/issues/87) ([64772ae](https://github.com/bitfocus/companion-module-base/commit/64772aea51779430e5ffac2785b69480ac822b26))
+
 ## [1.9.0](https://github.com/bitfocus/companion-module-base/compare/v1.8.1...v1.9.0) (2024-07-28)
 
 
