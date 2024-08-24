@@ -10,6 +10,7 @@ export enum InstanceStatus {
 	BadConfig = 'bad_config',
 	UnknownError = 'unknown_error',
 	UnknownWarning = 'unknown_warning',
+	AuthenticationFailure = 'authentication_failure',
 }
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug'
