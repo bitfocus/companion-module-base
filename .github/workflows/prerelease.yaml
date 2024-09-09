@@ -29,6 +29,8 @@ jobs:
           CI: true
       - name: Publish to NPM
         run: |
+          git fetch origin main
+
           yarn version ${{ github.event.inputs.tag }}
 
           npm publish --access=public --tag nightly
