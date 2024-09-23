@@ -28,7 +28,7 @@ function convertActionInstanceToEvent(action: ActionInstance): CompanionActionIn
 
 export class ActionManager {
 	readonly #parseVariablesInString: (
-		msg: ParseVariablesInStringMessage
+		msg: ParseVariablesInStringMessage,
 	) => Promise<ParseVariablesInStringResponseMessage>
 	readonly #setActionDefinitions: (msg: SetActionDefinitionsMessage) => void
 	readonly #log: (level: LogLevel, message: string) => void
@@ -39,7 +39,7 @@ export class ActionManager {
 	constructor(
 		parseVariablesInString: (msg: ParseVariablesInStringMessage) => Promise<ParseVariablesInStringResponseMessage>,
 		setActionDefinitions: (msg: SetActionDefinitionsMessage) => void,
-		log: (level: LogLevel, message: string) => void
+		log: (level: LogLevel, message: string) => void,
 	) {
 		this.#parseVariablesInString = parseVariablesInString
 		this.#setActionDefinitions = setActionDefinitions
@@ -72,7 +72,7 @@ export class ActionManager {
 
 				surfaceId: msg.surfaceId,
 			},
-			context
+			context,
 		)
 	}
 
@@ -99,7 +99,7 @@ export class ActionManager {
 					Promise.resolve(definition.unsubscribe(convertActionInstanceToEvent(existing), context)).catch((e) => {
 						this.#log(
 							'error',
-							`Action unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`
+							`Action unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`,
 						)
 					})
 				}
@@ -161,7 +161,7 @@ export class ActionManager {
 
 					surfaceId: undefined,
 				},
-				context
+				context,
 			)
 
 			return {

@@ -27,7 +27,7 @@ export function runThroughUpgradeScripts(
 	defaultUpgradeIndex: number | null,
 	upgradeScripts: CompanionStaticUpgradeScript<any>[],
 	config: unknown,
-	skipConfigUpgrade: boolean
+	skipConfigUpgrade: boolean,
 ): UpgradedDataResponseMessage & {
 	updatedConfig: unknown | undefined
 } {
@@ -137,7 +137,7 @@ export function runThroughUpgradeScripts(
 							}
 						})
 						.filter((v): v is FeedbackInstance => !!v),
-				}
+				},
 			)
 
 			// Apply changes

@@ -54,7 +54,7 @@ export interface CompanionActionDefinition {
 	 */
 	learn?: (
 		action: CompanionActionEvent,
-		context: CompanionActionContext
+		context: CompanionActionContext,
 	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 
 	/**

@@ -100,7 +100,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	constructor(internal: unknown) {
 		if (!isInstanceBaseProps<TConfig>(internal) || !internal._isInstanceBaseProps)
 			throw new Error(
-				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`
+				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`,
 			)
 
 		this.createSharedUdpSocket = this.createSharedUdpSocket.bind(this)
@@ -128,10 +128,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				sharedUdpSocketError: this._handleSharedUdpSocketError.bind(this),
 			},
 			(msg) => {
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				process.send!(msg)
 			},
-			5000
+			5000,
 		)
 		process.on('message', (msg) => {
 			this.#ipcWrapper.receivedMessage(msg as any)
@@ -140,13 +139,13 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		this.#actionManager = new ActionManager(
 			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('setActionDefinitions', msg),
-			this.log.bind(this)
+			this.log.bind(this),
 		)
 		this.#feedbackManager = new FeedbackManager(
 			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', msg),
-			this.log.bind(this)
+			this.log.bind(this),
 		)
 
 		this.#upgradeScripts = internal.upgradeScripts
@@ -191,7 +190,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				msg.lastUpgradeIndex,
 				this.#upgradeScripts,
 				this.#lastConfig,
-				false
+				false,
 			)
 			this.#lastConfig = (updatedConfig as TConfig | undefined) ?? this.#lastConfig
 
@@ -534,7 +533,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		if (currentContext) {
 			this.log(
 				'debug',
-				`parseVariablesInString called while in: ${currentContext}. You should use the parseVariablesInString provided to the callback instead`
+				`parseVariablesInString called while in: ${currentContext}. You should use the parseVariablesInString provided to the callback instead`,
 			)
 		}
 
@@ -652,7 +651,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				port,
 				path,
 				args,
-			})
+			}),
 		)
 	}
 
@@ -672,7 +671,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			literal<SetStatusMessage>({
 				status,
 				message: message ?? null,
-			})
+			}),
 		)
 	}
 
@@ -687,7 +686,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			literal<LogMessageMessage>({
 				level,
 				message,
-			})
+			}),
 		)
 	}
 
@@ -703,7 +702,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	createSharedUdpSocket(options: SharedUdpSocketOptions, callback?: SharedUdpSocketMessageCallback): SharedUdpSocket
 	createSharedUdpSocket(
 		typeOrOptions: 'udp4' | 'udp6' | SharedUdpSocketOptions,
-		callback?: SharedUdpSocketMessageCallback
+		callback?: SharedUdpSocketMessageCallback,
 	): SharedUdpSocket {
 		const options: SharedUdpSocketOptions = typeof typeOrOptions === 'string' ? { type: typeOrOptions } : typeOrOptions
 

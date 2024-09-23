@@ -30,13 +30,13 @@ export function createIpcWrapperMock<TOutbound extends { [key: string]: any }, T
 	sendWithCb?: jest.Mock<
 		ReturnType<IpcWrapper<TOutbound, TInbound>['sendWithCb']>,
 		Parameters<IpcWrapper<TOutbound, TInbound>['sendWithCb']>
-	>
+	>,
 ): IpcWrapper<TOutbound, TInbound> {
 	return mock<IpcWrapper<TOutbound, TInbound>>(
 		{
 			sendWithCb,
 		},
-		mockOptions
+		mockOptions,
 	)
 }
 

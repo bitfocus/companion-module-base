@@ -36,7 +36,7 @@ export type InstanceConstructor<TConfig> = new (internal: unknown) => InstanceBa
  */
 export function runEntrypoint<TConfig>(
 	factory: InstanceConstructor<TConfig>,
-	upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]
+	upgradeScripts: CompanionStaticUpgradeScript<TConfig>[],
 ): void {
 	Promise.resolve()
 		.then(async () => {
@@ -69,7 +69,7 @@ export function runEntrypoint<TConfig>(
 					if (baseJson.name === '@companion-module/base') {
 						apiVersion = baseJson.version
 					}
-				} catch (e) {
+				} catch (_e) {
 					throw new Error('Failed to determine module api version')
 				}
 			}
@@ -116,10 +116,9 @@ export function runEntrypoint<TConfig>(
 			const ipcWrapper = new IpcWrapper<ModuleToHostEventsInit, HostToModuleEventsInit>(
 				{},
 				(msg) => {
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					process.send!(msg)
 				},
-				5000
+				5000,
 			)
 			process.once('message', (msg: any) => {
 				ipcWrapper.receivedMessage(msg)
@@ -130,7 +129,7 @@ export function runEntrypoint<TConfig>(
 					id: connectionId,
 					upgradeScripts,
 					_isInstanceBaseProps: true,
-				})
+				}),
 			)
 
 			ipcWrapper.sendWithCb('register', { apiVersion, connectionId, verificationToken }).then(
@@ -142,7 +141,7 @@ export function runEntrypoint<TConfig>(
 
 					// Kill the process
 					process.exit(11)
-				}
+				},
 			)
 		})
 		.catch((e) => {

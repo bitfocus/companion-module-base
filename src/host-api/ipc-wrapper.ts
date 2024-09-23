@@ -8,9 +8,8 @@ const MAX_CALLBACK_ID = 1 << 28
  */
 type HandlerFunction<T extends (...args: any) => any> = (data: Parameters<T>[0]) => HandlerReturnType<T>
 
-type HandlerReturnType<T extends (...args: any) => any> = ReturnType<T> extends never
-	? Promise<void>
-	: Promise<ReturnType<T>>
+type HandlerReturnType<T extends (...args: any) => any> =
+	ReturnType<T> extends never ? Promise<void> : Promise<ReturnType<T>>
 
 type HandlerFunctionOrNever<T> = T extends (...args: any) => any ? HandlerFunction<T> : never
 
@@ -52,7 +51,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 	constructor(
 		handlers: IpcEventHandlers<TInbound>,
 		sendMessage: (message: IpcCallMessagePacket | IpcResponseMessagePacket) => void,
-		defaultTimeout: number
+		defaultTimeout: number,
 	) {
 		this.#handlers = handlers
 		this.#sendMessage = sendMessage
@@ -63,7 +62,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 		name: T,
 		msg: ParamsIfReturnIsValid<TOutbound[T]>[0],
 		defaultResponse?: () => Error,
-		timeout = 0
+		timeout = 0,
 	): Promise<ReturnType<TOutbound[T]>> {
 		if (timeout <= 0) timeout = this.#defaultTimeout
 
@@ -145,7 +144,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 									err instanceof Error ? JSON.stringify(err, Object.getOwnPropertyNames(err)) : ejson.stringify(err),
 							})
 						}
-					}
+					},
 				)
 
 				break

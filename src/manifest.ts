@@ -1,5 +1,6 @@
 import type { ModuleManifest, ModuleManifestMaintainer, ModuleManifestRuntime } from '../generated/manifest.d.ts'
 // @ts-expect-error no typings
+// eslint-disable-next-line n/no-missing-import
 import validateManifestSchema from '../generated/validate_manifest.js'
 
 export { ModuleManifest, ModuleManifestMaintainer, ModuleManifestRuntime }

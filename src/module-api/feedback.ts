@@ -39,10 +39,11 @@ export interface CompanionFeedbackInfo {
 /**
  * Extended information for execution of a boolean feedback
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface CompanionFeedbackBooleanEvent extends CompanionFeedbackInfo {
-	// readonly type: 'boolean'
-}
+
+export type CompanionFeedbackBooleanEvent = CompanionFeedbackInfo
+// {
+// 	// readonly type: 'boolean'
+// }
 
 /**
  * Extended information for execution of an advanced feedback
@@ -117,7 +118,7 @@ export interface CompanionFeedbackDefinitionBase {
 	 */
 	learn?: (
 		action: CompanionFeedbackInfo,
-		context: CompanionFeedbackContext
+		context: CompanionFeedbackContext,
 	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
 
 	/**
@@ -155,7 +156,7 @@ export interface CompanionAdvancedFeedbackDefinition extends CompanionFeedbackDe
 	/** Called to get the feedback value */
 	callback: (
 		feedback: CompanionFeedbackAdvancedEvent,
-		context: CompanionFeedbackContext
+		context: CompanionFeedbackContext,
 	) => CompanionAdvancedFeedbackResult | Promise<CompanionAdvancedFeedbackResult>
 }
 

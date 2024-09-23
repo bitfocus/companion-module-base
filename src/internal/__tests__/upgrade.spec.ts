@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 import { literal } from '../../util.js'
 import {
 	CompanionMigrationAction,
@@ -29,8 +27,8 @@ const createMockScripts = <TConfig>(count: number): MockUpgradeScript<TConfig>[]
 					updatedActions: [],
 					updatedFeedbacks: [],
 					updatedConfig: null,
-				})
-			)
+				}),
+			),
 		)
 
 	return result
@@ -137,7 +135,7 @@ describe('runThroughUpgradeScripts', () => {
 				actions: [],
 				feedbacks: [],
 				config: configBefore,
-			})
+			}),
 		)
 	})
 
@@ -166,7 +164,7 @@ describe('runThroughUpgradeScripts', () => {
 					actions: [stripActionInstance(action0Before), stripActionInstance(action1Before)],
 					feedbacks: [],
 					config: null,
-				})
+				}),
 			)
 
 			args.actions[0].actionId = 'new-action'
@@ -228,7 +226,7 @@ describe('runThroughUpgradeScripts', () => {
 					actions: [stripActionInstance(action1Before), stripActionInstance(action0Before)],
 					feedbacks: [],
 					config: null,
-				})
+				}),
 			)
 
 			args.actions[1].actionId = 'new-action'

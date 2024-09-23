@@ -67,17 +67,17 @@ window.onresize = debounceFn(() => {
 */
 declare function debounceFn<ArgumentsType extends unknown[], ReturnType>(
 	input: (...arguments: ArgumentsType) => ReturnType,
-	options: debounceFn.BeforeOptions
+	options: debounceFn.BeforeOptions,
 ): debounceFn.DebouncedFunction<ArgumentsType, ReturnType>
 
 declare function debounceFn<ArgumentsType extends unknown[], ReturnType>(
 	input: (...arguments: ArgumentsType) => ReturnType,
-	options: debounceFn.NoBeforeNoAfterOptions
+	options: debounceFn.NoBeforeNoAfterOptions,
 ): debounceFn.DebouncedFunction<ArgumentsType, undefined>
 
 declare function debounceFn<ArgumentsType extends unknown[], ReturnType>(
 	input: (...arguments: ArgumentsType) => ReturnType,
-	options?: debounceFn.Options
+	options?: debounceFn.Options,
 ): debounceFn.DebouncedFunction<ArgumentsType, ReturnType | undefined>
 
 export = debounceFn

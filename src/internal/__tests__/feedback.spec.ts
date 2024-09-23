@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
 	FeedbackInstance,
 	ParseVariablesInStringResponseMessage,
@@ -66,7 +65,7 @@ describe('FeedbackManager', () => {
 			unimplementedAsyncFunction,
 			unimplementedFunction,
 			mockSetFeedbackDefinitions,
-			mockLogger
+			mockLogger,
 		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 		expect(manager.getInstanceIds()).toHaveLength(0)
@@ -113,7 +112,7 @@ describe('FeedbackManager', () => {
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
 			mockSetFeedbackDefinitions,
-			mockLogger
+			mockLogger,
 		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 		expect(manager.getInstanceIds()).toHaveLength(0)
@@ -155,7 +154,7 @@ describe('FeedbackManager', () => {
 				controlId: feedback.controlId,
 				options: feedback.options,
 			},
-			expect.anything()
+			expect.anything(),
 		)
 		expect(manager.getInstanceIds()).toEqual([feedbackId])
 
@@ -177,7 +176,7 @@ describe('FeedbackManager', () => {
 			unimplementedAsyncFunction,
 			unimplementedFunction,
 			mockSetFeedbackDefinitions,
-			mockLogger
+			mockLogger,
 		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 		expect(manager.getInstanceIds()).toHaveLength(0)
@@ -220,7 +219,7 @@ describe('FeedbackManager', () => {
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
 			mockSetFeedbackDefinitions,
-			mockLogger
+			mockLogger,
 		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 		expect(manager.getInstanceIds()).toHaveLength(0)
@@ -273,7 +272,7 @@ describe('FeedbackManager', () => {
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
 			mockSetFeedbackDefinitions,
-			mockLogger
+			mockLogger,
 		)
 
 		const mockDefinition: CompanionFeedbackDefinition = {
@@ -422,7 +421,7 @@ describe('FeedbackManager', () => {
 			literal<ParseVariablesInStringResponseMessage>({
 				text: `res - ${msg.text}`,
 				variableIds: ['all', `var-${msg.text}`],
-			})
+			}),
 		)
 		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
 		const mockUpdateFeedbackValues = jest.fn((_msg: UpdateFeedbackValuesMessage) => null)
@@ -430,7 +429,7 @@ describe('FeedbackManager', () => {
 			mockParseVariables,
 			mockUpdateFeedbackValues,
 			mockSetFeedbackDefinitions,
-			mockLogger
+			mockLogger,
 		)
 
 		const mockDefinition: CompanionFeedbackDefinition = {
@@ -575,7 +574,7 @@ describe('FeedbackManager', () => {
 			literal<ParseVariablesInStringResponseMessage>({
 				text: `res - ${msg.text}`,
 				variableIds: ['all', `var-${msg.text}`],
-			})
+			}),
 		)
 		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
 		const mockUpdateFeedbackValues = jest.fn((_msg: UpdateFeedbackValuesMessage) => null)
@@ -583,7 +582,7 @@ describe('FeedbackManager', () => {
 			mockParseVariables,
 			mockUpdateFeedbackValues,
 			mockSetFeedbackDefinitions,
-			mockLogger
+			mockLogger,
 		)
 
 		let waitForManualResolve = false
@@ -792,7 +791,7 @@ describe('FeedbackManager', () => {
 				literal<ParseVariablesInStringResponseMessage>({
 					text: `res - tmp`,
 					variableIds: ['all', `different`],
-				})
+				}),
 			)
 
 			waitForManualResolve = true
@@ -836,7 +835,7 @@ describe('FeedbackManager', () => {
 			unimplementedAsyncFunction,
 			unimplementedFunction,
 			mockSetFeedbackDefinitions,
-			mockLogger
+			mockLogger,
 		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 
@@ -865,7 +864,7 @@ describe('FeedbackManager', () => {
 			unimplementedAsyncFunction,
 			unimplementedFunction,
 			mockSetFeedbackDefinitions,
-			mockLogger
+			mockLogger,
 		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 
@@ -896,7 +895,7 @@ describe('FeedbackManager', () => {
 				controlId: feedback.controlId,
 				options: feedback.options,
 			},
-			expect.anything()
+			expect.anything(),
 		)
 	})
 
@@ -905,14 +904,14 @@ describe('FeedbackManager', () => {
 			literal<ParseVariablesInStringResponseMessage>({
 				text: 'res str',
 				variableIds: ['abc', '123'],
-			})
+			}),
 		)
 		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
 		const manager = new FeedbackManager(
 			mockParseVariables,
 			unimplementedFunction,
 			mockSetFeedbackDefinitions,
-			mockLogger
+			mockLogger,
 		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 
@@ -957,7 +956,7 @@ describe('FeedbackManager', () => {
 				controlId: feedback.controlId,
 				options: feedback.options,
 			},
-			expect.anything()
+			expect.anything(),
 		)
 	})
 
@@ -968,7 +967,7 @@ describe('FeedbackManager', () => {
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
 			mockSetFeedbackDefinitions,
-			mockLogger
+			mockLogger,
 		)
 
 		const mockDefinition: CompanionFeedbackDefinition = {
@@ -1015,7 +1014,7 @@ describe('FeedbackManager', () => {
 					controlId: feedback.controlId,
 					options: feedback.options,
 				},
-				expect.anything()
+				expect.anything(),
 			)
 
 			expect(manager.getInstanceIds()).toEqual([feedbackId])
@@ -1047,7 +1046,7 @@ describe('FeedbackManager', () => {
 					controlId: 'new-control',
 					options: { val: 'changed' },
 				},
-				expect.anything()
+				expect.anything(),
 			)
 
 			expect(manager.getInstanceIds()).toEqual([feedbackId])
@@ -1101,7 +1100,7 @@ describe('FeedbackManager', () => {
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
 			mockSetFeedbackDefinitions,
-			mockLogger
+			mockLogger,
 		)
 
 		const mockDefinition: CompanionFeedbackDefinition = {
@@ -1171,7 +1170,7 @@ describe('FeedbackManager', () => {
 					controlId: feedback.controlId,
 					options: feedback.options,
 				},
-				expect.anything()
+				expect.anything(),
 			)
 
 			expect(manager.getInstanceIds()).toEqual([feedbackId])
@@ -1199,7 +1198,7 @@ describe('FeedbackManager', () => {
 					controlId: feedback.controlId,
 					options: feedback.options,
 				},
-				expect.anything()
+				expect.anything(),
 			)
 
 			expect(manager.getInstanceIds()).toEqual([])

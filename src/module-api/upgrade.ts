@@ -51,7 +51,7 @@ export interface CompanionStaticUpgradeResult<TConfig> {
  */
 export type CompanionStaticUpgradeScript<TConfig> = (
 	context: CompanionUpgradeContext<TConfig>,
-	props: CompanionStaticUpgradeProps<TConfig>
+	props: CompanionStaticUpgradeProps<TConfig>,
 ) => CompanionStaticUpgradeResult<TConfig>
 
 /**
@@ -125,7 +125,7 @@ export interface CompanionUpgradeToBooleanFeedbackMap {
  * @param upgradeMap The feedbacks to upgrade and the properties to convert
  */
 export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig = unknown>(
-	upgradeMap: CompanionUpgradeToBooleanFeedbackMap
+	upgradeMap: CompanionUpgradeToBooleanFeedbackMap,
 ): CompanionStaticUpgradeScript<TConfig> {
 	// Warning: the unused parameters will often be null
 	return (_context, props) => {
@@ -173,7 +173,7 @@ export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig = unknown>(
  * @param upgradeMap The feedbacks to upgrade and the id of the option to convert
  */
 export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig = unknown>(
-	upgradeMap: Record<string, string>
+	upgradeMap: Record<string, string>,
 ): CompanionStaticUpgradeScript<TConfig> {
 	// Warning: the unused parameters will often be null
 	return (_context, props) => {

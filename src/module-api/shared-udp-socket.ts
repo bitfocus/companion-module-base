@@ -47,7 +47,7 @@ export interface SharedUdpSocket extends EventEmitter<SharedUdpSocketEvents> {
 		bufferOrList: Buffer | DataView | string | Array<number>,
 		port: number,
 		address: string,
-		callback?: () => void
+		callback?: () => void,
 	): void
 	/**
 	 * Send a message from the shared socket
@@ -64,7 +64,7 @@ export interface SharedUdpSocket extends EventEmitter<SharedUdpSocketEvents> {
 		length: number,
 		port: number,
 		address: string,
-		callback?: () => void
+		callback?: () => void,
 	): void
 }
 
@@ -104,7 +104,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 	constructor(
 		ipcWrapper: IpcWrapper<ModuleToHostEventsV0SharedSocket, HostToModuleEventsV0SharedSocket>,
 		moduleUdpSockets: Map<string, SharedUdpSocketImpl>,
-		options: SharedUdpSocketOptions
+		options: SharedUdpSocketOptions,
 	) {
 		super()
 
@@ -148,7 +148,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 				(err) => {
 					this.#state = 'closed'
 					this.emit('error', err instanceof Error ? err : new Error(err))
-				}
+				},
 			)
 			.catch(() => null) // Make sure any errors in user code don't cause a crash
 	}
@@ -187,32 +187,27 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 				(err) => {
 					this.#moduleUdpSockets.delete(handleId)
 					this.emit('error', err instanceof Error ? err : new Error(err))
-				}
+				},
 			)
 			.catch(() => null) // Make sure any errors in user code don't cause a crash
 	}
 
-	send(
-		bufferOrList: string | Buffer | DataView | number[],
-		port: number,
-		address: string,
-		callback?: (() => void) | undefined
-	): void
+	send(bufferOrList: string | Buffer | DataView | number[], port: number, address: string, callback?: () => void): void
 	send(
 		buffer: string | Buffer | DataView,
 		offset: number,
 		length: number,
 		port: number,
 		address: string,
-		callback?: () => void
+		callback?: () => void,
 	): void
 	send(
 		bufferOrList: string | Buffer | DataView | number[],
 		offsetOrPort: number,
 		lengthOrAddress: number | string,
 		portOrCallback: number | (() => void) | undefined,
-		address?: string | undefined,
-		callback?: (() => void) | undefined
+		address?: string,
+		callback?: () => void,
 	): void {
 		if (typeof offsetOrPort !== 'number') throw new Error('Invalid arguments')
 		if (typeof lengthOrAddress === 'number') {
@@ -234,7 +229,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 	#processBuffer(
 		bufferOrList: string | Buffer | DataView | number[],
 		offset: number,
-		length: number | undefined
+		length: number | undefined,
 	): Buffer {
 		let buffer: Buffer
 		if (typeof bufferOrList === 'string') {
@@ -251,7 +246,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 		return buffer.subarray(offset, length !== undefined ? length + offset : undefined)
 	}
 
-	#sendInner(buffer: Buffer, port: number, address: string, callback?: (() => void) | undefined): void {
+	#sendInner(buffer: Buffer, port: number, address: string, callback?: () => void): void {
 		if (!this.#state || typeof this.#state !== 'object') throw new Error('Socket is not open')
 
 		this.#ipcWrapper
@@ -268,7 +263,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 				},
 				(err) => {
 					this.emit('error', err instanceof Error ? err : new Error(err))
-				}
+				},
 			)
 			.catch(() => null) // Make sure any errors in user code don't cause a crash
 	}
@@ -276,7 +271,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 	receiveSocketMessage(message: SharedUdpSocketMessage): void {
 		try {
 			this.emit('message', message.message, message.source)
-		} catch (e) {
+		} catch (_e) {
 			// Ignore
 		}
 	}
@@ -288,7 +283,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 
 		try {
 			this.emit('error', error)
-		} catch (e) {
+		} catch (_e) {
 			// Ignore
 		}
 	}

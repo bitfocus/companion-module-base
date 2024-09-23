@@ -21,11 +21,11 @@ describe('Shared UDP', () => {
 		const sendWithCbFn = jest.fn<ReturnType<IpcWrapperExt['sendWithCb']>, Parameters<IpcWrapperExt['sendWithCb']>>(
 			() => {
 				throw new Error('Not implemented')
-			}
+			},
 		)
 
 		const mockIpcWrapper = createIpcWrapperMock<ModuleToHostEventsV0SharedSocket, HostToModuleEventsV0SharedSocket>(
-			sendWithCbFn
+			sendWithCbFn,
 		)
 		const moduleUdpSockets = new Map<string, SharedUdpSocketImpl>()
 
@@ -134,7 +134,7 @@ describe('Shared UDP', () => {
 	async function createAndOpenSocket(
 		mockIpcWrapper: IpcWrapperExt,
 		moduleUdpSockets: Map<string, SharedUdpSocketImpl>,
-		sendWithCbFn: jest.Mock<ReturnType<IpcWrapperExt['sendWithCb']>, Parameters<IpcWrapperExt['sendWithCb']>>
+		sendWithCbFn: jest.Mock<ReturnType<IpcWrapperExt['sendWithCb']>, Parameters<IpcWrapperExt['sendWithCb']>>,
 	) {
 		const socket = new SharedUdpSocketImpl(mockIpcWrapper, moduleUdpSockets, { type: 'udp4' })
 		expect(socket.eventNames()).toHaveLength(0)

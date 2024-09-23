@@ -35,7 +35,7 @@ describe('IpcWrapper', () => {
 				recvTest2: testRecv2Fn,
 			},
 			sendMessageFn,
-			100
+			100,
 		)
 	})
 
@@ -295,6 +295,7 @@ describe('IpcWrapper', () => {
 
 		test('throw error as string', async () => {
 			testRecv2Fn.mockImplementation(async () => {
+				// eslint-disable-next-line @typescript-eslint/only-throw-error
 				throw 'my error message'
 			})
 
@@ -321,6 +322,7 @@ describe('IpcWrapper', () => {
 
 		test('throw null', async () => {
 			testRecv2Fn.mockImplementation(async () => {
+				// eslint-disable-next-line @typescript-eslint/only-throw-error
 				throw null
 			})
 
