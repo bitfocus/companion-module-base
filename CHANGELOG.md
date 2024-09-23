@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/bitfocus/companion-module-base/compare/v1.10.0...v1.11.0) (2024-09-23)
+
+
+### Features
+
+* allow using with nodejs 22 ([#94](https://github.com/bitfocus/companion-module-base/issues/94)) ([9d78a2e](https://github.com/bitfocus/companion-module-base/commit/9d78a2ee3c1e43c372ffa8a52f037d0bb1644b4c))
+
 ## [1.10.0](https://github.com/bitfocus/companion-module-base/compare/v1.9.0...v1.10.0) (2024-08-24)
 
 
