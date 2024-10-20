@@ -21,7 +21,8 @@ Each version of Companion supports a limited range of versions of this library l
 
 To get started with creating a new module, you should start with one of the following templates. These should be kept up to date, but you should make sure all the dependencies are up to date before you begin.
 
-- https://github.com/bitfocus/companion-module-template
+- https://github.com/bitfocus/companion-module-template-js (JavaScript)
+- https://github.com/bitfocus/companion-module-template-ts (TypeScript)
 
 ## Documentation
 
