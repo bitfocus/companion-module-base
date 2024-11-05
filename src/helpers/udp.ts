@@ -84,10 +84,6 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 			)
 		}
 
-		if (this.#options.broadcast) {
-			this.#socket.setBroadcast(true)
-		}
-
 		if (this.#options.ttl !== undefined) {
 			this.#socket.setTTL(this.#options.ttl)
 		}
@@ -109,6 +105,11 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 			// 		this.socket.addMembership(member.shift())
 			// 	}
 			// }
+
+			// Needed to be called after bind() had completed
+			if (this.#options.broadcast) {
+				this.#socket.setBroadcast(true)
+			}
 
 			if (this.#options.multicast_interface) {
 				this.#socket.setMulticastInterface(this.#options.multicast_interface)
