@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/bitfocus/companion-module-base/compare/v1.11.0...v1.11.1) (2024-11-07)
+
+
+### Bug Fixes
+
+* Resolving broadcast option within UDP Helper ([#101](https://github.com/bitfocus/companion-module-base/issues/101)) ([3ea9614](https://github.com/bitfocus/companion-module-base/commit/3ea9614788c135f053f8bb43ff74b7466694039e))
+
 ## [1.11.0](https://github.com/bitfocus/companion-module-base/compare/v1.10.0...v1.11.0) (2024-09-23)
 
 
