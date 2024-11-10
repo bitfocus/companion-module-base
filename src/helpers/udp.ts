@@ -119,7 +119,11 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 			this.emit('listening')
 		})
 
-		this.#socket.on('message', (data) => this.emit('data', data))
+		// Extended event to include remote address info
+		this.#socket.on('message', (msg, rinfo) => {
+			this.emit('data', msg, rinfo)
+			this.emit('message', msg, rinfo)
+		});
 
 		this.#missingErrorHandlerTimer = setTimeout(() => {
 			if (!this.#destroyed && !this.listenerCount('error')) {
