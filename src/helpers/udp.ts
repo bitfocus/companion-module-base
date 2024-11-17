@@ -27,7 +27,7 @@ export interface UDPHelperEvents {
 	// the socket is listening for packets
 	listening: []
 	// a packet of data has been received
-	data: [msg: Buffer]
+	data: [msg: Buffer, rinfo: Object]
 
 	// the connection status changes
 	status_change: [status: UDPStatuses, message: string | undefined]
@@ -119,11 +119,8 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 			this.emit('listening')
 		})
 
-		// Extended event to include remote address info
-		this.#socket.on('message', (msg, rinfo) => {
-			this.emit('data', msg, rinfo)
-			this.emit('message', msg, rinfo)
-		});
+		// Passing on rinfo to emit instead of omitting it
+		this.#socket.on('message', (data, rinfo) => this.emit('data', data, rinfo))
 
 		this.#missingErrorHandlerTimer = setTimeout(() => {
 			if (!this.#destroyed && !this.listenerCount('error')) {
