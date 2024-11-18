@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.2](https://github.com/bitfocus/companion-module-base/compare/v1.11.1...v1.11.2) (2024-11-18)
+
+
+### Bug Fixes
+
+* add rinfo to UDPHelper message event ([#103](https://github.com/bitfocus/companion-module-base/issues/103)) ([d7162c3](https://github.com/bitfocus/companion-module-base/commit/d7162c327183fb8ea9ad2e03facf700319b11b5b))
+
 ## [1.11.1](https://github.com/bitfocus/companion-module-base/compare/v1.11.0...v1.11.1) (2024-11-07)
 
 
