@@ -27,7 +27,7 @@ export interface UDPHelperEvents {
 	// the socket is listening for packets
 	listening: []
 	// a packet of data has been received
-	data: [msg: Buffer]
+	data: [msg: Buffer, rinfo: dgram.RemoteInfo]
 
 	// the connection status changes
 	status_change: [status: UDPStatuses, message: string | undefined]
@@ -119,7 +119,8 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 			this.emit('listening')
 		})
 
-		this.#socket.on('message', (data) => this.emit('data', data))
+		// Passing on rinfo to emit instead of omitting it
+		this.#socket.on('message', (data, rinfo) => this.emit('data', data, rinfo))
 
 		this.#missingErrorHandlerTimer = setTimeout(() => {
 			if (!this.#destroyed && !this.listenerCount('error')) {
