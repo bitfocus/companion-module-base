@@ -27,7 +27,7 @@ export interface UDPHelperEvents {
 	// the socket is listening for packets
 	listening: []
 	// a packet of data has been received
-	data: [msg: Buffer, rinfo: Object]
+	data: [msg: Buffer, rinfo: dgram.RemoteInfo]
 
 	// the connection status changes
 	status_change: [status: UDPStatuses, message: string | undefined]
