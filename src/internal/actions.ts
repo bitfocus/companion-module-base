@@ -199,16 +199,6 @@ export class ActionManager {
 		this.#setActionDefinitions({ actions: hostActions })
 	}
 
-	/** @deprecated */
-	_getAllActions(): Pick<ActionInstance, 'id' | 'actionId' | 'controlId' | 'options'>[] {
-		return Array.from(this.#actionInstances.values()).map((act) => ({
-			id: act.id,
-			actionId: act.actionId,
-			controlId: act.controlId,
-			options: act.options,
-		}))
-	}
-
 	subscribeActions(actionIds: string[]): void {
 		let actions = Array.from(this.#actionInstances.values())
 
