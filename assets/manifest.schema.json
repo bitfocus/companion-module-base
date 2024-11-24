@@ -25,6 +25,11 @@
 			"type": "string",
 			"description": "Current version of the module"
 		},
+		"releaseChannel": {
+			"type": "string",
+			"description": "Release channel for the module. If not specified, it is assumed to be stable",
+			"enum": ["stable", "beta"]
+		},
 		"license": {
 			"type": "string",
 			"description": "SPDX identifier for license of the module"
