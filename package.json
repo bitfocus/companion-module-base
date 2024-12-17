@@ -44,18 +44,18 @@
 		"@tsconfig/node18": "^18.2.4",
 		"@types/ejson": "^2.2.2",
 		"@types/jest": "^29.5.14",
-		"@types/node": "^18.19.65",
+		"@types/node": "^18.19.68",
 		"ajv-cli": "^5.0.0",
-		"eslint": "^9.15.0",
+		"eslint": "^9.17.0",
 		"jest": "^29.7.0",
 		"jest-extended": "^4.0.2",
 		"jest-mock-extended": "^3.0.7",
 		"json-schema-to-typescript": "^13.1.2",
-		"prettier": "^3.3.3",
+		"prettier": "^3.4.2",
 		"ts-jest": "^29.2.5",
 		"typedoc": "^0.26.11",
 		"typescript": "~5.6.3",
-		"typescript-eslint": "^8.15.0"
+		"typescript-eslint": "^8.18.1"
 	},
-	"packageManager": "yarn@4.5.2"
+	"packageManager": "yarn@4.5.3"
 }
