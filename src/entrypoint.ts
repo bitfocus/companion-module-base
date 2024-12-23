@@ -50,6 +50,13 @@ export function runEntrypoint<TConfig>(
 			if (hasEntrypoint) throw new Error(`runEntrypoint can only be called once`)
 			hasEntrypoint = true
 
+			// Validate that the upgrade scripts look sane
+			if (!upgradeScripts) upgradeScripts = []
+			if (!Array.isArray(upgradeScripts)) throw new Error('upgradeScripts must be an array')
+			for (const upgradeScript of upgradeScripts) {
+				if (typeof upgradeScript !== 'function') throw new Error('upgradeScripts must be an array of functions')
+			}
+
 			const manifestPath = process.env.MODULE_MANIFEST
 			if (!manifestPath) throw new Error('Module initialise is missing MODULE_MANIFEST')
 
