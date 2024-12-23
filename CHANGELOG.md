@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.3](https://github.com/bitfocus/companion-module-base/compare/v1.11.2...v1.11.3) (2024-12-23)
+
+
+### Bug Fixes
+
+* validate that the upgrade-scripts look correct (like an array of functions) ([1416357](https://github.com/bitfocus/companion-module-base/commit/141635715b37ceb7d21a65345476dec76742dd9b))
+
 ## [1.11.2](https://github.com/bitfocus/companion-module-base/compare/v1.11.1...v1.11.2) (2024-11-18)
 
 
