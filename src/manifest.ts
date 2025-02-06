@@ -31,6 +31,10 @@ export function validateManifest(manifest: ModuleManifest, looseChecks: boolean)
 			throw new Error(`Manifest incorrectly references template module 'Your product'`)
 	}
 
+	if (manifest.legacyIds.includes(manifest.id)) {
+		throw new Error(`Manifest contains itself '${manifest.id}' in legacyIds`)
+	}
+
 	if (!validateManifestSchema(manifest)) {
 		const errors = validateManifestSchema.errors
 		if (!errors) throw new Error(`Manifest failed validation with unknown reason`)
