@@ -6,27 +6,30 @@ import validateManifestSchema from '../generated/validate_manifest.js'
 export { ModuleManifest, ModuleManifestMaintainer, ModuleManifestRuntime }
 
 /** Validate that a manifest looks correctly populated */
-export function validateManifest(manifest: ModuleManifest): void {
-	const manifestStr = JSON.stringify(manifest)
-	if (manifestStr.includes('companion-module-your-module-name'))
-		throw new Error(`Manifest incorrectly references template module 'companion-module-your-module-name'`)
+export function validateManifest(manifest: ModuleManifest, looseChecks: boolean): void {
+	if (!looseChecks) {
+		const manifestStr = JSON.stringify(manifest)
+		if (manifestStr.includes('companion-module-your-module-name'))
+			throw new Error(`Manifest incorrectly references template module 'companion-module-your-module-name'`)
 
-	if (manifestStr.includes('module-shortname'))
-		throw new Error(`Manifest incorrectly references template module 'module-shortname'`)
+		if (manifestStr.includes('module-shortname'))
+			throw new Error(`Manifest incorrectly references template module 'module-shortname'`)
 
-	if (manifestStr.includes('A short one line description of your module'))
-		throw new Error(`Manifest incorrectly references template module 'A short one line description of your module'`)
+		if (manifestStr.includes('A short one line description of your module'))
+			throw new Error(`Manifest incorrectly references template module 'A short one line description of your module'`)
 
-	if (manifestStr.includes('Your name')) throw new Error(`Manifest incorrectly references template module 'Your name'`)
+		if (manifestStr.includes('Your name'))
+			throw new Error(`Manifest incorrectly references template module 'Your name'`)
 
-	if (manifestStr.includes('Your email'))
-		throw new Error(`Manifest incorrectly references template module 'Your email'`)
+		if (manifestStr.includes('Your email'))
+			throw new Error(`Manifest incorrectly references template module 'Your email'`)
 
-	if (manifestStr.includes('Your company'))
-		throw new Error(`Manifest incorrectly references template module 'Your company'`)
+		if (manifestStr.includes('Your company'))
+			throw new Error(`Manifest incorrectly references template module 'Your company'`)
 
-	if (manifestStr.includes('Your product'))
-		throw new Error(`Manifest incorrectly references template module 'Your product'`)
+		if (manifestStr.includes('Your product'))
+			throw new Error(`Manifest incorrectly references template module 'Your product'`)
+	}
 
 	if (!validateManifestSchema(manifest)) {
 		const errors = validateManifestSchema.errors

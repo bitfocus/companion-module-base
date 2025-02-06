@@ -25,6 +25,10 @@
 			"type": "string",
 			"description": "Current version of the module"
 		},
+		"isPrerelease": {
+			"type": "boolean",
+			"description": "Is this a pre-release version"
+		},
 		"license": {
 			"type": "string",
 			"description": "SPDX identifier for license of the module"
