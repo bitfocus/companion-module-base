@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.0](https://github.com/bitfocus/companion-module-base/compare/v1.11.3...v1.12.0) (2025-02-15)
+
+
+### Features
+
+* add prerelease field to manifest ([29fdd86](https://github.com/bitfocus/companion-module-base/commit/29fdd8633bc95901bc40843ca64f71dfb9bf50a1))
+
+
+### Bug Fixes
+
+* cleanup some deprecations ([ea2ec8d](https://github.com/bitfocus/companion-module-base/commit/ea2ec8d4358de68aacd26db8a5e90d45f7608533))
+
 ## [1.11.3](https://github.com/bitfocus/companion-module-base/compare/v1.11.2...v1.11.3) (2024-12-23)
 
 
