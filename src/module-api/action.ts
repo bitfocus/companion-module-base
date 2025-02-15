@@ -10,6 +10,7 @@ import type {
 	CompanionInputFieldTextInput,
 	CompanionInputFieldCustomVariable,
 } from './input.js'
+import type { CompanionVariableValue } from './variable.js'
 
 export type SomeCompanionActionInputField =
 	| CompanionInputFieldStaticText
@@ -24,7 +25,16 @@ export type SomeCompanionActionInputField =
 /**
  * Utility functions available in the context of the current action
  */
-export type CompanionActionContext = CompanionCommonCallbackContext
+export interface CompanionActionContext extends CompanionCommonCallbackContext {
+	/**
+	 * @deprecated Experimental: This method may change without notice. Do not use!
+	 * Set the value of a custom variable
+	 * @param variableName
+	 * @param value
+	 * @returns Promise which resolves upon success, or rejects if the variable no longer exists
+	 */
+	setCustomVariableValue(variableName: string, value: CompanionVariableValue): void
+}
 
 /**
  * The definition of an action

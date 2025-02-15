@@ -3,9 +3,7 @@ import type { CompanionFeedbackDefinitions } from './feedback.js'
 import type { CompanionPresetDefinitions } from './preset.js'
 import type { InstanceStatus, LogLevel } from './enums.js'
 import type {
-	ActionInstance,
 	ExecuteActionMessage,
-	FeedbackInstance,
 	GetConfigFieldsMessage,
 	GetConfigFieldsResponseMessage,
 	HandleHttpRequestMessage,
@@ -139,6 +137,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		this.#actionManager = new ActionManager(
 			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('setActionDefinitions', msg),
+			(msg) => this.#ipcWrapper.sendWithNoCb('setCustomVariable', msg),
 			this.log.bind(this),
 		)
 		this.#feedbackManager = new FeedbackManager(
@@ -562,11 +561,6 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		this.#feedbackManager.checkFeedbacksById(feedbackIds)
 	}
 
-	/** @deprecated */
-	_getAllActions(): Pick<ActionInstance, 'id' | 'actionId' | 'controlId' | 'options'>[] {
-		return this.#actionManager._getAllActions()
-	}
-
 	/**
 	 * Call subscribe on all currently known placed actions.
 	 * It can be useful to trigger this upon establishing a connection, to ensure all data is loaded.
@@ -582,11 +576,6 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 */
 	unsubscribeActions(...actionIds: string[]): void {
 		this.#actionManager.unsubscribeActions(actionIds)
-	}
-
-	/** @deprecated */
-	_getAllFeedbacks(): Pick<FeedbackInstance, 'id' | 'feedbackId' | 'controlId' | 'options'>[] {
-		return this.#feedbackManager._getAllFeedbacks()
 	}
 
 	/**
@@ -619,20 +608,6 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			actionId: action.actionId,
 			options: action.options,
 			delay: action.delay,
-		})
-	}
-
-	/**
-	 * @deprecated Experimental: This method may change without notice. Do not use!
-	 * Set the value of a custom variable
-	 * @param variableName
-	 * @param value
-	 * @returns Promise which resolves upon success, or rejects if the variable no longer exists
-	 */
-	setCustomVariableValue(variableName: string, value: CompanionVariableValue): void {
-		this.#ipcWrapper.sendWithNoCb('setCustomVariable', {
-			customVariableId: variableName,
-			value,
 		})
 	}
 

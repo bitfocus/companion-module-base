@@ -7,6 +7,7 @@ import type {
 	ExecuteActionMessage,
 	LearnActionMessage,
 	LearnActionResponseMessage,
+	SetCustomVariableMessage,
 } from '../host-api/api.js'
 import type {
 	CompanionActionContext,
@@ -14,8 +15,8 @@ import type {
 	CompanionActionDefinitions,
 	CompanionActionInfo,
 } from '../module-api/action.js'
-import type { CompanionFeedbackContext } from '../module-api/feedback.js'
 import { serializeIsVisibleFn } from './base.js'
+import { CompanionVariableValue } from '../module-api/variable.js'
 
 function convertActionInstanceToEvent(action: ActionInstance): CompanionActionInfo {
 	return {
@@ -31,6 +32,7 @@ export class ActionManager {
 		msg: ParseVariablesInStringMessage,
 	) => Promise<ParseVariablesInStringResponseMessage>
 	readonly #setActionDefinitions: (msg: SetActionDefinitionsMessage) => void
+	readonly #setCustomVariableValue: (msg: SetCustomVariableMessage) => void
 	readonly #log: (level: LogLevel, message: string) => void
 
 	readonly #actionDefinitions = new Map<string, CompanionActionDefinition>()
@@ -39,10 +41,12 @@ export class ActionManager {
 	constructor(
 		parseVariablesInString: (msg: ParseVariablesInStringMessage) => Promise<ParseVariablesInStringResponseMessage>,
 		setActionDefinitions: (msg: SetActionDefinitionsMessage) => void,
+		setCustomVariableValue: (msg: SetCustomVariableMessage) => void,
 		log: (level: LogLevel, message: string) => void,
 	) {
 		this.#parseVariablesInString = parseVariablesInString
 		this.#setActionDefinitions = setActionDefinitions
+		this.#setCustomVariableValue = setCustomVariableValue
 		this.#log = log
 	}
 
@@ -60,6 +64,13 @@ export class ActionManager {
 				})
 
 				return res.text
+			},
+			setCustomVariableValue: (variableName: string, value: CompanionVariableValue) => {
+				this.#setCustomVariableValue({
+					customVariableId: variableName,
+					value,
+					controlId: msg.action.controlId,
+				})
 			},
 		}
 
@@ -94,6 +105,9 @@ export class ActionManager {
 
 							return res.text
 						},
+						setCustomVariableValue: () => {
+							throw new Error(`setCustomVariableValue is not available during unsubscribe`)
+						},
 					}
 
 					Promise.resolve(definition.unsubscribe(convertActionInstanceToEvent(existing), context)).catch((e) => {
@@ -115,7 +129,7 @@ export class ActionManager {
 				// Inserted or updated
 				const definition = this.#actionDefinitions.get(action.actionId)
 				if (definition?.subscribe) {
-					const context: CompanionFeedbackContext = {
+					const context: CompanionActionContext = {
 						parseVariablesInString: async (text: string): Promise<string> => {
 							const res = await this.#parseVariablesInString({
 								text: text,
@@ -125,6 +139,9 @@ export class ActionManager {
 							})
 
 							return res.text
+						},
+						setCustomVariableValue: () => {
+							throw new Error(`setCustomVariableValue is not available during unsubscribe`)
 						},
 					}
 
@@ -139,7 +156,7 @@ export class ActionManager {
 	public async handleLearnAction(msg: LearnActionMessage): Promise<LearnActionResponseMessage> {
 		const definition = this.#actionDefinitions.get(msg.action.actionId)
 		if (definition && definition.learn) {
-			const context: CompanionFeedbackContext = {
+			const context: CompanionActionContext = {
 				parseVariablesInString: async (text: string): Promise<string> => {
 					const res = await this.#parseVariablesInString({
 						text: text,
@@ -149,6 +166,9 @@ export class ActionManager {
 					})
 
 					return res.text
+				},
+				setCustomVariableValue: () => {
+					throw new Error(`setCustomVariableValue is not available during learn`)
 				},
 			}
 
@@ -199,16 +219,6 @@ export class ActionManager {
 		this.#setActionDefinitions({ actions: hostActions })
 	}
 
-	/** @deprecated */
-	_getAllActions(): Pick<ActionInstance, 'id' | 'actionId' | 'controlId' | 'options'>[] {
-		return Array.from(this.#actionInstances.values()).map((act) => ({
-			id: act.id,
-			actionId: act.actionId,
-			controlId: act.controlId,
-			options: act.options,
-		}))
-	}
-
 	subscribeActions(actionIds: string[]): void {
 		let actions = Array.from(this.#actionInstances.values())
 
@@ -228,6 +238,9 @@ export class ActionManager {
 						})
 
 						return res.text
+					},
+					setCustomVariableValue: () => {
+						throw new Error(`setCustomVariableValue is not available during subscribe`)
 					},
 				}
 
@@ -257,6 +270,9 @@ export class ActionManager {
 						})
 
 						return res.text
+					},
+					setCustomVariableValue: () => {
+						throw new Error(`setCustomVariableValue is not available during unsubscribe`)
 					},
 				}
 

@@ -41,7 +41,7 @@ export interface ModuleToHostEventsV0SharedSocket {
 export interface HostToModuleEventsV0 extends HostToModuleEventsV0SharedSocket {
 	init: (msg: InitMessage) => InitResponseMessage
 	destroy: (msg: Record<string, never>) => void
-	/** @deprecated */
+	/** @deprecated Replaced with updateConfigAndLabel in 1.2.0 */
 	updateConfig: (config: unknown) => void
 	updateConfigAndLabel: (msg: UpdateConfigAndLabelMessage) => void
 	updateFeedbacks: (msg: UpdateFeedbackInstancesMessage) => void
@@ -279,6 +279,9 @@ export interface RecordActionMessage {
 export interface SetCustomVariableMessage {
 	customVariableId: string
 	value: CompanionVariableValue
+
+	/** Control the variable was set from. This should always be defined, but did not exist in older versions */
+	controlId: string | undefined
 }
 
 export interface VariablesChangedMessage {
