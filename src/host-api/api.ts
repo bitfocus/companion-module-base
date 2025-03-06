@@ -293,22 +293,33 @@ export interface UpdateActionInstancesMessage {
 
 export interface UpgradeActionInstance extends Omit<ActionInstanceBase, 'options'> {
 	options: RawOptionsObject
+
+	controlId: string
 }
 export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'options'> {
 	options: RawOptionsObject
 
 	isInverted: boolean
+
+	/**
+	 * Only used as an output from the module, when the feedback is being converted to a boolean feedback
+	 */
+	style?: Partial<CompanionFeedbackButtonStyleResult>
+
+	controlId: string
 }
 
 export interface UpgradeActionAndFeedbackInstancesMessage {
 	actions: UpgradeActionInstance[]
 	feedbacks: UpgradeFeedbackInstance[]
+	defaultUpgradeIndex: number | null
 }
 
 export interface UpgradeActionAndFeedbackInstancesResponse {
 	updatedConfig: unknown
 	updatedActions: UpgradeActionInstance[]
 	updatedFeedbacks: UpgradeFeedbackInstance[]
+	latestUpgradeIndex: number
 }
 
 export interface SaveConfigMessage {

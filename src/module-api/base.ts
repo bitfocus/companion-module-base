@@ -28,6 +28,8 @@ import type {
 	UpdateActionInstancesMessage,
 	UpdateConfigAndLabelMessage,
 	UpdateFeedbackInstancesMessage,
+	UpgradeActionAndFeedbackInstancesMessage,
+	UpgradeActionAndFeedbackInstancesResponse,
 	VariablesChangedMessage,
 } from '../host-api/api.js'
 import { literal } from '../util.js'
@@ -116,6 +118,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				executeAction: this._handleExecuteAction.bind(this),
 				updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
 				updateActions: this._handleUpdateActions.bind(this),
+				upgradeActionsAndFeedbacks: this._handleUpgradeActionsAndFeedbacks.bind(this),
 				getConfigFields: this._handleGetConfigFields.bind(this),
 				handleHttpRequest: this._handleHttpRequest.bind(this),
 				learnAction: this._handleLearnAction.bind(this),
@@ -183,6 +186,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			 * Performing upgrades during init requires a fair chunk of work.
 			 * Some actions/feedbacks will be using the upgradeIndex of the instance, but some may have their own upgradeIndex on themselves if they are from an import.
 			 */
+			// TODO - what to do with this in the new flow?
 			const { updatedActions, updatedFeedbacks, updatedConfig } = runThroughUpgradeScripts(
 				actions,
 				feedbacks,
@@ -214,10 +218,10 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 			setImmediate(() => {
 				// Subscribe all of the actions and feedbacks
-				this._handleUpdateActions({ actions }, true).catch((e) => {
+				this._handleUpdateActions({ actions }).catch((e) => {
 					this.log('error', `Receive actions failed: ${e}`)
 				})
-				this._handleUpdateFeedbacks({ feedbacks }, true).catch((e) => {
+				this._handleUpdateFeedbacks({ feedbacks }).catch((e) => {
 					this.log('error', `Receive feedbacks failed: ${e}`)
 				})
 			})
@@ -253,37 +257,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		return this.#actionManager.handleExecuteAction(msg)
 	}
 
-	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
-		// Run through upgrade scripts if needed
-		if (!skipUpgrades) {
-			const res = runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, this.#lastConfig, true)
-			this.#ipcWrapper
-				.sendWithCb('upgradedItems', {
-					updatedActions: res.updatedActions,
-					updatedFeedbacks: res.updatedFeedbacks,
-				})
-				.catch((e) => {
-					this.log('error', `Failed to save upgraded feedbacks: ${e}`)
-				})
-		}
-
+	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage): Promise<void> {
 		this.#feedbackManager.handleUpdateFeedbacks(msg.feedbacks)
 	}
-	private async _handleUpdateActions(msg: UpdateActionInstancesMessage, skipUpgrades?: boolean): Promise<void> {
-		// Run through upgrade scripts if needed
-		if (!skipUpgrades) {
-			const res = runThroughUpgradeScripts(msg.actions, {}, null, this.#upgradeScripts, this.#lastConfig, true)
-			this.#ipcWrapper
-				.sendWithCb('upgradedItems', {
-					updatedActions: res.updatedActions,
-					updatedFeedbacks: res.updatedFeedbacks,
-				})
-				.catch((e) => {
-					this.log('error', `Failed to save upgraded actions: ${e}`)
-				})
-		}
-
+	private async _handleUpdateActions(msg: UpdateActionInstancesMessage): Promise<void> {
 		this.#actionManager.handleUpdateActions(msg.actions)
+	}
+	private async _handleUpgradeActionsAndFeedbacks(
+		msg: UpgradeActionAndFeedbackInstancesMessage,
+	): Promise<UpgradeActionAndFeedbackInstancesResponse> {
+		return runThroughUpgradeScripts(msg.actions, msg.feedbacks, null, this.#upgradeScripts, this.#lastConfig, true)
 	}
 
 	private async _handleGetConfigFields(_msg: GetConfigFieldsMessage): Promise<GetConfigFieldsResponseMessage> {
