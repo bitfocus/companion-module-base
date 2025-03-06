@@ -161,8 +161,6 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		return this.#lifecycleQueue.add(async () => {
 			if (this.#initialized) throw new Error('Already initialized')
 
-			const actions = msg.actions
-			const feedbacks = msg.feedbacks
 			this.#lastConfig = msg.config as TConfig
 			this.#label = msg.label
 
@@ -183,25 +181,17 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 
 			/**
-			 * Performing upgrades during init requires a fair chunk of work.
-			 * Some actions/feedbacks will be using the upgradeIndex of the instance, but some may have their own upgradeIndex on themselves if they are from an import.
+			 * Making this handle actions/feedbacks is hard now due to the structure of options, so instead we just upgrade the config, and the actions/feedbacks will be handled in their own calls soon after this
 			 */
-			// TODO - what to do with this in the new flow?
-			const { updatedActions, updatedFeedbacks, updatedConfig } = runThroughUpgradeScripts(
-				actions,
-				feedbacks,
+			const { updatedConfig } = runThroughUpgradeScripts(
+				[],
+				[],
 				msg.lastUpgradeIndex,
 				this.#upgradeScripts,
 				this.#lastConfig,
 				false,
 			)
 			this.#lastConfig = (updatedConfig as TConfig | undefined) ?? this.#lastConfig
-
-			// Send the upgraded data back to companion now. Just so that if the init crashes, this doesnt have to be repeated
-			const pSendUpgrade = this.#ipcWrapper.sendWithCb('upgradedItems', {
-				updatedActions,
-				updatedFeedbacks,
-			})
 
 			// Now we can initialise the module
 			try {
@@ -211,20 +201,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			} catch (e) {
 				console.trace(`Init failed: ${e}`)
 				throw e
-			} finally {
-				// Only now do we need to await the upgrade
-				await pSendUpgrade
 			}
-
-			setImmediate(() => {
-				// Subscribe all of the actions and feedbacks
-				this._handleUpdateActions({ actions }).catch((e) => {
-					this.log('error', `Receive actions failed: ${e}`)
-				})
-				this._handleUpdateFeedbacks({ feedbacks }).catch((e) => {
-					this.log('error', `Receive feedbacks failed: ${e}`)
-				})
-			})
 
 			return {
 				hasHttpHandler: typeof this.handleHttpRequest === 'function',

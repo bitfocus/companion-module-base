@@ -138,7 +138,9 @@ export interface InitMessage {
 
 	lastUpgradeIndex: number
 
+	/** @deprecated not populated since 1.12.0 */
 	feedbacks: { [id: string]: FeedbackInstance | undefined }
+	/** @deprecated not populated since 1.12.0 */
 	actions: { [id: string]: ActionInstance | undefined }
 }
 export interface InitResponseMessage {
