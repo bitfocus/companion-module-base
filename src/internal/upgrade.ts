@@ -3,7 +3,11 @@ import type {
 	CompanionMigrationFeedback,
 	CompanionStaticUpgradeScript,
 } from '../module-api/upgrade.js'
-import type { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '../host-api/api.js'
+import type {
+	UpgradeActionInstance,
+	UpgradeFeedbackInstance,
+	UpgradeActionAndFeedbackInstancesResponse,
+} from '../host-api/api.js'
 import { Complete, literal } from '../util.js'
 
 function clone<T>(val: T): T {
@@ -22,15 +26,13 @@ function clone<T>(val: T): T {
  * @returns The upgraded data that needs persisting
  */
 export function runThroughUpgradeScripts(
-	allActions: { [id: string]: ActionInstance | undefined | null },
-	allFeedbacks: { [id: string]: FeedbackInstance | undefined | null },
+	allActionsArray: UpgradeActionInstance[],
+	allFeedbacksArray: UpgradeFeedbackInstance[],
 	defaultUpgradeIndex: number | null,
 	upgradeScripts: CompanionStaticUpgradeScript<any>[],
 	config: unknown,
 	skipConfigUpgrade: boolean,
-): UpgradedDataResponseMessage & {
-	updatedConfig: unknown | undefined
-} {
+): UpgradeActionAndFeedbackInstancesResponse {
 	// First we group all the actions and feedbacks by the version they currently are.
 	const pendingUpgradesGrouped = new Map<number, { feedbacks: string[]; actions: string[]; config: boolean }>()
 	const getPendingUpgradeGroup = (i: number) => {
@@ -41,14 +43,14 @@ export function runThroughUpgradeScripts(
 		}
 		return v
 	}
-	for (const action of Object.values(allActions)) {
+	for (const action of allActionsArray) {
 		const upgradeIndex = action?.upgradeIndex ?? defaultUpgradeIndex
 		if (action && typeof upgradeIndex === 'number') {
 			const pending = getPendingUpgradeGroup(upgradeIndex)
 			pending.actions.push(action.id)
 		}
 	}
-	for (const feedback of Object.values(allFeedbacks)) {
+	for (const feedback of allFeedbacksArray) {
 		const upgradeIndex = feedback?.upgradeIndex ?? defaultUpgradeIndex
 		if (feedback && typeof upgradeIndex === 'number') {
 			const pending = getPendingUpgradeGroup(upgradeIndex)
@@ -63,8 +65,11 @@ export function runThroughUpgradeScripts(
 		}
 	}
 
-	const updatedFeedbacks: UpgradedDataResponseMessage['updatedFeedbacks'] = {}
-	const updatedActions: UpgradedDataResponseMessage['updatedActions'] = {}
+	const allActions = Object.fromEntries(allActionsArray.map((a) => [a.id, a]))
+	const allFeedbacks = Object.fromEntries(allFeedbacksArray.map((a) => [a.id, a]))
+
+	const updatedFeedbacks: Record<string, UpgradeFeedbackInstance> = {}
+	const updatedActions: Record<string, UpgradeActionInstance> = {}
 	let updatedConfig: unknown | undefined
 
 	if (pendingUpgradesGrouped.size > 0) {
@@ -118,7 +123,7 @@ export function runThroughUpgradeScripts(
 								})
 							}
 						})
-						.filter((v): v is ActionInstance => !!v),
+						.filter((v): v is UpgradeActionInstance => !!v),
 
 					feedbacks: feedbackIdsToUpgrade
 						.map((id) => {
@@ -136,7 +141,7 @@ export function runThroughUpgradeScripts(
 								})
 							}
 						})
-						.filter((v): v is FeedbackInstance => !!v),
+						.filter((v): v is UpgradeFeedbackInstance => !!v),
 				},
 			)
 
@@ -191,8 +196,9 @@ export function runThroughUpgradeScripts(
 	}
 
 	return {
-		updatedActions,
-		updatedFeedbacks,
+		updatedActions: Object.values(updatedActions),
+		updatedFeedbacks: Object.values(updatedFeedbacks),
 		updatedConfig,
+		latestUpgradeIndex: upgradeScripts.length - 1,
 	}
 }
