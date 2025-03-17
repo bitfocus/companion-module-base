@@ -144,3 +144,45 @@ export function splitHex(color: number | string): string {
 export type Complete<T> = {
 	[P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : T[P] | undefined
 }
+
+/**
+ * Parse common escape characters in strings passed to callback from action or feedback options.
+ * This is useful to ensure \r, \n etc are represented as such rather than as \\r, \\n
+ */
+
+export function parseEscapeCharacters(msg: string): string {
+	const message = msg
+		.replaceAll('\\n', '\n')
+		.replaceAll('\\r', '\r')
+		.replaceAll('\\t', '\t')
+		.replaceAll('\\f', '\f')
+		.replaceAll('\\v', '\v')
+		.replaceAll('\\b', '\b')
+		.replaceAll('\\\\', '\\')
+		.replaceAll('\\x00', '\x00')
+		.replaceAll('\\x01', '\x01')
+		.replaceAll('\\x02', '\x02')
+		.replaceAll('\\x03', '\x03')
+	return message
+}
+
+/**
+ * The reverse of parseEscapeCharacters. This is useful to to ensure special charaters are displayed normally when returned to the UI.
+ * Ie during a learn callback, or as a variable
+ */
+
+export function substituteEscapeCharacters(msg: string): string {
+	const message = msg
+		.replaceAll('\n', '\\n')
+		.replaceAll('\r', '\\r')
+		.replaceAll('\t', '\\t')
+		.replaceAll('\f', '\\f')
+		.replaceAll('\v', '\\v')
+		.replaceAll('\b', '\\b')
+		.replaceAll('\\', '\\\\')
+		.replaceAll('\x00', '\\x00')
+		.replaceAll('\x01', '\\x01')
+		.replaceAll('\x02', '\\x02')
+		.replaceAll('\x03', '\\x03')
+	return message
+}
