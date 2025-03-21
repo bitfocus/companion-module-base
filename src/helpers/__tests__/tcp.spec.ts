@@ -1,10 +1,11 @@
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { TCPHelper } from '../tcp.js'
 import type { Socket as TMockSocket } from '../../__mocks__/net.js'
 import { Socket } from 'net'
 
 const MockSocket = Socket as unknown as typeof TMockSocket
 
-jest.mock('net')
+vi.mock('net', async () => import('../../__mocks__/net.js'))
 
 // async function sleepImmediate() {
 // 	return new Promise((resolve) => setImmediate(resolve))
@@ -91,8 +92,8 @@ describe('TCP', () => {
 	// 	try {
 	// 		expect(socket).toBeTruthy()
 
-	// 		const errorHandler = jest.fn(() => {})
-	// 		const statusHandler = jest.fn(() => {})
+	// 		const errorHandler = vi.fn(() => {})
+	// 		const statusHandler = vi.fn(() => {})
 	// 		socket.on('error', errorHandler)
 	// 		socket.on('status_change', statusHandler)
 
@@ -120,8 +121,8 @@ describe('TCP', () => {
 	// 		try {
 	// 			expect(socket).toBeTruthy()
 
-	// 			const listeningHandler = jest.fn(() => {})
-	// 			const statusHandler = jest.fn(() => {})
+	// 			const listeningHandler = vi.fn(() => {})
+	// 			const statusHandler = vi.fn(() => {})
 	// 			socket.on('connect', listeningHandler)
 	// 			socket.on('status_change', statusHandler)
 
@@ -146,7 +147,7 @@ describe('TCP', () => {
 
 	// 	rawSocket.bind.mockImplementationOnce(() => rawSocket as any)
 
-	// 	jest.advanceTimersByTimeAsync(10000)
+	// 	vi.advanceTimersByTimeAsync(10000)
 	// })
 
 	// describe('send', () => {

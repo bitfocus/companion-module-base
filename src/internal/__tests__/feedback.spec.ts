@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import {
 	FeedbackInstance,
 	ParseVariablesInStringResponseMessage,
@@ -54,13 +55,13 @@ const mockLogger = (level: LogLevel, msg: string) => {
 
 describe('FeedbackManager', () => {
 	beforeEach(() => {
-		jest.useFakeTimers()
+		vi.useFakeTimers()
 
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it('set definitions', () => {
-		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			unimplementedFunction,
@@ -75,7 +76,7 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(() => false),
+			callback: vi.fn(() => false),
 		}
 
 		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
@@ -106,8 +107,8 @@ describe('FeedbackManager', () => {
 	})
 
 	it('execute callback on registration', async () => {
-		const mockUpdateFeedbackValues = jest.fn((_msg: UpdateFeedbackValuesMessage) => null)
-		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
@@ -123,7 +124,7 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(() => false),
+			callback: vi.fn(() => false),
 		}
 
 		// setup definition
@@ -171,7 +172,7 @@ describe('FeedbackManager', () => {
 	})
 
 	it('instance: disabled', async () => {
-		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			unimplementedFunction,
@@ -187,7 +188,7 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(() => false),
+			callback: vi.fn(() => false),
 		}
 
 		// setup definition
@@ -213,8 +214,8 @@ describe('FeedbackManager', () => {
 	})
 
 	it('instance: delete', async () => {
-		const mockUpdateFeedbackValues = jest.fn((_msg: UpdateFeedbackValuesMessage) => null)
-		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
@@ -229,7 +230,7 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(() => false),
+			callback: vi.fn(() => false),
 		}
 
 		// setup definition
@@ -266,8 +267,8 @@ describe('FeedbackManager', () => {
 	})
 
 	describe('checkFeedbacks', () => {
-		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const mockUpdateFeedbackValues = jest.fn((_msg: UpdateFeedbackValuesMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
@@ -280,13 +281,13 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(() => false),
+			callback: vi.fn(() => false),
 		}
 		const mockDefinition2: CompanionFeedbackDefinition = {
 			type: 'advanced',
 			name: 'Definition2',
 			options: [],
-			callback: jest.fn(() => ({})),
+			callback: vi.fn(() => ({})),
 		}
 
 		beforeAll(async () => {
@@ -316,7 +317,7 @@ describe('FeedbackManager', () => {
 		})
 
 		beforeEach(() => {
-			jest.clearAllMocks()
+			vi.clearAllMocks()
 		})
 
 		it('no types specified', async () => {
@@ -417,14 +418,14 @@ describe('FeedbackManager', () => {
 	})
 
 	describe('variables change', () => {
-		const mockParseVariables = jest.fn(async (msg: ParseVariablesInStringMessage) =>
+		const mockParseVariables = vi.fn(async (msg: ParseVariablesInStringMessage) =>
 			literal<ParseVariablesInStringResponseMessage>({
 				text: `res - ${msg.text}`,
 				variableIds: ['all', `var-${msg.text}`],
 			}),
 		)
-		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const mockUpdateFeedbackValues = jest.fn((_msg: UpdateFeedbackValuesMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
 		const manager = new FeedbackManager(
 			mockParseVariables,
 			mockUpdateFeedbackValues,
@@ -437,7 +438,7 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(async (fb, ctx) => {
+			callback: vi.fn(async (fb, ctx) => {
 				await ctx.parseVariablesInString(fb.id)
 				return false
 			}),
@@ -446,7 +447,7 @@ describe('FeedbackManager', () => {
 			type: 'advanced',
 			name: 'Definition2',
 			options: [],
-			callback: jest.fn(async (fb, ctx) => {
+			callback: vi.fn(async (fb, ctx) => {
 				await ctx.parseVariablesInString(fb.id)
 				return {}
 			}),
@@ -493,7 +494,7 @@ describe('FeedbackManager', () => {
 		})
 
 		beforeEach(() => {
-			jest.clearAllMocks()
+			vi.clearAllMocks()
 		})
 
 		it('on unrelated variables change', async () => {
@@ -570,14 +571,14 @@ describe('FeedbackManager', () => {
 	})
 
 	describe('check while being checked', () => {
-		const mockParseVariables = jest.fn(async (msg: ParseVariablesInStringMessage) =>
+		const mockParseVariables = vi.fn(async (msg: ParseVariablesInStringMessage) =>
 			literal<ParseVariablesInStringResponseMessage>({
 				text: `res - ${msg.text}`,
 				variableIds: ['all', `var-${msg.text}`],
 			}),
 		)
-		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const mockUpdateFeedbackValues = jest.fn((_msg: UpdateFeedbackValuesMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
 		const manager = new FeedbackManager(
 			mockParseVariables,
 			mockUpdateFeedbackValues,
@@ -593,7 +594,7 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(async (fb, ctx) => {
+			callback: vi.fn(async (fb, ctx) => {
 				await ctx.parseVariablesInString(fb.id)
 
 				if (waitForManualResolve) {
@@ -632,7 +633,7 @@ describe('FeedbackManager', () => {
 		})
 
 		beforeEach(() => {
-			jest.clearAllMocks()
+			vi.clearAllMocks()
 
 			waitForManualResolve = false
 		})
@@ -830,7 +831,7 @@ describe('FeedbackManager', () => {
 	})
 
 	it('learn values: no implementation', async () => {
-		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			unimplementedFunction,
@@ -845,7 +846,7 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(() => false),
+			callback: vi.fn(() => false),
 		}
 
 		// setup definition
@@ -859,7 +860,7 @@ describe('FeedbackManager', () => {
 	})
 
 	it('learn values: with implementation', async () => {
-		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			unimplementedFunction,
@@ -874,8 +875,8 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(() => false),
-			learn: jest.fn(() => ({ abc: 123 })),
+			callback: vi.fn(() => false),
+			learn: vi.fn(() => ({ abc: 123 })),
 		}
 
 		// setup definition
@@ -900,13 +901,13 @@ describe('FeedbackManager', () => {
 	})
 
 	it('learn values: with implementation using variables', async () => {
-		const mockParseVariables = jest.fn(async (_msg: ParseVariablesInStringMessage) =>
+		const mockParseVariables = vi.fn(async (_msg: ParseVariablesInStringMessage) =>
 			literal<ParseVariablesInStringResponseMessage>({
 				text: 'res str',
 				variableIds: ['abc', '123'],
 			}),
 		)
-		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
 		const manager = new FeedbackManager(
 			mockParseVariables,
 			unimplementedFunction,
@@ -921,8 +922,8 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(() => false),
-			learn: jest.fn(async (fb, context) => {
+			callback: vi.fn(() => false),
+			learn: vi.fn(async (fb, context) => {
 				const val = await context.parseVariablesInString('test string')
 				return { abc: val }
 			}),
@@ -961,8 +962,8 @@ describe('FeedbackManager', () => {
 	})
 
 	describe('subscribe', () => {
-		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const mockUpdateFeedbackValues = jest.fn((_msg: UpdateFeedbackValuesMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
@@ -975,8 +976,8 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(async (_fb, _ctx) => false),
-			subscribe: jest.fn(async (_fb, _ctx) => undefined),
+			callback: vi.fn(async (_fb, _ctx) => false),
+			subscribe: vi.fn(async (_fb, _ctx) => undefined),
 		}
 
 		beforeAll(async () => {
@@ -997,7 +998,7 @@ describe('FeedbackManager', () => {
 				[feedbackId2]: undefined,
 			})
 
-			jest.clearAllMocks()
+			vi.clearAllMocks()
 		})
 
 		it('called when adding', async () => {
@@ -1094,8 +1095,8 @@ describe('FeedbackManager', () => {
 	})
 
 	describe('unsubscribe', () => {
-		const mockSetFeedbackDefinitions = jest.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const mockUpdateFeedbackValues = jest.fn((_msg: UpdateFeedbackValuesMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
 			mockUpdateFeedbackValues,
@@ -1108,8 +1109,8 @@ describe('FeedbackManager', () => {
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
-			callback: jest.fn(async (_fb, _ctx) => false),
-			unsubscribe: jest.fn(async (_fb, _ctx) => undefined),
+			callback: vi.fn(async (_fb, _ctx) => false),
+			unsubscribe: vi.fn(async (_fb, _ctx) => undefined),
 		}
 
 		beforeAll(async () => {
@@ -1130,7 +1131,7 @@ describe('FeedbackManager', () => {
 				[feedbackId2]: undefined,
 			})
 
-			jest.clearAllMocks()
+			vi.clearAllMocks()
 		})
 
 		it('not called when adding', async () => {

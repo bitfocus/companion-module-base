@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { IpcWrapper } from '../ipc-wrapper.js'
 
 interface TestInbound1 {
@@ -14,14 +15,14 @@ function stringifyError(err: Error): string {
 }
 
 describe('IpcWrapper', () => {
-	const sendMessageFn = jest.fn()
+	const sendMessageFn = vi.fn()
 
-	const testRecv1Fn = jest.fn<Promise<void>, []>()
-	const testRecv2Fn = jest.fn<Promise<void>, []>()
+	const testRecv1Fn = vi.fn<() => Promise<void>>()
+	const testRecv2Fn = vi.fn<() => Promise<void>>()
 	let ipc: IpcWrapper<TestOutbound1, TestInbound1>
 
 	beforeAll(() => {
-		jest.useFakeTimers()
+		vi.useFakeTimers()
 	})
 
 	beforeEach(() => {
@@ -66,7 +67,7 @@ describe('IpcWrapper', () => {
 				callbackId: 1,
 			})
 
-			jest.advanceTimersByTime(101)
+			vi.advanceTimersByTime(101)
 
 			await expect(result).rejects.toThrow('Call timed out')
 		})
@@ -207,7 +208,7 @@ describe('IpcWrapper', () => {
 		expect(testRecv1Fn).toHaveBeenCalledTimes(1)
 		expect(testRecv1Fn).toHaveBeenCalledWith(42)
 
-		jest.advanceTimersByTime(101)
+		vi.advanceTimersByTime(101)
 		expect(sendMessageFn).toHaveBeenCalledTimes(0)
 	})
 
@@ -227,7 +228,7 @@ describe('IpcWrapper', () => {
 			expect(testRecv2Fn).toHaveBeenCalledTimes(1)
 			expect(testRecv2Fn).toHaveBeenCalledWith(42)
 
-			await jest.advanceTimersByTimeAsync(201)
+			await vi.advanceTimersByTimeAsync(201)
 
 			expect(sendMessageFn).toHaveBeenCalledTimes(1)
 			expect(sendMessageFn).toHaveBeenCalledWith({
@@ -253,7 +254,7 @@ describe('IpcWrapper', () => {
 			expect(testRecv2Fn).toHaveBeenCalledTimes(1)
 			expect(testRecv2Fn).toHaveBeenCalledWith(42)
 
-			await jest.advanceTimersByTimeAsync(201)
+			await vi.advanceTimersByTimeAsync(201)
 
 			expect(sendMessageFn).toHaveBeenCalledTimes(1)
 			expect(sendMessageFn).toHaveBeenCalledWith({
@@ -282,7 +283,7 @@ describe('IpcWrapper', () => {
 			expect(testRecv2Fn).toHaveBeenCalledWith(42)
 			expect(error).toBeTruthy()
 
-			await jest.advanceTimersByTimeAsync(201)
+			await vi.advanceTimersByTimeAsync(201)
 
 			expect(sendMessageFn).toHaveBeenCalledTimes(1)
 			expect(sendMessageFn).toHaveBeenCalledWith({
@@ -309,7 +310,7 @@ describe('IpcWrapper', () => {
 			expect(testRecv2Fn).toHaveBeenCalledTimes(1)
 			expect(testRecv2Fn).toHaveBeenCalledWith(42)
 
-			await jest.advanceTimersByTimeAsync(201)
+			await vi.advanceTimersByTimeAsync(201)
 
 			expect(sendMessageFn).toHaveBeenCalledTimes(1)
 			expect(sendMessageFn).toHaveBeenCalledWith({
@@ -336,7 +337,7 @@ describe('IpcWrapper', () => {
 			expect(testRecv2Fn).toHaveBeenCalledTimes(1)
 			expect(testRecv2Fn).toHaveBeenCalledWith(42)
 
-			await jest.advanceTimersByTimeAsync(201)
+			await vi.advanceTimersByTimeAsync(201)
 
 			expect(sendMessageFn).toHaveBeenCalledTimes(1)
 			expect(sendMessageFn).toHaveBeenCalledWith({

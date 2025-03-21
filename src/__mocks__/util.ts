@@ -1,4 +1,5 @@
-import { mock } from 'jest-mock-extended'
+import { vi, Mock } from 'vitest'
+import { mock } from 'vitest-mock-extended'
 import { IpcWrapper } from '../host-api/ipc-wrapper.js'
 
 const orgSetTimeout = setTimeout
@@ -6,7 +7,7 @@ export async function runAllTimers(): Promise<void> {
 	// Run all timers, and wait, multiple times.
 	// This is to allow timers AND internal promises to resolve in inner functions
 	for (let i = 0; i < 50; i++) {
-		jest.runOnlyPendingTimers()
+		vi.runOnlyPendingTimers()
 		await new Promise((resolve) => orgSetTimeout(resolve, 0))
 	}
 }
@@ -15,7 +16,7 @@ export async function runTimersUntilNow(): Promise<void> {
 	// Run all timers, and wait, multiple times.
 	// This is to allow timers AND internal promises to resolve in inner functions
 	for (let i = 0; i < 50; i++) {
-		jest.advanceTimersByTime(0)
+		vi.advanceTimersByTime(0)
 		await new Promise((resolve) => orgSetTimeout(resolve, 0))
 	}
 }
@@ -27,10 +28,7 @@ const mockOptions = {
 }
 
 export function createIpcWrapperMock<TOutbound extends { [key: string]: any }, TInbound extends { [key: string]: any }>(
-	sendWithCb?: jest.Mock<
-		ReturnType<IpcWrapper<TOutbound, TInbound>['sendWithCb']>,
-		Parameters<IpcWrapper<TOutbound, TInbound>['sendWithCb']>
-	>,
+	sendWithCb?: Mock<IpcWrapper<TOutbound, TInbound>['sendWithCb']>,
 ): IpcWrapper<TOutbound, TInbound> {
 	return mock<IpcWrapper<TOutbound, TInbound>>(
 		{

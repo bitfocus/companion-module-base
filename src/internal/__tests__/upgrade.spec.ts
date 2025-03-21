@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi, Mock } from 'vitest'
 import { literal } from '../../util.js'
 import {
 	CompanionMigrationAction,
@@ -8,10 +9,7 @@ import {
 import { runThroughUpgradeScripts } from '../upgrade.js'
 import { ActionInstance } from '../../host-api/api.js'
 
-type MockUpgradeScript<TConfig> = jest.Mock<
-	ReturnType<CompanionStaticUpgradeScript<TConfig>>,
-	Parameters<CompanionStaticUpgradeScript<TConfig>>
->
+type MockUpgradeScript<TConfig> = Mock<CompanionStaticUpgradeScript<TConfig>>
 
 function clone<T>(val: T): T {
 	return JSON.parse(JSON.stringify(val))
@@ -22,7 +20,7 @@ const createMockScripts = <TConfig>(count: number): MockUpgradeScript<TConfig>[]
 
 	for (let i = 0; i < count; i++)
 		result.push(
-			jest.fn((..._args: Parameters<CompanionStaticUpgradeScript<TConfig>>) =>
+			vi.fn((..._args: Parameters<CompanionStaticUpgradeScript<TConfig>>) =>
 				literal<CompanionStaticUpgradeResult<TConfig>>({
 					updatedActions: [],
 					updatedFeedbacks: [],
@@ -56,9 +54,9 @@ function stripActionInstance(action: ActionInstance): CompanionMigrationAction {
 
 describe('runThroughUpgradeScripts', () => {
 	beforeEach(() => {
-		// jest.useFakeTimers()
+		// vi.useFakeTimers()
 
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it('nothing to upgrade', () => {

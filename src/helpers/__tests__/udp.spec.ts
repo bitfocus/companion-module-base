@@ -1,14 +1,18 @@
+import { describe, it, expect, beforeEach, vi, beforeAll, afterAll } from 'vitest'
+
 import { UDPHelper } from '../udp.js'
 import EventEmitter from 'events'
 import type { RemoteInfo, Socket, createSocket } from 'dgram'
 import { InstanceStatus } from '../../module-api/enums.js'
 
-const createSocketMock = jest.fn<ReturnType<typeof createSocket>, Parameters<typeof createSocket>>(() => {
+const createSocketMock = vi.fn<typeof createSocket>(() => {
 	throw new Error('Not implemented')
 })
-jest.mock('dgram', () => {
+vi.mock('dgram', () => {
 	return {
-		createSocket: (...args: Parameters<typeof createSocket>) => createSocketMock(...args),
+		default: {
+			createSocket: (...args: Parameters<typeof createSocket>) => createSocketMock(...args),
+		},
 	}
 })
 
@@ -28,18 +32,18 @@ class MinimalSocket extends EventEmitter {
 		}
 		this.emit('message', msg, rinfo)
 
-		await jest.runAllTimersAsync()
+		await vi.runAllTimersAsync()
 	}
 
-	public bind = jest.fn<ReturnType<Socket['bind']>, Parameters<Socket['bind']>>(() => {
+	public bind = vi.fn<Socket['bind']>(() => {
 		throw new Error('Not implemented')
 	})
 
-	public send = jest.fn<ReturnType<Socket['send']>, Parameters<Socket['send']>>(() => {
+	public send = vi.fn<Socket['send']>(() => {
 		throw new Error('Not implemented')
 	})
 
-	public close = jest.fn<ReturnType<Socket['close']>, Parameters<Socket['close']>>(() => {
+	public close = vi.fn<Socket['close']>(() => {
 		return this as any
 	})
 }
@@ -51,7 +55,7 @@ describe('UDP', () => {
 
 	describe('construct', () => {
 		// beforeEach(() => {
-		// 	jest.useFakeTimers()
+		// 	vi.useFakeTimers()
 		// })
 		it('no socket', () => {
 			createSocketMock.mockImplementationOnce(() => {
@@ -106,8 +110,8 @@ describe('UDP', () => {
 		try {
 			expect(socket).toBeTruthy()
 
-			const errorHandler = jest.fn(() => null)
-			const statusHandler = jest.fn(() => null)
+			const errorHandler = vi.fn(() => null)
+			const statusHandler = vi.fn(() => null)
 			socket.on('error', errorHandler)
 			socket.on('status_change', statusHandler)
 
@@ -135,8 +139,8 @@ describe('UDP', () => {
 			try {
 				expect(socket).toBeTruthy()
 
-				const listeningHandler = jest.fn(() => null)
-				const statusHandler = jest.fn(() => null)
+				const listeningHandler = vi.fn(() => null)
+				const statusHandler = vi.fn(() => null)
 				socket.on('listening', listeningHandler)
 				socket.on('status_change', statusHandler)
 
@@ -161,7 +165,7 @@ describe('UDP', () => {
 
 	// 	rawSocket.bind.mockImplementationOnce(() => rawSocket as any)
 
-	// 	jest.advanceTimersByTimeAsync(10000)
+	// 	vi.advanceTimersByTimeAsync(10000)
 	// })
 
 	describe('send', () => {

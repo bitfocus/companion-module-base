@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, Mock } from 'vitest'
 import { nanoid } from 'nanoid'
 import {
 	ModuleToHostEventsV0SharedSocket,
@@ -18,11 +19,9 @@ type IpcWrapperExt = IpcWrapper<ModuleToHostEventsV0SharedSocket, HostToModuleEv
 
 describe('Shared UDP', () => {
 	function createDeps() {
-		const sendWithCbFn = jest.fn<ReturnType<IpcWrapperExt['sendWithCb']>, Parameters<IpcWrapperExt['sendWithCb']>>(
-			() => {
-				throw new Error('Not implemented')
-			},
-		)
+		const sendWithCbFn = vi.fn<IpcWrapperExt['sendWithCb']>(() => {
+			throw new Error('Not implemented')
+		})
 
 		const mockIpcWrapper = createIpcWrapperMock<ModuleToHostEventsV0SharedSocket, HostToModuleEventsV0SharedSocket>(
 			sendWithCbFn,
@@ -57,7 +56,7 @@ describe('Shared UDP', () => {
 				return sendPromise
 			})
 
-			const bindCb = jest.fn()
+			const bindCb = vi.fn()
 			socket.bind(5678, '1.2.3.4', bindCb)
 
 			// Opening a second time should fail
@@ -102,14 +101,14 @@ describe('Shared UDP', () => {
 				return sendPromise
 			})
 
-			const bindCb = jest.fn()
+			const bindCb = vi.fn()
 			socket.bind(5678, '1.2.3.4', bindCb)
 
 			await sleepImmediate()
 			expect(bindCb).toHaveBeenCalledTimes(0)
 
 			// setup an error listener
-			const errorCb = jest.fn()
+			const errorCb = vi.fn()
 			socket.on('error', errorCb)
 
 			// Check call was made
@@ -134,7 +133,7 @@ describe('Shared UDP', () => {
 	async function createAndOpenSocket(
 		mockIpcWrapper: IpcWrapperExt,
 		moduleUdpSockets: Map<string, SharedUdpSocketImpl>,
-		sendWithCbFn: jest.Mock<ReturnType<IpcWrapperExt['sendWithCb']>, Parameters<IpcWrapperExt['sendWithCb']>>,
+		sendWithCbFn: Mock<IpcWrapperExt['sendWithCb']>,
 	) {
 		const socket = new SharedUdpSocketImpl(mockIpcWrapper, moduleUdpSockets, { type: 'udp4' })
 		expect(socket.eventNames()).toHaveLength(0)
@@ -146,7 +145,7 @@ describe('Shared UDP', () => {
 			return sendPromise
 		})
 
-		const bindCb = jest.fn()
+		const bindCb = vi.fn()
 		socket.bind(5678, '1.2.3.4', bindCb)
 
 		// Mock receive a response
@@ -180,7 +179,7 @@ describe('Shared UDP', () => {
 			})
 
 			// Do send
-			const sendCb = jest.fn()
+			const sendCb = vi.fn()
 			const message = Buffer.from('my fake message')
 			socket.send(message, 4789, '4.5.6.7', sendCb)
 
@@ -221,11 +220,11 @@ describe('Shared UDP', () => {
 			})
 
 			// Do send
-			const sendCb = jest.fn()
+			const sendCb = vi.fn()
 			const message = Buffer.from('my fake message')
 			socket.send(message, 4789, '4.5.6.7', sendCb)
 
-			const errorCb = jest.fn()
+			const errorCb = vi.fn()
 			socket.on('error', errorCb)
 
 			// Check callbacks
@@ -270,7 +269,7 @@ describe('Shared UDP', () => {
 			})
 
 			// Do send
-			const closeCb = jest.fn()
+			const closeCb = vi.fn()
 			socket.close(closeCb)
 
 			// Check callbacks
@@ -307,10 +306,10 @@ describe('Shared UDP', () => {
 			})
 
 			// Do send
-			const closeCb = jest.fn()
+			const closeCb = vi.fn()
 			socket.close(closeCb)
 
-			const errorCb = jest.fn()
+			const errorCb = vi.fn()
 			socket.on('error', errorCb)
 
 			// Check callbacks
