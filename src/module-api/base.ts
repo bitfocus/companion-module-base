@@ -30,7 +30,6 @@ import type {
 	UpdateFeedbackInstancesMessage,
 	UpgradeActionAndFeedbackInstancesMessage,
 	UpgradeActionAndFeedbackInstancesResponse,
-	VariablesChangedMessage,
 } from '../host-api/api.js'
 import { literal } from '../util.js'
 import type { InstanceBaseShared } from '../instance-base.js'
