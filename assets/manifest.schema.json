@@ -59,7 +59,8 @@
 						"type": "string"
 					}
 				},
-				"required": ["name"]
+				"required": ["name"],
+				"additionalProperties": false
 			}
 		},
 		"legacyIds": {
@@ -92,6 +93,29 @@
 				"entrypoint": {
 					"type": "string",
 					"description": "Entrypoint to pass to the runtime. eg index.js"
+				},
+				"permissions": {
+					"type": "object",
+					"description": "Permissions required by the module. This is used to inform the user of the permissions required by the module.\nNote: this requires the node22 or newer runtime",
+					"properties": {
+						"worker-threads": {
+							"type": "boolean",
+							"description": "Enable if the module uses worker threads"
+						},
+						"child-process": {
+							"type": "boolean",
+							"description": "Enable if the module uses child processes"
+						},
+						"native-addons": {
+							"type": "boolean",
+							"description": "Enable if the module uses native addons"
+						},
+						"filesystem": {
+							"type": "boolean",
+							"description": "Enable if the module requires read/write access to the filesystem"
+						}
+					},
+					"additionalProperties": false
 				}
 			},
 			"required": ["type", "api", "apiVersion", "entrypoint"]
