@@ -171,7 +171,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	private async _handleInit(msg: InitMessage): Promise<InitResponseMessage> {
-		return this.#lifecycleQueue.add(async () => {
+		const res = await this.#lifecycleQueue.add(async () => {
 			if (this.#initialized) throw new Error('Already initialized')
 
 			this.#lastConfig = msg.config as TConfig
@@ -223,6 +223,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				updatedConfig: this.#lastConfig,
 			}
 		})
+
+		if (!res) throw new Error('Failed to initialize')
+		return res
 	}
 	private async _handleDestroy(): Promise<void> {
 		await this.#lifecycleQueue.add(async () => {
