@@ -1,7 +1,7 @@
 {
 	"name": "@companion-module/base",
 	"version": "1.11.3",
-	"type": "commonjs",
+	"type": "module",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
 	"license": "MIT",
@@ -18,7 +18,7 @@
 		"unit": "vitest"
 	},
 	"engines": {
-		"node": "^18.12 || ^22.8"
+		"node": "^22.14"
 	},
 	"files": [
 		"README.md",
@@ -40,7 +40,7 @@
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.2.2",
-		"@tsconfig/node18": "^18.2.4",
+		"@tsconfig/node22": "^22.0.1",
 		"@types/ejson": "^2.2.2",
 		"@types/node": "^18.19.84",
 		"eslint": "^9.23.0",
