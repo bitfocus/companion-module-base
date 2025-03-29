@@ -15,8 +15,7 @@ import type {
 	UpdateFeedbackValuesMessage,
 } from '../host-api/api.js'
 import { serializeIsVisibleFn } from './base.js'
-// eslint-disable-next-line n/no-missing-import
-import debounceFn from '../../lib/debounce-fn/index.js'
+import debounceFn from 'debounce-fn'
 import type { LogLevel } from '../module-api/enums.js'
 import { assertNever } from '../util.js'
 import type { JsonValue } from '../common/json-value.js'
