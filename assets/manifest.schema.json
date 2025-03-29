@@ -57,6 +57,9 @@
 					},
 					"github": {
 						"type": "string"
+					},
+					"url": {
+						"type": "string"
 					}
 				},
 				"required": ["name"],
