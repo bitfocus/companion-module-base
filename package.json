@@ -10,7 +10,7 @@
 		"dev": "yarn build:ts --watch",
 		"build": "yarn build:json-schema && yarn build:ajv-validator && yarn build:ts",
 		"build:ts": "tsc -p tsconfig.build.json",
-		"build:json-schema": "json2ts --input assets/manifest.schema.json --output generated/manifest.d.ts",
+		"build:json-schema": "json2ts --input assets/manifest.schema.json --output generated/manifest.d.ts --additionalProperties=false",
 		"build:ajv-validator": "node tools/schema-compile.mjs",
 		"docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/index.ts --excludePrivate --theme default --out docs",
 		"lint:raw": "eslint",
