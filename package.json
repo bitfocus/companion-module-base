@@ -43,15 +43,15 @@
 		"@companion-module/tools": "^2.2.2",
 		"@tsconfig/node18": "^18.2.4",
 		"@types/ejson": "^2.2.2",
-		"@types/node": "^18.19.81",
-		"eslint": "^9.22.0",
+		"@types/node": "^18.19.84",
+		"eslint": "^9.23.0",
 		"json-schema-to-typescript": "^15.0.4",
 		"prettier": "^3.5.3",
 		"typedoc": "^0.27.9",
 		"typescript": "~5.7.3",
-		"typescript-eslint": "^8.27.0",
+		"typescript-eslint": "^8.28.0",
 		"vitest": "^3.0.9",
 		"vitest-mock-extended": "^3.0.1"
 	},
-	"packageManager": "yarn@4.6.0"
+	"packageManager": "yarn@4.8.0"
 }
