@@ -28,7 +28,8 @@ import type {
 	UpdateActionInstancesMessage,
 	UpdateConfigAndLabelMessage,
 	UpdateFeedbackInstancesMessage,
-	VariablesChangedMessage,
+	UpgradeActionAndFeedbackInstancesMessage,
+	UpgradeActionAndFeedbackInstancesResponse,
 } from '../host-api/api.js'
 import { literal } from '../util.js'
 import type { InstanceBaseShared } from '../instance-base.js'
@@ -116,12 +117,13 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				executeAction: this._handleExecuteAction.bind(this),
 				updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
 				updateActions: this._handleUpdateActions.bind(this),
+				upgradeActionsAndFeedbacks: this._handleUpgradeActionsAndFeedbacks.bind(this),
 				getConfigFields: this._handleGetConfigFields.bind(this),
 				handleHttpRequest: this._handleHttpRequest.bind(this),
 				learnAction: this._handleLearnAction.bind(this),
 				learnFeedback: this._handleLearnFeedback.bind(this),
 				startStopRecordActions: this._handleStartStopRecordActions.bind(this),
-				variablesChanged: this._handleVariablesChanged.bind(this),
+				variablesChanged: async () => undefined, // Not needed since 1.12.0
 				sharedUdpSocketMessage: this._handleSharedUdpSocketMessage.bind(this),
 				sharedUdpSocketError: this._handleSharedUdpSocketError.bind(this),
 			},
@@ -158,8 +160,6 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		return this.#lifecycleQueue.add(async () => {
 			if (this.#initialized) throw new Error('Already initialized')
 
-			const actions = msg.actions
-			const feedbacks = msg.feedbacks
 			this.#lastConfig = msg.config as TConfig
 			this.#label = msg.label
 
@@ -180,24 +180,17 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			}
 
 			/**
-			 * Performing upgrades during init requires a fair chunk of work.
-			 * Some actions/feedbacks will be using the upgradeIndex of the instance, but some may have their own upgradeIndex on themselves if they are from an import.
+			 * Making this handle actions/feedbacks is hard now due to the structure of options, so instead we just upgrade the config, and the actions/feedbacks will be handled in their own calls soon after this
 			 */
-			const { updatedActions, updatedFeedbacks, updatedConfig } = runThroughUpgradeScripts(
-				actions,
-				feedbacks,
+			const { updatedConfig } = runThroughUpgradeScripts(
+				[],
+				[],
 				msg.lastUpgradeIndex,
 				this.#upgradeScripts,
 				this.#lastConfig,
 				false,
 			)
 			this.#lastConfig = (updatedConfig as TConfig | undefined) ?? this.#lastConfig
-
-			// Send the upgraded data back to companion now. Just so that if the init crashes, this doesnt have to be repeated
-			const pSendUpgrade = this.#ipcWrapper.sendWithCb('upgradedItems', {
-				updatedActions,
-				updatedFeedbacks,
-			})
 
 			// Now we can initialise the module
 			try {
@@ -207,20 +200,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			} catch (e) {
 				console.trace(`Init failed: ${e}`)
 				throw e
-			} finally {
-				// Only now do we need to await the upgrade
-				await pSendUpgrade
 			}
-
-			setImmediate(() => {
-				// Subscribe all of the actions and feedbacks
-				this._handleUpdateActions({ actions }, true).catch((e) => {
-					this.log('error', `Receive actions failed: ${e}`)
-				})
-				this._handleUpdateFeedbacks({ feedbacks }, true).catch((e) => {
-					this.log('error', `Receive feedbacks failed: ${e}`)
-				})
-			})
 
 			return {
 				hasHttpHandler: typeof this.handleHttpRequest === 'function',
@@ -253,37 +233,16 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		return this.#actionManager.handleExecuteAction(msg)
 	}
 
-	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
-		// Run through upgrade scripts if needed
-		if (!skipUpgrades) {
-			const res = runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, this.#lastConfig, true)
-			this.#ipcWrapper
-				.sendWithCb('upgradedItems', {
-					updatedActions: res.updatedActions,
-					updatedFeedbacks: res.updatedFeedbacks,
-				})
-				.catch((e) => {
-					this.log('error', `Failed to save upgraded feedbacks: ${e}`)
-				})
-		}
-
+	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage): Promise<void> {
 		this.#feedbackManager.handleUpdateFeedbacks(msg.feedbacks)
 	}
-	private async _handleUpdateActions(msg: UpdateActionInstancesMessage, skipUpgrades?: boolean): Promise<void> {
-		// Run through upgrade scripts if needed
-		if (!skipUpgrades) {
-			const res = runThroughUpgradeScripts(msg.actions, {}, null, this.#upgradeScripts, this.#lastConfig, true)
-			this.#ipcWrapper
-				.sendWithCb('upgradedItems', {
-					updatedActions: res.updatedActions,
-					updatedFeedbacks: res.updatedFeedbacks,
-				})
-				.catch((e) => {
-					this.log('error', `Failed to save upgraded actions: ${e}`)
-				})
-		}
-
+	private async _handleUpdateActions(msg: UpdateActionInstancesMessage): Promise<void> {
 		this.#actionManager.handleUpdateActions(msg.actions)
+	}
+	private async _handleUpgradeActionsAndFeedbacks(
+		msg: UpgradeActionAndFeedbackInstancesMessage,
+	): Promise<UpgradeActionAndFeedbackInstancesResponse> {
+		return runThroughUpgradeScripts(msg.actions, msg.feedbacks, null, this.#upgradeScripts, this.#lastConfig, true)
 	}
 
 	private async _handleGetConfigFields(_msg: GetConfigFieldsMessage): Promise<GetConfigFieldsResponseMessage> {
@@ -326,10 +285,6 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		this.#recordingActions = msg.recording
 
 		this.handleStartStopRecordActions(this.#recordingActions)
-	}
-
-	private async _handleVariablesChanged(msg: VariablesChangedMessage): Promise<void> {
-		this.#feedbackManager.handleVariablesChanged(msg)
 	}
 
 	private async _handleSharedUdpSocketMessage(msg: SharedUdpSocketMessage): Promise<void> {
