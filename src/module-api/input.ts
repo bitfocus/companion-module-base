@@ -96,7 +96,7 @@ export interface CompanionInputFieldColor extends CompanionInputFieldBase {
 	/**
 	 * The default color value to set when creating this action/feedback/instance
 	 * Can be a color string or a color number
-	 * Valid strings are CSS color strings in Hex, RGB, HSL or HSV notation with ot without alpha
+	 * Valid strings are CSS color strings in Hex, RGB, HSL or HSV notation with or without alpha
 	 * Valid numbers are 0x0 - 0xffffffff, where the components are ttrrggbb, you can generate the number with combineRgb()
 	 *
 	 * ### Examples for red
