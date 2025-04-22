@@ -209,6 +209,7 @@ export class ActionManager {
 					options: serializeIsVisibleFn(action.options),
 					hasLearn: !!action.learn,
 					learnTimeout: action.learnTimeout,
+					hasLifecycleFunctions: !!action.subscribe || !!action.unsubscribe,
 				})
 
 				// Remember the definition locally

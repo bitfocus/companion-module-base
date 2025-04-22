@@ -117,6 +117,7 @@ export interface SetActionDefinitionsMessage {
 		options: EncodeIsVisible<SomeCompanionActionInputField>[] // TODO module-lib - versioned types?
 		hasLearn: boolean
 		learnTimeout: number | undefined
+		hasLifecycleFunctions: boolean // Since 1.12.0
 	}>
 }
 
