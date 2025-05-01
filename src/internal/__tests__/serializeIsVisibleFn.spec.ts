@@ -60,7 +60,7 @@ describe('serializeIsVisibleFn', () => {
 		]
 
 		const res = serializeIsVisibleFn(input)
-		expect(res).toEqual(input.map((field) => omit(field, 'isVisibleExpression', 'isVisibleFn')))
+		expect(res).toEqual(input.map((field) => omit(field, 'isVisibleExpression', 'isVisibleFn', 'isVisible')))
 	})
 
 	test('mixed valid', () => {
