@@ -188,10 +188,4 @@ export function substituteEscapeCharacters(msg: string): string {
 	return message
 }
 
-export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
-export type MakeExpressionable<T extends { type: string } /*TSkip extends keyof T = 'type'*/> = {
-	[P in keyof Omit<T, 'id'>]: P extends 'type' ? T[P] : ExpressionOrValue<T[P]>
-}
-
 export type OptionsObject = { [key: string]: InputValue | undefined }
-export type RawOptionsObject = { [key: string]: ExpressionOrValue<InputValue> | undefined }

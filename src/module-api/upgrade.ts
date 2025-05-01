@@ -1,6 +1,5 @@
-import type { ExpressionOrValue } from '../util.js'
 import type { CompanionFeedbackButtonStyleResult } from './feedback.js'
-import type { InputValue } from './input.js'
+import type { OptionsObject } from '../util.js'
 
 /** Additional utilities for Upgrade Scripts */
 export interface CompanionUpgradeContext<TConfig> {
@@ -55,10 +54,6 @@ export type CompanionStaticUpgradeScript<TConfig> = (
 	props: CompanionStaticUpgradeProps<TConfig>,
 ) => CompanionStaticUpgradeResult<TConfig>
 
-export type CompanionMigrationOptionValues = {
-	[key: string]: ExpressionOrValue<InputValue> | undefined
-}
-
 /**
  * An action that could be upgraded
  */
@@ -71,7 +66,7 @@ export interface CompanionMigrationAction {
 	/** The id of the action definition */
 	actionId: string
 	/** The user selected options for the action */
-	options: CompanionMigrationOptionValues
+	options: OptionsObject
 }
 
 /**
@@ -86,7 +81,7 @@ export interface CompanionMigrationFeedback {
 	/** The id of the feedback definition */
 	feedbackId: string
 	/** The user selected options for the feedback */
-	options: CompanionMigrationOptionValues
+	options: OptionsObject
 
 	/**
 	 * If the feedback is being converted to a boolean feedback, the style can be set here.

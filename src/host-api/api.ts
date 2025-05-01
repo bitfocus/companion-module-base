@@ -46,7 +46,7 @@ export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	/**
 	 * @deprecated Replaced with explicit upgrade call in 1.12.0
 	 * The connection has upgraded some actions/feedbacks it has been informed about to a new version of its definitions
-	 */ // TODO - confirm version
+	 */
 	upgradedItems: (msg: UpgradedDataResponseMessage) => void
 	/** When the action-recorder is running, the module has recorded an action to add to the recorded stack */
 	recordAction: (msg: RecordActionMessage) => never
@@ -294,12 +294,12 @@ export interface UpdateActionInstancesMessage {
 }
 
 export interface UpgradeActionInstance extends Omit<ActionInstanceBase, 'options'> {
-	options: RawOptionsObject
+	options: OptionsObject
 
 	controlId: string
 }
 export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'options'> {
-	options: RawOptionsObject
+	options: OptionsObject
 
 	isInverted: boolean
 
