@@ -128,7 +128,6 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 				init: this._handleInit.bind(this),
 				destroy: this._handleDestroy.bind(this),
 				updateConfigAndLabel: this._handleConfigUpdateAndLabel.bind(this),
-				updateConfig: async () => undefined, // Replaced by updateConfigAndLabel
 				executeAction: this._handleExecuteAction.bind(this),
 				updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
 				updateActions: this._handleUpdateActions.bind(this),
@@ -138,7 +137,6 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 				learnAction: this._handleLearnAction.bind(this),
 				learnFeedback: this._handleLearnFeedback.bind(this),
 				startStopRecordActions: this._handleStartStopRecordActions.bind(this),
-				variablesChanged: async () => undefined, // Not needed since 1.13.0
 				sharedUdpSocketMessage: this._handleSharedUdpSocketMessage.bind(this),
 				sharedUdpSocketError: this._handleSharedUdpSocketError.bind(this),
 			},
