@@ -17,6 +17,8 @@ import type {
 	LearnFeedbackResponseMessage,
 	LogMessageMessage,
 	ModuleToHostEventsV0,
+	ParseVariablesInStringMessage,
+	ParseVariablesInStringResponseMessage,
 	SendOscMessage,
 	SetPresetDefinitionsMessage,
 	SetStatusMessage,
@@ -136,14 +138,26 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			this.#ipcWrapper.receivedMessage(msg as any)
 		})
 
+		const parseVariablesInStringIfNeeded = async (
+			msg: ParseVariablesInStringMessage,
+		): Promise<ParseVariablesInStringResponseMessage> => {
+			// Shortcut in case there is definitely nothing to parse
+			if (!msg.text.includes('${'))
+				return {
+					text: msg.text,
+					variableIds: undefined,
+				}
+			return this.#ipcWrapper.sendWithCb('parseVariablesInString', msg)
+		}
+
 		this.#actionManager = new ActionManager(
-			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
+			parseVariablesInStringIfNeeded,
 			(msg) => this.#ipcWrapper.sendWithNoCb('setActionDefinitions', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('setCustomVariable', msg),
 			this.log.bind(this),
 		)
 		this.#feedbackManager = new FeedbackManager(
-			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
+			parseVariablesInStringIfNeeded,
 			(msg) => this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', msg),
 			this.log.bind(this),
@@ -490,6 +504,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				`parseVariablesInString called while in: ${currentContext}. You should use the parseVariablesInString provided to the callback instead`,
 			)
 		}
+
+		// If there are no variables, just return the text
+		if (!text.includes('${')) return text
 
 		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
 			text: text,
