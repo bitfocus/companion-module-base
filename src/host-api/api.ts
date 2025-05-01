@@ -41,14 +41,9 @@ export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	'send-osc': (msg: SendOscMessage) => never
 	/**
 	 * Parse the variables in a string of text.
-	 * This has been semi depricated in favor of the companion parsing the options before the module.
+	 * This has been semi deprecated in favor of the companion parsing the options before the module.
 	 */
 	parseVariablesInString: (msg: ParseVariablesInStringMessage) => ParseVariablesInStringResponseMessage
-	/**
-	 * @deprecated Replaced with explicit upgrade call in 1.13.0
-	 * The connection has upgraded some actions/feedbacks it has been informed about to a new version of its definitions
-	 */ // TODO - confirm version
-	upgradedItems: (msg: UpgradedDataResponseMessage) => void
 	/** When the action-recorder is running, the module has recorded an action to add to the recorded stack */
 	recordAction: (msg: RecordActionMessage) => never
 	/**
@@ -68,11 +63,6 @@ export interface HostToModuleEventsV0 extends HostToModuleEventsV0SharedSocket {
 	init: (msg: InitMessage) => InitResponseMessage
 	/** Cleanup the connection in preparation for the thread/process to be terminated */
 	destroy: (msg: Record<string, never>) => void
-	/**
-	 * @deprecated Replaced with updateConfigAndLabel in 1.2.0
-	 * This is the same as `updateConfigAndLabel` but without the label
-	 */
-	updateConfig: (config: unknown) => void
 	/** The connection config or label has been updated by the user */
 	updateConfigAndLabel: (msg: UpdateConfigAndLabelMessage) => void
 	/**
@@ -117,11 +107,6 @@ export interface HostToModuleEventsV0 extends HostToModuleEventsV0SharedSocket {
 	 * This allows users to record macros of actions for their device by changing properties on the device itself.
 	 */
 	startStopRecordActions: (msg: StartStopRecordActionsMessage) => void
-	/**
-	 * @deprecated Replaced by companion parsing the options before the module in 1.13.0
-	 * Prior to 1.13.0, this would notify the module that a variable it had parsed during a feedback had changed and let it re-run the feedback
-	 */
-	variablesChanged: (msg: VariablesChangedMessage) => never
 }
 export interface HostToModuleEventsV0SharedSocket {
 	sharedUdpSocketMessage: (msg: SharedUdpSocketMessage) => never
@@ -140,11 +125,6 @@ export interface InitMessage {
 	secrets: unknown
 
 	lastUpgradeIndex: number
-
-	/** @deprecated not populated/used since 1.13.0 */
-	feedbacks: { [id: string]: FeedbackInstance | undefined }
-	/** @deprecated not populated/used since 1.13.0 */
-	actions: { [id: string]: ActionInstance | undefined }
 }
 export interface InitResponseMessage {
 	hasHttpHandler: boolean
