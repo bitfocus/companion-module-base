@@ -7,7 +7,7 @@ import {
 	CompanionStaticUpgradeScript,
 } from '../../module-api/upgrade.js'
 import { runThroughUpgradeScripts } from '../upgrade.js'
-import { ActionInstance, UpgradeActionInstance } from '../../host-api/api.js'
+import { UpgradeActionInstance } from '../../host-api/api.js'
 
 type MockUpgradeScript<TConfig> = Mock<CompanionStaticUpgradeScript<TConfig>>
 
@@ -144,8 +144,8 @@ describe('runThroughUpgradeScripts', () => {
 			disabled: false,
 			actionId: 'my-action',
 			options: {
-				a: { value: 1, isExpression: false },
-				b: { value: 2, isExpression: false },
+				a: 1,
+				b: 2,
 			},
 			controlId: 'control0',
 		}
@@ -155,8 +155,8 @@ describe('runThroughUpgradeScripts', () => {
 			disabled: false,
 			actionId: 'my-action',
 			options: {
-				c: { value: 1, isExpression: false },
-				d: { value: 2, isExpression: false },
+				c: 1,
+				d: 2,
 			},
 			controlId: 'control1',
 		}
@@ -212,8 +212,8 @@ describe('runThroughUpgradeScripts', () => {
 			disabled: false,
 			actionId: 'my-action',
 			options: {
-				a: { value: 1, isExpression: false },
-				b: { value: 2, isExpression: false },
+				a: 1,
+				b: 2,
 			},
 			controlId: 'control0',
 		}
@@ -223,8 +223,8 @@ describe('runThroughUpgradeScripts', () => {
 			disabled: false,
 			actionId: 'my-action',
 			options: {
-				c: { value: 1, isExpression: false },
-				d: { value: 2, isExpression: false },
+				c: 1,
+				d: 2,
 			},
 			controlId: 'control1',
 		}

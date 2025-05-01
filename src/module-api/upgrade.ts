@@ -189,13 +189,13 @@ export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig = unknow
 			delete feedback.options[propertyName]
 
 			// Interpret it to a boolean, it could be stored in a few ways
-			if (rawValue.isExpression) {
-				feedback.isInverted =
-					rawValue.value === 'true' || Boolean(rawValue.value) === true || Number(rawValue.value) > 0
-			} else {
-				// We can't fix this case for them
-				feedback.isInverted = false
-			}
+			feedback.isInverted = rawValue === 'true' || Boolean(rawValue) === true || Number(rawValue) > 0
+			// if (!rawValue.isExpression) {
+			// feedback.isInverted = rawValue.value === 'true' || Boolean(rawValue.value) === true || Number(rawValue.value) > 0
+			// } else {
+			// 	// We can't fix this case for them
+			// 	feedback.isInverted = false
+			// }
 
 			changedFeedbacks.push(feedback)
 		}
