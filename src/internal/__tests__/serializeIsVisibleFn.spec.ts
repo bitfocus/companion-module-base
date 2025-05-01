@@ -38,24 +38,6 @@ describe('serializeIsVisibleFn', () => {
 				label: 'Test',
 				isVisibleExpression: () => true as any,
 			},
-			{
-				id: 'test',
-				type: 'textinput',
-				label: 'Test',
-				isVisible: true as any,
-			},
-			{
-				id: 'test',
-				type: 'textinput',
-				label: 'Test',
-				isVisible: 'true' as any,
-			},
-			{
-				id: 'test',
-				type: 'textinput',
-				label: 'Test',
-				isVisible: null as any,
-			},
 		]
 
 		const res = serializeIsVisibleFn(input)
@@ -76,18 +58,6 @@ describe('serializeIsVisibleFn', () => {
 				label: 'Test',
 				isVisibleExpression: 'abc',
 			},
-			{
-				id: 'test',
-				type: 'textinput',
-				label: 'Test',
-				isVisible: () => true,
-			},
-			{
-				id: 'test',
-				type: 'textinput',
-				label: 'Test',
-				isVisible: () => !!expected,
-			},
 		]
 
 		const expected: EncodeIsVisible<CompanionInputFieldBase>[] = [
@@ -104,20 +74,6 @@ describe('serializeIsVisibleFn', () => {
 				label: 'Test',
 				isVisibleFn: 'abc',
 				isVisibleFnType: 'expression',
-			},
-			{
-				id: 'test',
-				type: 'textinput',
-				label: 'Test',
-				isVisibleFn: '() => true',
-				isVisibleFnType: 'function',
-			},
-			{
-				id: 'test',
-				type: 'textinput',
-				label: 'Test',
-				isVisibleFn: '() => !!expected',
-				isVisibleFnType: 'function',
 			},
 		]
 

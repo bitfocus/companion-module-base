@@ -128,9 +128,9 @@ export interface HostToModuleEventsV0SharedSocket {
 	sharedUdpSocketError: (msg: SharedUdpSocketError) => never
 }
 
-export type EncodeIsVisible<T extends CompanionInputFieldBase> = Omit<T, 'isVisible' | 'isVisibleExpression'> & {
+export type EncodeIsVisible<T extends CompanionInputFieldBase> = Omit<T, 'isVisibleExpression'> & {
 	isVisibleFn?: string
-	isVisibleFnType?: 'function' | 'expression'
+	isVisibleFnType?: 'expression'
 }
 
 export interface InitMessage {
