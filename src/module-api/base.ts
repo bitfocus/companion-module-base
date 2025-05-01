@@ -489,6 +489,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	/**
+	 * @deprecated Companion now handles this for you, for actions and feedbacks. If you need this for another purpose, let us know as we intend to remove this
+	 *
 	 * Parse and replace all the variables in a string
 	 * Note: You must not use this for feedbacks, as your feedback will not update when the variable changes.
 	 * There is an alternate version of this supplied to each of the action/feedback callbacks that tracks
