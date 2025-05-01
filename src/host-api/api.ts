@@ -15,7 +15,7 @@ import type { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/
 import type { SomeCompanionActionInputField } from '../module-api/action.js'
 import type { CompanionVariableValue } from '../module-api/variable.js'
 import type { RemoteInfo } from 'dgram'
-import type { OptionsObject } from '../util.js'
+import type { OptionsObject, RawOptionsObject } from '../util.js'
 
 export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	/** The connection has a message for the Companion log */
@@ -46,7 +46,7 @@ export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	/**
 	 * @deprecated Replaced with explicit upgrade call in 1.12.0
 	 * The connection has upgraded some actions/feedbacks it has been informed about to a new version of its definitions
-	 */
+	 */ // TODO - confirm version
 	upgradedItems: (msg: UpgradedDataResponseMessage) => void
 	/** When the action-recorder is running, the module has recorded an action to add to the recorded stack */
 	recordAction: (msg: RecordActionMessage) => never
@@ -76,13 +76,13 @@ export interface HostToModuleEventsV0 extends HostToModuleEventsV0SharedSocket {
 	updateConfigAndLabel: (msg: UpdateConfigAndLabelMessage) => void
 	/**
 	 * Some feedbacks for this connection have been created/updated/removed. This will start them being executed, watching for state changes in the connection and any referenced variables
-	 * Since 1.12.0, the options will have variables pre-parsed. Subscribe/unsubscribe would be called as needed, and the feedbacks would start to be executed
+	 * Since 1.12.0, the options will have expressions be pre-parsed. Subscribe/unsubscribe would be called as needed, and the feedbacks would start to be executed
 	 * Prior to 1.12.0, this would also run upgrade scripts on the feedbacks
 	 */
 	updateFeedbacks: (msg: UpdateFeedbackInstancesMessage) => void
 	/**
 	 * Some actions for this connection have been created/updated/removed
-	 * Since 1.12.0, the options will have variables pre-parsed. Subscribe/unsubscribe would be called as needed
+	 * Since 1.12.0, the options will have expressions be pre-parsed. Subscribe/unsubscribe would be called as needed
 	 * Prior to 1.12.0, this would also run upgrade scripts on the actions
 	 */
 	updateActions: (msg: UpdateActionInstancesMessage) => void
@@ -295,12 +295,12 @@ export interface UpdateActionInstancesMessage {
 }
 
 export interface UpgradeActionInstance extends Omit<ActionInstanceBase, 'options'> {
-	options: OptionsObject
+	options: RawOptionsObject
 
 	controlId: string
 }
 export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'options'> {
-	options: OptionsObject
+	options: RawOptionsObject
 
 	isInverted: boolean
 
