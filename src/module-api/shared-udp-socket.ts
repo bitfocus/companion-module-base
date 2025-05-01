@@ -5,7 +5,7 @@ import type {
 	HostToModuleEventsV0SharedSocket,
 } from '../host-api/api.js'
 import type { IpcWrapper } from '../host-api/ipc-wrapper.js'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'events'
 import { assertNever } from '../util.js'
 
 export interface SharedUdpSocketEvents {

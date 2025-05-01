@@ -12,14 +12,6 @@ export function serializeIsVisibleFn<T extends CompanionInputFieldBase>(options:
 				isVisible: undefined,
 				isVisibleExpression: undefined,
 			}
-		} else if ('isVisible' in option && typeof option.isVisible === 'function') {
-			return {
-				...option,
-				isVisibleFn: option.isVisible.toString(),
-				isVisibleFnType: 'function',
-				isVisible: undefined,
-				isVisibleExpression: undefined,
-			}
 		}
 
 		// ignore any existing `isVisibleFn` to avoid code injection

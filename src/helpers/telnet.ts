@@ -15,7 +15,7 @@
  *
  */
 
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'events'
 import { Transform, TransformCallback, TransformOptions } from 'stream'
 import { TCPHelper, TCPHelperEvents, TCPHelperOptions } from './tcp.js'
 

@@ -15,7 +15,7 @@ import type { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/
 import type { SomeCompanionActionInputField } from '../module-api/action.js'
 import type { CompanionVariableValue } from '../module-api/variable.js'
 import type { RemoteInfo } from 'dgram'
-import type { OptionsObject } from '../util.js'
+import type { OptionsObject, RawOptionsObject } from '../util.js'
 
 export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	/** The connection has a message for the Companion log */
@@ -43,11 +43,6 @@ export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	 * This has been semi depricated in favor of the companion parsing the options before the module.
 	 */
 	parseVariablesInString: (msg: ParseVariablesInStringMessage) => ParseVariablesInStringResponseMessage
-	/**
-	 * @deprecated Replaced with explicit upgrade call in 1.12.0
-	 * The connection has upgraded some actions/feedbacks it has been informed about to a new version of its definitions
-	 */
-	upgradedItems: (msg: UpgradedDataResponseMessage) => void
 	/** When the action-recorder is running, the module has recorded an action to add to the recorded stack */
 	recordAction: (msg: RecordActionMessage) => never
 	/**
@@ -67,22 +62,17 @@ export interface HostToModuleEventsV0 extends HostToModuleEventsV0SharedSocket {
 	init: (msg: InitMessage) => InitResponseMessage
 	/** Cleanup the connection in preparation for the thread/process to be terminated */
 	destroy: (msg: Record<string, never>) => void
-	/**
-	 * @deprecated Replaced with updateConfigAndLabel in 1.2.0
-	 * This is the same as `updateConfigAndLabel` but without the label
-	 */
-	updateConfig: (config: unknown) => void
 	/** The connection config or label has been updated by the user */
 	updateConfigAndLabel: (msg: UpdateConfigAndLabelMessage) => void
 	/**
 	 * Some feedbacks for this connection have been created/updated/removed. This will start them being executed, watching for state changes in the connection and any referenced variables
-	 * Since 1.12.0, the options will have variables pre-parsed. Subscribe/unsubscribe would be called as needed, and the feedbacks would start to be executed
+	 * Since 1.12.0, the options will have expressions be pre-parsed. Subscribe/unsubscribe would be called as needed, and the feedbacks would start to be executed
 	 * Prior to 1.12.0, this would also run upgrade scripts on the feedbacks
 	 */
 	updateFeedbacks: (msg: UpdateFeedbackInstancesMessage) => void
 	/**
 	 * Some actions for this connection have been created/updated/removed
-	 * Since 1.12.0, the options will have variables pre-parsed. Subscribe/unsubscribe would be called as needed
+	 * Since 1.12.0, the options will have expressions be pre-parsed. Subscribe/unsubscribe would be called as needed
 	 * Prior to 1.12.0, this would also run upgrade scripts on the actions
 	 */
 	updateActions: (msg: UpdateActionInstancesMessage) => void
@@ -116,20 +106,15 @@ export interface HostToModuleEventsV0 extends HostToModuleEventsV0SharedSocket {
 	 * This allows users to record macros of actions for their device by changing properties on the device itself.
 	 */
 	startStopRecordActions: (msg: StartStopRecordActionsMessage) => void
-	/**
-	 * @deprecated Replaced by companion parsing the options before the module in 1.12?.0
-	 * Prior to 1.12.0, this would notify the module that a variable it had parsed during a feedback had changed and let it re-run the feedback
-	 */
-	variablesChanged: (msg: VariablesChangedMessage) => never
 }
 export interface HostToModuleEventsV0SharedSocket {
 	sharedUdpSocketMessage: (msg: SharedUdpSocketMessage) => never
 	sharedUdpSocketError: (msg: SharedUdpSocketError) => never
 }
 
-export type EncodeIsVisible<T extends CompanionInputFieldBase> = Omit<T, 'isVisible' | 'isVisibleExpression'> & {
+export type EncodeIsVisible<T extends CompanionInputFieldBase> = Omit<T, 'isVisibleExpression'> & {
 	isVisibleFn?: string
-	isVisibleFnType?: 'function' | 'expression'
+	isVisibleFnType?: 'expression'
 }
 
 export interface InitMessage {
@@ -138,11 +123,6 @@ export interface InitMessage {
 	config: unknown
 
 	lastUpgradeIndex: number
-
-	/** @deprecated not populated since 1.12.0 */
-	feedbacks: { [id: string]: FeedbackInstance | undefined }
-	/** @deprecated not populated since 1.12.0 */
-	actions: { [id: string]: ActionInstance | undefined }
 }
 export interface InitResponseMessage {
 	hasHttpHandler: boolean
@@ -295,12 +275,12 @@ export interface UpdateActionInstancesMessage {
 }
 
 export interface UpgradeActionInstance extends Omit<ActionInstanceBase, 'options'> {
-	options: OptionsObject
+	options: RawOptionsObject
 
 	controlId: string
 }
 export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'options'> {
-	options: OptionsObject
+	options: RawOptionsObject
 
 	isInverted: boolean
 
