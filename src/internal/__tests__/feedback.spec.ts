@@ -399,6 +399,175 @@ describe('FeedbackManager', () => {
 				],
 			})
 		})
+
+		it('on unrelated variables change', async () => {
+			// make sure it didnt want to rerun by itself
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
+			expect(mockDefinition2.callback).toHaveBeenCalledTimes(0)
+
+			// check all
+			manager.handleVariablesChanged({
+				variablesIds: ['not-used'],
+			})
+
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
+			expect(mockDefinition2.callback).toHaveBeenCalledTimes(0)
+		})
+	})
+
+	describe('variables change', () => {
+		const mockParseVariables = vi.fn(async (msg: ParseVariablesInStringMessage) =>
+			literal<ParseVariablesInStringResponseMessage>({
+				text: `res - ${msg.text}`,
+				variableIds: ['all', `var-${msg.text}`],
+			}),
+		)
+		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
+		const manager = new FeedbackManager(
+			mockParseVariables,
+			mockUpdateFeedbackValues,
+			mockSetFeedbackDefinitions,
+			mockLogger,
+		)
+
+		const mockDefinition: CompanionFeedbackDefinition = {
+			type: 'boolean',
+			name: 'Definition0',
+			defaultStyle: {},
+			options: [],
+			callback: vi.fn(async (fb, ctx) => {
+				await ctx.parseVariablesInString(fb.id)
+				return false
+			}),
+		}
+		const mockDefinition2: CompanionFeedbackDefinition = {
+			type: 'advanced',
+			name: 'Definition2',
+			options: [],
+			callback: vi.fn(async (fb, ctx) => {
+				await ctx.parseVariablesInString(fb.id)
+				return {}
+			}),
+		}
+
+		beforeAll(async () => {
+			expect(manager.getDefinitionIds()).toHaveLength(0)
+			expect(manager.getInstanceIds()).toHaveLength(0)
+
+			// setup definition
+			manager.setFeedbackDefinitions({
+				[mockDefinitionId]: mockDefinition,
+				[mockDefinitionId2]: mockDefinition2,
+			})
+			expect(manager.getDefinitionIds()).toEqual([mockDefinitionId, mockDefinitionId2])
+			expect(mockSetFeedbackDefinitions).toHaveBeenCalledTimes(1)
+
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
+
+			// report a feedback
+			manager.handleUpdateFeedbacks({
+				[feedbackId]: feedback,
+				[feedbackId2]: feedback2,
+			})
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(1)
+			expect(mockDefinition2.callback).toHaveBeenCalledTimes(1)
+
+			expect(manager.getInstanceIds()).toEqual([feedbackId, feedbackId2])
+
+			expect(mockParseVariables).toHaveBeenCalledTimes(2)
+			expect(mockParseVariables).toHaveBeenCalledWith({
+				text: 'abc123',
+				controlId: 'control1',
+				actionInstanceId: undefined,
+				feedbackInstanceId: 'abc123',
+			})
+			expect(mockParseVariables).toHaveBeenCalledWith({
+				text: 'abcdef',
+				controlId: 'control0',
+				actionInstanceId: undefined,
+				feedbackInstanceId: 'abcdef',
+			})
+		})
+
+		beforeEach(() => {
+			vi.clearAllMocks()
+		})
+
+		it('on unrelated variables change', async () => {
+			// make sure it didnt want to rerun by itself
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
+			expect(mockDefinition2.callback).toHaveBeenCalledTimes(0)
+
+			// check all
+			manager.handleVariablesChanged({
+				variablesIds: ['var-unused'],
+			})
+
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
+			expect(mockDefinition2.callback).toHaveBeenCalledTimes(0)
+		})
+
+		it('on variable change', async () => {
+			// make sure it didnt want to rerun by itself
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
+			expect(mockDefinition2.callback).toHaveBeenCalledTimes(0)
+
+			// check all
+			manager.handleVariablesChanged({
+				variablesIds: ['var-abcdef'],
+			})
+
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(1)
+			expect(mockDefinition2.callback).toHaveBeenCalledTimes(0)
+
+			// check it reparsed the variables
+			expect(mockParseVariables).toBeCalledTimes(1)
+			expect(mockParseVariables).toHaveBeenLastCalledWith({
+				text: 'abcdef',
+				controlId: 'control0',
+				actionInstanceId: undefined,
+				feedbackInstanceId: 'abcdef',
+			})
+		})
+
+		it('on variable change for all', async () => {
+			// make sure it didnt want to rerun by itself
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
+			expect(mockDefinition2.callback).toHaveBeenCalledTimes(0)
+
+			// check all
+			manager.handleVariablesChanged({
+				variablesIds: ['all'],
+			})
+
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(1)
+			expect(mockDefinition2.callback).toHaveBeenCalledTimes(1)
+
+			// check it reparsed the variables
+			expect(mockParseVariables).toBeCalledTimes(2)
+			expect(mockParseVariables).toHaveBeenCalledWith({
+				text: 'abc123',
+				controlId: 'control1',
+				actionInstanceId: undefined,
+				feedbackInstanceId: 'abc123',
+			})
+			expect(mockParseVariables).toHaveBeenCalledWith({
+				text: 'abcdef',
+				controlId: 'control0',
+				actionInstanceId: undefined,
+				feedbackInstanceId: 'abcdef',
+			})
+		})
 	})
 
 	describe('check while being checked', () => {
@@ -547,6 +716,101 @@ describe('FeedbackManager', () => {
 			// trigger it to be checked again
 			waitForManualResolve = false
 			manager.checkFeedbacks([])
+
+			// make sure the second doesnt start by itself
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(1)
+
+			// let it complete now
+			setImmediate(() => nextResolve!())
+			await runAllTimers()
+			await runAllTimers()
+
+			// make sure it ran twice
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(2)
+			expect(nextResolve).toBeFalsy()
+
+			// check the value sent to the client
+			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(2)
+		})
+
+		it('variable changed while frozen', async () => {
+			// make sure it didnt want to rerun by itself
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
+
+			waitForManualResolve = true
+
+			// check all
+			manager.handleVariablesChanged({
+				variablesIds: ['all'],
+			})
+
+			// make sure it hasnt completed yet
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(1)
+			expect(nextResolve).toBeTruthy()
+			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(0)
+
+			// trigger it to be checked again
+			waitForManualResolve = false
+			manager.handleVariablesChanged({
+				variablesIds: ['all'],
+			})
+
+			// make sure the second doesnt start by itself
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(1)
+
+			// let it complete now
+			setImmediate(() => nextResolve!())
+			await runAllTimers()
+			await runAllTimers()
+
+			// make sure it ran twice
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(2)
+			expect(nextResolve).toBeFalsy()
+
+			// check the value sent to the client
+			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(2)
+		})
+
+		it('variables used by feedback change and those change while its running', async () => {
+			// make sure it didnt want to rerun by itself
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
+
+			// make sure feedback doesnt recheck from this special var
+			manager.handleVariablesChanged({
+				variablesIds: ['different'],
+			})
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
+
+			// change what variables will be found
+			mockParseVariables.mockImplementationOnce(async (_msg: ParseVariablesInStringMessage) =>
+				literal<ParseVariablesInStringResponseMessage>({
+					text: `res - tmp`,
+					variableIds: ['all', `different`],
+				}),
+			)
+
+			waitForManualResolve = true
+
+			// check all
+			manager.checkFeedbacks([])
+
+			// make sure it hasnt completed yet
+			await runAllTimers()
+			expect(mockDefinition.callback).toHaveBeenCalledTimes(1)
+			expect(nextResolve).toBeTruthy()
+			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(0)
+
+			// trigger it to be checked again, with the newly dependent variable
+			waitForManualResolve = false
+			manager.handleVariablesChanged({
+				variablesIds: ['different'],
+			})
 
 			// make sure the second doesnt start by itself
 			await runAllTimers()
