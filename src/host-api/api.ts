@@ -9,27 +9,51 @@ import type { CompanionFeedbackButtonStyleResult, SomeCompanionFeedbackInputFiel
 import type { OSCSomeArguments } from '../common/osc.js'
 import type { SomeCompanionConfigField } from '../module-api/config.js'
 import type { LogLevel, InstanceStatus } from '../module-api/enums.js'
-import type { InputValue, CompanionOptionValues, CompanionInputFieldBase } from '../module-api/input.js'
+import type { CompanionOptionValues, CompanionInputFieldBase } from '../module-api/input.js'
 import type { CompanionButtonPresetDefinition, CompanionTextPresetDefinition } from '../module-api/preset.js'
 import type { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http.js'
 import type { SomeCompanionActionInputField } from '../module-api/action.js'
 import type { CompanionVariableValue } from '../module-api/variable.js'
 import type { RemoteInfo } from 'dgram'
+import type { OptionsObject } from '../util.js'
 
 export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
+	/** The connection has a message for the Companion log */
 	'log-message': (msg: LogMessageMessage) => never
+	/** The connection status has changed */
 	'set-status': (msg: SetStatusMessage) => never
+	/** The actions available in the connection have changed */
 	setActionDefinitions: (msg: SetActionDefinitionsMessage) => never
+	/** The feedbacks available in the connection have changed */
 	setFeedbackDefinitions: (msg: SetFeedbackDefinitionsMessage) => never
+	/** The varaibles available in the connection have changed */
 	setVariableDefinitions: (msg: SetVariableDefinitionsMessage) => never
+	/** The presets provided by the connection have changed */
 	setPresetDefinitions: (msg: SetPresetDefinitionsMessage) => never
+	/** The connection has some new values for variables */
 	setVariableValues: (msg: SetVariableValuesMessage) => never
+	/** The connection has some new values for feedbacks it is running */
 	updateFeedbackValues: (msg: UpdateFeedbackValuesMessage) => never
+	/** The connection has updated its config, which should be persisted */
 	saveConfig: (msg: SaveConfigMessage) => never
+	/** Send an OSC message from the default osc listener in companion */
 	'send-osc': (msg: SendOscMessage) => never
+	/**
+	 * Parse the variables in a string of text.
+	 * This has been semi depricated in favor of the companion parsing the options before the module.
+	 */
 	parseVariablesInString: (msg: ParseVariablesInStringMessage) => ParseVariablesInStringResponseMessage
+	/**
+	 * @deprecated Replaced with explicit upgrade call in 1.13.0
+	 * The connection has upgraded some actions/feedbacks it has been informed about to a new version of its definitions
+	 */
 	upgradedItems: (msg: UpgradedDataResponseMessage) => void
+	/** When the action-recorder is running, the module has recorded an action to add to the recorded stack */
 	recordAction: (msg: RecordActionMessage) => never
+	/**
+	 * The connection has a new value for a custom variable
+	 * Note: This should only be used by a few internal modules, it is not intended for general use
+	 */
 	setCustomVariable: (msg: SetCustomVariableMessage) => never
 }
 export interface ModuleToHostEventsV0SharedSocket {
@@ -39,19 +63,63 @@ export interface ModuleToHostEventsV0SharedSocket {
 }
 
 export interface HostToModuleEventsV0 extends HostToModuleEventsV0SharedSocket {
+	/** Initialise the connection with the given config and label */
 	init: (msg: InitMessage) => InitResponseMessage
+	/** Cleanup the connection in preparation for the thread/process to be terminated */
 	destroy: (msg: Record<string, never>) => void
-	/** @deprecated Replaced with updateConfigAndLabel in 1.2.0 */
+	/**
+	 * @deprecated Replaced with updateConfigAndLabel in 1.2.0
+	 * This is the same as `updateConfigAndLabel` but without the label
+	 */
 	updateConfig: (config: unknown) => void
+	/** The connection config or label has been updated by the user */
 	updateConfigAndLabel: (msg: UpdateConfigAndLabelMessage) => void
+	/**
+	 * Some feedbacks for this connection have been created/updated/removed. This will start them being executed, watching for state changes in the connection and any referenced variables
+	 * Since 1.13.0, the options will have variables pre-parsed. Subscribe/unsubscribe would be called as needed, and the feedbacks would start to be executed
+	 * Prior to 1.13.0, this would also run upgrade scripts on the feedbacks
+	 */
 	updateFeedbacks: (msg: UpdateFeedbackInstancesMessage) => void
+	/**
+	 * Some actions for this connection have been created/updated/removed
+	 * Since 1.13.0, the options will have variables pre-parsed. Subscribe/unsubscribe would be called as needed
+	 * Prior to 1.13.0, this would also run upgrade scripts on the actions
+	 */
 	updateActions: (msg: UpdateActionInstancesMessage) => void
+	/**
+	 * Run the upgrade scripts for the provided actions and feedbacks
+	 * Available since 1.13.0. Prior to this, the upgrade scripts would be run as part of the `updateActions` and `updateFeedbacks` calls
+	 * The options objects provided here are in their 'raw' form, and can contain expressions
+	 */
+	upgradeActionsAndFeedbacks: (
+		msg: UpgradeActionAndFeedbackInstancesMessage,
+	) => UpgradeActionAndFeedbackInstancesResponse
+	/** Execute an action */
 	executeAction: (msg: ExecuteActionMessage) => void
+	/** Get the config fields for this connection */
 	getConfigFields: (msg: GetConfigFieldsMessage) => GetConfigFieldsResponseMessage
+	/** Handle an incoming HTTP request */
 	handleHttpRequest: (msg: HandleHttpRequestMessage) => HandleHttpRequestResponseMessage
+	/**
+	 * Learn the options for an action
+	 * This allows the module to update the options for an action based on the current state of the device
+	 */
 	learnAction: (msg: LearnActionMessage) => LearnActionResponseMessage
+	/**
+	 * Learn the options for an feedback
+	 * This allows the module to update the options for an feedback based on the current state of the device
+	 */
 	learnFeedback: (msg: LearnFeedbackMessage) => LearnFeedbackResponseMessage
+	/**
+	 * Start or stop the action-recorder.
+	 * When running, this lets the connection emit `recordAction` events when the state of the device changes.
+	 * This allows users to record macros of actions for their device by changing properties on the device itself.
+	 */
 	startStopRecordActions: (msg: StartStopRecordActionsMessage) => void
+	/**
+	 * @deprecated Replaced by companion parsing the options before the module in 1.13.0
+	 * Prior to 1.13.0, this would notify the module that a variable it had parsed during a feedback had changed and let it re-run the feedback
+	 */
 	variablesChanged: (msg: VariablesChangedMessage) => never
 }
 export interface HostToModuleEventsV0SharedSocket {
@@ -71,7 +139,9 @@ export interface InitMessage {
 
 	lastUpgradeIndex: number
 
+	/** @deprecated not populated since 1.13.0 */
 	feedbacks: { [id: string]: FeedbackInstance | undefined }
+	/** @deprecated not populated since 1.13.0 */
 	actions: { [id: string]: ActionInstance | undefined }
 }
 export interface InitResponseMessage {
@@ -182,7 +252,7 @@ export interface FeedbackInstanceBase {
 	disabled: boolean
 
 	feedbackId: string // aka 'type'
-	options: { [key: string]: InputValue | undefined }
+	options: OptionsObject
 }
 
 export interface FeedbackInstance extends FeedbackInstanceBase {
@@ -214,7 +284,7 @@ export interface ActionInstanceBase {
 	disabled: boolean
 
 	actionId: string // aka 'type'
-	options: { [key: string]: InputValue | undefined }
+	options: OptionsObject
 }
 export interface ActionInstance extends ActionInstanceBase {
 	controlId: string
@@ -222,6 +292,37 @@ export interface ActionInstance extends ActionInstanceBase {
 
 export interface UpdateActionInstancesMessage {
 	actions: { [id: string]: ActionInstance | null | undefined }
+}
+
+export interface UpgradeActionInstance extends Omit<ActionInstanceBase, 'options'> {
+	options: OptionsObject
+
+	controlId: string
+}
+export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'options'> {
+	options: OptionsObject
+
+	isInverted: boolean
+
+	/**
+	 * Only used as an output from the module, when the feedback is being converted to a boolean feedback
+	 */
+	style?: Partial<CompanionFeedbackButtonStyleResult>
+
+	controlId: string
+}
+
+export interface UpgradeActionAndFeedbackInstancesMessage {
+	actions: UpgradeActionInstance[]
+	feedbacks: UpgradeFeedbackInstance[]
+	defaultUpgradeIndex: number | null
+}
+
+export interface UpgradeActionAndFeedbackInstancesResponse {
+	updatedConfig: unknown
+	updatedActions: UpgradeActionInstance[]
+	updatedFeedbacks: UpgradeFeedbackInstance[]
+	latestUpgradeIndex: number
 }
 
 export interface SaveConfigMessage {

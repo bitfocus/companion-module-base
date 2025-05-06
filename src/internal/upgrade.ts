@@ -3,7 +3,11 @@ import type {
 	CompanionMigrationFeedback,
 	CompanionStaticUpgradeScript,
 } from '../module-api/upgrade.js'
-import type { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '../host-api/api.js'
+import type {
+	UpgradeActionInstance,
+	UpgradeFeedbackInstance,
+	UpgradeActionAndFeedbackInstancesResponse,
+} from '../host-api/api.js'
 import { Complete, literal } from '../util.js'
 
 function clone<T>(val: T): T {
@@ -18,59 +22,49 @@ function clone<T>(val: T): T {
  * @param defaultUpgradeIndex The lastUpgradeIndex of the connection, if known
  * @param upgradeScripts The scripts that may be run
  * @param config The current config of the module
- * @param skipConfigUpgrade Whether to skip upgrading the config
  * @returns The upgraded data that needs persisting
  */
 export function runThroughUpgradeScripts(
-	allActions: { [id: string]: ActionInstance | undefined | null },
-	allFeedbacks: { [id: string]: FeedbackInstance | undefined | null },
-	defaultUpgradeIndex: number | null,
+	allActionsArray: UpgradeActionInstance[],
+	allFeedbacksArray: UpgradeFeedbackInstance[],
 	upgradeScripts: CompanionStaticUpgradeScript<any>[],
 	config: unknown,
-	skipConfigUpgrade: boolean,
-): UpgradedDataResponseMessage & {
-	updatedConfig: unknown | undefined
-} {
+): UpgradeActionAndFeedbackInstancesResponse {
 	// First we group all the actions and feedbacks by the version they currently are.
-	const pendingUpgradesGrouped = new Map<number, { feedbacks: string[]; actions: string[]; config: boolean }>()
+	const pendingUpgradesGrouped = new Map<number, { feedbacks: string[]; actions: string[] }>()
 	const getPendingUpgradeGroup = (i: number) => {
 		let v = pendingUpgradesGrouped.get(i)
 		if (!v) {
-			v = { actions: [], feedbacks: [], config: false }
+			v = { actions: [], feedbacks: [] }
 			pendingUpgradesGrouped.set(i, v)
 		}
 		return v
 	}
-	for (const action of Object.values(allActions)) {
-		const upgradeIndex = action?.upgradeIndex ?? defaultUpgradeIndex
+	for (const action of allActionsArray) {
+		const upgradeIndex = action?.upgradeIndex
 		if (action && typeof upgradeIndex === 'number') {
 			const pending = getPendingUpgradeGroup(upgradeIndex)
 			pending.actions.push(action.id)
 		}
 	}
-	for (const feedback of Object.values(allFeedbacks)) {
-		const upgradeIndex = feedback?.upgradeIndex ?? defaultUpgradeIndex
+	for (const feedback of allFeedbacksArray) {
+		const upgradeIndex = feedback?.upgradeIndex
 		if (feedback && typeof upgradeIndex === 'number') {
 			const pending = getPendingUpgradeGroup(upgradeIndex)
 			pending.feedbacks.push(feedback.id)
 		}
 	}
-	if (!skipConfigUpgrade) {
-		// If there is config we still need to upgrade that
-		for (let i = defaultUpgradeIndex ?? -1; i < upgradeScripts.length; i++) {
-			// ensure the group is registered
-			getPendingUpgradeGroup(i).config = true
-		}
-	}
 
-	const updatedFeedbacks: UpgradedDataResponseMessage['updatedFeedbacks'] = {}
-	const updatedActions: UpgradedDataResponseMessage['updatedActions'] = {}
-	let updatedConfig: unknown | undefined
+	const allActions = Object.fromEntries(allActionsArray.map((a) => [a.id, a]))
+	const allFeedbacks = Object.fromEntries(allFeedbacksArray.map((a) => [a.id, a]))
+
+	const updatedFeedbacks: Record<string, UpgradeFeedbackInstance> = {}
+	const updatedActions: Record<string, UpgradeActionInstance> = {}
 
 	if (pendingUpgradesGrouped.size > 0) {
 		// Figure out which script to run first. Note: we track the last index we ran, so it is offset by one
 		const pendingUpgradeGroups = Array.from(pendingUpgradesGrouped.keys()).sort()
-		const firstUpgradeGroup = Math.min(...pendingUpgradeGroups, defaultUpgradeIndex ?? -1) + 1
+		const firstUpgradeGroup = Math.min(...pendingUpgradeGroups, -1) + 1
 
 		// Start building arrays of the ids which we are upgrading as we go
 		const actionsIdsToUpgrade: string[] = []
@@ -86,23 +80,18 @@ export function runThroughUpgradeScripts(
 				feedbackIdsToUpgrade.push(...group.feedbacks)
 			}
 
-			// Only upgrade the config, if we are past the last version we had for it
-			const upgradeConfig = !!group?.config
-
 			// Ensure there is something to upgrade
-			if (!upgradeConfig && actionsIdsToUpgrade.length === 0 && feedbackIdsToUpgrade.length === 0) continue
-
-			const inputConfig = updatedConfig ?? config
+			if (actionsIdsToUpgrade.length === 0 && feedbackIdsToUpgrade.length === 0) continue
 
 			// We have an upgrade script that can be run
 			const fcn = upgradeScripts[i]
 			const res = fcn(
 				{
 					// Pass a clone to avoid mutations
-					currentConfig: clone(inputConfig) as any,
+					currentConfig: clone(config) as any,
 				},
 				{
-					config: upgradeConfig ? inputConfig : null,
+					config: null,
 
 					// Only pass the actions & feedbacks which need upgrading from this version
 					actions: actionsIdsToUpgrade
@@ -118,7 +107,7 @@ export function runThroughUpgradeScripts(
 								})
 							}
 						})
-						.filter((v): v is ActionInstance => !!v),
+						.filter((v): v is UpgradeActionInstance => !!v),
 
 					feedbacks: feedbackIdsToUpgrade
 						.map((id) => {
@@ -136,12 +125,9 @@ export function runThroughUpgradeScripts(
 								})
 							}
 						})
-						.filter((v): v is FeedbackInstance => !!v),
+						.filter((v): v is UpgradeFeedbackInstance => !!v),
 				},
 			)
-
-			// Apply changes
-			if (upgradeConfig && res.updatedConfig) updatedConfig = res.updatedConfig
 
 			for (const action of res.updatedActions) {
 				if (action) {
@@ -191,8 +177,53 @@ export function runThroughUpgradeScripts(
 	}
 
 	return {
-		updatedActions,
-		updatedFeedbacks,
+		updatedActions: Object.values(updatedActions),
+		updatedFeedbacks: Object.values(updatedFeedbacks),
+		updatedConfig: null,
+		latestUpgradeIndex: upgradeScripts.length - 1,
+	}
+}
+
+/**
+//  * Run through the upgrade scripts for the given data
+//  * Note: this updates the inputs in place, but the result needs to be sent back to companion
+//  * @param defaultUpgradeIndex The lastUpgradeIndex of the connection, if known
+//  * @param upgradeScripts The scripts that may be run
+//  * @param config The current config of the module
+//  * @returns The upgraded data that needs persisting
+ */
+export function runConfigThroughUpgradeScripts(
+	defaultUpgradeIndex: number,
+	upgradeScripts: CompanionStaticUpgradeScript<any>[],
+	config: unknown,
+): { updatedConfig: unknown | undefined; latestUpgradeIndex: number } {
+	let updatedConfig: unknown | undefined
+
+	// Perform the upgrades. We start on the first batch/instance, and work our way up to the last
+	const targetCount = upgradeScripts.length
+	for (let i = defaultUpgradeIndex ?? -1; i < targetCount; i++) {
+		const inputConfig = updatedConfig ?? config
+
+		// We have an upgrade script that can be run
+		const fcn = upgradeScripts[i]
+		const res = fcn(
+			{
+				// Pass a clone to avoid mutations
+				currentConfig: clone(inputConfig) as any,
+			},
+			{
+				config: inputConfig,
+				actions: [],
+				feedbacks: [],
+			},
+		)
+
+		// Apply changes
+		if (res.updatedConfig) updatedConfig = res.updatedConfig
+	}
+
+	return {
 		updatedConfig,
+		latestUpgradeIndex: upgradeScripts.length - 1,
 	}
 }
