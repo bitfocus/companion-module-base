@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.12.0](https://github.com/bitfocus/companion-module-base/compare/v1.11.3...v1.12.0) (2025-05-06)
+
+
+### Features
+
+* Add parseEscapeCharacters, substituteEscapeCharacters utility functions ([#117](https://github.com/bitfocus/companion-module-base/issues/117)) ([a5eb609](https://github.com/bitfocus/companion-module-base/commit/a5eb609fc15d892754c833817f8e1efe1eab1594))
+* add permissions to manifest ([e13be3e](https://github.com/bitfocus/companion-module-base/commit/e13be3e903bae7a2d714de028698ad8d96658b1a))
+* add prerelease field to manifest ([29fdd86](https://github.com/bitfocus/companion-module-base/commit/29fdd8633bc95901bc40843ca64f71dfb9bf50a1))
+* allow defining `isVisible` on options as expressions ([b491303](https://github.com/bitfocus/companion-module-base/commit/b491303d11c7a3528c2ccba715d3fbd9bb029ff5))
+* expose `hasLifecycleFunctions` property about actions to Companion ([0744101](https://github.com/bitfocus/companion-module-base/commit/07441017d2c27921c318135e85743066d28752a9))
+* split host api methods to separate out upgrade-script calls ([#118](https://github.com/bitfocus/companion-module-base/issues/118)) ([19e0023](https://github.com/bitfocus/companion-module-base/commit/19e00239e0b7acff3ebb3eb59337c6e8656679e9))
+
+
+### Bug Fixes
+
+* adjust additionalProperties of manifest schema ([b1bd70e](https://github.com/bitfocus/companion-module-base/commit/b1bd70ea28c1a6aa66b8ffdd6f3b16ad17594b80))
+* cleanup some deprecations ([ea2ec8d](https://github.com/bitfocus/companion-module-base/commit/ea2ec8d4358de68aacd26db8a5e90d45f7608533))
+
 ## [1.11.3](https://github.com/bitfocus/companion-module-base/compare/v1.11.2...v1.11.3) (2024-12-23)
 
 
