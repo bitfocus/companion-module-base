@@ -10,7 +10,6 @@
 * add prerelease field to manifest ([29fdd86](https://github.com/bitfocus/companion-module-base/commit/29fdd8633bc95901bc40843ca64f71dfb9bf50a1))
 * allow defining `isVisible` on options as expressions ([b491303](https://github.com/bitfocus/companion-module-base/commit/b491303d11c7a3528c2ccba715d3fbd9bb029ff5))
 * expose `hasLifecycleFunctions` property about actions to Companion ([0744101](https://github.com/bitfocus/companion-module-base/commit/07441017d2c27921c318135e85743066d28752a9))
-* split host api methods to separate out upgrade-script calls ([#118](https://github.com/bitfocus/companion-module-base/issues/118)) ([19e0023](https://github.com/bitfocus/companion-module-base/commit/19e00239e0b7acff3ebb3eb59337c6e8656679e9))
 
 
 ### Bug Fixes
