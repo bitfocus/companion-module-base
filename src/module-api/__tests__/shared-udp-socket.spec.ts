@@ -192,7 +192,7 @@ describe('Shared UDP', () => {
 			expect(sendPromises).toHaveLength(1)
 			expect(sendWithCbFn).toHaveBeenCalledWith('sharedUdpSocketSend', {
 				handleId,
-				message,
+				message: message.toString('base64'),
 				address: '4.5.6.7',
 				port: 4789,
 			} satisfies SharedUdpSocketMessageSend)
@@ -236,7 +236,7 @@ describe('Shared UDP', () => {
 			expect(sendPromises).toHaveLength(1)
 			expect(sendWithCbFn).toHaveBeenCalledWith('sharedUdpSocketSend', {
 				handleId,
-				message,
+				message: message.toString('base64'),
 				address: '4.5.6.7',
 				port: 4789,
 			} satisfies SharedUdpSocketMessageSend)

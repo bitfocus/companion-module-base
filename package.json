@@ -31,7 +31,6 @@
 		"ajv": "^8.17.1",
 		"colord": "^2.9.3",
 		"debounce-fn": "^6.0.0",
-		"ejson": "^2.2.3",
 		"nanoid": "^5.1.5",
 		"p-queue": "^8.1.0",
 		"p-timeout": "^6.1.4",
@@ -40,7 +39,6 @@
 	"devDependencies": {
 		"@companion-module/tools": "^2.4.2",
 		"@tsconfig/node22": "^22.0.1",
-		"@types/ejson": "^2.2.2",
 		"@types/lodash-es": "^4.17.12",
 		"@types/node": "^22.13.14",
 		"eslint": "^9.39.1",
