@@ -5,7 +5,11 @@
  * This will allow for cleaner and more stable apis which can both evolve at different rates
  */
 
-import type { CompanionFeedbackButtonStyleResult, SomeCompanionFeedbackInputField } from '../module-api/feedback.js'
+import type {
+	CompanionAdvancedFeedbackResult,
+	CompanionFeedbackButtonStyleResult,
+	SomeCompanionFeedbackInputField,
+} from '../module-api/feedback.js'
 import type { OSCSomeArguments } from '../common/osc.js'
 import type { SomeCompanionConfigField } from '../module-api/config.js'
 import type { LogLevel, InstanceStatus } from '../module-api/enums.js'
@@ -220,7 +224,7 @@ export interface UpdateFeedbackValuesMessage {
 	values: Array<{
 		id: string
 		controlId: string
-		value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined
+		value: boolean | Partial<CompanionAdvancedFeedbackResult> | undefined
 	}>
 }
 
