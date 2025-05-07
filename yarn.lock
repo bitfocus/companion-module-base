@@ -22,13 +22,11 @@ __metadata:
   dependencies:
     "@companion-module/tools": "npm:^2.3.0"
     "@tsconfig/node22": "npm:^22.0.1"
-    "@types/ejson": "npm:^2.2.2"
     "@types/lodash-es": "npm:^4.17.12"
     "@types/node": "npm:^22.13.14"
     ajv: "npm:^8.17.1"
     colord: "npm:^2.9.3"
     debounce-fn: "npm:^6.0.0"
-    ejson: "npm:^2.2.3"
     eslint: "npm:^9.34.0"
     json-schema-to-typescript: "npm:^15.0.4"
     lodash-es: "npm:^4.17.21"
@@ -736,13 +734,6 @@ __metadata:
   version: 4.0.2
   resolution: "@types/deep-eql@npm:4.0.2"
   checksum: 10c0/bf3f811843117900d7084b9d0c852da9a044d12eb40e6de73b552598a6843c21291a8a381b0532644574beecd5e3491c5ff3a0365ab86b15d59862c025384844
-  languageName: node
-  linkType: hard
-
-"@types/ejson@npm:^2.2.2":
-  version: 2.2.2
-  resolution: "@types/ejson@npm:2.2.2"
-  checksum: 10c0/601afc9299b0ee645f14ce78b7d7cd618afb865ec4220f0b9b4082d9e729c1f6bcabeb328b43a08b25d3a0b63e9b1b48d825080eee717d1537bd693e7455c9bb
   languageName: node
   linkType: hard
 
@@ -1650,13 +1641,6 @@ __metadata:
   version: 0.2.0
   resolution: "eastasianwidth@npm:0.2.0"
   checksum: 10c0/26f364ebcdb6395f95124fda411f63137a4bfb5d3a06453f7f23dfe52502905bd84e0488172e0f9ec295fdc45f05c23d5d91baf16bd26f0fe9acd777a188dc39
-  languageName: node
-  linkType: hard
-
-"ejson@npm:^2.2.3":
-  version: 2.2.3
-  resolution: "ejson@npm:2.2.3"
-  checksum: 10c0/648ea347f5e57441b7b9341adc6de244445b6da1d0e7747ea7a083f906299b92e4c44fc29e6de0b240d8fa4a73159e85f9367780d7af2ecbc50aae8a4e4961ae
   languageName: node
   linkType: hard
 
