@@ -2,7 +2,6 @@
 	"extends": "./tsconfig.build.json",
 	"exclude": ["node_modules/**"],
 	"compilerOptions": {
-		"types": ["node"],
-		"lib": ["ES2021.String"]
+		"types": ["node"]
 	}
 }

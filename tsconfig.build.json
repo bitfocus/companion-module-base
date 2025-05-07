@@ -1,5 +1,5 @@
 {
-	"extends": "./tsconfig-base.json",
+	"extends": "@tsconfig/node22/tsconfig.json",
 	"include": ["src/**/*.ts"],
 	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
 	"compilerOptions": {
@@ -12,6 +12,11 @@
 		},
 		"types": ["node"],
 		"declaration": true,
-		"declarationMap": true
+		"declarationMap": true,
+
+		"sourceMap": true,
+		"importHelpers": true,
+		"pretty": true,
+		"esModuleInterop": true
 	}
 }

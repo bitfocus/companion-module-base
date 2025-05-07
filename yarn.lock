@@ -21,7 +21,7 @@ __metadata:
   resolution: "@companion-module/base@workspace:."
   dependencies:
     "@companion-module/tools": "npm:^2.4.2"
-    "@tsconfig/node18": "npm:^18.2.6"
+    "@tsconfig/node22": "npm:^22.0.1"
     "@types/ejson": "npm:^2.2.2"
     "@types/lodash-es": "npm:^4.17.12"
     "@types/node": "npm:^18.19.130"
@@ -719,10 +719,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node18@npm:^18.2.6":
-  version: 18.2.6
-  resolution: "@tsconfig/node18@npm:18.2.6"
-  checksum: 10c0/52fc3fadd9d60225c30983f1236f9d16a83f942d27accf3a71d71aee7c76e705307aefb89baa5b3df631c93fe41b47a25ede4f14c6816019000233f1e4df3302
+"@tsconfig/node22@npm:^22.0.1":
+  version: 22.0.1
+  resolution: "@tsconfig/node22@npm:22.0.1"
+  checksum: 10c0/9448a14da65ebdafe10bef2582df11c8c8a769b919854747ad97f127eedc188f5e383b5b08df74bd895fa3738f17a442f9de153c0b326f870f2b335f36b51c43
   languageName: node
   linkType: hard
 
