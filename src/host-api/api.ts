@@ -399,7 +399,8 @@ export interface SharedUdpSocketMessageLeave {
 }
 export interface SharedUdpSocketMessageSend {
 	handleId: string
-	message: Buffer
+	/** Base64 encoded */
+	message: string
 
 	address: string
 	port: number
@@ -409,7 +410,8 @@ export interface SharedUdpSocketMessage {
 	handleId: string
 	portNumber: number
 
-	message: Buffer
+	/** Base64 encoded */
+	message: string
 	source: RemoteInfo
 }
 
@@ -417,5 +419,6 @@ export interface SharedUdpSocketError {
 	handleId: string
 	portNumber: number
 
-	error: Error
+	errorMessage: string
+	errorStack: string | undefined
 }

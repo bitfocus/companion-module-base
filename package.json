@@ -7,7 +7,7 @@
 	"license": "MIT",
 	"repository": "https://github.com/bitfocus/companion-module-base",
 	"scripts": {
-		"dev": "yarn build:ts --watch",
+		"dev": "tsc -p tsconfig.json --watch",
 		"build": "yarn build:schema && yarn build:ts",
 		"build:ts": "tsc -p tsconfig.build.json",
 		"build:schema": "node tools/schema-compile.mjs",
