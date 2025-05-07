@@ -75,6 +75,7 @@ describe('ModuleToHostEventsV0', () => {
 					hasLearn: false,
 					learnTimeout: undefined,
 					hasLifecycleFunctions: true,
+					optionsToIgnoreForSubscribe: ['abc'],
 				},
 			],
 		})
@@ -219,7 +220,7 @@ describe('ModuleToHostEventsV0', () => {
 						png64: 'abcdef',
 						show_topbar: false,
 
-						imageBuffer: Buffer.from('test'),
+						imageBuffer: 'test',
 						imageBufferEncoding: { pixelFormat: 'ARGB' },
 						imageBufferPosition: {
 							x: 0,
@@ -241,6 +242,10 @@ describe('ModuleToHostEventsV0', () => {
 			config: {
 				host: '192.168.1.1',
 				port: 8080,
+			},
+			secrets: {
+				apiKey: '123',
+				abc: null,
 			},
 		})
 	})
@@ -341,7 +346,7 @@ describe('ModuleToHostEventsV0', () => {
 
 		testForParams<'sharedUdpSocketSend'>({
 			handleId: 'handle-id-1234',
-			message: Buffer.from('test message'),
+			message: Buffer.from('test message').toString('base64'),
 			address: '192.168.1.100',
 			port: 9000,
 		})
@@ -401,21 +406,27 @@ describe('HostToModuleEventsV0', () => {
 				host: '192.168.1.1',
 				port: 1234,
 			},
+			secrets: {
+				abc: 13,
+			},
 			lastUpgradeIndex: 0,
 		})
 
-		const response = {
+		testForReturn<'init'>({
 			hasHttpHandler: true,
 			hasRecordActionsHandler: true,
 			newUpgradeIndex: 1,
+			disableNewConfigLayout: false,
+
 			updatedConfig: {
 				host: '192.168.1.1',
 				port: 1234,
 				username: 'default',
 			},
-		}
-
-		testForReturn<'init'>(response)
+			updatedSecrets: {
+				abc: 13,
+			},
+		})
 	})
 
 	test('destroy', () => {
@@ -432,6 +443,10 @@ describe('HostToModuleEventsV0', () => {
 			config: {
 				host: '192.168.1.100',
 				port: 5678,
+			},
+			secrets: {
+				a: 123,
+				b: null,
 			},
 		})
 	})
@@ -529,6 +544,7 @@ describe('HostToModuleEventsV0', () => {
 
 		const response: ReturnType<HostToModuleEventsV0['upgradeActionsAndFeedbacks']> = {
 			updatedConfig: {},
+			updatedSecrets: {},
 			updatedActions: [
 				{
 					id: 'action-1',
@@ -736,7 +752,7 @@ describe('HostToModuleEventsV0', () => {
 		testForParams<'sharedUdpSocketMessage'>({
 			handleId: 'handle-id-1234',
 			portNumber: 8000,
-			message: Buffer.from('test message'),
+			message: Buffer.from('test message').toString('base64'),
 			source: {
 				address: '192.168.1.100',
 				port: 9000,
@@ -749,10 +765,13 @@ describe('HostToModuleEventsV0', () => {
 	test('sharedUdpSocketError', () => {
 		testsBeingRun.add('sharedUdpSocketError')
 
+		const err = new Error('Socket error')
+
 		testForParams<'sharedUdpSocketError'>({
 			handleId: 'handle-id-1234',
 			portNumber: 8000,
-			error: new Error('Socket error'),
+			errorMessage: err.message,
+			errorStack: err.stack,
 		})
 	})
 
