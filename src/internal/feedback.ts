@@ -265,6 +265,18 @@ export class FeedbackManager {
 
 				// Await the value before looking at this.#pendingFeedbackValues, to avoid race conditions
 				const resolvedValue = await value
+
+				if (
+					definition?.type === 'advanced' &&
+					resolvedValue &&
+					typeof resolvedValue === 'object' &&
+					'imageBuffer' in resolvedValue &&
+					(resolvedValue.imageBuffer as any) instanceof Uint8Array
+				) {
+					// Backwards compatibility fixup, ensure the imageBuffer is a string
+					resolvedValue.imageBuffer = Buffer.from(resolvedValue.imageBuffer as any).toString('base64')
+				}
+
 				this.#pendingFeedbackValues.set(id, {
 					id: id,
 					controlId: feedback.controlId,

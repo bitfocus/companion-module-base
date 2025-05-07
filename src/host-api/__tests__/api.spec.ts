@@ -219,7 +219,7 @@ describe('ModuleToHostEventsV0', () => {
 						png64: 'abcdef',
 						show_topbar: false,
 
-						imageBuffer: Buffer.from('test'),
+						imageBuffer: 'test',
 						imageBufferEncoding: { pixelFormat: 'ARGB' },
 						imageBufferPosition: {
 							x: 0,
@@ -341,7 +341,7 @@ describe('ModuleToHostEventsV0', () => {
 
 		testForParams<'sharedUdpSocketSend'>({
 			handleId: 'handle-id-1234',
-			message: Buffer.from('test message'),
+			message: Buffer.from('test message').toString('base64'),
 			address: '192.168.1.100',
 			port: 9000,
 		})
@@ -736,7 +736,7 @@ describe('HostToModuleEventsV0', () => {
 		testForParams<'sharedUdpSocketMessage'>({
 			handleId: 'handle-id-1234',
 			portNumber: 8000,
-			message: Buffer.from('test message'),
+			message: Buffer.from('test message').toString('base64'),
 			source: {
 				address: '192.168.1.100',
 				port: 9000,
@@ -749,10 +749,13 @@ describe('HostToModuleEventsV0', () => {
 	test('sharedUdpSocketError', () => {
 		testsBeingRun.add('sharedUdpSocketError')
 
+		const err = new Error('Socket error')
+
 		testForParams<'sharedUdpSocketError'>({
 			handleId: 'handle-id-1234',
 			portNumber: 8000,
-			error: new Error('Socket error'),
+			errorMessage: err.message,
+			errorStack: err.stack,
 		})
 	})
 

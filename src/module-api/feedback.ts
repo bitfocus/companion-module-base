@@ -91,7 +91,8 @@ export interface CompanionImageBufferEncoding {
 
 /** The resulting style of an advanced feedback */
 export interface CompanionAdvancedFeedbackResult extends CompanionFeedbackButtonStyleResult {
-	imageBuffer?: Uint8Array | string
+	/** Base64 encoded pixel buffer */
+	imageBuffer?: string
 	imageBufferEncoding?: CompanionImageBufferEncoding
 	imageBufferPosition?: CompanionImageBufferPosition
 }
