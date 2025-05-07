@@ -312,7 +312,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	private async _handleSharedUdpSocketError(msg: SharedUdpSocketError): Promise<void> {
 		for (const socket of this.#sharedUdpSocketHandlers.values()) {
 			if (socket.handleId === msg.handleId) {
-				socket.receiveSocketError(msg.error)
+				const error = new Error(msg.errorMessage)
+				error.stack = msg.errorStack
+				socket.receiveSocketError(error)
 			}
 		}
 	}
