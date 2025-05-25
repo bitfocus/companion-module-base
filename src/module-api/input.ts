@@ -39,6 +39,8 @@ export interface CompanionInputFieldBase {
 /**
  * A static un-editable line of text
  *
+ * This supports limited markdown formatting. It used to support HTML, but this has been removed in favor of markdown.
+ *
  * Available for actions/feedbacks/config
  *
  * ### Example
