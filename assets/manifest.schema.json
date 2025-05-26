@@ -190,6 +190,9 @@
 					"type": "string",
 					"enum": ["tcp", "udp"]
 				},
+				"port": {
+					"type": "number"
+				},
 				"txt": {
 					"type": "object",
 					"description": "Match on any txt values returned in the query. This is useful to filter out devices of the same 'type' that are not supported",
