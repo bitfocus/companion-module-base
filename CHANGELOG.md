@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.1](https://github.com/bitfocus/companion-module-base/compare/v1.12.0...v1.12.1) (2025-05-31)
+
+
+### Bug Fixes
+
+* add port to bonjour query ([#133](https://github.com/bitfocus/companion-module-base/issues/133)) ([d7e0344](https://github.com/bitfocus/companion-module-base/commit/d7e0344149e920965e527cd7f56fe4e2db11663b))
+* Incorrect type check for callback parameter in SharedUdpSocketImpl.send ([#134](https://github.com/bitfocus/companion-module-base/issues/134)) ([de854eb](https://github.com/bitfocus/companion-module-base/commit/de854eb2998d6857d2a2259572b4d8cf7c62c2e4))
+
 ## [1.12.0](https://github.com/bitfocus/companion-module-base/compare/v1.11.3...v1.12.0) (2025-05-06)
 
 
