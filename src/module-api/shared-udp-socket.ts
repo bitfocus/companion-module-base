@@ -212,7 +212,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 		if (typeof offsetOrPort !== 'number') throw new Error('Invalid arguments')
 		if (typeof lengthOrAddress === 'number') {
 			if (typeof portOrCallback !== 'number' || typeof address !== 'string') throw new Error('Invalid arguments')
-			if (callback !== undefined && typeof callback !== 'number') throw new Error('Invalid arguments')
+			if (callback !== undefined && typeof callback !== 'function') throw new Error('Invalid arguments')
 
 			const buffer = this.#processBuffer(bufferOrList, offsetOrPort, lengthOrAddress)
 			this.#sendInner(buffer, portOrCallback, address, callback)
