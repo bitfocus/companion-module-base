@@ -11,9 +11,9 @@ import path from 'path'
 
 let hasEntrypoint = false
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-let moduleInstance: InstanceBase<any> | undefined
+let moduleInstance: InstanceBase<any, any> | undefined
 
-export type InstanceConstructor<TConfig> = new (internal: unknown) => InstanceBase<TConfig>
+export type InstanceConstructor<TConfig, TSecrets> = new (internal: unknown) => InstanceBase<TConfig, TSecrets>
 
 // async function readFileUrl(url: URL): Promise<string> {
 // 	// Hack to make json files be loadable after being inlined by webpack
@@ -34,9 +34,9 @@ export type InstanceConstructor<TConfig> = new (internal: unknown) => InstanceBa
  * @param factory The class for the module
  * @param upgradeScripts Upgrade scripts
  */
-export function runEntrypoint<TConfig>(
-	factory: InstanceConstructor<TConfig>,
-	upgradeScripts: CompanionStaticUpgradeScript<TConfig>[],
+export function runEntrypoint<TConfig, TSecrets>(
+	factory: InstanceConstructor<TConfig, TSecrets>,
+	upgradeScripts: CompanionStaticUpgradeScript<TConfig, TSecrets>[],
 ): void {
 	Promise.resolve()
 		.then(async () => {
@@ -132,7 +132,7 @@ export function runEntrypoint<TConfig>(
 			})
 
 			moduleInstance = new factory(
-				literal<InstanceBaseProps<TConfig>>({
+				literal<InstanceBaseProps<TConfig, TSecrets>>({
 					id: connectionId,
 					upgradeScripts,
 					_isInstanceBaseProps: true,

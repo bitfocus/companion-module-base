@@ -33,13 +33,13 @@ export function serializeIsVisibleFn<T extends CompanionInputFieldBase>(options:
 	})
 }
 
-export interface InstanceBaseProps<TConfig> {
+export interface InstanceBaseProps<TConfig, TSecrets> {
 	id: string
-	upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]
+	upgradeScripts: CompanionStaticUpgradeScript<TConfig, TSecrets>[]
 	_isInstanceBaseProps: boolean
 }
 
-export function isInstanceBaseProps<TConfig>(obj: unknown): obj is InstanceBaseProps<TConfig> {
-	const obj2 = obj as InstanceBaseProps<TConfig>
+export function isInstanceBaseProps<TConfig, TSecrets>(obj: unknown): obj is InstanceBaseProps<TConfig, TSecrets> {
+	const obj2 = obj as InstanceBaseProps<TConfig, TSecrets>
 	return typeof obj2 === 'object' && typeof obj2.id === 'string' && obj2._isInstanceBaseProps === true
 }

@@ -6,6 +6,7 @@ import type {
 	CompanionInputFieldDropdown,
 	CompanionInputFieldMultiDropdown,
 	CompanionInputFieldNumber,
+	CompanionInputFieldSecret,
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
 } from './input.js'
@@ -29,5 +30,6 @@ export type SomeCompanionConfigField = (
 	| CompanionInputFieldNumber
 	| CompanionInputFieldCheckbox
 	| CompanionInputFieldBonjourDevice
+	| CompanionInputFieldSecret
 ) &
 	CompanionConfigField

@@ -18,18 +18,20 @@ function clone<T>(val: T): T {
  * @param defaultUpgradeIndex The lastUpgradeIndex of the connection, if known
  * @param upgradeScripts The scripts that may be run
  * @param config The current config of the module
- * @param skipConfigUpgrade Whether to skip upgrading the config
+ * @param skipConfigAndSecretsUpgrade Whether to skip upgrading the config and secrets
  * @returns The upgraded data that needs persisting
  */
 export function runThroughUpgradeScripts(
 	allActions: { [id: string]: ActionInstance | undefined | null },
 	allFeedbacks: { [id: string]: FeedbackInstance | undefined | null },
 	defaultUpgradeIndex: number | null,
-	upgradeScripts: CompanionStaticUpgradeScript<any>[],
+	upgradeScripts: CompanionStaticUpgradeScript<any, any>[],
 	config: unknown,
-	skipConfigUpgrade: boolean,
+	secrets: unknown,
+	skipConfigAndSecretsUpgrade: boolean,
 ): UpgradedDataResponseMessage & {
 	updatedConfig: unknown | undefined
+	updatedSecrets: unknown | undefined
 } {
 	// First we group all the actions and feedbacks by the version they currently are.
 	const pendingUpgradesGrouped = new Map<number, { feedbacks: string[]; actions: string[]; config: boolean }>()
@@ -55,7 +57,7 @@ export function runThroughUpgradeScripts(
 			pending.feedbacks.push(feedback.id)
 		}
 	}
-	if (!skipConfigUpgrade) {
+	if (!skipConfigAndSecretsUpgrade) {
 		// If there is config we still need to upgrade that
 		for (let i = defaultUpgradeIndex ?? -1; i < upgradeScripts.length; i++) {
 			// ensure the group is registered
@@ -66,6 +68,7 @@ export function runThroughUpgradeScripts(
 	const updatedFeedbacks: UpgradedDataResponseMessage['updatedFeedbacks'] = {}
 	const updatedActions: UpgradedDataResponseMessage['updatedActions'] = {}
 	let updatedConfig: unknown | undefined
+	let updatedSecrets: unknown | undefined
 
 	if (pendingUpgradesGrouped.size > 0) {
 		// Figure out which script to run first. Note: we track the last index we ran, so it is offset by one
@@ -87,12 +90,13 @@ export function runThroughUpgradeScripts(
 			}
 
 			// Only upgrade the config, if we are past the last version we had for it
-			const upgradeConfig = !!group?.config
+			const upgradeConfigAndSecrets = !!group?.config
 
 			// Ensure there is something to upgrade
-			if (!upgradeConfig && actionsIdsToUpgrade.length === 0 && feedbackIdsToUpgrade.length === 0) continue
+			if (!upgradeConfigAndSecrets && actionsIdsToUpgrade.length === 0 && feedbackIdsToUpgrade.length === 0) continue
 
 			const inputConfig = updatedConfig ?? config
+			const inputSecrets = updatedSecrets ?? secrets
 
 			// We have an upgrade script that can be run
 			const fcn = upgradeScripts[i]
@@ -102,7 +106,8 @@ export function runThroughUpgradeScripts(
 					currentConfig: clone(inputConfig) as any,
 				},
 				{
-					config: upgradeConfig ? inputConfig : null,
+					config: upgradeConfigAndSecrets ? inputConfig : null,
+					secrets: upgradeConfigAndSecrets ? inputSecrets : null,
 
 					// Only pass the actions & feedbacks which need upgrading from this version
 					actions: actionsIdsToUpgrade
@@ -141,7 +146,8 @@ export function runThroughUpgradeScripts(
 			)
 
 			// Apply changes
-			if (upgradeConfig && res.updatedConfig) updatedConfig = res.updatedConfig
+			if (upgradeConfigAndSecrets && res.updatedConfig) updatedConfig = res.updatedConfig
+			if (upgradeConfigAndSecrets && res.updatedSecrets) updatedSecrets = res.updatedSecrets
 
 			for (const action of res.updatedActions) {
 				if (action) {
@@ -194,5 +200,6 @@ export function runThroughUpgradeScripts(
 		updatedActions,
 		updatedFeedbacks,
 		updatedConfig,
+		updatedSecrets,
 	}
 }
