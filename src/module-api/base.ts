@@ -58,9 +58,9 @@ export interface InstanceBaseOptions {
 	disableVariableValidation: boolean
 }
 
-export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
+export abstract class InstanceBase<TConfig, TSecrets = undefined> implements InstanceBaseShared<TConfig, TSecrets> {
 	readonly #ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>
-	readonly #upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]
+	readonly #upgradeScripts: CompanionStaticUpgradeScript<TConfig, TSecrets>[]
 	public readonly id: string
 
 	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })
@@ -68,6 +68,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	#recordingActions = false
 
 	#lastConfig: TConfig = {} as any
+	#lastSecrets: TSecrets = {} as any
 
 	readonly #actionManager: ActionManager
 	readonly #feedbackManager: FeedbackManager
@@ -96,7 +97,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Create an instance of the module
 	 */
 	constructor(internal: unknown) {
-		if (!isInstanceBaseProps<TConfig>(internal) || !internal._isInstanceBaseProps)
+		if (!isInstanceBaseProps<TConfig, TSecrets>(internal) || !internal._isInstanceBaseProps)
 			throw new Error(
 				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`,
 			)
@@ -161,19 +162,26 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			const actions = msg.actions
 			const feedbacks = msg.feedbacks
 			this.#lastConfig = msg.config as TConfig
+			this.#lastSecrets = msg.secrets as TSecrets
 			this.#label = msg.label
 
 			// Create initial config object
 			if (msg.isFirstInit) {
 				const newConfig: any = {}
+				const newSecrets: any = {}
 				const fields = this.getConfigFields()
 				for (const field of fields) {
 					if ('default' in field) {
-						newConfig[field.id] = field.default
+						if (field.type.startsWith('secret')) {
+							newSecrets[field.id] = field.default
+						} else {
+							newConfig[field.id] = field.default
+						}
 					}
 				}
 				this.#lastConfig = newConfig as TConfig
-				this.saveConfig(this.#lastConfig)
+				this.#lastSecrets = newSecrets as TSecrets
+				this.saveConfig(this.#lastConfig, this.#lastSecrets)
 
 				// this is new, so there is no point attempting to run any upgrade scripts
 				msg.lastUpgradeIndex = this.#upgradeScripts.length - 1
@@ -183,15 +191,17 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			 * Performing upgrades during init requires a fair chunk of work.
 			 * Some actions/feedbacks will be using the upgradeIndex of the instance, but some may have their own upgradeIndex on themselves if they are from an import.
 			 */
-			const { updatedActions, updatedFeedbacks, updatedConfig } = runThroughUpgradeScripts(
+			const { updatedActions, updatedFeedbacks, updatedConfig, updatedSecrets } = runThroughUpgradeScripts(
 				actions,
 				feedbacks,
 				msg.lastUpgradeIndex,
 				this.#upgradeScripts,
 				this.#lastConfig,
+				this.#lastSecrets,
 				false,
 			)
 			this.#lastConfig = (updatedConfig as TConfig | undefined) ?? this.#lastConfig
+			this.#lastSecrets = (updatedSecrets as TSecrets | undefined) ?? this.#lastSecrets
 
 			// Send the upgraded data back to companion now. Just so that if the init crashes, this doesnt have to be repeated
 			const pSendUpgrade = this.#ipcWrapper.sendWithCb('upgradedItems', {
@@ -201,7 +211,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 
 			// Now we can initialise the module
 			try {
-				await this.init(this.#lastConfig, !!msg.isFirstInit)
+				await this.init(this.#lastConfig, !!msg.isFirstInit, this.#lastSecrets)
 
 				this.#initialized = true
 			} catch (e) {
@@ -227,6 +237,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				hasRecordActionsHandler: typeof this.handleStartStopRecordActions == 'function',
 				newUpgradeIndex: this.#upgradeScripts.length - 1,
 				updatedConfig: this.#lastConfig,
+				updatedSecrets: this.#lastSecrets,
 			}
 		})
 	}
@@ -246,7 +257,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			this.#label = msg.label
 			this.#lastConfig = msg.config as TConfig
 
-			await this.configUpdated(this.#lastConfig)
+			await this.configUpdated(this.#lastConfig, this.#lastSecrets)
 		})
 	}
 	private async _handleExecuteAction(msg: ExecuteActionMessage): Promise<void> {
@@ -256,7 +267,15 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
 		if (!skipUpgrades) {
-			const res = runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, this.#lastConfig, true)
+			const res = runThroughUpgradeScripts(
+				{},
+				msg.feedbacks,
+				null,
+				this.#upgradeScripts,
+				this.#lastConfig,
+				this.#lastSecrets,
+				true,
+			)
 			this.#ipcWrapper
 				.sendWithCb('upgradedItems', {
 					updatedActions: res.updatedActions,
@@ -272,7 +291,15 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	private async _handleUpdateActions(msg: UpdateActionInstancesMessage, skipUpgrades?: boolean): Promise<void> {
 		// Run through upgrade scripts if needed
 		if (!skipUpgrades) {
-			const res = runThroughUpgradeScripts(msg.actions, {}, null, this.#upgradeScripts, this.#lastConfig, true)
+			const res = runThroughUpgradeScripts(
+				msg.actions,
+				{},
+				null,
+				this.#upgradeScripts,
+				this.#lastConfig,
+				this.#lastSecrets,
+				true,
+			)
 			this.#ipcWrapper
 				.sendWithCb('upgradedItems', {
 					updatedActions: res.updatedActions,
@@ -351,7 +378,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Main initialization function called
 	 * once the module is OK to start doing things.
 	 */
-	abstract init(config: TConfig, isFirstInit: boolean): Promise<void>
+	abstract init(config: TConfig, isFirstInit: boolean, secrets: TSecrets): Promise<void>
 
 	/**
 	 * Clean up the instance before it is destroyed.
@@ -362,15 +389,18 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Called when the configuration is updated.
 	 * @param config The new config object
 	 */
-	abstract configUpdated(config: TConfig): Promise<void>
+	abstract configUpdated(config: TConfig, secrets: TSecrets): Promise<void>
 
 	/**
 	 * Save an updated configuration object
-	 * @param newConfig The new config object
+	 * Note: The whole config object and the keys of the secrets object are reported to the webui, so be careful how sensitive data is stored
+	 * @param newConfig The new config object, or undefined to not update the config
+	 * @param newSecrets The new secrets object, or undefined to not update the secrets
 	 */
-	saveConfig(newConfig: TConfig): void {
-		this.#lastConfig = newConfig
-		this.#ipcWrapper.sendWithNoCb('saveConfig', { config: newConfig })
+	saveConfig(newConfig: TConfig | undefined, newSecrets: TSecrets | undefined): void {
+		if (newConfig) this.#lastConfig = newConfig
+		if (newSecrets) this.#lastSecrets = newSecrets
+		this.#ipcWrapper.sendWithNoCb('saveConfig', { config: newConfig, secrets: newSecrets })
 	}
 
 	/**

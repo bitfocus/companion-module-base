@@ -9,7 +9,7 @@ import {
 import { runThroughUpgradeScripts } from '../upgrade.js'
 import { ActionInstance } from '../../host-api/api.js'
 
-type MockUpgradeScript<TConfig> = Mock<CompanionStaticUpgradeScript<TConfig>>
+type MockUpgradeScript<TConfig> = Mock<CompanionStaticUpgradeScript<TConfig, any>>
 
 function clone<T>(val: T): T {
 	return JSON.parse(JSON.stringify(val))
@@ -61,11 +61,12 @@ describe('runThroughUpgradeScripts', () => {
 
 	it('nothing to upgrade', () => {
 		const scripts = createMockScripts(2)
-		const result = runThroughUpgradeScripts({}, {}, null, scripts, {}, true)
+		const result = runThroughUpgradeScripts({}, {}, null, scripts, {}, {}, true)
 
 		// Check result looks sane
 		expect(result).toBeTruthy()
 		expect(result.updatedConfig).toBeUndefined()
+		expect(result.updatedSecrets).toBeUndefined()
 		expect(result.updatedActions).toEqual({})
 		expect(result.updatedFeedbacks).toEqual({})
 
@@ -80,12 +81,16 @@ describe('runThroughUpgradeScripts', () => {
 			host: '127.0.0.1',
 			something: true,
 		}
+		const secretsBefore = {
+			secret: '123',
+		}
 		const scripts = createMockScripts(2)
-		const result = runThroughUpgradeScripts({}, {}, null, scripts, { ...configBefore }, false)
+		const result = runThroughUpgradeScripts({}, {}, null, scripts, { ...configBefore }, { ...secretsBefore }, false)
 
 		// Check result looks sane
 		expect(result).toBeTruthy()
 		expect(result.updatedConfig).toEqual(undefined)
+		expect(result.updatedSecrets).toEqual(undefined)
 		expect(result.updatedActions).toEqual({})
 		expect(result.updatedFeedbacks).toEqual({})
 
@@ -112,7 +117,7 @@ describe('runThroughUpgradeScripts', () => {
 			})
 		})
 
-		const result = runThroughUpgradeScripts({}, {}, 0, scripts, { ...configBefore }, false)
+		const result = runThroughUpgradeScripts({}, {}, 0, scripts, { ...configBefore }, {}, false)
 		// Check result looks sane
 		expect(result).toBeTruthy()
 		expect(result.updatedConfig).toEqual({
@@ -129,10 +134,57 @@ describe('runThroughUpgradeScripts', () => {
 		expect(scripts[1]).toHaveBeenNthCalledWith(
 			1,
 			expect.anything(),
-			literal<CompanionStaticUpgradeProps<any>>({
+			literal<CompanionStaticUpgradeProps<any, any>>({
 				actions: [],
 				feedbacks: [],
 				config: configBefore,
+				secrets: {},
+			}),
+		)
+	})
+	it('just the secrets to upgrade, from v0', () => {
+		const secretsBefore = {
+			host: '127.0.0.1',
+			something: true,
+		}
+		const scripts = createMockScripts(2)
+		scripts[1].mockImplementation((ctx, args) => {
+			expect(args.config).toBeTruthy()
+			expect(args.secrets).toBeTruthy()
+			return literal<CompanionStaticUpgradeResult<any, any>>({
+				updatedActions: [],
+				updatedFeedbacks: [],
+				updatedConfig: null,
+				updatedSecrets: {
+					...args.secrets!,
+					added: 123,
+				},
+			})
+		})
+
+		const result = runThroughUpgradeScripts({}, {}, 0, scripts, {}, { ...secretsBefore }, false)
+		// Check result looks sane
+		expect(result).toBeTruthy()
+		expect(result.updatedConfig).toBeUndefined()
+		expect(result.updatedSecrets).toEqual({
+			...secretsBefore,
+			added: 123,
+		})
+		expect(result.updatedActions).toEqual({})
+		expect(result.updatedFeedbacks).toEqual({})
+
+		// check scripts
+		expect(scripts).toHaveLength(2)
+		expect(scripts[0]).toHaveBeenCalledTimes(0)
+		expect(scripts[1]).toHaveBeenCalledTimes(1)
+		expect(scripts[1]).toHaveBeenNthCalledWith(
+			1,
+			expect.anything(),
+			literal<CompanionStaticUpgradeProps<any, any>>({
+				actions: [],
+				feedbacks: [],
+				config: {},
+				secrets: secretsBefore,
 			}),
 		)
 	})
@@ -158,10 +210,11 @@ describe('runThroughUpgradeScripts', () => {
 		const scripts = createMockScripts(2)
 		scripts[1].mockImplementation((ctx, args) => {
 			expect(args).toEqual(
-				literal<CompanionStaticUpgradeProps<any>>({
+				literal<CompanionStaticUpgradeProps<any, any>>({
 					actions: [stripActionInstance(action0Before), stripActionInstance(action1Before)],
 					feedbacks: [],
 					config: null,
+					secrets: null,
 				}),
 			)
 
@@ -175,7 +228,7 @@ describe('runThroughUpgradeScripts', () => {
 		})
 
 		const actionsInput = makeActionsInput(action0Before, action1Before)
-		const result = runThroughUpgradeScripts(actionsInput, {}, 0, scripts, {}, true)
+		const result = runThroughUpgradeScripts(actionsInput, {}, 0, scripts, {}, {}, true)
 
 		// Check result looks sane
 		expect(result).toBeTruthy()
@@ -224,6 +277,7 @@ describe('runThroughUpgradeScripts', () => {
 					actions: [stripActionInstance(action1Before), stripActionInstance(action0Before)],
 					feedbacks: [],
 					config: null,
+					secrets: null,
 				}),
 			)
 
@@ -236,7 +290,7 @@ describe('runThroughUpgradeScripts', () => {
 		})
 
 		const actionsInput = makeActionsInput(action0Before, action1Before)
-		const result = runThroughUpgradeScripts(actionsInput, {}, 0, scripts, {}, true)
+		const result = runThroughUpgradeScripts(actionsInput, {}, 0, scripts, {}, {}, true)
 
 		// Check result looks sane
 		expect(result).toBeTruthy()
