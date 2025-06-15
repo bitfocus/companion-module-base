@@ -68,6 +68,7 @@ export interface InitMessage {
 	label: string
 	isFirstInit: boolean
 	config: unknown
+	secrets: unknown
 
 	lastUpgradeIndex: number
 
@@ -80,6 +81,7 @@ export interface InitResponseMessage {
 	newUpgradeIndex: number
 
 	updatedConfig: unknown | undefined
+	updatedSecrets: unknown | undefined
 }
 
 export interface UpgradedDataResponseMessage {
@@ -199,7 +201,8 @@ export interface FeedbackInstance extends FeedbackInstanceBase {
 
 export interface UpdateConfigAndLabelMessage {
 	label: string
-	config: unknown
+	config: unknown | undefined
+	secrets: unknown | undefined
 }
 
 export interface UpdateFeedbackInstancesMessage {
@@ -225,7 +228,8 @@ export interface UpdateActionInstancesMessage {
 }
 
 export interface SaveConfigMessage {
-	config: unknown
+	config: unknown | undefined
+	secrets: unknown | undefined
 }
 
 export interface SendOscMessage {
