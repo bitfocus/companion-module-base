@@ -57,6 +57,9 @@
 					},
 					"github": {
 						"type": "string"
+					},
+					"url": {
+						"type": "string"
 					}
 				},
 				"required": ["name"],
@@ -155,11 +158,9 @@
 						}
 					]
 				}
-			},
-			"additionalProperties": false
+			}
 		}
 	},
-	"additionalProperties": false,
 	"required": [
 		"id",
 		"name",
@@ -196,12 +197,10 @@
 						"": {
 							"type": "string"
 						}
-					},
-					"additionalProperties": false
+					}
 				}
 			},
-			"required": ["type", "protocol"],
-			"additionalProperties": false
+			"required": ["type", "protocol"]
 		}
 	}
 }
