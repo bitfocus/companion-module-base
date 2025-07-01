@@ -1,4 +1,5 @@
 import { HslaColor, HsvaColor, colord } from 'colord'
+import { addSlashes, removeSlashes } from 'slashes'
 
 /**
  * Assert a certain type for a literal.
@@ -151,19 +152,7 @@ export type Complete<T> = {
  */
 
 export function parseEscapeCharacters(msg: string): string {
-	const message = msg
-		.replaceAll('\\n', '\n')
-		.replaceAll('\\r', '\r')
-		.replaceAll('\\t', '\t')
-		.replaceAll('\\f', '\f')
-		.replaceAll('\\v', '\v')
-		.replaceAll('\\b', '\b')
-		.replaceAll('\\\\', '\\')
-		.replaceAll('\\x00', '\x00')
-		.replaceAll('\\x01', '\x01')
-		.replaceAll('\\x02', '\x02')
-		.replaceAll('\\x03', '\x03')
-	return message
+	return removeSlashes(msg)
 }
 
 /**
@@ -172,17 +161,5 @@ export function parseEscapeCharacters(msg: string): string {
  */
 
 export function substituteEscapeCharacters(msg: string): string {
-	const message = msg
-		.replaceAll('\n', '\\n')
-		.replaceAll('\r', '\\r')
-		.replaceAll('\t', '\\t')
-		.replaceAll('\f', '\\f')
-		.replaceAll('\v', '\\v')
-		.replaceAll('\b', '\\b')
-		.replaceAll('\\', '\\\\')
-		.replaceAll('\x00', '\\x00')
-		.replaceAll('\x01', '\\x01')
-		.replaceAll('\x02', '\\x02')
-		.replaceAll('\x03', '\\x03')
-	return message
+	return addSlashes(msg)
 }
