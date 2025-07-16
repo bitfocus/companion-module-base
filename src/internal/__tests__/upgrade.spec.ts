@@ -243,6 +243,7 @@ describe('runThroughUpgradeScripts', () => {
 			{
 				...action0Before,
 				actionId: 'new-action',
+				upgradeIndex: 1,
 			},
 		])
 		expect(result.updatedFeedbacks).toEqual([])
@@ -255,6 +256,7 @@ describe('runThroughUpgradeScripts', () => {
 		// Check input was mutated in place
 		const expectedInput = makeActionsInput(action0Before, action1Before)
 		expectedInput[0].actionId = 'new-action'
+		expectedInput[0].upgradeIndex = 1
 		expect(actionsInput).toEqual(expectedInput)
 	})
 
@@ -311,10 +313,12 @@ describe('runThroughUpgradeScripts', () => {
 			{
 				...action0Before,
 				actionId: 'new-action',
+				upgradeIndex: 1,
 			},
 			{
 				// Reported to confirm the upgrade
 				...action1Before,
+				upgradeIndex: -1,
 			},
 		])
 		expect(result.updatedFeedbacks).toEqual([])
@@ -328,6 +332,7 @@ describe('runThroughUpgradeScripts', () => {
 		// Check input was mutated in place
 		const expectedInput = makeActionsInput(action0Before, action1Before)
 		expectedInput[0].actionId = 'new-action'
+		expectedInput[0].upgradeIndex = 1
 		expect(actionsInput).toEqual(expectedInput)
 	})
 })
