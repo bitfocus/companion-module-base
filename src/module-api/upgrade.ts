@@ -1,5 +1,5 @@
 import type { CompanionFeedbackButtonStyleResult } from './feedback.js'
-import type { CompanionOptionValues } from './input.js'
+import type { OptionsObject } from '../util.js'
 
 /** Additional utilities for Upgrade Scripts */
 export interface CompanionUpgradeContext<TConfig> {
@@ -74,7 +74,7 @@ export interface CompanionMigrationAction {
 	/** The id of the action definition */
 	actionId: string
 	/** The user selected options for the action */
-	options: CompanionOptionValues
+	options: OptionsObject
 }
 
 /**
@@ -89,7 +89,7 @@ export interface CompanionMigrationFeedback {
 	/** The id of the feedback definition */
 	feedbackId: string
 	/** The user selected options for the feedback */
-	options: CompanionOptionValues
+	options: OptionsObject
 
 	/**
 	 * If the feedback is being converted to a boolean feedback, the style can be set here.
@@ -199,7 +199,13 @@ export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig = unknow
 			delete feedback.options[propertyName]
 
 			// Interpret it to a boolean, it could be stored in a few ways
-			feedback.isInverted = rawValue === 'true' || rawValue === true || Number(rawValue) > 0
+			feedback.isInverted = rawValue === 'true' || Boolean(rawValue) === true || Number(rawValue) > 0
+			// if (!rawValue.isExpression) {
+			// feedback.isInverted = rawValue.value === 'true' || Boolean(rawValue.value) === true || Number(rawValue.value) > 0
+			// } else {
+			// 	// We can't fix this case for them
+			// 	feedback.isInverted = false
+			// }
 
 			changedFeedbacks.push(feedback)
 		}
