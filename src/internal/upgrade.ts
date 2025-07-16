@@ -159,6 +159,7 @@ export function runThroughUpgradeScripts(
 					if (instance) {
 						instance.actionId = action.actionId
 						instance.options = action.options
+						instance.upgradeIndex = i
 
 						// Mark it as changed
 						updatedActions[action.id] = instance
@@ -172,6 +173,7 @@ export function runThroughUpgradeScripts(
 					if (instance) {
 						instance.feedbackId = feedback.feedbackId
 						instance.options = feedback.options
+						instance.upgradeIndex = i
 
 						// Mark it as changed
 						updatedFeedbacks[feedback.id] = {
