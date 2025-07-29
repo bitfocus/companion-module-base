@@ -16,6 +16,7 @@ import type { SomeCompanionActionInputField } from '../module-api/action.js'
 import type { CompanionVariableValue } from '../module-api/variable.js'
 import type { RemoteInfo } from 'dgram'
 import type { OptionsObject } from '../util.js'
+import type { JsonValue } from '../common/json-value.js'
 
 export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	/** The connection has a message for the Companion log */
@@ -201,7 +202,7 @@ export interface SetFeedbackDefinitionsMessage {
 		name: string
 		description: string | undefined
 		options: EncodeIsVisible<SomeCompanionFeedbackInputField>[] // TODO module-lib - versioned types?
-		type: 'boolean' | 'advanced'
+		type: 'boolean' | 'value' | 'advanced'
 		defaultStyle?: CompanionFeedbackButtonStyleResult
 		hasLearn: boolean
 		showInvert: boolean | undefined
@@ -243,7 +244,7 @@ export interface UpdateFeedbackValuesMessage {
 	values: Array<{
 		id: string
 		controlId: string
-		value: boolean | Partial<CompanionFeedbackButtonStyleResult> | undefined
+		value: JsonValue | Partial<CompanionFeedbackButtonStyleResult> | undefined
 	}>
 }
 

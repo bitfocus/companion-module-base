@@ -18,9 +18,11 @@ import { serializeIsVisibleFn } from './base.js'
 // eslint-disable-next-line n/no-missing-import
 import debounceFn from '../../lib/debounce-fn/index.js'
 import type { LogLevel } from '../module-api/enums.js'
+import { assertNever } from '../util.js'
+import type { JsonValue } from '../common/json-value.js'
 
 function convertFeedbackInstanceToEvent(
-	type: 'boolean' | 'advanced',
+	type: 'boolean' | 'value' | 'advanced',
 	feedback: FeedbackInstance,
 ): CompanionFeedbackInfo {
 	return {
@@ -201,8 +203,8 @@ export class FeedbackManager {
 				const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 
 				let value:
-					| boolean
-					| Promise<boolean>
+					| JsonValue
+					| Promise<JsonValue>
 					| CompanionAdvancedFeedbackResult
 					| Promise<CompanionAdvancedFeedbackResult>
 					| undefined
@@ -224,23 +226,39 @@ export class FeedbackManager {
 							return res.text
 						},
 					}
-					if (definition.type === 'boolean') {
-						value = definition.callback(
-							{
-								...convertFeedbackInstanceToEvent('boolean', feedback),
-								type: 'boolean',
-							},
-							context,
-						)
-					} else {
-						value = definition.callback(
-							{
-								...convertFeedbackInstanceToEvent('advanced', feedback),
-								type: 'advanced',
-								image: feedback.image,
-							},
-							context,
-						)
+
+					switch (definition.type) {
+						case 'boolean':
+							value = definition.callback(
+								{
+									...convertFeedbackInstanceToEvent('boolean', feedback),
+									type: 'boolean',
+								},
+								context,
+							)
+							break
+						case 'value':
+							value = definition.callback(
+								{
+									...convertFeedbackInstanceToEvent('value', feedback),
+									type: 'value',
+								},
+								context,
+							)
+							break
+						case 'advanced':
+							value = definition.callback(
+								{
+									...convertFeedbackInstanceToEvent('advanced', feedback),
+									type: 'advanced',
+									image: feedback.image,
+								},
+								context,
+							)
+							break
+						default:
+							assertNever(definition)
+							break
 					}
 
 					this.#parseVariablesContext = undefined
