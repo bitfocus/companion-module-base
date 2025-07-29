@@ -46,6 +46,13 @@ export interface CompanionActionDefinition {
 	description?: string
 	/** The input fields for the action */
 	options: SomeCompanionActionInputField[]
+
+	/**
+	 * Ignore changes to certain options and don't allow them to trigger the subscribe/unsubscribe callbacks
+	 * This allows for ensuring that the subscribe callback is only called when values the action cares about change
+	 */
+	optionsToIgnoreForSubscribe?: string[]
+
 	/** Called to execute the action */
 	callback: (action: CompanionActionEvent, context: CompanionActionContext) => Promise<void> | void
 	/**
