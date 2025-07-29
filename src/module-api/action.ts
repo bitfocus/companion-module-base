@@ -53,6 +53,11 @@ export interface CompanionActionDefinition {
 	 */
 	optionsToIgnoreForSubscribe?: string[]
 
+	/**
+	 * If true, the unsubscribe callback will not be called when the options change, only when the action is removed or disabled
+	 */
+	skipUnsubscribeOnOptionsChange?: boolean
+
 	/** Called to execute the action */
 	callback: (action: CompanionActionEvent, context: CompanionActionContext) => Promise<void> | void
 	/**

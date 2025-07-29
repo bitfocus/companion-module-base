@@ -93,7 +93,7 @@ export class ActionManager {
 			if (existing) {
 				// Call unsubscribe
 				const definition = this.#actionDefinitions.get(existing.actionId)
-				if (definition?.unsubscribe) {
+				if (definition?.unsubscribe && !definition.skipUnsubscribeOnOptionsChange) {
 					const context: CompanionActionContext = {
 						parseVariablesInString: async (text: string): Promise<string> => {
 							// No-op, any values parsed here will not be stable
