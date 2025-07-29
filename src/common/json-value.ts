@@ -1,3 +1,6 @@
+// Copied from https://github.com/sindresorhus/type-fest/blob/main/source/json-value.d.ts
+// Under MIT License - Sindre Sorhus <sindresorhus@gmail.com>
+
 /**
 Matches a JSON object.
 
