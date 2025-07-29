@@ -88,14 +88,8 @@ export class FeedbackManager {
 				if (definition?.unsubscribe) {
 					const context: CompanionFeedbackContext = {
 						parseVariablesInString: async (text: string): Promise<string> => {
-							const res = await this.#parseVariablesInString({
-								text: text,
-								controlId: existing.controlId,
-								actionInstanceId: undefined,
-								feedbackInstanceId: existing.id,
-							})
-
-							return res.text
+							// No-op, any values parsed here will not be stable
+							return text
 						},
 					}
 
@@ -117,19 +111,13 @@ export class FeedbackManager {
 				// TODO module-lib - deep freeze the feedback to avoid mutation?
 				this.#feedbackInstances.set(id, { ...feedback })
 
-				// Inserted or updated
+				// Inserted
 				const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 				if (definition?.subscribe) {
 					const context: CompanionFeedbackContext = {
 						parseVariablesInString: async (text: string): Promise<string> => {
-							const res = await this.#parseVariablesInString({
-								text: text,
-								controlId: feedback.controlId,
-								actionInstanceId: undefined,
-								feedbackInstanceId: feedback.id,
-							})
-
-							return res.text
+							// No-op, any values parsed here will not be stable
+							return text
 						},
 					}
 
@@ -363,14 +351,8 @@ export class FeedbackManager {
 			if (def?.subscribe) {
 				const context: CompanionFeedbackContext = {
 					parseVariablesInString: async (text: string): Promise<string> => {
-						const res = await this.#parseVariablesInString({
-							text: text,
-							controlId: fb.controlId,
-							actionInstanceId: undefined,
-							feedbackInstanceId: fb.id,
-						})
-
-						return res.text
+						// No-op, any values parsed here will not be stable
+						return text
 					},
 				}
 
@@ -392,14 +374,8 @@ export class FeedbackManager {
 			if (def && def.unsubscribe) {
 				const context: CompanionFeedbackContext = {
 					parseVariablesInString: async (text: string): Promise<string> => {
-						const res = await this.#parseVariablesInString({
-							text: text,
-							controlId: fb.controlId,
-							actionInstanceId: undefined,
-							feedbackInstanceId: fb.id,
-						})
-
-						return res.text
+						// No-op, any values parsed here will not be stable
+						return text
 					},
 				}
 
