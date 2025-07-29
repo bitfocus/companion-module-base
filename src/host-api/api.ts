@@ -188,6 +188,7 @@ export interface SetActionDefinitionsMessage {
 		name: string
 		description: string | undefined
 		options: EncodeIsVisible<SomeCompanionActionInputField>[] // TODO module-lib - versioned types?
+		optionsToIgnoreForSubscribe: string[] | undefined // Since 1.13.0
 		hasLearn: boolean
 		learnTimeout: number | undefined
 		hasLifecycleFunctions: boolean // Since 1.12.0

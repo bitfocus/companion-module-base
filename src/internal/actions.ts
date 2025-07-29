@@ -207,6 +207,7 @@ export class ActionManager {
 					name: action.name,
 					description: action.description,
 					options: serializeIsVisibleFn(action.options),
+					optionsToIgnoreForSubscribe: action.optionsToIgnoreForSubscribe,
 					hasLearn: !!action.learn,
 					learnTimeout: action.learnTimeout,
 					hasLifecycleFunctions: !!action.subscribe || !!action.unsubscribe,
