@@ -774,17 +774,7 @@ describe('FeedbackManager', () => {
 			})
 
 			await runAllTimers()
-			expect(mockDefinition.subscribe).toHaveBeenCalledTimes(2)
-			expect(mockDefinition.subscribe).toHaveBeenLastCalledWith(
-				{
-					id: feedbackId,
-					type: mockDefinition.type,
-					feedbackId: mockDefinitionId,
-					controlId: 'new-control',
-					options: { val: 'changed' },
-				},
-				expect.anything(),
-			)
+			expect(mockDefinition.subscribe).toHaveBeenCalledTimes(1)
 
 			expect(manager.getInstanceIds()).toEqual([feedbackId])
 		})
@@ -880,7 +870,7 @@ describe('FeedbackManager', () => {
 			expect(manager.getInstanceIds()).toEqual([feedbackId])
 		})
 
-		it('called when updated', async () => {
+		it('not called when updated', async () => {
 			// report a feedback
 			manager.handleUpdateFeedbacks({ [feedbackId]: feedback })
 
@@ -897,18 +887,7 @@ describe('FeedbackManager', () => {
 			})
 
 			await runAllTimers()
-			expect(mockDefinition.unsubscribe).toHaveBeenCalledTimes(1)
-			expect(mockDefinition.unsubscribe).toHaveBeenLastCalledWith(
-				{
-					id: feedbackId,
-					type: mockDefinition.type,
-					feedbackId: mockDefinitionId,
-					// with old values are expected for the unsubscribe
-					controlId: feedback.controlId,
-					options: feedback.options,
-				},
-				expect.anything(),
-			)
+			expect(mockDefinition.unsubscribe).toHaveBeenCalledTimes(0)
 
 			expect(manager.getInstanceIds()).toEqual([feedbackId])
 		})

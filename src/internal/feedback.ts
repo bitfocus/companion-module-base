@@ -82,7 +82,7 @@ export class FeedbackManager {
 	public handleUpdateFeedbacks(feedbacks: { [id: string]: FeedbackInstance | null | undefined }): void {
 		for (const [id, feedback] of Object.entries(feedbacks)) {
 			const existing = this.#feedbackInstances.get(id)
-			if (existing) {
+			if (existing && !feedback) {
 				// Call unsubscribe
 				const definition = this.#feedbackDefinitions.get(existing.feedbackId)
 				if (definition?.unsubscribe) {
@@ -112,23 +112,25 @@ export class FeedbackManager {
 				this.#feedbackInstances.set(id, { ...feedback })
 
 				// Inserted
-				const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
-				if (definition?.subscribe) {
-					const context: CompanionFeedbackContext = {
-						parseVariablesInString: async (text: string): Promise<string> => {
-							// No-op, any values parsed here will not be stable
-							return text
-						},
-					}
+				if (!existing) {
+					const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
+					if (definition?.subscribe) {
+						const context: CompanionFeedbackContext = {
+							parseVariablesInString: async (text: string): Promise<string> => {
+								// No-op, any values parsed here will not be stable
+								return text
+							},
+						}
 
-					Promise.resolve(
-						definition.subscribe(convertFeedbackInstanceToEvent(definition.type, feedback), context),
-					).catch((e) => {
-						this.#log(
-							'error',
-							`Feedback subscribe failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`,
-						)
-					})
+						Promise.resolve(
+							definition.subscribe(convertFeedbackInstanceToEvent(definition.type, feedback), context),
+						).catch((e) => {
+							this.#log(
+								'error',
+								`Feedback subscribe failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`,
+							)
+						})
+					}
 				}
 
 				// update the feedback value
