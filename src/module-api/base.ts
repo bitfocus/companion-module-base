@@ -17,6 +17,8 @@ import type {
 	LearnFeedbackResponseMessage,
 	LogMessageMessage,
 	ModuleToHostEventsV0,
+	ParseVariablesInStringMessage,
+	ParseVariablesInStringResponseMessage,
 	SendOscMessage,
 	SetPresetDefinitionsMessage,
 	SetStatusMessage,
@@ -28,7 +30,8 @@ import type {
 	UpdateActionInstancesMessage,
 	UpdateConfigAndLabelMessage,
 	UpdateFeedbackInstancesMessage,
-	VariablesChangedMessage,
+	UpgradeActionAndFeedbackInstancesMessage,
+	UpgradeActionAndFeedbackInstancesResponse,
 } from '../host-api/api.js'
 import { literal } from '../util.js'
 import type { InstanceBaseShared } from '../instance-base.js'
@@ -58,9 +61,9 @@ export interface InstanceBaseOptions {
 	disableVariableValidation: boolean
 }
 
-export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfig> {
+export abstract class InstanceBase<TConfig, TSecrets = undefined> implements InstanceBaseShared<TConfig, TSecrets> {
 	readonly #ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>
-	readonly #upgradeScripts: CompanionStaticUpgradeScript<TConfig>[]
+	readonly #upgradeScripts: CompanionStaticUpgradeScript<TConfig, TSecrets>[]
 	public readonly id: string
 
 	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })
@@ -68,6 +71,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	#recordingActions = false
 
 	#lastConfig: TConfig = {} as any
+	#lastSecrets: TSecrets = {} as any
 
 	readonly #actionManager: ActionManager
 	readonly #feedbackManager: FeedbackManager
@@ -96,7 +100,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Create an instance of the module
 	 */
 	constructor(internal: unknown) {
-		if (!isInstanceBaseProps<TConfig>(internal) || !internal._isInstanceBaseProps)
+		if (!isInstanceBaseProps<TConfig, TSecrets>(internal) || !internal._isInstanceBaseProps)
 			throw new Error(
 				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`,
 			)
@@ -116,12 +120,13 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				executeAction: this._handleExecuteAction.bind(this),
 				updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
 				updateActions: this._handleUpdateActions.bind(this),
+				upgradeActionsAndFeedbacks: this._handleUpgradeActionsAndFeedbacks.bind(this),
 				getConfigFields: this._handleGetConfigFields.bind(this),
 				handleHttpRequest: this._handleHttpRequest.bind(this),
 				learnAction: this._handleLearnAction.bind(this),
 				learnFeedback: this._handleLearnFeedback.bind(this),
 				startStopRecordActions: this._handleStartStopRecordActions.bind(this),
-				variablesChanged: this._handleVariablesChanged.bind(this),
+				variablesChanged: async () => undefined, // Not needed since 1.13.0
 				sharedUdpSocketMessage: this._handleSharedUdpSocketMessage.bind(this),
 				sharedUdpSocketError: this._handleSharedUdpSocketError.bind(this),
 			},
@@ -134,14 +139,26 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			this.#ipcWrapper.receivedMessage(msg as any)
 		})
 
+		const parseVariablesInStringIfNeeded = async (
+			msg: ParseVariablesInStringMessage,
+		): Promise<ParseVariablesInStringResponseMessage> => {
+			// Shortcut in case there is definitely nothing to parse
+			if (!msg.text.includes('$('))
+				return {
+					text: msg.text,
+					variableIds: undefined,
+				}
+			return this.#ipcWrapper.sendWithCb('parseVariablesInString', msg)
+		}
+
 		this.#actionManager = new ActionManager(
-			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
+			parseVariablesInStringIfNeeded,
 			(msg) => this.#ipcWrapper.sendWithNoCb('setActionDefinitions', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('setCustomVariable', msg),
 			this.log.bind(this),
 		)
 		this.#feedbackManager = new FeedbackManager(
-			async (msg) => this.#ipcWrapper.sendWithCb('parseVariablesInString', msg),
+			parseVariablesInStringIfNeeded,
 			(msg) => this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', msg),
 			(msg) => this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', msg),
 			this.log.bind(this),
@@ -158,75 +175,63 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		return this.#lifecycleQueue.add(async () => {
 			if (this.#initialized) throw new Error('Already initialized')
 
-			const actions = msg.actions
-			const feedbacks = msg.feedbacks
 			this.#lastConfig = msg.config as TConfig
+			this.#lastSecrets = msg.secrets as TSecrets
 			this.#label = msg.label
 
 			// Create initial config object
 			if (msg.isFirstInit) {
 				const newConfig: any = {}
+				const newSecrets: any = {}
 				const fields = this.getConfigFields()
 				for (const field of fields) {
 					if ('default' in field) {
-						newConfig[field.id] = field.default
+						if (field.type.startsWith('secret')) {
+							newSecrets[field.id] = field.default
+						} else {
+							newConfig[field.id] = field.default
+						}
 					}
 				}
 				this.#lastConfig = newConfig as TConfig
-				this.saveConfig(this.#lastConfig)
+				this.#lastSecrets = newSecrets as TSecrets
+				this.saveConfig(this.#lastConfig, this.#lastSecrets)
 
 				// this is new, so there is no point attempting to run any upgrade scripts
 				msg.lastUpgradeIndex = this.#upgradeScripts.length - 1
 			}
 
 			/**
-			 * Performing upgrades during init requires a fair chunk of work.
-			 * Some actions/feedbacks will be using the upgradeIndex of the instance, but some may have their own upgradeIndex on themselves if they are from an import.
+			 * Making this handle actions/feedbacks is hard now due to the structure of options, so instead we just upgrade the config, and the actions/feedbacks will be handled in their own calls soon after this
 			 */
-			const { updatedActions, updatedFeedbacks, updatedConfig } = runThroughUpgradeScripts(
-				actions,
-				feedbacks,
+			const { updatedConfig, updatedSecrets } = runThroughUpgradeScripts(
+				[],
+				[],
 				msg.lastUpgradeIndex,
 				this.#upgradeScripts,
 				this.#lastConfig,
+				this.#lastSecrets,
 				false,
 			)
 			this.#lastConfig = (updatedConfig as TConfig | undefined) ?? this.#lastConfig
-
-			// Send the upgraded data back to companion now. Just so that if the init crashes, this doesnt have to be repeated
-			const pSendUpgrade = this.#ipcWrapper.sendWithCb('upgradedItems', {
-				updatedActions,
-				updatedFeedbacks,
-			})
+			this.#lastSecrets = (updatedSecrets as TSecrets | undefined) ?? this.#lastSecrets
 
 			// Now we can initialise the module
 			try {
-				await this.init(this.#lastConfig, !!msg.isFirstInit)
+				await this.init(this.#lastConfig, !!msg.isFirstInit, this.#lastSecrets)
 
 				this.#initialized = true
 			} catch (e) {
 				console.trace(`Init failed: ${e}`)
 				throw e
-			} finally {
-				// Only now do we need to await the upgrade
-				await pSendUpgrade
 			}
-
-			setImmediate(() => {
-				// Subscribe all of the actions and feedbacks
-				this._handleUpdateActions({ actions }, true).catch((e) => {
-					this.log('error', `Receive actions failed: ${e}`)
-				})
-				this._handleUpdateFeedbacks({ feedbacks }, true).catch((e) => {
-					this.log('error', `Receive feedbacks failed: ${e}`)
-				})
-			})
 
 			return {
 				hasHttpHandler: typeof this.handleHttpRequest === 'function',
 				hasRecordActionsHandler: typeof this.handleStartStopRecordActions == 'function',
 				newUpgradeIndex: this.#upgradeScripts.length - 1,
 				updatedConfig: this.#lastConfig,
+				updatedSecrets: this.#lastSecrets,
 			}
 		})
 	}
@@ -246,44 +251,31 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 			this.#label = msg.label
 			this.#lastConfig = msg.config as TConfig
 
-			await this.configUpdated(this.#lastConfig)
+			await this.configUpdated(this.#lastConfig, this.#lastSecrets)
 		})
 	}
 	private async _handleExecuteAction(msg: ExecuteActionMessage): Promise<void> {
 		return this.#actionManager.handleExecuteAction(msg)
 	}
 
-	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage, skipUpgrades?: boolean): Promise<void> {
-		// Run through upgrade scripts if needed
-		if (!skipUpgrades) {
-			const res = runThroughUpgradeScripts({}, msg.feedbacks, null, this.#upgradeScripts, this.#lastConfig, true)
-			this.#ipcWrapper
-				.sendWithCb('upgradedItems', {
-					updatedActions: res.updatedActions,
-					updatedFeedbacks: res.updatedFeedbacks,
-				})
-				.catch((e) => {
-					this.log('error', `Failed to save upgraded feedbacks: ${e}`)
-				})
-		}
-
+	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage): Promise<void> {
 		this.#feedbackManager.handleUpdateFeedbacks(msg.feedbacks)
 	}
-	private async _handleUpdateActions(msg: UpdateActionInstancesMessage, skipUpgrades?: boolean): Promise<void> {
-		// Run through upgrade scripts if needed
-		if (!skipUpgrades) {
-			const res = runThroughUpgradeScripts(msg.actions, {}, null, this.#upgradeScripts, this.#lastConfig, true)
-			this.#ipcWrapper
-				.sendWithCb('upgradedItems', {
-					updatedActions: res.updatedActions,
-					updatedFeedbacks: res.updatedFeedbacks,
-				})
-				.catch((e) => {
-					this.log('error', `Failed to save upgraded actions: ${e}`)
-				})
-		}
-
+	private async _handleUpdateActions(msg: UpdateActionInstancesMessage): Promise<void> {
 		this.#actionManager.handleUpdateActions(msg.actions)
+	}
+	private async _handleUpgradeActionsAndFeedbacks(
+		msg: UpgradeActionAndFeedbackInstancesMessage,
+	): Promise<UpgradeActionAndFeedbackInstancesResponse> {
+		return runThroughUpgradeScripts(
+			msg.actions,
+			msg.feedbacks,
+			null,
+			this.#upgradeScripts,
+			this.#lastConfig,
+			this.#lastSecrets,
+			true,
+		)
 	}
 
 	private async _handleGetConfigFields(_msg: GetConfigFieldsMessage): Promise<GetConfigFieldsResponseMessage> {
@@ -328,10 +320,6 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 		this.handleStartStopRecordActions(this.#recordingActions)
 	}
 
-	private async _handleVariablesChanged(msg: VariablesChangedMessage): Promise<void> {
-		this.#feedbackManager.handleVariablesChanged(msg)
-	}
-
 	private async _handleSharedUdpSocketMessage(msg: SharedUdpSocketMessage): Promise<void> {
 		for (const socket of this.#sharedUdpSocketHandlers.values()) {
 			if (socket.handleId === msg.handleId) {
@@ -351,7 +339,7 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Main initialization function called
 	 * once the module is OK to start doing things.
 	 */
-	abstract init(config: TConfig, isFirstInit: boolean): Promise<void>
+	abstract init(config: TConfig, isFirstInit: boolean, secrets: TSecrets): Promise<void>
 
 	/**
 	 * Clean up the instance before it is destroyed.
@@ -362,15 +350,18 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	 * Called when the configuration is updated.
 	 * @param config The new config object
 	 */
-	abstract configUpdated(config: TConfig): Promise<void>
+	abstract configUpdated(config: TConfig, secrets: TSecrets): Promise<void>
 
 	/**
 	 * Save an updated configuration object
-	 * @param newConfig The new config object
+	 * Note: The whole config object and the keys of the secrets object are reported to the webui, so be careful how sensitive data is stored
+	 * @param newConfig The new config object, or undefined to not update the config
+	 * @param newSecrets The new secrets object, or undefined to not update the secrets
 	 */
-	saveConfig(newConfig: TConfig): void {
-		this.#lastConfig = newConfig
-		this.#ipcWrapper.sendWithNoCb('saveConfig', { config: newConfig })
+	saveConfig(newConfig: TConfig | undefined, newSecrets: TSecrets | undefined): void {
+		if (newConfig) this.#lastConfig = newConfig
+		if (newSecrets) this.#lastSecrets = newSecrets
+		this.#ipcWrapper.sendWithNoCb('saveConfig', { config: newConfig, secrets: newSecrets })
 	}
 
 	/**
@@ -520,6 +511,8 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 	}
 
 	/**
+	 * @deprecated Companion now handles this for you, for actions and feedbacks. If you need this for another purpose, let us know as we intend to remove this
+	 *
 	 * Parse and replace all the variables in a string
 	 * Note: You must not use this for feedbacks, as your feedback will not update when the variable changes.
 	 * There is an alternate version of this supplied to each of the action/feedback callbacks that tracks
@@ -535,6 +528,9 @@ export abstract class InstanceBase<TConfig> implements InstanceBaseShared<TConfi
 				`parseVariablesInString called while in: ${currentContext}. You should use the parseVariablesInString provided to the callback instead`,
 			)
 		}
+
+		// If there are no variables, just return the text
+		if (!text.includes('$(')) return text
 
 		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
 			text: text,

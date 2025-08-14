@@ -1,3 +1,4 @@
+import type { JsonValue } from '../common/json-value.js'
 import type { CompanionCommonCallbackContext } from './common.js'
 import type {
 	CompanionOptionValues,
@@ -25,7 +26,7 @@ export type SomeCompanionFeedbackInputField =
  */
 export interface CompanionFeedbackInfo {
 	/** The type of the feedback */
-	readonly type: 'boolean' | 'advanced'
+	readonly type: 'boolean' | 'value' | 'advanced'
 	/** The unique id for this feedback */
 	readonly id: string
 	/** The unique id for the location of this feedback */
@@ -39,11 +40,15 @@ export interface CompanionFeedbackInfo {
 /**
  * Extended information for execution of a boolean feedback
  */
-
 export type CompanionFeedbackBooleanEvent = CompanionFeedbackInfo
 // {
 // 	// readonly type: 'boolean'
 // }
+
+/**
+ * Extended information for execution of a value feedback
+ */
+export type CompanionFeedbackValueEvent = CompanionFeedbackInfo
 
 /**
  * Extended information for execution of an advanced feedback
@@ -95,7 +100,7 @@ export interface CompanionAdvancedFeedbackResult extends CompanionFeedbackButton
  * The common definition of a feedback
  */
 export interface CompanionFeedbackDefinitionBase {
-	type: 'boolean' | 'advanced'
+	type: 'boolean' | 'value' | 'advanced'
 	/** Name to show in the feedbacks list */
 	name: string
 	/** Additional description of the feedback */
@@ -148,6 +153,16 @@ export interface CompanionBooleanFeedbackDefinition extends CompanionFeedbackDef
 }
 
 /**
+ * The definition of a value feedback
+ */
+export interface CompanionValueFeedbackDefinition extends CompanionFeedbackDefinitionBase {
+	/** The type of the feedback */
+	type: 'value'
+	/** Called to get the feedback value */
+	callback: (feedback: CompanionFeedbackValueEvent, context: CompanionFeedbackContext) => JsonValue | Promise<JsonValue>
+}
+
+/**
  * The definition of an advanced feedback
  */
 export interface CompanionAdvancedFeedbackDefinition extends CompanionFeedbackDefinitionBase {
@@ -168,7 +183,10 @@ export type CompanionFeedbackContext = CompanionCommonCallbackContext
 /**
  * The definition of some feedback
  */
-export type CompanionFeedbackDefinition = CompanionBooleanFeedbackDefinition | CompanionAdvancedFeedbackDefinition
+export type CompanionFeedbackDefinition =
+	| CompanionBooleanFeedbackDefinition
+	| CompanionValueFeedbackDefinition
+	| CompanionAdvancedFeedbackDefinition
 
 /**
  * The definitions of a group of feedbacks

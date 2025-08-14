@@ -21,6 +21,7 @@ export interface CompanionInputFieldBase {
 		| 'checkbox'
 		| 'custom-variable'
 		| 'bonjour-device'
+		| 'secret-text'
 	/** The label of the field */
 	label: string
 	/** A hover tooltip for this field */
@@ -382,4 +383,32 @@ export interface CompanionInputFieldCustomVariable extends CompanionInputFieldBa
  */
 export interface CompanionInputFieldBonjourDevice extends CompanionInputFieldBase {
 	type: 'bonjour-device'
+}
+
+/**
+ * A text input field for secret values
+ *
+ * Available for config. Note: the value for this will be in the secrets store, not the config store.
+ *
+ * ### Example
+ * ```js
+ * {
+ * 	id: 'val',
+ * 	type: 'secret-text',
+ * 	label: 'Provide name',
+ * 	default: 'Bob'
+ * }
+ * ```
+ */
+export interface CompanionInputFieldSecret extends CompanionInputFieldBase {
+	type: 'secret-text'
+	/**
+	 * The default text value
+	 */
+	default?: string
+	/**
+	 * Whether a value is required
+	 * Note: values may not conform to this, it is a visual hint only
+	 */
+	required?: boolean
 }

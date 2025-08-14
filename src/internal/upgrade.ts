@@ -3,7 +3,11 @@ import type {
 	CompanionMigrationFeedback,
 	CompanionStaticUpgradeScript,
 } from '../module-api/upgrade.js'
-import type { FeedbackInstance, ActionInstance, UpgradedDataResponseMessage } from '../host-api/api.js'
+import type {
+	UpgradeActionInstance,
+	UpgradeFeedbackInstance,
+	UpgradeActionAndFeedbackInstancesResponse,
+} from '../host-api/api.js'
 import { Complete, literal } from '../util.js'
 
 function clone<T>(val: T): T {
@@ -18,19 +22,18 @@ function clone<T>(val: T): T {
  * @param defaultUpgradeIndex The lastUpgradeIndex of the connection, if known
  * @param upgradeScripts The scripts that may be run
  * @param config The current config of the module
- * @param skipConfigUpgrade Whether to skip upgrading the config
+ * @param skipConfigAndSecretsUpgrade Whether to skip upgrading the config and secrets
  * @returns The upgraded data that needs persisting
  */
 export function runThroughUpgradeScripts(
-	allActions: { [id: string]: ActionInstance | undefined | null },
-	allFeedbacks: { [id: string]: FeedbackInstance | undefined | null },
+	allActionsArray: UpgradeActionInstance[],
+	allFeedbacksArray: UpgradeFeedbackInstance[],
 	defaultUpgradeIndex: number | null,
-	upgradeScripts: CompanionStaticUpgradeScript<any>[],
+	upgradeScripts: CompanionStaticUpgradeScript<any, any>[],
 	config: unknown,
-	skipConfigUpgrade: boolean,
-): UpgradedDataResponseMessage & {
-	updatedConfig: unknown | undefined
-} {
+	secrets: unknown,
+	skipConfigAndSecretsUpgrade: boolean,
+): UpgradeActionAndFeedbackInstancesResponse {
 	// First we group all the actions and feedbacks by the version they currently are.
 	const pendingUpgradesGrouped = new Map<number, { feedbacks: string[]; actions: string[]; config: boolean }>()
 	const getPendingUpgradeGroup = (i: number) => {
@@ -41,21 +44,21 @@ export function runThroughUpgradeScripts(
 		}
 		return v
 	}
-	for (const action of Object.values(allActions)) {
+	for (const action of allActionsArray) {
 		const upgradeIndex = action?.upgradeIndex ?? defaultUpgradeIndex
 		if (action && typeof upgradeIndex === 'number') {
 			const pending = getPendingUpgradeGroup(upgradeIndex)
 			pending.actions.push(action.id)
 		}
 	}
-	for (const feedback of Object.values(allFeedbacks)) {
+	for (const feedback of allFeedbacksArray) {
 		const upgradeIndex = feedback?.upgradeIndex ?? defaultUpgradeIndex
 		if (feedback && typeof upgradeIndex === 'number') {
 			const pending = getPendingUpgradeGroup(upgradeIndex)
 			pending.feedbacks.push(feedback.id)
 		}
 	}
-	if (!skipConfigUpgrade) {
+	if (!skipConfigAndSecretsUpgrade) {
 		// If there is config we still need to upgrade that
 		for (let i = defaultUpgradeIndex ?? -1; i < upgradeScripts.length; i++) {
 			// ensure the group is registered
@@ -63,9 +66,13 @@ export function runThroughUpgradeScripts(
 		}
 	}
 
-	const updatedFeedbacks: UpgradedDataResponseMessage['updatedFeedbacks'] = {}
-	const updatedActions: UpgradedDataResponseMessage['updatedActions'] = {}
+	const allActions = Object.fromEntries(allActionsArray.map((a) => [a.id, a]))
+	const allFeedbacks = Object.fromEntries(allFeedbacksArray.map((a) => [a.id, a]))
+
+	const updatedFeedbacks: Record<string, UpgradeFeedbackInstance> = {}
+	const updatedActions: Record<string, UpgradeActionInstance> = {}
 	let updatedConfig: unknown | undefined
+	let updatedSecrets: unknown | undefined
 
 	if (pendingUpgradesGrouped.size > 0) {
 		// Figure out which script to run first. Note: we track the last index we ran, so it is offset by one
@@ -87,12 +94,13 @@ export function runThroughUpgradeScripts(
 			}
 
 			// Only upgrade the config, if we are past the last version we had for it
-			const upgradeConfig = !!group?.config
+			const upgradeConfigAndSecrets = !!group?.config
 
 			// Ensure there is something to upgrade
-			if (!upgradeConfig && actionsIdsToUpgrade.length === 0 && feedbackIdsToUpgrade.length === 0) continue
+			if (!upgradeConfigAndSecrets && actionsIdsToUpgrade.length === 0 && feedbackIdsToUpgrade.length === 0) continue
 
 			const inputConfig = updatedConfig ?? config
+			const inputSecrets = updatedSecrets ?? secrets
 
 			// We have an upgrade script that can be run
 			const fcn = upgradeScripts[i]
@@ -102,7 +110,8 @@ export function runThroughUpgradeScripts(
 					currentConfig: clone(inputConfig) as any,
 				},
 				{
-					config: upgradeConfig ? inputConfig : null,
+					config: upgradeConfigAndSecrets ? inputConfig : null,
+					secrets: upgradeConfigAndSecrets ? inputSecrets : null,
 
 					// Only pass the actions & feedbacks which need upgrading from this version
 					actions: actionsIdsToUpgrade
@@ -118,7 +127,7 @@ export function runThroughUpgradeScripts(
 								})
 							}
 						})
-						.filter((v): v is ActionInstance => !!v),
+						.filter((v): v is UpgradeActionInstance => !!v),
 
 					feedbacks: feedbackIdsToUpgrade
 						.map((id) => {
@@ -136,12 +145,13 @@ export function runThroughUpgradeScripts(
 								})
 							}
 						})
-						.filter((v): v is FeedbackInstance => !!v),
+						.filter((v): v is UpgradeFeedbackInstance => !!v),
 				},
 			)
 
 			// Apply changes
-			if (upgradeConfig && res.updatedConfig) updatedConfig = res.updatedConfig
+			if (upgradeConfigAndSecrets && res.updatedConfig) updatedConfig = res.updatedConfig
+			if (upgradeConfigAndSecrets && res.updatedSecrets) updatedSecrets = res.updatedSecrets
 
 			for (const action of res.updatedActions) {
 				if (action) {
@@ -149,6 +159,7 @@ export function runThroughUpgradeScripts(
 					if (instance) {
 						instance.actionId = action.actionId
 						instance.options = action.options
+						instance.upgradeIndex = i
 
 						// Mark it as changed
 						updatedActions[action.id] = instance
@@ -162,6 +173,7 @@ export function runThroughUpgradeScripts(
 					if (instance) {
 						instance.feedbackId = feedback.feedbackId
 						instance.options = feedback.options
+						instance.upgradeIndex = i
 
 						// Mark it as changed
 						updatedFeedbacks[feedback.id] = {
@@ -191,8 +203,10 @@ export function runThroughUpgradeScripts(
 	}
 
 	return {
-		updatedActions,
-		updatedFeedbacks,
+		updatedActions: Object.values(updatedActions),
+		updatedFeedbacks: Object.values(updatedFeedbacks),
 		updatedConfig,
+		updatedSecrets,
+		latestUpgradeIndex: upgradeScripts.length - 1,
 	}
 }

@@ -1,5 +1,5 @@
 import type { CompanionFeedbackButtonStyleResult } from './feedback.js'
-import type { CompanionOptionValues } from './input.js'
+import type { OptionsObject } from '../util.js'
 
 /** Additional utilities for Upgrade Scripts */
 export interface CompanionUpgradeContext<TConfig> {
@@ -13,11 +13,15 @@ export interface CompanionUpgradeContext<TConfig> {
 /**
  * The items for an upgrade script to upgrade
  */
-export interface CompanionStaticUpgradeProps<TConfig> {
+export interface CompanionStaticUpgradeProps<TConfig, TSecrets = undefined> {
 	/**
-	 * The module config to upgrade, if any
+	 * The connection config to upgrade, if any
 	 */
 	config: TConfig | null
+	/**
+	 * The connection secrets to upgrade, if any
+	 */
+	secrets: TSecrets | null
 	/**
 	 * The actions to upgrade
 	 */
@@ -31,11 +35,15 @@ export interface CompanionStaticUpgradeProps<TConfig> {
 /**
  * The result of an upgrade script
  */
-export interface CompanionStaticUpgradeResult<TConfig> {
+export interface CompanionStaticUpgradeResult<TConfig, TSecrets = undefined> {
 	/**
 	 * The updated config, if any changes were made
 	 */
 	updatedConfig: TConfig | null
+	/**
+	 * The updated secrets, if any changes were made
+	 */
+	updatedSecrets?: TSecrets | null
 	/**
 	 * Any changed actions
 	 */
@@ -49,10 +57,10 @@ export interface CompanionStaticUpgradeResult<TConfig> {
 /**
  * The definition of an upgrade script function
  */
-export type CompanionStaticUpgradeScript<TConfig> = (
+export type CompanionStaticUpgradeScript<TConfig, TSecrets = undefined> = (
 	context: CompanionUpgradeContext<TConfig>,
-	props: CompanionStaticUpgradeProps<TConfig>,
-) => CompanionStaticUpgradeResult<TConfig>
+	props: CompanionStaticUpgradeProps<TConfig, TSecrets>,
+) => CompanionStaticUpgradeResult<TConfig, TSecrets>
 
 /**
  * An action that could be upgraded
@@ -66,7 +74,7 @@ export interface CompanionMigrationAction {
 	/** The id of the action definition */
 	actionId: string
 	/** The user selected options for the action */
-	options: CompanionOptionValues
+	options: OptionsObject
 }
 
 /**
@@ -81,7 +89,7 @@ export interface CompanionMigrationFeedback {
 	/** The id of the feedback definition */
 	feedbackId: string
 	/** The user selected options for the feedback */
-	options: CompanionOptionValues
+	options: OptionsObject
 
 	/**
 	 * If the feedback is being converted to a boolean feedback, the style can be set here.
@@ -102,6 +110,7 @@ export interface CompanionMigrationFeedback {
  */
 export const EmptyUpgradeScript: CompanionStaticUpgradeScript<any> = () => ({
 	updatedConfig: null,
+	updatedSecrets: null,
 	updatedActions: [],
 	updatedFeedbacks: [],
 })
@@ -126,10 +135,10 @@ export interface CompanionUpgradeToBooleanFeedbackMap {
  */
 export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig = unknown>(
 	upgradeMap: CompanionUpgradeToBooleanFeedbackMap,
-): CompanionStaticUpgradeScript<TConfig> {
+): CompanionStaticUpgradeScript<TConfig, any> {
 	// Warning: the unused parameters will often be null
 	return (_context, props) => {
-		const changedFeedbacks: CompanionStaticUpgradeResult<unknown>['updatedFeedbacks'] = []
+		const changedFeedbacks: CompanionStaticUpgradeResult<unknown, any>['updatedFeedbacks'] = []
 
 		for (const feedback of props.feedbacks) {
 			let upgrade_rules = upgradeMap[feedback.feedbackId]
@@ -161,6 +170,7 @@ export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig = unknown>(
 
 		return {
 			updatedConfig: null,
+			updatedSecrets: null,
 			updatedActions: [],
 			updatedFeedbacks: changedFeedbacks,
 		}
@@ -189,13 +199,20 @@ export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig = unknow
 			delete feedback.options[propertyName]
 
 			// Interpret it to a boolean, it could be stored in a few ways
-			feedback.isInverted = rawValue === 'true' || rawValue === true || Number(rawValue) > 0
+			feedback.isInverted = rawValue === 'true' || Boolean(rawValue) === true || Number(rawValue) > 0
+			// if (!rawValue.isExpression) {
+			// feedback.isInverted = rawValue.value === 'true' || Boolean(rawValue.value) === true || Number(rawValue.value) > 0
+			// } else {
+			// 	// We can't fix this case for them
+			// 	feedback.isInverted = false
+			// }
 
 			changedFeedbacks.push(feedback)
 		}
 
 		return {
 			updatedConfig: null,
+			updatedSecrets: null,
 			updatedActions: [],
 			updatedFeedbacks: changedFeedbacks,
 		}

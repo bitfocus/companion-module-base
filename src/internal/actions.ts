@@ -93,17 +93,11 @@ export class ActionManager {
 			if (existing) {
 				// Call unsubscribe
 				const definition = this.#actionDefinitions.get(existing.actionId)
-				if (definition?.unsubscribe) {
+				if (definition?.unsubscribe && !definition.skipUnsubscribeOnOptionsChange) {
 					const context: CompanionActionContext = {
 						parseVariablesInString: async (text: string): Promise<string> => {
-							const res = await this.#parseVariablesInString({
-								text: text,
-								controlId: existing.controlId,
-								actionInstanceId: existing.id,
-								feedbackInstanceId: undefined,
-							})
-
-							return res.text
+							// No-op, any values parsed here will not be stable
+							return text
 						},
 						setCustomVariableValue: () => {
 							throw new Error(`setCustomVariableValue is not available during unsubscribe`)
@@ -131,17 +125,11 @@ export class ActionManager {
 				if (definition?.subscribe) {
 					const context: CompanionActionContext = {
 						parseVariablesInString: async (text: string): Promise<string> => {
-							const res = await this.#parseVariablesInString({
-								text: text,
-								controlId: action.controlId,
-								actionInstanceId: action.id,
-								feedbackInstanceId: undefined,
-							})
-
-							return res.text
+							// No-op, any values parsed here will not be stable
+							return text
 						},
 						setCustomVariableValue: () => {
-							throw new Error(`setCustomVariableValue is not available during unsubscribe`)
+							throw new Error(`setCustomVariableValue is not available during subscribe`)
 						},
 					}
 
@@ -207,6 +195,7 @@ export class ActionManager {
 					name: action.name,
 					description: action.description,
 					options: serializeIsVisibleFn(action.options),
+					optionsToIgnoreForSubscribe: action.optionsToIgnoreForSubscribe,
 					hasLearn: !!action.learn,
 					learnTimeout: action.learnTimeout,
 					hasLifecycleFunctions: !!action.subscribe || !!action.unsubscribe,
@@ -231,14 +220,8 @@ export class ActionManager {
 			if (def?.subscribe) {
 				const context: CompanionActionContext = {
 					parseVariablesInString: async (text: string): Promise<string> => {
-						const res = await this.#parseVariablesInString({
-							text: text,
-							controlId: act.controlId,
-							actionInstanceId: act.id,
-							feedbackInstanceId: undefined,
-						})
-
-						return res.text
+						// No-op, any values parsed here will not be stable
+						return text
 					},
 					setCustomVariableValue: () => {
 						throw new Error(`setCustomVariableValue is not available during subscribe`)
@@ -263,14 +246,8 @@ export class ActionManager {
 			if (def && def.unsubscribe) {
 				const context: CompanionActionContext = {
 					parseVariablesInString: async (text: string): Promise<string> => {
-						const res = await this.#parseVariablesInString({
-							text: text,
-							controlId: act.controlId,
-							actionInstanceId: act.id,
-							feedbackInstanceId: undefined,
-						})
-
-						return res.text
+						// No-op, any values parsed here will not be stable
+						return text
 					},
 					setCustomVariableValue: () => {
 						throw new Error(`setCustomVariableValue is not available during unsubscribe`)
