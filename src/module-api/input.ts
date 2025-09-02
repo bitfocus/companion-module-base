@@ -26,6 +26,8 @@ export interface CompanionInputFieldBase {
 	label: string
 	/** A hover tooltip for this field */
 	tooltip?: string
+	/** A longer description/summary/notes for this field */
+	description?: string
 
 	/**
 	 * @deprecated This will be removed in 2.0.0 of this api. Use `isVisibleExpression` instead.
