@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.1](https://github.com/bitfocus/companion-module-base/compare/v1.13.0...v1.13.1) (2025-09-04)
+
+
+### Bug Fixes
+
+* add regex to secret-text field ([51822ca](https://github.com/bitfocus/companion-module-base/commit/51822ca609718ac202eb7618a69a09b73155889a))
+
 ## [1.13.0](https://github.com/bitfocus/companion-module-base/compare/v1.12.1...v1.13.0) (2025-09-04)
 
 
