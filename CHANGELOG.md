@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.13.0](https://github.com/bitfocus/companion-module-base/compare/v1.12.1...v1.13.0) (2025-09-04)
+
+
+### Features
+
+* add desciption line below input fields ([d86300c](https://github.com/bitfocus/companion-module-base/commit/d86300ca0e777ef55fe869e2d7b24926172e46b8))
+* add option to actions to skip unsubscribe being called when options change. ([3c4430d](https://github.com/bitfocus/companion-module-base/commit/3c4430d08c33311b9fae54f503518273704eb9f2))
+* add value feedback type ([2e48256](https://github.com/bitfocus/companion-module-base/commit/2e482565bdd1545a74150695e94dfeaad6eaf8ee))
+* allow actions to mark options to not treat reactively for subscription callbacks ([d959218](https://github.com/bitfocus/companion-module-base/commit/d95921803d342640a84cf638db286ebbb2e00515))
+* connection secrets config ([d030871](https://github.com/bitfocus/companion-module-base/commit/d0308713fecf9b7307facdbf32c8c3c60a10bd92))
+* split host api methods to separate out upgrade-script calls ([#118](https://github.com/bitfocus/companion-module-base/issues/118)) ([cfa561c](https://github.com/bitfocus/companion-module-base/commit/cfa561c05ebabbc058e1e83dfbffd65e44de5706))
+
+
+### Bug Fixes
+
+* make context.parseVariablesInString a no-op in subscribe/unsubscribe callbacks ([fbbb8a2](https://github.com/bitfocus/companion-module-base/commit/fbbb8a2b0af04453dd639c7fe1db858be0366684))
+* only call feedback subscribe/unsubscribe when the feedback is added/removed, not for every update. ([56ba76a](https://github.com/bitfocus/companion-module-base/commit/56ba76a24c3b48dce9e42d64b93a9f53cc823848))
+* upgrade index tracking in new flow ([27f71f5](https://github.com/bitfocus/companion-module-base/commit/27f71f5ffc65a79d711907e1e31ae1bd16d57809))
+
 ## [1.12.1](https://github.com/bitfocus/companion-module-base/compare/v1.12.0...v1.12.1) (2025-05-31)
 
 
