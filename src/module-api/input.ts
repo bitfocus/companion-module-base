@@ -413,4 +413,9 @@ export interface CompanionInputFieldSecret extends CompanionInputFieldBase {
 	 * Note: values may not conform to this, it is a visual hint only
 	 */
 	required?: boolean
+	/**
+	 * A regex to use to inform the user if the current input is valid.
+	 * Note: values may not conform to this, it is a visual hint only
+	 */
+	regex?: string
 }
