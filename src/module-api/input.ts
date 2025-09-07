@@ -187,6 +187,9 @@ export interface CompanionInputFieldTextInput extends CompanionInputFieldBase {
 	 * This can either be a boolean for minimal support, or an object defining additional values
 	 */
 	useVariables?: boolean | CompanionFieldVariablesSupport
+
+	/** Show as a multiline input field */
+	multiline?: boolean
 }
 
 export interface CompanionFieldVariablesSupport {
