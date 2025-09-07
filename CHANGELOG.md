@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.2](https://github.com/bitfocus/companion-module-base/compare/v1.13.1...v1.13.2) (2025-09-07)
+
+
+### Bug Fixes
+
+* expose `multiline` option on textinput field ([213347c](https://github.com/bitfocus/companion-module-base/commit/213347ca98dc2c87e34bd09f875ff896d8b812ec))
+* exposes `showMinAsNegativeInfinity` and `showMaxAsPositiveInfinity` properties on number input field ([d290a74](https://github.com/bitfocus/companion-module-base/commit/d290a744251d0913a57380d93990c6b3b5bc799e))
+
 ## [1.13.1](https://github.com/bitfocus/companion-module-base/compare/v1.13.0...v1.13.1) (2025-09-04)
 
 
