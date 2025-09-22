@@ -356,9 +356,9 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * Save an updated configuration object
 	 * Note: The whole config object and the keys of the secrets object are reported to the webui, so be careful how sensitive data is stored
 	 * @param newConfig The new config object, or undefined to not update the config
-	 * @param newSecrets The new secrets object, or undefined to not update the secrets
+	 * @param newSecrets The new secrets object, or undefined to not update the secrets (optional)
 	 */
-	saveConfig(newConfig: TConfig | undefined, newSecrets: TSecrets | undefined): void {
+	saveConfig(newConfig: TConfig | undefined, newSecrets: TSecrets | undefined = undefined): void {
 		if (newConfig) this.#lastConfig = newConfig
 		if (newSecrets) this.#lastSecrets = newSecrets
 		this.#ipcWrapper.sendWithNoCb('saveConfig', { config: newConfig, secrets: newSecrets })
