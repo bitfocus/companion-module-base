@@ -359,6 +359,12 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param newConfig The new config object, or undefined to not update the config
 	 * @param newSecrets The new secrets object, or undefined to not update the secrets
 	 */
+	saveConfig(this: InstanceBase<TConfig, undefined>, newConfig: TConfig | undefined, newSecrets?: undefined): void
+	saveConfig(
+		this: InstanceBase<TConfig, TSecrets>,
+		newConfig: TConfig | undefined,
+		newSecrets: TSecrets | undefined,
+	): void
 	saveConfig(newConfig: TConfig | undefined, newSecrets: TSecrets | undefined): void {
 		if (newConfig) this.#lastConfig = newConfig
 		if (newSecrets) this.#lastSecrets = newSecrets
