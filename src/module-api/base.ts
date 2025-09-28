@@ -35,6 +35,7 @@ import type {
 } from '../host-api/api.js'
 import { literal } from '../util.js'
 import type { InstanceBaseShared } from '../instance-base.js'
+// eslint-disable-next-line n/no-missing-import
 import PQueue from 'p-queue'
 import type { CompanionVariableDefinition, CompanionVariableValue, CompanionVariableValues } from './variable.js'
 import type { OSCSomeArguments } from '../common/osc.js'

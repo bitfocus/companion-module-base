@@ -1,4 +1,5 @@
 import { assertNever } from '../util.js'
+// eslint-disable-next-line n/no-missing-import
 import ejson from 'ejson'
 
 const MAX_CALLBACK_ID = 1 << 28
