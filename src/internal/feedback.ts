@@ -15,8 +15,7 @@ import type {
 	UpdateFeedbackValuesMessage,
 } from '../host-api/api.js'
 import { serializeIsVisibleFn } from './base.js'
-// eslint-disable-next-line n/no-missing-import
-import debounceFn from '../../lib/debounce-fn/index.js'
+import debounceFn from 'debounce-fn'
 import type { LogLevel } from '../module-api/enums.js'
 import { assertNever } from '../util.js'
 import type { JsonValue } from '../common/json-value.js'
@@ -266,6 +265,18 @@ export class FeedbackManager {
 
 				// Await the value before looking at this.#pendingFeedbackValues, to avoid race conditions
 				const resolvedValue = await value
+
+				if (
+					definition?.type === 'advanced' &&
+					resolvedValue &&
+					typeof resolvedValue === 'object' &&
+					'imageBuffer' in resolvedValue &&
+					(resolvedValue.imageBuffer as any) instanceof Uint8Array
+				) {
+					// Backwards compatibility fixup, ensure the imageBuffer is a string
+					resolvedValue.imageBuffer = Buffer.from(resolvedValue.imageBuffer as any).toString('base64')
+				}
+
 				this.#pendingFeedbackValues.set(id, {
 					id: id,
 					controlId: feedback.controlId,

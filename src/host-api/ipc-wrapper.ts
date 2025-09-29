@@ -1,6 +1,4 @@
 import { assertNever } from '../util.js'
-// eslint-disable-next-line n/no-missing-import
-import ejson from 'ejson'
 
 const MAX_CALLBACK_ID = 1 << 28
 
@@ -82,7 +80,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 		this.#sendMessage({
 			direction: 'call',
 			name: String(name),
-			payload: ejson.stringify(msg),
+			payload: JSON.stringify(msg),
 			callbackId: id,
 		})
 
@@ -100,7 +98,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 		this.#sendMessage({
 			direction: 'call',
 			name: String(name),
-			payload: ejson.stringify(msg),
+			payload: JSON.stringify(msg),
 			callbackId: undefined,
 		})
 	}
@@ -116,14 +114,14 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 							direction: 'response',
 							callbackId: msg.callbackId,
 							success: false,
-							payload: ejson.stringify({ message: `Unknown command "${msg.name}"` }),
+							payload: JSON.stringify({ message: `Unknown command "${msg.name}"` }),
 						})
 					}
 					return
 				}
 
 				// TODO - should anything be logged here?
-				const data = msg.payload ? ejson.parse(msg.payload) : undefined
+				const data = msg.payload ? JSON.parse(msg.payload) : undefined
 				handler(data).then(
 					(res) => {
 						if (msg.callbackId) {
@@ -131,7 +129,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 								direction: 'response',
 								callbackId: msg.callbackId,
 								success: true,
-								payload: ejson.stringify(res),
+								payload: JSON.stringify(res),
 							})
 						}
 					},
@@ -142,7 +140,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 								callbackId: msg.callbackId,
 								success: false,
 								payload:
-									err instanceof Error ? JSON.stringify(err, Object.getOwnPropertyNames(err)) : ejson.stringify(err),
+									err instanceof Error ? JSON.stringify(err, Object.getOwnPropertyNames(err)) : JSON.stringify(err),
 							})
 						}
 					},
@@ -164,7 +162,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 
 				clearTimeout(callbacks.timeout)
 
-				const data = msg.payload ? ejson.parse(msg.payload) : undefined
+				const data = msg.payload ? JSON.parse(msg.payload) : undefined
 				if (msg.success) {
 					callbacks.resolve(data)
 				} else {
