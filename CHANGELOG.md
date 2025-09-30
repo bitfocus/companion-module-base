@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.3](https://github.com/bitfocus/companion-module-base/compare/v1.13.2...v1.13.3) (2025-09-30)
+
+
+### Bug Fixes
+
+* make `newSecrets` parameter to `saveConfig` optional, if secrets config is not being used [#152](https://github.com/bitfocus/companion-module-base/issues/152) ([ce8397b](https://github.com/bitfocus/companion-module-base/commit/ce8397b6cce4f3e43dc23070e03d27d87d936d93))
+
 ## [1.13.2](https://github.com/bitfocus/companion-module-base/compare/v1.13.1...v1.13.2) (2025-09-07)
 
 
