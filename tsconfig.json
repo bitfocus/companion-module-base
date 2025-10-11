@@ -2,7 +2,7 @@
 	"extends": "./tsconfig.build.json",
 	"exclude": ["node_modules/**"],
 	"compilerOptions": {
-		"types": ["jest", "node"],
+		"types": ["node" /* , "jest" ] // uncomment this if using jest */],
 		"lib": ["ES2021.String"]
 	}
 }
