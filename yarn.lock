@@ -22,6 +22,7 @@ __metadata:
   dependencies:
     "@companion-module/tools": "npm:^2.3.0"
     "@tsconfig/node18": "npm:^18.2.4"
+    "@tsconfig/node22": "npm:^22.0.2"
     "@types/ejson": "npm:^2.2.2"
     "@types/lodash-es": "npm:^4.17.12"
     "@types/node": "npm:^18.19.123"
@@ -721,6 +722,13 @@ __metadata:
   version: 18.2.4
   resolution: "@tsconfig/node18@npm:18.2.4"
   checksum: 10c0/cdfd17f212660374eb2765cd5907b2252e43cfa2623cd52307a49f004327ef49bbe7d53c78b0aca57f33e9a5cb0d7d2eb5ded9be1235e6212f65c9f0699322b6
+  languageName: node
+  linkType: hard
+
+"@tsconfig/node22@npm:^22.0.2":
+  version: 22.0.2
+  resolution: "@tsconfig/node22@npm:22.0.2"
+  checksum: 10c0/c75e6b9ea86ec2a384adefac0e2f16a6c08202ae5cf6c8c745944396a6931ffb38e742809491c1882d1868c2af1c33744193701779674bfb1e05f6a130045a18
   languageName: node
   linkType: hard
 
