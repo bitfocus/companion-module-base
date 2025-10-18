@@ -7,26 +7,12 @@ import type { InstanceBase } from './module-api/base.js'
 import { literal } from './util.js'
 import type { InstanceBaseProps } from './internal/base.js'
 import { IpcWrapper } from './host-api/ipc-wrapper.js'
-import path from 'path'
 
 let hasEntrypoint = false
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let moduleInstance: InstanceBase<any, any> | undefined
 
 export type InstanceConstructor<TConfig, TSecrets> = new (internal: unknown) => InstanceBase<TConfig, TSecrets>
-
-// async function readFileUrl(url: URL): Promise<string> {
-// 	// Hack to make json files be loadable after being inlined by webpack
-// 	const prefix = 'application/json;base64,'
-// 	if (url.pathname.startsWith(prefix)) {
-// 		const base64 = url.pathname.substring(prefix.length)
-// 		return Buffer.from(base64, 'base64').toString()
-// 	}
-
-// 	// Fallback to reading from disk
-// 	const buf = await fs.readFile(url)
-// 	return buf.toString()
-// }
 
 /**
  * Setup the module for execution
@@ -40,12 +26,6 @@ export function runEntrypoint<TConfig, TSecrets>(
 ): void {
 	Promise.resolve()
 		.then(async () => {
-			// const pkgJsonStr = (await fs.readFile(path.join(__dirname, '../package.json'))).toString()
-			// const pkgJson = JSON.parse(pkgJsonStr)
-			// if (!pkgJson || pkgJson.name !== '@companion-module/base')
-			// 	throw new Error('Failed to find the package.json for @companion-module/base')
-			// if (!pkgJson.version) throw new Error('Missing version field in the package.json for @companion-module/base')
-
 			// Ensure only called once per module
 			if (hasEntrypoint) throw new Error(`runEntrypoint can only be called once`)
 			hasEntrypoint = true
@@ -66,20 +46,6 @@ export function runEntrypoint<TConfig, TSecrets>(
 
 			if (manifestJson.runtime?.api !== HostApiNodeJsIpc) throw new Error(`Module manifest 'api' mismatch`)
 			if (!manifestJson.runtime.apiVersion) throw new Error(`Module manifest 'apiVersion' missing`)
-			let apiVersion = manifestJson.runtime.apiVersion
-
-			if (apiVersion === '0.0.0') {
-				// It looks like the module is in dev mode. lets attempt to load the package.json from this module instead
-				try {
-					const baseJsonStr = await fs.readFile(path.join(__dirname, '../package.json'))
-					const baseJson = JSON.parse(baseJsonStr.toString())
-					if (baseJson.name === '@companion-module/base') {
-						apiVersion = baseJson.version
-					}
-				} catch (_e) {
-					throw new Error('Failed to determine module api version')
-				}
-			}
 
 			if (!process.send) throw new Error('Module is not being run with ipc')
 
@@ -139,7 +105,7 @@ export function runEntrypoint<TConfig, TSecrets>(
 				}),
 			)
 
-			ipcWrapper.sendWithCb('register', { apiVersion, connectionId, verificationToken }).then(
+			ipcWrapper.sendWithCb('register', { verificationToken }).then(
 				() => {
 					console.log(`Module-host accepted registration`)
 				},
