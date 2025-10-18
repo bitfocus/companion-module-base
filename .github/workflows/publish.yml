@@ -111,7 +111,7 @@ jobs:
             yarn version ${OLD_VERSION}-${{ steps.do-publish.outputs.prerelease }}
           fi
 
-          # yarn build
+          yarn build
         env:
           CI: true
 
@@ -121,6 +121,7 @@ jobs:
           name: publish-dist
           path: |
             dist
+            generated
             package.json
           retention-days: 1
           if-no-files-found: error
