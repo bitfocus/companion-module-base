@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.4](https://github.com/bitfocus/companion-module-base/compare/v1.13.3...v1.13.4) (2025-10-18)
+
+
+### Bug Fixes
+
+* missing files in package ([528e743](https://github.com/bitfocus/companion-module-base/commit/528e7431c41c81e3d1c9bddd2ae9743e181df4c9))
+
 ## [1.13.3](https://github.com/bitfocus/companion-module-base/compare/v1.13.2...v1.13.3) (2025-10-18)
 
 
