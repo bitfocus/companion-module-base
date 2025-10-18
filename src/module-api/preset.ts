@@ -69,7 +69,7 @@ export interface CompanionButtonPresetDefinition {
 	/** The base style of this preset, this will be copied to the button */
 	style: CompanionButtonStyleProps
 	/** Preview style for preset, will be used in GUI for preview */
-	previewStyle?: CompanionButtonStyleProps
+	previewStyle?: Partial<CompanionButtonStyleProps>
 	/** Options for this preset */
 	options?: CompanionButtonPresetOptions
 	/** The feedbacks on the button */
