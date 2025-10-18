@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.3](https://github.com/bitfocus/companion-module-base/compare/v1.13.2...v1.13.3) (2025-10-18)
+
+
+### Bug Fixes
+
+* make `newSecrets` parameter to `saveConfig` optional, if secrets config is not being used [#152](https://github.com/bitfocus/companion-module-base/issues/152) ([ce8397b](https://github.com/bitfocus/companion-module-base/commit/ce8397b6cce4f3e43dc23070e03d27d87d936d93))
+* make CompanionButtonPresetDefinition presetStyle a partial ([#156](https://github.com/bitfocus/companion-module-base/issues/156)) ([c4c8b49](https://github.com/bitfocus/companion-module-base/commit/c4c8b49a3cc6e18ec110661fdf880a8ab2d38063))
+
 ## [1.13.2](https://github.com/bitfocus/companion-module-base/compare/v1.13.1...v1.13.2) (2025-09-07)
 
 
