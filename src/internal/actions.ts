@@ -8,6 +8,7 @@ import type {
 	LearnActionMessage,
 	LearnActionResponseMessage,
 	SetCustomVariableMessage,
+	ExecuteActionReponseMessage,
 } from '../host-api/api.js'
 import type {
 	CompanionActionContext,
@@ -50,9 +51,14 @@ export class ActionManager {
 		this.#log = log
 	}
 
-	public async handleExecuteAction(msg: ExecuteActionMessage): Promise<void> {
+	public async handleExecuteAction(msg: ExecuteActionMessage): Promise<ExecuteActionReponseMessage> {
 		const actionDefinition = this.#actionDefinitions.get(msg.action.actionId)
-		if (!actionDefinition) throw new Error(`Unknown action: ${msg.action.actionId}`)
+		if (!actionDefinition) {
+			return {
+				success: false,
+				errorMessage: `Action definition not found for: ${msg.action.actionId}`,
+			}
+		}
 
 		const context: CompanionActionContext = {
 			parseVariablesInString: async (text: string): Promise<string> => {
@@ -74,17 +80,29 @@ export class ActionManager {
 			},
 		}
 
-		await actionDefinition.callback(
-			{
-				id: msg.action.id,
-				actionId: msg.action.actionId,
-				controlId: msg.action.controlId,
-				options: msg.action.options,
+		try {
+			await actionDefinition.callback(
+				{
+					id: msg.action.id,
+					actionId: msg.action.actionId,
+					controlId: msg.action.controlId,
+					options: msg.action.options,
 
-				surfaceId: msg.surfaceId,
-			},
-			context,
-		)
+					surfaceId: msg.surfaceId,
+				},
+				context,
+			)
+
+			return {
+				success: true,
+				errorMessage: undefined,
+			}
+		} catch (e: any) {
+			return {
+				success: false,
+				errorMessage: e?.message ?? String(e),
+			}
+		}
 	}
 
 	public handleUpdateActions(actions: { [id: string]: ActionInstance | null | undefined }): void {

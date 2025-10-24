@@ -96,7 +96,7 @@ export interface HostToModuleEventsV0 extends HostToModuleEventsV0SharedSocket {
 		msg: UpgradeActionAndFeedbackInstancesMessage,
 	) => UpgradeActionAndFeedbackInstancesResponse
 	/** Execute an action */
-	executeAction: (msg: ExecuteActionMessage) => void
+	executeAction: (msg: ExecuteActionMessage) => ExecuteActionReponseMessage | undefined // This is only returned since 1.14.0
 	/** Get the config fields for this connection */
 	getConfigFields: (msg: GetConfigFieldsMessage) => GetConfigFieldsResponseMessage
 	/** Handle an incoming HTTP request */
@@ -118,7 +118,7 @@ export interface HostToModuleEventsV0 extends HostToModuleEventsV0SharedSocket {
 	 */
 	startStopRecordActions: (msg: StartStopRecordActionsMessage) => void
 	/**
-	 * @deprecated Replaced by companion parsing the options before the module in 1.13?.0
+	 * @deprecated Replaced by companion parsing the options before the module in 1.13.0
 	 * Prior to 1.13.0, this would notify the module that a variable it had parsed during a feedback had changed and let it re-run the feedback
 	 */
 	variablesChanged: (msg: VariablesChangedMessage) => never
@@ -238,6 +238,12 @@ export interface ExecuteActionMessage {
 
 	/** Identifier of the surface which triggered this action */
 	surfaceId: string | undefined
+}
+
+export interface ExecuteActionReponseMessage {
+	success: boolean
+	/** If success=false, a reason for the failure */
+	errorMessage: string | undefined
 }
 
 export interface UpdateFeedbackValuesMessage {
