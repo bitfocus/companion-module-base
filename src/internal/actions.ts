@@ -8,7 +8,7 @@ import type {
 	LearnActionMessage,
 	LearnActionResponseMessage,
 	SetCustomVariableMessage,
-	ExecuteActionReponseMessage,
+	ExecuteActionResponseMessage,
 } from '../host-api/api.js'
 import type {
 	CompanionActionContext,
@@ -51,7 +51,7 @@ export class ActionManager {
 		this.#log = log
 	}
 
-	public async handleExecuteAction(msg: ExecuteActionMessage): Promise<ExecuteActionReponseMessage> {
+	public async handleExecuteAction(msg: ExecuteActionMessage): Promise<ExecuteActionResponseMessage> {
 		const actionDefinition = this.#actionDefinitions.get(msg.action.actionId)
 		if (!actionDefinition) {
 			return {

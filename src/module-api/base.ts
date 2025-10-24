@@ -4,7 +4,7 @@ import type { CompanionPresetDefinitions } from './preset.js'
 import type { InstanceStatus, LogLevel } from './enums.js'
 import type {
 	ExecuteActionMessage,
-	ExecuteActionReponseMessage,
+	ExecuteActionResponseMessage,
 	GetConfigFieldsMessage,
 	GetConfigFieldsResponseMessage,
 	HandleHttpRequestMessage,
@@ -256,7 +256,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 			await this.configUpdated(this.#lastConfig, this.#lastSecrets)
 		})
 	}
-	private async _handleExecuteAction(msg: ExecuteActionMessage): Promise<ExecuteActionReponseMessage> {
+	private async _handleExecuteAction(msg: ExecuteActionMessage): Promise<ExecuteActionResponseMessage> {
 		return this.#actionManager.handleExecuteAction(msg)
 	}
 

@@ -96,7 +96,7 @@ export interface HostToModuleEventsV0 extends HostToModuleEventsV0SharedSocket {
 		msg: UpgradeActionAndFeedbackInstancesMessage,
 	) => UpgradeActionAndFeedbackInstancesResponse
 	/** Execute an action */
-	executeAction: (msg: ExecuteActionMessage) => ExecuteActionReponseMessage | undefined // This is only returned since 1.14.0
+	executeAction: (msg: ExecuteActionMessage) => ExecuteActionResponseMessage | undefined // This is only returned since 1.14.0
 	/** Get the config fields for this connection */
 	getConfigFields: (msg: GetConfigFieldsMessage) => GetConfigFieldsResponseMessage
 	/** Handle an incoming HTTP request */
@@ -240,7 +240,7 @@ export interface ExecuteActionMessage {
 	surfaceId: string | undefined
 }
 
-export interface ExecuteActionReponseMessage {
+export interface ExecuteActionResponseMessage {
 	success: boolean
 	/** If success=false, a reason for the failure */
 	errorMessage: string | undefined
