@@ -60,6 +60,16 @@ export interface InstanceBaseOptions {
 	 * It is not recommended to set this, unless you know what you are doing.
 	 */
 	disableVariableValidation: boolean
+
+	/**
+	 * Disable the new connection configuration layout.
+	 *
+	 * @deprecated This option will be removed in future versions. Avoid using this when possible.
+	 *
+	 * We acknowledge that some modules may face challenges adapting to the new configuration layout.
+	 * If this is you, we want to hear from you! Let us know what is missing in order for you to adopt the new layout.
+	 */
+	disableNewConfigLayout: boolean
 }
 
 export abstract class InstanceBase<TConfig, TSecrets = undefined> implements InstanceBaseShared<TConfig, TSecrets> {
@@ -110,6 +120,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 
 		this.#options = {
 			disableVariableValidation: false,
+			disableNewConfigLayout: false,
 		}
 
 		this.#ipcWrapper = new IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>(
@@ -231,6 +242,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 				hasHttpHandler: typeof this.handleHttpRequest === 'function',
 				hasRecordActionsHandler: typeof this.handleStartStopRecordActions == 'function',
 				newUpgradeIndex: this.#upgradeScripts.length - 1,
+				disableNewConfigLayout: this.#options.disableNewConfigLayout,
 				updatedConfig: this.#lastConfig,
 				updatedSecrets: this.#lastSecrets,
 			}
