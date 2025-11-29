@@ -19,4 +19,5 @@ jobs:
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          target-branch: ${{ github.ref_name }}
           config-file: .github/release-please-config.json
