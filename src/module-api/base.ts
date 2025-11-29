@@ -264,6 +264,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 
 			this.#label = msg.label
 			this.#lastConfig = msg.config as TConfig
+			this.#lastSecrets = msg.secrets as TSecrets
 
 			await this.configUpdated(this.#lastConfig, this.#lastSecrets)
 		})
