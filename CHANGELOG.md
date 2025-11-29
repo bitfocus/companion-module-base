@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.5](https://github.com/bitfocus/companion-module-base/compare/v1.13.4...v1.13.5) (2025-11-29)
+
+
+### Bug Fixes
+
+* secrets not updating in configUpdated ([8d867a2](https://github.com/bitfocus/companion-module-base/commit/8d867a2c0b9b8d83a3481237a9fc558c91328db7))
+
 ## [1.13.4](https://github.com/bitfocus/companion-module-base/compare/v1.13.3...v1.13.4) (2025-10-18)
 
 
