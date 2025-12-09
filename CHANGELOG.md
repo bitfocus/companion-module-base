@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.14.0](https://github.com/bitfocus/companion-module-base/compare/v1.13.4...v1.14.0) (2025-12-09)
+
+
+### Features
+
+* add disableNewConfigLayout option ([36da934](https://github.com/bitfocus/companion-module-base/commit/36da9346c9b02d0040ddd13ac4cfba7cbf6258ff))
+* add return value to `executeAction`, to let the host application identify action failure from other errors ([#160](https://github.com/bitfocus/companion-module-base/issues/160)) ([c67b18c](https://github.com/bitfocus/companion-module-base/commit/c67b18c350f910e1be3052942f9941986f2afe75))
+
+
+### Bug Fixes
+
+* secrets not updating in configUpdated ([623a575](https://github.com/bitfocus/companion-module-base/commit/623a5754b53f69a8b9b493020437495e0766a8b8))
+
 ## [1.13.5](https://github.com/bitfocus/companion-module-base/compare/v1.13.4...v1.13.5) (2025-11-29)
 
 
