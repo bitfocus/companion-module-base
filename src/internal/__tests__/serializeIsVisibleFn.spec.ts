@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { serializeIsVisibleFn } from '../base.js'
 import type { CompanionInputFieldBase } from '../../module-api/input.js'
-// eslint-disable-next-line n/no-missing-import
 import { omit } from 'lodash-es'
 import type { EncodeIsVisible } from '../../host-api/api.js'
 
