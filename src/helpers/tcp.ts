@@ -19,7 +19,7 @@ import net from 'net'
 import { EventEmitter } from 'eventemitter3'
 import { InstanceStatus } from '../module-api/enums.js'
 
-type TCPStatuses =
+export type TCPStatuses =
 	| InstanceStatus.Ok
 	| InstanceStatus.Connecting
 	| InstanceStatus.Disconnected

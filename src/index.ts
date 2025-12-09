@@ -13,6 +13,7 @@ export {
 	assertNever,
 	parseEscapeCharacters,
 	substituteEscapeCharacters,
+	OptionsObject,
 } from './util.js'
 export * from './helpers/index.js'
 
