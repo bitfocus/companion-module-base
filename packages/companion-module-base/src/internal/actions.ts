@@ -1,4 +1,4 @@
-import type { LogLevel } from '../module-api/enums.js'
+import type { LogLevel } from '../logging.js'
 import type {
 	ParseVariablesInStringMessage,
 	ParseVariablesInStringResponseMessage,

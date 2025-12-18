@@ -17,7 +17,7 @@ import type {
 import { serializeIsVisibleFn } from './base.js'
 // eslint-disable-next-line n/no-missing-import
 import debounceFn from '../../lib/debounce-fn/index.js'
-import type { LogLevel } from '../module-api/enums.js'
+import type { LogLevel } from '../logging.js'
 import { assertNever } from '../util.js'
 import type { JsonValue } from '../common/json-value.js'
 

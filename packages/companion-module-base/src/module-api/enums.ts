@@ -13,8 +13,6 @@ export enum InstanceStatus {
 	AuthenticationFailure = 'authentication_failure',
 }
 
-export type LogLevel = 'info' | 'warn' | 'error' | 'debug'
-
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Regex {
 	// TODO - are all of these needed?
