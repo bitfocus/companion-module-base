@@ -5,19 +5,25 @@
  * This will allow for cleaner and more stable apis which can both evolve at different rates
  */
 
-import type { CompanionFeedbackButtonStyleResult, SomeCompanionFeedbackInputField } from '../module-api/feedback.js'
-import type { OSCSomeArguments } from '../common/osc.js'
-import type { SomeCompanionConfigField } from '../module-api/config.js'
-import type { InstanceStatus } from '../module-api/enums.js'
-import type { LogLevel } from '../logging.js'
-import type { CompanionOptionValues, CompanionInputFieldBase } from '../module-api/input.js'
-import type { CompanionButtonPresetDefinition, CompanionTextPresetDefinition } from '../module-api/preset.js'
-import type { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http.js'
-import type { SomeCompanionActionInputField } from '../module-api/action.js'
-import type { CompanionVariableValue } from '../module-api/variable.js'
+import type {
+	CompanionFeedbackButtonStyleResult,
+	OSCSomeArguments,
+	SomeCompanionConfigField,
+	SomeCompanionFeedbackInputField,
+	InstanceStatus,
+	LogLevel,
+	CompanionOptionValues,
+	CompanionInputFieldBase,
+	CompanionButtonPresetDefinition,
+	CompanionTextPresetDefinition,
+	CompanionHTTPRequest,
+	CompanionHTTPResponse,
+	SomeCompanionActionInputField,
+	CompanionVariableValue,
+	OptionsObject,
+	JsonValue,
+} from '@companion-module/base'
 import type { RemoteInfo } from 'dgram'
-import type { OptionsObject } from '../util.js'
-import type { JsonValue } from '../common/json-value.js'
 
 export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	/** The connection has a message for the Companion log */
@@ -404,30 +410,6 @@ export interface SetCustomVariableMessage {
 
 export interface VariablesChangedMessage {
 	variablesIds: string[]
-}
-
-export interface SharedUdpSocketMessageJoin {
-	family: 'udp4' | 'udp6'
-	portNumber: number
-	// TODO - more props?
-}
-export interface SharedUdpSocketMessageLeave {
-	handleId: string
-}
-export interface SharedUdpSocketMessageSend {
-	handleId: string
-	message: Buffer
-
-	address: string
-	port: number
-}
-
-export interface SharedUdpSocketMessage {
-	handleId: string
-	portNumber: number
-
-	message: Buffer
-	source: RemoteInfo
 }
 
 export interface SharedUdpSocketError {

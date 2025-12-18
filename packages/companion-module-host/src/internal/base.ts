@@ -1,6 +1,5 @@
-import type { CompanionStaticUpgradeScript } from '../module-api/upgrade.js'
 import type { EncodeIsVisible } from '../host-api/api.js'
-import type { CompanionInputFieldBase } from '../module-api/input.js'
+import type { CompanionInputFieldBase } from '@companion-module/base'
 
 export function serializeIsVisibleFn<T extends CompanionInputFieldBase>(options: T[]): EncodeIsVisible<T>[] {
 	return (options ?? []).map((option) => {
@@ -31,15 +30,4 @@ export function serializeIsVisibleFn<T extends CompanionInputFieldBase>(options:
 			isVisibleExpression: undefined,
 		}
 	})
-}
-
-export interface InstanceBaseProps<TConfig, TSecrets> {
-	id: string
-	upgradeScripts: CompanionStaticUpgradeScript<TConfig, TSecrets>[]
-	_isInstanceBaseProps: boolean
-}
-
-export function isInstanceBaseProps<TConfig, TSecrets>(obj: unknown): obj is InstanceBaseProps<TConfig, TSecrets> {
-	const obj2 = obj as InstanceBaseProps<TConfig, TSecrets>
-	return typeof obj2 === 'object' && typeof obj2.id === 'string' && obj2._isInstanceBaseProps === true
 }

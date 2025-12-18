@@ -1,4 +1,3 @@
-import type { LogLevel } from '../logging.js'
 import type {
 	ParseVariablesInStringMessage,
 	ParseVariablesInStringResponseMessage,
@@ -10,14 +9,15 @@ import type {
 	SetCustomVariableMessage,
 	ExecuteActionResponseMessage,
 } from '../host-api/api.js'
-import type {
-	CompanionActionContext,
-	CompanionActionDefinition,
-	CompanionActionDefinitions,
-	CompanionActionInfo,
-} from '../module-api/action.js'
+import {
+	type CompanionActionContext,
+	type CompanionActionDefinition,
+	type CompanionActionDefinitions,
+	type CompanionActionInfo,
+	type CompanionVariableValue,
+	createModuleLogger,
+} from '@companion-module/base'
 import { serializeIsVisibleFn } from './base.js'
-import { CompanionVariableValue } from '../module-api/variable.js'
 
 function convertActionInstanceToEvent(action: ActionInstance): CompanionActionInfo {
 	return {
@@ -29,12 +29,13 @@ function convertActionInstanceToEvent(action: ActionInstance): CompanionActionIn
 }
 
 export class ActionManager {
+	readonly #logger = createModuleLogger('ActionManager')
+
 	readonly #parseVariablesInString: (
 		msg: ParseVariablesInStringMessage,
 	) => Promise<ParseVariablesInStringResponseMessage>
 	readonly #setActionDefinitions: (msg: SetActionDefinitionsMessage) => void
 	readonly #setCustomVariableValue: (msg: SetCustomVariableMessage) => void
-	readonly #log: (level: LogLevel, message: string) => void
 
 	readonly #actionDefinitions = new Map<string, CompanionActionDefinition>()
 	readonly #actionInstances = new Map<string, ActionInstance>()
@@ -43,12 +44,10 @@ export class ActionManager {
 		parseVariablesInString: (msg: ParseVariablesInStringMessage) => Promise<ParseVariablesInStringResponseMessage>,
 		setActionDefinitions: (msg: SetActionDefinitionsMessage) => void,
 		setCustomVariableValue: (msg: SetCustomVariableMessage) => void,
-		log: (level: LogLevel, message: string) => void,
 	) {
 		this.#parseVariablesInString = parseVariablesInString
 		this.#setActionDefinitions = setActionDefinitions
 		this.#setCustomVariableValue = setCustomVariableValue
-		this.#log = log
 	}
 
 	public async handleExecuteAction(msg: ExecuteActionMessage): Promise<ExecuteActionResponseMessage> {
@@ -123,8 +122,7 @@ export class ActionManager {
 					}
 
 					Promise.resolve(definition.unsubscribe(convertActionInstanceToEvent(existing), context)).catch((e) => {
-						this.#log(
-							'error',
+						this.#logger.error(
 							`Action unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`,
 						)
 					})
@@ -152,7 +150,7 @@ export class ActionManager {
 					}
 
 					Promise.resolve(definition.subscribe(convertActionInstanceToEvent(action), context)).catch((e) => {
-						this.#log('error', `Action subscribe failed: ${JSON.stringify(action)} - ${e?.message ?? e} ${e?.stack}`)
+						this.#logger.error(`Action subscribe failed: ${JSON.stringify(action)} - ${e?.message ?? e} ${e?.stack}`)
 					})
 				}
 			}
@@ -247,7 +245,7 @@ export class ActionManager {
 				}
 
 				Promise.resolve(def.subscribe(convertActionInstanceToEvent(act), context)).catch((e) => {
-					this.#log('error', `Action subscribe failed: ${JSON.stringify(act)} - ${e?.message ?? e} ${e?.stack}`)
+					this.#logger.error(`Action subscribe failed: ${JSON.stringify(act)} - ${e?.message ?? e} ${e?.stack}`)
 				})
 			}
 		}
@@ -273,7 +271,7 @@ export class ActionManager {
 				}
 
 				Promise.resolve(def.unsubscribe(convertActionInstanceToEvent(act), context)).catch((e) => {
-					this.#log('error', `Action unsubscribe failed: ${JSON.stringify(act)} - ${e?.message ?? e} ${e?.stack}`)
+					this.#logger.error(`Action unsubscribe failed: ${JSON.stringify(act)} - ${e?.message ?? e} ${e?.stack}`)
 				})
 			}
 		}
