@@ -1,0 +1,15 @@
+{
+	"extends": "@tsconfig/node22/tsconfig.json",
+	"compilerOptions": {
+        "composite": true,
+		// "importHelpers": false,
+		"types": ["node"],
+		"declaration": true,
+		"declarationMap": true,
+
+		"sourceMap": true,
+		"importHelpers": true,
+		"pretty": true,
+		"esModuleInterop": true
+	}
+}

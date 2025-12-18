@@ -1,46 +1,36 @@
 {
-	"name": "@companion-module/base",
-	"version": "1.14.1",
-	"type": "commonjs",
-	"main": "dist/index.js",
-	"typings": "dist/index.d.ts",
+	"name": "@companion-module/api",
 	"license": "MIT",
-	"repository": "https://github.com/bitfocus/companion-module-base",
+	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
 	"scripts": {
-		"dev": "yarn build:ts --watch",
-		"build": "yarn build:schema && yarn build:ts",
-		"build:ts": "tsc -p tsconfig.build.json",
-		"build:schema": "node tools/schema-compile.mjs",
-		"docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/index.ts --excludePrivate --theme default --out docs",
-		"lint:raw": "eslint",
-		"lint": "yarn lint:raw .",
-		"unit": "vitest"
+		"build": "run build:schema && run build:root",
+		"build:clean": "(rm -rf ./packages/*/dist ./packages/*/generated ./packages/*/*.tsbuildinfo || true) && run build",
+		"build:root": "tsc --build tsconfig.build.json",
+		"build:schema": "cd packages/companion-module-base && node ./tools/schema-compile.mjs",
+		"dev": "run build:root --watch",
+		"lint": "eslint .",
+		"unit": "vitest run",
+		"unit:watch": "vitest",
+		"_dev": "yarn build:ts --watch",
+		"_build": "yarn build:json-schema && yarn build:ajv-validator && yarn build:ts",
+		"_build:ts": "tsc -p tsconfig.build.json",
+		"_build:json-schema": "json2ts --input assets/manifest.schema.json --output generated/manifest.d.ts --additionalProperties=false",
+		"_build:ajv-validator": "node tools/schema-compile.mjs",
+		"_docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/index.ts --excludePrivate --theme default --out docs",
+		"_lint:raw": "eslint",
+		"_lint": "yarn lint:raw .",
+		"_unit": "vitest"
 	},
 	"engines": {
-		"node": "^18.12 || ^22.8"
-	},
-	"files": [
-		"README.md",
-		"CHANGELOG.md",
-		"dist",
-		"generated",
-		"assets",
-		"lib"
-	],
-	"dependencies": {
-		"ajv": "^8.17.1",
-		"colord": "^2.9.3",
-		"ejson": "^2.2.3",
-		"eventemitter3": "^5.0.1",
-		"mimic-fn": "^3.1.0",
-		"nanoid": "^3.3.11",
-		"p-queue": "^6.6.2",
-		"p-timeout": "^4.1.0",
-		"tslib": "^2.8.1"
+		"node": "^22.11"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.4.2",
 		"@tsconfig/node18": "^18.2.6",
+		"@tsconfig/node22": "^22.0.5",
 		"@types/ejson": "^2.2.2",
 		"@types/lodash-es": "^4.17.12",
 		"@types/node": "^18.19.130",

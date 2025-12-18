@@ -1,0 +1,29 @@
+{
+	"name": "@companion-module/host",
+	"version": "1.0.0-0",
+	"type": "module",
+	"license": "MIT",
+	"repository": "https://github.com/bitfocus/companion-module-api",
+	"exports": {
+		".": {
+			"import": "./dist/main.js",
+			"require": "./dist/main.js"
+		},
+		"./package.json": {
+			"import": "./package.json",
+			"require": "./package.json"
+		}
+	},
+	"engines": {
+		"node": "^22.21"
+	},
+	"files": [
+		"README.md",
+		"CHANGELOG.md",
+		"dist"
+	],
+	"dependencies": {
+		"@companion-module/base": "workspace:~",
+		"tslib": "^2.8.1"
+	}
+}
