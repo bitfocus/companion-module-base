@@ -5,7 +5,7 @@ import type {
 	HostToModuleEventsV0SharedSocket,
 } from '../host-api/api.js'
 import type { IpcWrapper } from '../host-api/ipc-wrapper.js'
-import EventEmitter from 'eventemitter3'
+import { EventEmitter } from 'events'
 import { assertNever } from '../util.js'
 
 export interface SharedUdpSocketEvents {
@@ -252,7 +252,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 		this.#ipcWrapper
 			.sendWithCb('sharedUdpSocketSend', {
 				handleId: this.#state.handleId,
-				message: buffer,
+				message: buffer.toString('base64'),
 
 				address: address,
 				port: port,
@@ -270,7 +270,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 
 	receiveSocketMessage(message: SharedUdpSocketMessage): void {
 		try {
-			this.emit('message', message.message, message.source)
+			this.emit('message', Buffer.from(message.message, 'base64'), message.source)
 		} catch (_e) {
 			// Ignore
 		}

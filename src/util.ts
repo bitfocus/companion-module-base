@@ -188,4 +188,7 @@ export function substituteEscapeCharacters(msg: string): string {
 	return message
 }
 
+export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
+
 export type OptionsObject = { [key: string]: InputValue | undefined }
+export type RawOptionsObject = { [key: string]: ExpressionOrValue<InputValue> | undefined }

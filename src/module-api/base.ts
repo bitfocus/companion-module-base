@@ -128,7 +128,6 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 				init: this._handleInit.bind(this),
 				destroy: this._handleDestroy.bind(this),
 				updateConfigAndLabel: this._handleConfigUpdateAndLabel.bind(this),
-				updateConfig: async () => undefined, // Replaced by updateConfigAndLabel
 				executeAction: this._handleExecuteAction.bind(this),
 				updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
 				updateActions: this._handleUpdateActions.bind(this),
@@ -138,7 +137,6 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 				learnAction: this._handleLearnAction.bind(this),
 				learnFeedback: this._handleLearnFeedback.bind(this),
 				startStopRecordActions: this._handleStartStopRecordActions.bind(this),
-				variablesChanged: async () => undefined, // Not needed since 1.13.0
 				sharedUdpSocketMessage: this._handleSharedUdpSocketMessage.bind(this),
 				sharedUdpSocketError: this._handleSharedUdpSocketError.bind(this),
 			},
@@ -184,7 +182,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	}
 
 	private async _handleInit(msg: InitMessage): Promise<InitResponseMessage> {
-		return this.#lifecycleQueue.add(async () => {
+		const res = await this.#lifecycleQueue.add(async () => {
 			if (this.#initialized) throw new Error('Already initialized')
 
 			this.#lastConfig = msg.config as TConfig
@@ -247,6 +245,9 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 				updatedSecrets: this.#lastSecrets,
 			}
 		})
+
+		if (!res) throw new Error('Failed to initialize')
+		return res
 	}
 	private async _handleDestroy(): Promise<void> {
 		await this.#lifecycleQueue.add(async () => {
@@ -344,7 +345,9 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	private async _handleSharedUdpSocketError(msg: SharedUdpSocketError): Promise<void> {
 		for (const socket of this.#sharedUdpSocketHandlers.values()) {
 			if (socket.handleId === msg.handleId) {
-				socket.receiveSocketError(msg.error)
+				const error = new Error(msg.errorMessage)
+				error.stack = msg.errorStack
+				socket.receiveSocketError(error)
 			}
 		}
 	}
