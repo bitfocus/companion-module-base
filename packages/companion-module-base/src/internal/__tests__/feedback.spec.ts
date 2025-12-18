@@ -9,7 +9,7 @@ import {
 import { runAllTimers } from '../../__mocks__/util.js'
 import { FeedbackManager } from '../feedback.js'
 import { CompanionFeedbackDefinition } from '../../module-api/feedback.js'
-import { LogLevel } from '../../module-api/enums.js'
+import type { LogLevel } from '../../logging.js'
 import { literal } from '../../util.js'
 
 const mockDefinitionId = 'definition0'

@@ -1,7 +1,8 @@
 import type { CompanionActionDefinitions, CompanionRecordedAction } from './action.js'
 import type { CompanionFeedbackDefinitions } from './feedback.js'
 import type { CompanionPresetDefinitions } from './preset.js'
-import type { InstanceStatus, LogLevel } from './enums.js'
+import type { InstanceStatus } from './enums.js'
+import type { LogLevel } from '../logging.js'
 import type {
 	ExecuteActionMessage,
 	ExecuteActionResponseMessage,
