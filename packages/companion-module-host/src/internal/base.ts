@@ -1,5 +1,5 @@
-import type { EncodeIsVisible } from '../host-api/api.js'
 import type { CompanionInputFieldBase } from '@companion-module/base'
+import type { EncodeIsVisible } from '../context.js'
 
 export function serializeIsVisibleFn<T extends CompanionInputFieldBase>(options: T[]): EncodeIsVisible<T>[] {
 	return (options ?? []).map((option) => {

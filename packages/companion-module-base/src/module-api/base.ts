@@ -215,24 +215,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @returns The string with variables replaced with their values
 	 */
 	async parseVariablesInString(text: string): Promise<string> {
-		const currentContext = this.#feedbackManager.parseVariablesContext
-		if (currentContext) {
-			this.log(
-				'debug',
-				`parseVariablesInString called while in: ${currentContext}. You should use the parseVariablesInString provided to the callback instead`,
-			)
-		}
-
-		// If there are no variables, just return the text
-		if (!text.includes('$(')) return text
-
-		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-			text: text,
-			controlId: undefined,
-			actionInstanceId: undefined,
-			feedbackInstanceId: undefined,
-		})
-		return res.text
+		return this.#context.parseVariablesInString(text)
 	}
 
 	/**

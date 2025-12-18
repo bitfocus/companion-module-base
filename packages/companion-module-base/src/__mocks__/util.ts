@@ -1,6 +1,4 @@
-import { vi, Mock } from 'vitest'
-import { mock } from 'vitest-mock-extended'
-import { IpcWrapper } from '../host-api/ipc-wrapper.js'
+import { vi } from 'vitest'
 
 const orgSetTimeout = setTimeout
 export async function runAllTimers(): Promise<void> {
@@ -19,23 +17,6 @@ export async function runTimersUntilNow(): Promise<void> {
 		vi.advanceTimersByTime(0)
 		await new Promise((resolve) => orgSetTimeout(resolve, 0))
 	}
-}
-
-const mockOptions = {
-	fallbackMockImplementation: () => {
-		throw new Error('not mocked')
-	},
-}
-
-export function createIpcWrapperMock<TOutbound extends { [key: string]: any }, TInbound extends { [key: string]: any }>(
-	sendWithCb?: Mock<IpcWrapper<TOutbound, TInbound>['sendWithCb']>,
-): IpcWrapper<TOutbound, TInbound> {
-	return mock<IpcWrapper<TOutbound, TInbound>>(
-		{
-			sendWithCb,
-		},
-		mockOptions,
-	)
 }
 
 export interface ManualPromise<T> extends Promise<T> {

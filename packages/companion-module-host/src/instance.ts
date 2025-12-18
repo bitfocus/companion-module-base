@@ -1,14 +1,24 @@
 import {
+	CompanionOptionValues,
 	CompanionStaticUpgradeScript,
 	CompanionVariableDefinition,
 	CompanionVariableValue,
 	createModuleLogger,
+	SomeCompanionConfigField,
 	type InstanceBase,
 } from '@companion-module/base'
 import PQueue from 'p-queue'
 import { ActionManager } from './internal/actions.js'
 import { FeedbackManager } from './internal/feedback.js'
-import type { ModuleHostContext } from './context.js'
+import type {
+	ActionInstance,
+	EncodeIsVisible,
+	FeedbackInstance,
+	HostVariableDefinition,
+	HostVariableValue,
+	ModuleHostContext,
+	ParseVariablesInfo,
+} from './context.js'
 // eslint-disable-next-line n/no-missing-import
 import type { InstanceContext } from '@companion-module/base/dist/host-api/context.js'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
@@ -44,27 +54,21 @@ export class InstanceWrapper<TConfig, TSecrets> {
 		this.#host = host
 		// this.#plugin = plugin
 
-		const parseVariablesInStringIfNeeded = async (
-			msg: ParseVariablesInStringMessage,
-		): Promise<ParseVariablesInStringResponseMessage> => {
+		const parseVariablesInStringIfNeeded = async (text: string, info: ParseVariablesInfo): Promise<string> => {
 			// Shortcut in case there is definitely nothing to parse
-			if (!msg.text.includes('$('))
-				return {
-					text: msg.text,
-					variableIds: undefined,
-				}
-			return this.#ipcWrapper.sendWithCb('parseVariablesInString', msg)
+			if (!text.includes('$(')) return text
+			return this.#host.parseVariablesInString(text, info)
 		}
 
 		this.#actionManager = new ActionManager(
 			parseVariablesInStringIfNeeded,
-			(msg) => this.#ipcWrapper.sendWithNoCb('setActionDefinitions', msg),
-			(msg) => this.#ipcWrapper.sendWithNoCb('setCustomVariable', msg),
+			(actions) => this.#host.setActionDefinitions(actions),
+			(msg) => this.#host.setCustomVariable(msg),
 		)
 		this.#feedbackManager = new FeedbackManager(
 			parseVariablesInStringIfNeeded,
-			(msg) => this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', msg),
-			(msg) => this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', msg),
+			(feedbacks) => this.#host.setFeedbackDefinitions(feedbacks),
+			(values) => this.#host.updateFeedbackValues(values),
 		)
 
 		this.#instanceContext = {
@@ -86,10 +90,31 @@ export class InstanceWrapper<TConfig, TSecrets> {
 				// TODO
 			},
 
+			parseVariablesInString: async (text) => {
+				const currentContext = this.#feedbackManager.parseVariablesContext
+				if (currentContext) {
+					this.#logger.debug(
+						`parseVariablesInString called while in: ${currentContext}. You should use the parseVariablesInString provided to the callback instead`,
+					)
+				}
+
+				// If there are no variables, just return the text
+				if (!text.includes('$(')) return text
+
+				const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
+					text: text,
+					controlId: undefined,
+					actionInstanceId: undefined,
+					feedbackInstanceId: undefined,
+				})
+
+				return res.text
+			},
+
 			recordAction: (action, uniquenessId) => {
 				if (!this.#recordingActions) throw new Error('Not currently recording actions')
 
-				this.#context.recordAction(action, uniquenessId)
+				this.#host.recordAction(action, uniquenessId)
 			},
 
 			setActionDefinitions: (actions) => {
@@ -123,8 +148,8 @@ export class InstanceWrapper<TConfig, TSecrets> {
 			},
 
 			setVariableDefinitions: (variables) => {
-				const hostVariables: SetVariableDefinitionsMessage['variables'] = []
-				const hostValues: SetVariableDefinitionsMessage['newValues'] = []
+				const hostVariables: HostVariableDefinition[] = []
+				const hostValues: HostVariableValue[] = []
 
 				this.#variableDefinitions.clear()
 
@@ -146,7 +171,7 @@ export class InstanceWrapper<TConfig, TSecrets> {
 					}
 				}
 
-				if (!this.#options.disableVariableValidation) {
+				if (!this.#instance.instanceOptions.disableVariableValidation) {
 					const validIds = new Set(this.#variableDefinitions.keys())
 					for (const id of this.#variableValues.keys()) {
 						if (!validIds.has(id)) {
@@ -160,13 +185,13 @@ export class InstanceWrapper<TConfig, TSecrets> {
 					}
 				}
 
-				this.#ipcWrapper.sendWithNoCb('setVariableDefinitions', { variables: hostVariables, newValues: hostValues })
+				this.#host.setVariableDefinitions(hostVariables, hostValues)
 			},
 			setVariableValues: (values) => {
-				const hostValues: SetVariableValuesMessage['newValues'] = []
+				const hostValues: HostVariableValue[] = []
 
 				for (const [variableId, value] of Object.entries(values)) {
-					if (this.#options.disableVariableValidation) {
+					if (this.#instance.instanceOptions.disableVariableValidation) {
 						// update the cached value
 						if (value === undefined) {
 							this.#variableValues.delete(variableId)
@@ -195,7 +220,7 @@ export class InstanceWrapper<TConfig, TSecrets> {
 					}
 				}
 
-				this.#ipcWrapper.sendWithNoCb('setVariableValues', { newValues: hostValues })
+				this.#host.setVariableValues(hostValues)
 			},
 			getVariableValue: (variableId) => {
 				return this.#variableValues.get(variableId)
@@ -292,26 +317,26 @@ export class InstanceWrapper<TConfig, TSecrets> {
 		})
 	}
 
-	async configUpdateAndLabel(msg: UpdateConfigAndLabelMessage): Promise<void> {
+	async configUpdateAndLabel(label: string, config: TConfig, secrets: TSecrets): Promise<void> {
 		await this.#lifecycleQueue.add(async () => {
 			if (!this.#initialized) throw new Error('Not initialized')
 
-			this.#instanceContext.label = msg.label
-			this.#lastConfig = msg.config
-			this.#lastSecrets = msg.secrets
+			this.#instanceContext.label = label
+			this.#lastConfig = config
+			this.#lastSecrets = secrets
 
 			await this.#instance.configUpdated(this.#lastConfig, this.#lastSecrets)
 		})
 	}
-	async executeAction(msg: ExecuteActionMessage): Promise<ExecuteActionResponseMessage> {
-		return this.#actionManager.handleExecuteAction(msg)
+	async executeAction(action: ActionInstance, surfaceId: string | undefined): Promise<ExecuteActionResult> {
+		return this.#actionManager.handleExecuteAction(action, surfaceId)
 	}
 
-	async updateFeedbacks(msg: UpdateFeedbackInstancesMessage): Promise<void> {
-		this.#feedbackManager.handleUpdateFeedbacks(msg.feedbacks)
+	async updateFeedbacks(feedbacks: Record<string, FeedbackInstance | null | undefined>): Promise<void> {
+		this.#feedbackManager.handleUpdateFeedbacks(feedbacks)
 	}
-	async updateActions(msg: UpdateActionInstancesMessage): Promise<void> {
-		this.#actionManager.handleUpdateActions(msg.actions)
+	async updateActions(actions: Record<string, ActionInstance | null | undefined>): Promise<void> {
+		this.#actionManager.handleUpdateActions(actions)
 	}
 	async upgradeActionsAndFeedbacks(
 		msg: UpgradeActionAndFeedbackInstancesMessage,
@@ -327,9 +352,10 @@ export class InstanceWrapper<TConfig, TSecrets> {
 		)
 	}
 
-	async getConfigFields(_msg: GetConfigFieldsMessage): Promise<GetConfigFieldsResponseMessage> {
+	async getConfigFields(): Promise<{ fields: EncodeIsVisible<SomeCompanionConfigField>[] }> {
 		return {
-			fields: serializeIsVisibleFn(this.#instanceContext.getConfigFields()),
+			// TODO - isolate types better?
+			fields: serializeIsVisibleFn(this.#instance.getConfigFields()),
 		}
 	}
 
@@ -340,11 +366,11 @@ export class InstanceWrapper<TConfig, TSecrets> {
 
 		return { response: res }
 	}
-	async learnAction(msg: LearnActionMessage): Promise<LearnActionResponseMessage> {
-		return this.#actionManager.handleLearnAction(msg)
+	async learnAction(action: ActionInstance): Promise<{ options: CompanionOptionValues | undefined }> {
+		return this.#actionManager.handleLearnAction(action)
 	}
-	async learnFeedback(msg: LearnFeedbackMessage): Promise<LearnFeedbackResponseMessage> {
-		return this.#feedbackManager.handleLearnFeedback(msg)
+	async learnFeedback(feedback: FeedbackInstance): Promise<{ options: CompanionOptionValues | undefined }> {
+		return this.#feedbackManager.handleLearnFeedback(feedback)
 	}
 	async startStopRecordActions(recording: boolean): Promise<void> {
 		if (!recording) {
@@ -383,4 +409,10 @@ export class InstanceWrapper<TConfig, TSecrets> {
 			}
 		}
 	}
+}
+
+export interface ExecuteActionResult {
+	success: boolean
+	/** If success=false, a reason for the failure */
+	errorMessage: string | undefined
 }

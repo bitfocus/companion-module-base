@@ -1,43 +1,37 @@
-import { describe, it, expect, vi, Mock } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { nanoid } from 'nanoid'
-import {
-	ModuleToHostEventsV0SharedSocket,
-	HostToModuleEventsV0SharedSocket,
-	SharedUdpSocketMessageJoin,
-	SharedUdpSocketMessageSend,
-	SharedUdpSocketMessageLeave,
-} from '../../host-api/api.js'
-import { IpcWrapper } from '../../host-api/ipc-wrapper.js'
 import { SharedUdpSocketImpl } from '../shared-udp-socket.js'
-import { ManualPromise, createIpcWrapperMock, createManualPromise } from '../../__mocks__/util.js'
+import { ManualPromise, createManualPromise } from '../../__mocks__/util.js'
+import type {
+	InstanceSharedUdpSocketContext,
+	SharedUdpSocketMessageJoin,
+	SharedUdpSocketMessageLeave,
+	SharedUdpSocketMessageSend,
+} from '../../host-api/context.js'
 
 async function sleepImmediate() {
 	return new Promise((resolve) => setImmediate(resolve))
 }
 
-type IpcWrapperExt = IpcWrapper<ModuleToHostEventsV0SharedSocket, HostToModuleEventsV0SharedSocket>
-
 describe('Shared UDP', () => {
-	function createDeps() {
-		const sendWithCbFn = vi.fn<IpcWrapperExt['sendWithCb']>(() => {
-			throw new Error('Not implemented')
-		})
-
-		const mockIpcWrapper = createIpcWrapperMock<ModuleToHostEventsV0SharedSocket, HostToModuleEventsV0SharedSocket>(
-			sendWithCbFn,
-		)
-		const moduleUdpSockets = new Map<string, SharedUdpSocketImpl>()
-
+	function createContext() {
 		return {
-			mockIpcWrapper,
-			moduleUdpSockets,
-			sendWithCbFn,
+			sharedUdpSocketHandlers: new Map<string, SharedUdpSocketImpl>(),
+			sharedUdpSocketJoin: vi.fn<InstanceSharedUdpSocketContext['sharedUdpSocketJoin']>(() => {
+				throw new Error('Not implemented')
+			}),
+			sharedUdpSocketLeave: vi.fn<InstanceSharedUdpSocketContext['sharedUdpSocketLeave']>(() => {
+				throw new Error('Not implemented')
+			}),
+			sharedUdpSocketSend: vi.fn<InstanceSharedUdpSocketContext['sharedUdpSocketSend']>(() => {
+				throw new Error('Not implemented')
+			}),
 		}
 	}
 
 	it('call fail before open', () => {
-		const { mockIpcWrapper, moduleUdpSockets } = createDeps()
-		const socket = new SharedUdpSocketImpl(mockIpcWrapper, moduleUdpSockets, { type: 'udp4' })
+		const ctx = createContext()
+		const socket = new SharedUdpSocketImpl(ctx, { type: 'udp4' })
 
 		expect(() => socket.close()).toThrow(/Socket is not open/)
 		expect(() => socket.send('', 12, '')).toThrow(/Socket is not open/)
@@ -45,12 +39,12 @@ describe('Shared UDP', () => {
 
 	describe('bind', () => {
 		it('ok', async () => {
-			const { mockIpcWrapper, moduleUdpSockets, sendWithCbFn } = createDeps()
-			const socket = new SharedUdpSocketImpl(mockIpcWrapper, moduleUdpSockets, { type: 'udp4' })
+			const ctx = createContext()
+			const socket = new SharedUdpSocketImpl(ctx, { type: 'udp4' })
 			expect(socket.eventNames()).toHaveLength(0)
 
 			const sendPromises: ManualPromise<any>[] = []
-			sendWithCbFn.mockImplementationOnce(async () => {
+			ctx.sharedUdpSocketJoin.mockImplementationOnce(async () => {
 				const sendPromise = createManualPromise<any>()
 				sendPromises.push(sendPromise)
 				return sendPromise
@@ -70,9 +64,11 @@ describe('Shared UDP', () => {
 			expect(socket.listenerCount('listening')).toBe(1)
 
 			// Check call was made
-			expect(sendWithCbFn).toHaveBeenCalledTimes(1)
+			expect(ctx.sharedUdpSocketJoin).toHaveBeenCalledTimes(1)
+			expect(ctx.sharedUdpSocketLeave).toHaveBeenCalledTimes(0)
+			expect(ctx.sharedUdpSocketSend).toHaveBeenCalledTimes(0)
 			expect(sendPromises).toHaveLength(1)
-			expect(sendWithCbFn).toHaveBeenCalledWith('sharedUdpSocketJoin', {
+			expect(ctx.sharedUdpSocketJoin).toHaveBeenCalledWith({
 				family: 'udp4',
 				portNumber: 5678,
 			} satisfies SharedUdpSocketMessageJoin)
@@ -86,16 +82,16 @@ describe('Shared UDP', () => {
 			expect(bindCb).toHaveBeenCalledTimes(1)
 
 			// Should be tracked now
-			expect(moduleUdpSockets.get(handleId)).toBe(socket)
+			expect(ctx.sharedUdpSocketHandlers.get(handleId)).toBe(socket)
 		})
 
 		it('error', async () => {
-			const { mockIpcWrapper, moduleUdpSockets, sendWithCbFn } = createDeps()
-			const socket = new SharedUdpSocketImpl(mockIpcWrapper, moduleUdpSockets, { type: 'udp4' })
+			const ctx = createContext()
+			const socket = new SharedUdpSocketImpl(ctx, { type: 'udp4' })
 			expect(socket.eventNames()).toHaveLength(0)
 
 			const sendPromises: ManualPromise<any>[] = []
-			sendWithCbFn.mockImplementationOnce(async () => {
+			ctx.sharedUdpSocketJoin.mockImplementationOnce(async () => {
 				const sendPromise = createManualPromise<any>()
 				sendPromises.push(sendPromise)
 				return sendPromise
@@ -112,7 +108,9 @@ describe('Shared UDP', () => {
 			socket.on('error', errorCb)
 
 			// Check call was made
-			expect(sendWithCbFn).toHaveBeenCalledTimes(1)
+			expect(ctx.sharedUdpSocketJoin).toHaveBeenCalledTimes(1)
+			expect(ctx.sharedUdpSocketLeave).toHaveBeenCalledTimes(0)
+			expect(ctx.sharedUdpSocketSend).toHaveBeenCalledTimes(0)
 			expect(sendPromises).toHaveLength(1)
 
 			// Mock receive a response
@@ -122,7 +120,7 @@ describe('Shared UDP', () => {
 			// Verify that opening failed
 			await sleepImmediate()
 			expect(bindCb).toHaveBeenCalledTimes(0)
-			expect(moduleUdpSockets.size).toBe(0)
+			expect(ctx.sharedUdpSocketHandlers.size).toBe(0)
 
 			// Error should have propogated
 			expect(errorCb).toHaveBeenCalledTimes(1)
@@ -130,16 +128,12 @@ describe('Shared UDP', () => {
 		})
 	})
 
-	async function createAndOpenSocket(
-		mockIpcWrapper: IpcWrapperExt,
-		moduleUdpSockets: Map<string, SharedUdpSocketImpl>,
-		sendWithCbFn: Mock<IpcWrapperExt['sendWithCb']>,
-	) {
-		const socket = new SharedUdpSocketImpl(mockIpcWrapper, moduleUdpSockets, { type: 'udp4' })
+	async function createAndOpenSocket(ctx: ReturnType<typeof createContext>) {
+		const socket = new SharedUdpSocketImpl(ctx, { type: 'udp4' })
 		expect(socket.eventNames()).toHaveLength(0)
 
 		const sendPromises: ManualPromise<any>[] = []
-		sendWithCbFn.mockImplementationOnce(async () => {
+		ctx.sharedUdpSocketJoin.mockImplementationOnce(async () => {
 			const sendPromise = createManualPromise<any>()
 			sendPromises.push(sendPromise)
 			return sendPromise
@@ -149,7 +143,9 @@ describe('Shared UDP', () => {
 		socket.bind(5678, '1.2.3.4', bindCb)
 
 		// Mock receive a response
-		expect(sendWithCbFn).toHaveBeenCalledTimes(1)
+		expect(ctx.sharedUdpSocketJoin).toHaveBeenCalledTimes(1)
+		expect(ctx.sharedUdpSocketLeave).toHaveBeenCalledTimes(0)
+		expect(ctx.sharedUdpSocketSend).toHaveBeenCalledTimes(0)
 		expect(sendPromises).toHaveLength(1)
 		const handleId = nanoid()
 		sendPromises[0].manualResolve(handleId)
@@ -159,20 +155,20 @@ describe('Shared UDP', () => {
 		expect(bindCb).toHaveBeenCalledTimes(1)
 
 		// Should be tracked now
-		expect(moduleUdpSockets.get(handleId)).toBe(socket)
-		sendWithCbFn.mockClear()
+		expect(ctx.sharedUdpSocketHandlers.get(handleId)).toBe(socket)
+		ctx.sharedUdpSocketJoin.mockClear()
 
 		return { socket, handleId }
 	}
 
 	describe('send', () => {
 		it('ok', async () => {
-			const { mockIpcWrapper, moduleUdpSockets, sendWithCbFn } = createDeps()
+			const ctx = createContext()
 
-			const { socket, handleId } = await createAndOpenSocket(mockIpcWrapper, moduleUdpSockets, sendWithCbFn)
+			const { socket, handleId } = await createAndOpenSocket(ctx)
 
 			const sendPromises: ManualPromise<any>[] = []
-			sendWithCbFn.mockImplementationOnce(async () => {
+			ctx.sharedUdpSocketSend.mockImplementationOnce(async () => {
 				const sendPromise = createManualPromise<any>()
 				sendPromises.push(sendPromise)
 				return sendPromise
@@ -188,9 +184,11 @@ describe('Shared UDP', () => {
 			expect(sendCb).toHaveBeenCalledTimes(0)
 
 			// Check call was made
-			expect(sendWithCbFn).toHaveBeenCalledTimes(1)
+			expect(ctx.sharedUdpSocketSend).toHaveBeenCalledTimes(1)
+			expect(ctx.sharedUdpSocketLeave).toHaveBeenCalledTimes(0)
+			expect(ctx.sharedUdpSocketJoin).toHaveBeenCalledTimes(0)
 			expect(sendPromises).toHaveLength(1)
-			expect(sendWithCbFn).toHaveBeenCalledWith('sharedUdpSocketSend', {
+			expect(ctx.sharedUdpSocketSend).toHaveBeenCalledWith({
 				handleId,
 				message,
 				address: '4.5.6.7',
@@ -204,16 +202,16 @@ describe('Shared UDP', () => {
 			await sleepImmediate()
 			expect(sendCb).toHaveBeenCalledTimes(1)
 
-			expect(moduleUdpSockets.has(handleId)).toBeTruthy()
+			expect(ctx.sharedUdpSocketHandlers.has(handleId)).toBeTruthy()
 		})
 
 		it('error', async () => {
-			const { mockIpcWrapper, moduleUdpSockets, sendWithCbFn } = createDeps()
+			const ctx = createContext()
 
-			const { socket, handleId } = await createAndOpenSocket(mockIpcWrapper, moduleUdpSockets, sendWithCbFn)
+			const { socket, handleId } = await createAndOpenSocket(ctx)
 
 			const sendPromises: ManualPromise<any>[] = []
-			sendWithCbFn.mockImplementationOnce(async () => {
+			ctx.sharedUdpSocketSend.mockImplementationOnce(async () => {
 				const sendPromise = createManualPromise<any>()
 				sendPromises.push(sendPromise)
 				return sendPromise
@@ -232,9 +230,11 @@ describe('Shared UDP', () => {
 			expect(sendCb).toHaveBeenCalledTimes(0)
 
 			// Check call was made
-			expect(sendWithCbFn).toHaveBeenCalledTimes(1)
+			expect(ctx.sharedUdpSocketSend).toHaveBeenCalledTimes(1)
+			expect(ctx.sharedUdpSocketLeave).toHaveBeenCalledTimes(0)
+			expect(ctx.sharedUdpSocketJoin).toHaveBeenCalledTimes(0)
 			expect(sendPromises).toHaveLength(1)
-			expect(sendWithCbFn).toHaveBeenCalledWith('sharedUdpSocketSend', {
+			expect(ctx.sharedUdpSocketSend).toHaveBeenCalledWith({
 				handleId,
 				message,
 				address: '4.5.6.7',
@@ -251,18 +251,18 @@ describe('Shared UDP', () => {
 			expect(errorCb).toHaveBeenCalledTimes(1)
 			expect(errorCb).toHaveBeenCalledWith(err)
 
-			expect(moduleUdpSockets.has(handleId)).toBeTruthy()
+			expect(ctx.sharedUdpSocketHandlers.has(handleId)).toBeTruthy()
 		})
 	})
 
 	describe('close', () => {
 		it('ok', async () => {
-			const { mockIpcWrapper, moduleUdpSockets, sendWithCbFn } = createDeps()
+			const ctx = createContext()
 
-			const { socket, handleId } = await createAndOpenSocket(mockIpcWrapper, moduleUdpSockets, sendWithCbFn)
+			const { socket, handleId } = await createAndOpenSocket(ctx)
 
 			const sendPromises: ManualPromise<any>[] = []
-			sendWithCbFn.mockImplementationOnce(async () => {
+			ctx.sharedUdpSocketLeave.mockImplementationOnce(async () => {
 				const sendPromise = createManualPromise<any>()
 				sendPromises.push(sendPromise)
 				return sendPromise
@@ -277,9 +277,11 @@ describe('Shared UDP', () => {
 			expect(closeCb).toHaveBeenCalledTimes(0)
 
 			// Check call was made
-			expect(sendWithCbFn).toHaveBeenCalledTimes(1)
+			expect(ctx.sharedUdpSocketLeave).toHaveBeenCalledTimes(1)
+			expect(ctx.sharedUdpSocketSend).toHaveBeenCalledTimes(0)
+			expect(ctx.sharedUdpSocketJoin).toHaveBeenCalledTimes(0)
 			expect(sendPromises).toHaveLength(1)
-			expect(sendWithCbFn).toHaveBeenCalledWith('sharedUdpSocketLeave', {
+			expect(ctx.sharedUdpSocketLeave).toHaveBeenCalledWith({
 				handleId,
 			} satisfies SharedUdpSocketMessageLeave)
 
@@ -290,16 +292,16 @@ describe('Shared UDP', () => {
 			await sleepImmediate()
 			expect(closeCb).toHaveBeenCalledTimes(1)
 
-			expect(moduleUdpSockets.has(handleId)).toBeFalsy()
+			expect(ctx.sharedUdpSocketHandlers.has(handleId)).toBeFalsy()
 		})
 
 		it('error', async () => {
-			const { mockIpcWrapper, moduleUdpSockets, sendWithCbFn } = createDeps()
+			const ctx = createContext()
 
-			const { socket, handleId } = await createAndOpenSocket(mockIpcWrapper, moduleUdpSockets, sendWithCbFn)
+			const { socket, handleId } = await createAndOpenSocket(ctx)
 
 			const sendPromises: ManualPromise<any>[] = []
-			sendWithCbFn.mockImplementationOnce(async () => {
+			ctx.sharedUdpSocketLeave.mockImplementationOnce(async () => {
 				const sendPromise = createManualPromise<any>()
 				sendPromises.push(sendPromise)
 				return sendPromise
@@ -317,9 +319,11 @@ describe('Shared UDP', () => {
 			expect(closeCb).toHaveBeenCalledTimes(0)
 
 			// Check call was made
-			expect(sendWithCbFn).toHaveBeenCalledTimes(1)
+			expect(ctx.sharedUdpSocketLeave).toHaveBeenCalledTimes(1)
+			expect(ctx.sharedUdpSocketSend).toHaveBeenCalledTimes(0)
+			expect(ctx.sharedUdpSocketJoin).toHaveBeenCalledTimes(0)
 			expect(sendPromises).toHaveLength(1)
-			expect(sendWithCbFn).toHaveBeenCalledWith('sharedUdpSocketLeave', {
+			expect(ctx.sharedUdpSocketLeave).toHaveBeenCalledWith({
 				handleId,
 			} satisfies SharedUdpSocketMessageLeave)
 
@@ -333,7 +337,7 @@ describe('Shared UDP', () => {
 			expect(errorCb).toHaveBeenCalledTimes(1)
 			expect(errorCb).toHaveBeenCalledWith(err)
 
-			expect(moduleUdpSockets.has(handleId)).toBeFalsy()
+			expect(ctx.sharedUdpSocketHandlers.has(handleId)).toBeFalsy()
 		})
 	})
 })
