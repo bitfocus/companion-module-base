@@ -190,7 +190,8 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 			this.#lastConfig = msg.config as TConfig
 			this.#lastSecrets = msg.secrets as TSecrets
 			this.#label = msg.label
-
+			process.title = msg.label
+			
 			// Create initial config object
 			if (msg.isFirstInit) {
 				const newConfig: any = {}
@@ -262,6 +263,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 			if (!this.#initialized) throw new Error('Not initialized')
 
 			this.#label = msg.label
+			process.title = msg.label
 			this.#lastConfig = msg.config as TConfig
 			this.#lastSecrets = msg.secrets as TSecrets
 
