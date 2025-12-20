@@ -1,14 +1,15 @@
-import type {
-	CompanionMigrationAction,
-	CompanionMigrationFeedback,
-	CompanionStaticUpgradeScript,
-} from '../module-api/upgrade.js'
+import {
+	type CompanionMigrationAction,
+	type CompanionMigrationFeedback,
+	type CompanionStaticUpgradeScript,
+	type Complete,
+	literal,
+} from '@companion-module/base'
 import type {
 	UpgradeActionInstance,
 	UpgradeFeedbackInstance,
 	UpgradeActionAndFeedbackInstancesResponse,
-} from '../host-api/api.js'
-import { Complete, literal } from '../util.js'
+} from '../context.js'
 
 /**
  * Run through the upgrade scripts for the given data

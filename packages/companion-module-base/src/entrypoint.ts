@@ -1,16 +1,21 @@
-/* eslint-disable n/no-process-exit */
-import { HostApiNodeJsIpc, HostToModuleEventsInit, ModuleToHostEventsInit } from './host-api/versions.js'
-import fs from 'fs/promises'
-import type { ModuleManifest } from './manifest.js'
 import type { CompanionStaticUpgradeScript } from './module-api/upgrade.js'
 import type { InstanceBase } from './module-api/base.js'
-import { literal } from './util.js'
-import type { InstanceBaseProps } from './internal/base.js'
-import { IpcWrapper } from './host-api/ipc-wrapper.js'
 
-let hasEntrypoint = false
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-let moduleInstance: InstanceBase<any, any> | undefined
+declare global {
+	/**
+	 * INTERNAL USE ONLY
+	 */
+	var COMPANION_ENTRYPOINT_INFO:
+		| {
+				factory: InstanceConstructor<any, any>
+				upgradeScripts: CompanionStaticUpgradeScript<any, any>[]
+		  }
+		| undefined
+}
+
+// let hasEntrypoint = false
+// // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// let moduleInstance: InstanceBase<any, any> | undefined
 
 export type InstanceConstructor<TConfig, TSecrets> = new (internal: unknown) => InstanceBase<TConfig, TSecrets>
 
@@ -21,6 +26,17 @@ export type InstanceConstructor<TConfig, TSecrets> = new (internal: unknown) => 
  * @param upgradeScripts Upgrade scripts
  */
 export function runEntrypoint<TConfig, TSecrets>(
+	factory: InstanceConstructor<TConfig, TSecrets>,
+	upgradeScripts: CompanionStaticUpgradeScript<TConfig, TSecrets>[],
+): void {
+	if (global.COMPANION_ENTRYPOINT_INFO) throw new Error(`runEntrypoint can only be called once`)
+
+	// Future: In v2.0 of the api, this method should be removed and replaced with the module exporting a default class
+	global.COMPANION_ENTRYPOINT_INFO = { factory, upgradeScripts }
+}
+
+/*
+export function runEntrypoint2<TConfig, TSecrets>(
 	factory: InstanceConstructor<TConfig, TSecrets>,
 	upgradeScripts: CompanionStaticUpgradeScript<TConfig, TSecrets>[],
 ): void {
@@ -123,3 +139,4 @@ export function runEntrypoint<TConfig, TSecrets>(
 			process.exit(1)
 		})
 }
+*/

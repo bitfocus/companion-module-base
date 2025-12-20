@@ -1,26 +1,33 @@
 import {
+	CompanionHTTPRequest,
+	CompanionHTTPResponse,
 	CompanionOptionValues,
 	CompanionStaticUpgradeScript,
 	CompanionVariableDefinition,
 	CompanionVariableValue,
 	createModuleLogger,
+	OSCMetaArgument,
 	SomeCompanionConfigField,
 	type InstanceBase,
+	type InstanceConstructor,
 } from '@companion-module/base'
 import PQueue from 'p-queue'
 import { ActionManager } from './internal/actions.js'
 import { FeedbackManager } from './internal/feedback.js'
 import type {
 	ActionInstance,
+	EncodedOSCArgument,
 	EncodeIsVisible,
 	FeedbackInstance,
 	HostVariableDefinition,
 	HostVariableValue,
 	ModuleHostContext,
 	ParseVariablesInfo,
+	UpgradeActionAndFeedbackInstancesMessage,
+	UpgradeActionAndFeedbackInstancesResponse,
 } from './context.js'
 // eslint-disable-next-line n/no-missing-import
-import type { InstanceContext } from '@companion-module/base/dist/host-api/context.js'
+import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/dist/host-api/context.js'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
 import { serializeIsVisibleFn } from './internal/base.js'
 
@@ -48,7 +55,7 @@ export class InstanceWrapper<TConfig, TSecrets> {
 	constructor(
 		id: string,
 		host: ModuleHostContext<TConfig, TSecrets>,
-		instanceFactory: (internal: unknown) => InstanceBase<TConfig, TSecrets>,
+		instanceFactory: InstanceConstructor<TConfig, TSecrets>,
 		upgradeScripts: CompanionStaticUpgradeScript<TConfig, TSecrets>[],
 	) {
 		this.#host = host
@@ -63,7 +70,7 @@ export class InstanceWrapper<TConfig, TSecrets> {
 		this.#actionManager = new ActionManager(
 			parseVariablesInStringIfNeeded,
 			(actions) => this.#host.setActionDefinitions(actions),
-			(msg) => this.#host.setCustomVariable(msg),
+			(controlId, variableId, value) => this.#host.setCustomVariable(controlId, variableId, value),
 		)
 		this.#feedbackManager = new FeedbackManager(
 			parseVariablesInStringIfNeeded,
@@ -76,7 +83,6 @@ export class InstanceWrapper<TConfig, TSecrets> {
 			id,
 			label: id, // Temporary
 			upgradeScripts,
-			// TODO
 
 			saveConfig: (newConfig, newSecrets) => {
 				if (newConfig) this.#lastConfig = newConfig
@@ -84,10 +90,39 @@ export class InstanceWrapper<TConfig, TSecrets> {
 				this.#host.saveConfig(newConfig, newSecrets)
 			},
 			updateStatus: (status, message) => {
-				// TODO
+				this.#host.setStatus(status, message)
 			},
 			oscSend: (host, port, path, args) => {
-				// TODO
+				const encodedArgs: EncodedOSCArgument[] = []
+
+				if (args !== undefined && args !== null) {
+					// Simplify as an array
+					if (!Array.isArray(args)) args = [args as OSCMetaArgument]
+
+					for (const arg of args) {
+						if (typeof arg === 'string') {
+							encodedArgs.push({ type: 's', value: arg })
+						} else if (typeof arg === 'number') {
+							encodedArgs.push({ type: 'f', value: arg })
+						} else if (arg instanceof Uint8Array) {
+							// Future: use native toBase64 when available
+							encodedArgs.push({ type: 'b', value: Buffer.from(arg).toString('base64') })
+						} else if (arg && typeof arg === 'object') {
+							if (arg.type === 's' || arg.type === 'f' || arg.type === 'i') {
+								encodedArgs.push(arg)
+							} else if (arg.type === 'b' && arg.value instanceof Uint8Array) {
+								// Future: use native toBase64 when available
+								encodedArgs.push({ type: 'b', value: Buffer.from(arg.value).toString('base64') })
+							} else {
+								throw new Error(`Unsupported OSC argument type: ${JSON.stringify(arg)}`)
+							}
+						} else {
+							throw new Error(`Unsupported OSC argument type: ${arg}`)
+						}
+					}
+				}
+
+				this.#host.sendOSC(host, port, path, encodedArgs)
 			},
 
 			parseVariablesInString: async (text) => {
@@ -101,14 +136,13 @@ export class InstanceWrapper<TConfig, TSecrets> {
 				// If there are no variables, just return the text
 				if (!text.includes('$(')) return text
 
-				const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-					text: text,
+				const res = await this.#host.parseVariablesInString(text, {
 					controlId: undefined,
 					actionInstanceId: undefined,
 					feedbackInstanceId: undefined,
 				})
 
-				return res.text
+				return res
 			},
 
 			recordAction: (action, uniquenessId) => {
@@ -144,7 +178,7 @@ export class InstanceWrapper<TConfig, TSecrets> {
 			},
 
 			setPresetDefinitions: (presets) => {
-				// TODO
+				this.#host.setPresetDefinitions(presets)
 			},
 
 			setVariableDefinitions: (variables) => {
@@ -228,25 +262,24 @@ export class InstanceWrapper<TConfig, TSecrets> {
 
 			sharedUdpSocketHandlers: new Map(),
 			sharedUdpSocketJoin: async (msg) => {
-				// TODO
-				return ''
+				return this.#host.sharedUdpSocketJoin(msg)
 			},
 			sharedUdpSocketLeave: async (msg) => {
-				// TODO
+				return this.#host.sharedUdpSocketLeave(msg)
 			},
 			sharedUdpSocketSend: async (msg) => {
-				// TODO
+				return this.#host.sharedUdpSocketSend(msg)
 			},
 		}
-		this.#instance = instanceFactory(this.#instanceContext)
+		this.#instance = new instanceFactory(this.#instanceContext)
 	}
 
 	async init(msg: InitMessage): Promise<InitResponseMessage> {
 		return this.#lifecycleQueue.add(async () => {
 			if (this.#initialized) throw new Error('Already initialized')
 
-			this.#lastConfig = msg.config
-			this.#lastSecrets = msg.secrets
+			this.#lastConfig = msg.config as any
+			this.#lastSecrets = msg.secrets as any
 			this.#instanceContext.label = msg.label
 
 			// Create initial config object
@@ -283,8 +316,8 @@ export class InstanceWrapper<TConfig, TSecrets> {
 				this.#lastSecrets,
 				false,
 			)
-			this.#lastConfig = updatedConfig ?? this.#lastConfig
-			this.#lastSecrets = updatedSecrets ?? this.#lastSecrets
+			this.#lastConfig = (updatedConfig ?? this.#lastConfig) as any
+			this.#lastSecrets = (updatedSecrets ?? this.#lastSecrets) as any
 
 			// Now we can initialise the module
 			try {
@@ -297,10 +330,10 @@ export class InstanceWrapper<TConfig, TSecrets> {
 			}
 
 			return {
-				hasHttpHandler: typeof this.handleHttpRequest === 'function',
-				hasRecordActionsHandler: typeof this.handleStartStopRecordActions == 'function',
-				newUpgradeIndex: this.#context.upgradeScripts.length - 1,
-				disableNewConfigLayout: this.#options.disableNewConfigLayout,
+				hasHttpHandler: typeof this.#instance.handleHttpRequest === 'function',
+				hasRecordActionsHandler: typeof this.#instance.handleStartStopRecordActions == 'function',
+				newUpgradeIndex: this.#instanceContext.upgradeScripts.length - 1,
+				disableNewConfigLayout: this.#instance.instanceOptions.disableNewConfigLayout,
 				updatedConfig: this.#lastConfig,
 				updatedSecrets: this.#lastSecrets,
 			}
@@ -359,12 +392,12 @@ export class InstanceWrapper<TConfig, TSecrets> {
 		}
 	}
 
-	async httpRequest(msg: HandleHttpRequestMessage): Promise<HandleHttpRequestResponseMessage> {
+	async httpRequest(request: CompanionHTTPRequest): Promise<CompanionHTTPResponse> {
 		if (!this.#instance.handleHttpRequest) throw new Error(`handleHttpRequest is not supported!`)
 
-		const res = await this.#instance.handleHttpRequest(msg.request)
+		const res = await this.#instance.handleHttpRequest(request)
 
-		return { response: res }
+		return res
 	}
 	async learnAction(action: ActionInstance): Promise<{ options: CompanionOptionValues | undefined }> {
 		return this.#actionManager.handleLearnAction(action)
@@ -411,8 +444,33 @@ export class InstanceWrapper<TConfig, TSecrets> {
 	}
 }
 
+export interface InitMessage {
+	label: string
+	isFirstInit: boolean
+	config: unknown
+	secrets: unknown
+
+	lastUpgradeIndex: number
+}
+export interface InitResponseMessage {
+	hasHttpHandler: boolean
+	hasRecordActionsHandler: boolean
+	newUpgradeIndex: number
+	disableNewConfigLayout: boolean
+
+	updatedConfig: unknown | undefined
+	updatedSecrets: unknown | undefined
+}
+
 export interface ExecuteActionResult {
 	success: boolean
 	/** If success=false, a reason for the failure */
 	errorMessage: string | undefined
+}
+
+export interface SharedUdpSocketError {
+	handleId: string
+	portNumber: number
+
+	error: Error
 }

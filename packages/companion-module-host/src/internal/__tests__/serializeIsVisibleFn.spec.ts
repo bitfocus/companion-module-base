@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest'
 import { serializeIsVisibleFn } from '../base.js'
-import type { CompanionInputFieldBase } from '../../module-api/input.js'
+import type { CompanionInputFieldBase } from '@companion-module/base'
 import { omit } from 'lodash-es'
-import type { EncodeIsVisible } from '../../host-api/api.js'
+import type { EncodeIsVisible } from '../../context.js'
 
 describe('serializeIsVisibleFn', () => {
 	test('no isVisible', () => {

@@ -1,10 +1,9 @@
 import type {
-	CompanionButtonPresetDefinition,
 	CompanionFeedbackButtonStyleResult,
 	CompanionInputFieldBase,
 	CompanionOptionValues,
+	CompanionPresetDefinitions,
 	CompanionRecordedAction,
-	CompanionTextPresetDefinition,
 	CompanionVariableValue,
 	InstanceStatus,
 	JsonValue,
@@ -12,6 +11,12 @@ import type {
 	SomeCompanionActionInputField,
 	SomeCompanionFeedbackInputField,
 } from '@companion-module/base'
+import {
+	SharedUdpSocketMessageJoin,
+	SharedUdpSocketMessageLeave,
+	SharedUdpSocketMessageSend,
+	// eslint-disable-next-line n/no-missing-import
+} from '@companion-module/base/dist/host-api/context.js'
 
 export interface ModuleHostContext<TConfig, TSecrets> {
 	/** The connection status has changed */
@@ -23,17 +28,15 @@ export interface ModuleHostContext<TConfig, TSecrets> {
 	/** The varaibles available in the connection have changed */
 	setVariableDefinitions: (definitions: HostVariableDefinition[], values: HostVariableValue[]) => void
 	/** The presets provided by the connection have changed */
-	setPresetDefinitions: (
-		presets: Array<(CompanionButtonPresetDefinition | CompanionTextPresetDefinition) & { id: string }>, // TODO - isolate types
-	) => void
+	setPresetDefinitions: (presets: CompanionPresetDefinitions) => void
 	/** The connection has some new values for variables */
 	setVariableValues: (values: HostVariableValue[]) => void
 	/** The connection has some new values for feedbacks it is running */
 	updateFeedbackValues: (values: HostFeedbackValue[]) => void
 	/** The connection has updated its config, which should be persisted */
-	saveConfig(newConfig: TConfig | undefined, newSecrets: TSecrets | undefined): Promise<void>
+	saveConfig(newConfig: TConfig | undefined, newSecrets: TSecrets | undefined): void
 	/** Send an OSC message from the default osc listener in companion */
-	'send-osc': (msg: SendOscMessage) => void
+	sendOSC: (host: string, port: number, path: string, args: EncodedOSCArgument[]) => void
 	/**
 	 * Parse the variables in a string of text.
 	 * This has been semi depricated in favor of the companion parsing the options before the module.
@@ -46,6 +49,10 @@ export interface ModuleHostContext<TConfig, TSecrets> {
 	 * Note: This should only be used by a few internal modules, it is not intended for general use
 	 */
 	setCustomVariable: (controlId: string, variableId: string, value: CompanionVariableValue | undefined) => void
+
+	sharedUdpSocketJoin: (msg: SharedUdpSocketMessageJoin) => Promise<string>
+	sharedUdpSocketLeave: (msg: SharedUdpSocketMessageLeave) => Promise<void>
+	sharedUdpSocketSend: (msg: SharedUdpSocketMessageSend) => Promise<void>
 }
 
 export type EncodeIsVisible<T extends CompanionInputFieldBase> = Omit<T, 'isVisible' | 'isVisibleExpression'> & {
@@ -161,37 +168,37 @@ export interface ActionInstance extends ActionInstanceBase {
 	controlId: string
 }
 
-// export interface UpgradeActionInstance extends Omit<ActionInstanceBase, 'options'> {
-// 	options: OptionsObject
+export interface UpgradeActionInstance extends Omit<ActionInstanceBase, 'options'> {
+	options: OptionsObject
 
-// 	controlId: string
-// }
-// export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'options'> {
-// 	options: OptionsObject
+	controlId: string
+}
+export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'options'> {
+	options: OptionsObject
 
-// 	isInverted: boolean
+	isInverted: boolean
 
-// 	/**
-// 	 * Only used as an output from the module, when the feedback is being converted to a boolean feedback
-// 	 */
-// 	style?: Partial<CompanionFeedbackButtonStyleResult>
+	/**
+	 * Only used as an output from the module, when the feedback is being converted to a boolean feedback
+	 */
+	style?: Partial<CompanionFeedbackButtonStyleResult>
 
-// 	controlId: string
-// }
+	controlId: string
+}
 
-// export interface UpgradeActionAndFeedbackInstancesMessage {
-// 	actions: UpgradeActionInstance[]
-// 	feedbacks: UpgradeFeedbackInstance[]
-// 	defaultUpgradeIndex: number | null
-// }
+export interface UpgradeActionAndFeedbackInstancesMessage {
+	actions: UpgradeActionInstance[]
+	feedbacks: UpgradeFeedbackInstance[]
+	defaultUpgradeIndex: number | null
+}
 
-// export interface UpgradeActionAndFeedbackInstancesResponse {
-// 	updatedConfig: unknown
-// 	updatedSecrets: unknown
-// 	updatedActions: UpgradeActionInstance[]
-// 	updatedFeedbacks: UpgradeFeedbackInstance[]
-// 	latestUpgradeIndex: number
-// }
+export interface UpgradeActionAndFeedbackInstancesResponse {
+	updatedConfig: unknown
+	updatedSecrets: unknown
+	updatedActions: UpgradeActionInstance[]
+	updatedFeedbacks: UpgradeFeedbackInstance[]
+	latestUpgradeIndex: number
+}
 
 // export interface SendOscMessage {
 // 	host: string
@@ -236,3 +243,17 @@ export interface RecordActionMessage {
 	options: CompanionOptionValues
 	delay: number | undefined
 }
+
+export type EncodedOSCArgument =
+	| {
+			type: 'i' | 'f'
+			value: number
+	  }
+	| {
+			type: 's'
+			value: string
+	  }
+	| {
+			type: 'b'
+			value: string // base64 encoded
+	  }
