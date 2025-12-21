@@ -191,7 +191,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 			this.#lastSecrets = msg.secrets as TSecrets
 			this.#label = msg.label
 			process.title = msg.label
-			
+
 			// Create initial config object
 			if (msg.isFirstInit) {
 				const newConfig: any = {}
