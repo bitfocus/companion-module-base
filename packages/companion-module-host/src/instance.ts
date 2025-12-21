@@ -243,7 +243,7 @@ export class InstanceWrapper<TConfig, TSecrets> {
 	}
 
 	async init(msg: InitMessage): Promise<InitResponseMessage> {
-		return this.#lifecycleQueue.add(async () => {
+		const res = await this.#lifecycleQueue.add(async () => {
 			if (this.#initialized) throw new Error('Already initialized')
 
 			this.#lastConfig = msg.config as any
@@ -306,6 +306,9 @@ export class InstanceWrapper<TConfig, TSecrets> {
 				updatedSecrets: this.#lastSecrets,
 			}
 		})
+
+		if (!res) throw new Error('Failed to initialize')
+		return res
 	}
 
 	async destroy(): Promise<void> {
