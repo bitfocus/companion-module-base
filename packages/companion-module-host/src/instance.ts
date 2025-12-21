@@ -6,7 +6,6 @@ import {
 	CompanionVariableDefinition,
 	CompanionVariableValue,
 	createModuleLogger,
-	OSCMetaArgument,
 	SomeCompanionConfigField,
 	type InstanceBase,
 	type InstanceConstructor,
@@ -16,8 +15,6 @@ import { ActionManager } from './internal/actions.js'
 import { FeedbackManager } from './internal/feedback.js'
 import type {
 	ActionInstance,
-	EncodedOSCArgument,
-	EncodeIsVisible,
 	FeedbackInstance,
 	HostVariableDefinition,
 	HostVariableValue,
@@ -29,7 +26,6 @@ import type {
 // eslint-disable-next-line n/no-missing-import
 import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/dist/host-api/context.js'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
-import { serializeIsVisibleFn } from './internal/base.js'
 
 export class InstanceWrapper<TConfig, TSecrets> {
 	readonly #logger = createModuleLogger('InstanceWrapper')
@@ -93,36 +89,7 @@ export class InstanceWrapper<TConfig, TSecrets> {
 				this.#host.setStatus(status, message)
 			},
 			oscSend: (host, port, path, args) => {
-				const encodedArgs: EncodedOSCArgument[] = []
-
-				if (args !== undefined && args !== null) {
-					// Simplify as an array
-					if (!Array.isArray(args)) args = [args as OSCMetaArgument]
-
-					for (const arg of args) {
-						if (typeof arg === 'string') {
-							encodedArgs.push({ type: 's', value: arg })
-						} else if (typeof arg === 'number') {
-							encodedArgs.push({ type: 'f', value: arg })
-						} else if (arg instanceof Uint8Array) {
-							// Future: use native toBase64 when available
-							encodedArgs.push({ type: 'b', value: Buffer.from(arg).toString('base64') })
-						} else if (arg && typeof arg === 'object') {
-							if (arg.type === 's' || arg.type === 'f' || arg.type === 'i') {
-								encodedArgs.push(arg)
-							} else if (arg.type === 'b' && arg.value instanceof Uint8Array) {
-								// Future: use native toBase64 when available
-								encodedArgs.push({ type: 'b', value: Buffer.from(arg.value).toString('base64') })
-							} else {
-								throw new Error(`Unsupported OSC argument type: ${JSON.stringify(arg)}`)
-							}
-						} else {
-							throw new Error(`Unsupported OSC argument type: ${arg}`)
-						}
-					}
-				}
-
-				this.#host.sendOSC(host, port, path, encodedArgs)
+				this.#host.sendOSC(host, port, path, args)
 			},
 
 			parseVariablesInString: async (text) => {
@@ -385,11 +352,8 @@ export class InstanceWrapper<TConfig, TSecrets> {
 		)
 	}
 
-	async getConfigFields(): Promise<{ fields: EncodeIsVisible<SomeCompanionConfigField>[] }> {
-		return {
-			// TODO - isolate types better?
-			fields: serializeIsVisibleFn(this.#instance.getConfigFields()),
-		}
+	async getConfigFields(): Promise<SomeCompanionConfigField[]> {
+		return this.#instance.getConfigFields()
 	}
 
 	async httpRequest(request: CompanionHTTPRequest): Promise<CompanionHTTPResponse> {

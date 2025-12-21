@@ -7,7 +7,6 @@ import {
 	type CompanionVariableValue,
 	createModuleLogger,
 } from '@companion-module/base'
-import { serializeIsVisibleFn } from './base.js'
 import type { ActionInstance, HostActionDefinition, ParseVariablesInfo } from '../context.js'
 import { ExecuteActionResult } from '../instance.js'
 
@@ -201,7 +200,7 @@ export class ActionManager {
 					id: actionId,
 					name: action.name,
 					description: action.description,
-					options: serializeIsVisibleFn(action.options),
+					options: action.options,
 					optionsToIgnoreForSubscribe: action.optionsToIgnoreForSubscribe,
 					hasLearn: !!action.learn,
 					learnTimeout: action.learnTimeout,

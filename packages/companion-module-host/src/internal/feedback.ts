@@ -9,7 +9,6 @@ import {
 	assertNever,
 	createModuleLogger,
 } from '@companion-module/base'
-import { serializeIsVisibleFn } from './base.js'
 import debounceFn from 'debounce-fn'
 import type { FeedbackInstance, HostFeedbackDefinition, HostFeedbackValue, ParseVariablesInfo } from '../context.js'
 
@@ -309,7 +308,7 @@ export class FeedbackManager {
 					id: feedbackId,
 					name: feedback.name,
 					description: feedback.description,
-					options: serializeIsVisibleFn(feedback.options),
+					options: feedback.options,
 					type: feedback.type,
 					defaultStyle: feedback.type === 'boolean' ? feedback.defaultStyle : undefined,
 					hasLearn: !!feedback.learn,

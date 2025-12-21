@@ -1,13 +1,12 @@
 import type {
 	CompanionFeedbackButtonStyleResult,
-	CompanionInputFieldBase,
-	CompanionOptionValues,
 	CompanionPresetDefinitions,
 	CompanionRecordedAction,
 	CompanionVariableValue,
 	InstanceStatus,
 	JsonValue,
 	OptionsObject,
+	OSCSomeArguments,
 	SomeCompanionActionInputField,
 	SomeCompanionFeedbackInputField,
 } from '@companion-module/base'
@@ -25,7 +24,7 @@ export interface ModuleHostContext<TConfig, TSecrets> {
 	setActionDefinitions: (actions: HostActionDefinition[]) => void
 	/** The feedbacks available in the connection have changed */
 	setFeedbackDefinitions: (feedbacks: HostFeedbackDefinition[]) => void
-	/** The varaibles available in the connection have changed */
+	/** The variables available in the connection have changed */
 	setVariableDefinitions: (definitions: HostVariableDefinition[], values: HostVariableValue[]) => void
 	/** The presets provided by the connection have changed */
 	setPresetDefinitions: (presets: CompanionPresetDefinitions) => void
@@ -36,7 +35,7 @@ export interface ModuleHostContext<TConfig, TSecrets> {
 	/** The connection has updated its config, which should be persisted */
 	saveConfig(newConfig: TConfig | undefined, newSecrets: TSecrets | undefined): void
 	/** Send an OSC message from the default osc listener in companion */
-	sendOSC: (host: string, port: number, path: string, args: EncodedOSCArgument[]) => void
+	sendOSC: (host: string, port: number, path: string, args: OSCSomeArguments) => void
 	/**
 	 * Parse the variables in a string of text.
 	 * This has been semi depricated in favor of the companion parsing the options before the module.
@@ -55,26 +54,11 @@ export interface ModuleHostContext<TConfig, TSecrets> {
 	sharedUdpSocketSend: (msg: SharedUdpSocketMessageSend) => Promise<void>
 }
 
-export type EncodeIsVisible<T extends CompanionInputFieldBase> = Omit<T, 'isVisible' | 'isVisibleExpression'> & {
-	isVisibleFn?: string
-	isVisibleFnType?: 'function' | 'expression'
-}
-
-// export type GetConfigFieldsMessage = Record<string, never>
-// export type SomeEncodedCompanionConfigField = EncodeIsVisible<SomeCompanionConfigField>
-// export interface GetConfigFieldsResponseMessage {
-// 	fields: SomeEncodedCompanionConfigField[]
-// }
-// export interface LogMessageMessage {
-// 	level: LogLevel
-// 	message: string
-// }
-
 export interface HostActionDefinition {
 	id: string
 	name: string
 	description: string | undefined
-	options: EncodeIsVisible<SomeCompanionActionInputField>[] // TODO module-lib - versioned types?
+	options: SomeCompanionActionInputField[] // TODO module-lib - versioned types?
 	optionsToIgnoreForSubscribe: string[] | undefined
 	hasLearn: boolean
 	learnTimeout: number | undefined
@@ -85,7 +69,7 @@ export interface HostFeedbackDefinition {
 	id: string
 	name: string
 	description: string | undefined
-	options: EncodeIsVisible<SomeCompanionFeedbackInputField>[] // TODO module-lib - versioned types?
+	options: SomeCompanionFeedbackInputField[] // TODO module-lib - versioned types?
 	type: 'boolean' | 'value' | 'advanced'
 	defaultStyle?: CompanionFeedbackButtonStyleResult
 	hasLearn: boolean
@@ -101,23 +85,6 @@ export interface HostVariableValue {
 	id: string
 	value: string | number | boolean | undefined
 }
-
-// export interface SetPresetDefinitionsMessage {
-// 	presets: Array<(CompanionButtonPresetDefinition | CompanionTextPresetDefinition) & { id: string }>
-// }
-
-// export interface ExecuteActionMessage {
-// 	action: ActionInstance
-
-// 	/** Identifier of the surface which triggered this action */
-// 	surfaceId: string | undefined
-// }
-
-// export interface ExecuteActionResponseMessage {
-// 	success: boolean
-// 	/** If success=false, a reason for the failure */
-// 	errorMessage: string | undefined
-// }
 
 export interface HostFeedbackValue {
 	id: string
@@ -147,12 +114,6 @@ export interface FeedbackInstance extends FeedbackInstanceBase {
 		height: number
 	}
 }
-
-// export interface UpdateConfigAndLabelMessage {
-// 	label: string
-// 	config: unknown | undefined
-// 	secrets: unknown | undefined
-// }
 
 export interface ActionInstanceBase {
 	id: string
@@ -200,60 +161,8 @@ export interface UpgradeActionAndFeedbackInstancesResponse {
 	latestUpgradeIndex: number
 }
 
-// export interface SendOscMessage {
-// 	host: string
-// 	port: number
-// 	path: string
-// 	args: OSCSomeArguments
-// }
-
 export interface ParseVariablesInfo {
 	controlId: string | undefined
 	feedbackInstanceId: string | undefined
 	actionInstanceId: string | undefined
 }
-// export interface HandleHttpRequestMessage {
-// 	request: CompanionHTTPRequest
-// }
-// export interface HandleHttpRequestResponseMessage {
-// 	response: CompanionHTTPResponse
-// }
-
-// export interface LearnActionMessage {
-// 	action: ActionInstance
-// }
-// export interface LearnActionResponseMessage {
-// 	options: CompanionOptionValues | undefined
-// }
-
-// export interface LearnFeedbackMessage {
-// 	feedback: FeedbackInstance
-// }
-// export interface LearnFeedbackResponseMessage {
-// 	options: CompanionOptionValues | undefined
-// }
-
-// export interface StartStopRecordActionsMessage {
-// 	recording: boolean
-// }
-
-export interface RecordActionMessage {
-	uniquenessId: string | null
-	actionId: string
-	options: CompanionOptionValues
-	delay: number | undefined
-}
-
-export type EncodedOSCArgument =
-	| {
-			type: 'i' | 'f'
-			value: number
-	  }
-	| {
-			type: 's'
-			value: string
-	  }
-	| {
-			type: 'b'
-			value: string // base64 encoded
-	  }
