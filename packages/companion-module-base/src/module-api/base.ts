@@ -2,58 +2,20 @@ import type { CompanionActionDefinitions, CompanionRecordedAction } from './acti
 import type { CompanionFeedbackDefinitions } from './feedback.js'
 import type { CompanionPresetDefinitions } from './preset.js'
 import type { InstanceStatus } from './enums.js'
-import type { LogLevel } from '../logging.js'
-import type {
-	ExecuteActionMessage,
-	ExecuteActionResponseMessage,
-	GetConfigFieldsMessage,
-	GetConfigFieldsResponseMessage,
-	HandleHttpRequestMessage,
-	HandleHttpRequestResponseMessage,
-	HostToModuleEventsV0,
-	InitMessage,
-	InitResponseMessage,
-	LearnActionMessage,
-	LearnActionResponseMessage,
-	LearnFeedbackMessage,
-	LearnFeedbackResponseMessage,
-	LogMessageMessage,
-	ModuleToHostEventsV0,
-	ParseVariablesInStringMessage,
-	ParseVariablesInStringResponseMessage,
-	SendOscMessage,
-	SetPresetDefinitionsMessage,
-	SetStatusMessage,
-	SetVariableDefinitionsMessage,
-	SetVariableValuesMessage,
-	SharedUdpSocketError,
-	SharedUdpSocketMessage,
-	StartStopRecordActionsMessage,
-	UpdateActionInstancesMessage,
-	UpdateConfigAndLabelMessage,
-	UpdateFeedbackInstancesMessage,
-	UpgradeActionAndFeedbackInstancesMessage,
-	UpgradeActionAndFeedbackInstancesResponse,
-} from '../host-api/api.js'
-import { literal } from '../util.js'
+import { createModuleLogger, type LogLevel, type ModuleLogger } from '../logging.js'
+import { assertNever } from '../util.js'
 import type { InstanceBaseShared } from '../instance-base.js'
-import PQueue from 'p-queue'
 import type { CompanionVariableDefinition, CompanionVariableValue, CompanionVariableValues } from './variable.js'
 import type { OSCSomeArguments } from '../common/osc.js'
 import type { SomeCompanionConfigField } from './config.js'
-import type { CompanionStaticUpgradeScript } from './upgrade.js'
-import { isInstanceBaseProps, serializeIsVisibleFn } from '../internal/base.js'
-import { runThroughUpgradeScripts } from '../internal/upgrade.js'
-import { FeedbackManager } from '../internal/feedback.js'
 import type { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
-import { IpcWrapper } from '../host-api/ipc-wrapper.js'
-import { ActionManager } from '../internal/actions.js'
 import {
 	SharedUdpSocket,
 	SharedUdpSocketImpl,
 	SharedUdpSocketMessageCallback,
 	SharedUdpSocketOptions,
 } from './shared-udp-socket.js'
+import { type InstanceContext, isInstanceContext } from '../host-api/context.js'
 
 export interface InstanceBaseOptions {
 	/**
@@ -74,27 +36,14 @@ export interface InstanceBaseOptions {
 }
 
 export abstract class InstanceBase<TConfig, TSecrets = undefined> implements InstanceBaseShared<TConfig, TSecrets> {
-	readonly #ipcWrapper: IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>
-	readonly #upgradeScripts: CompanionStaticUpgradeScript<TConfig, TSecrets>[]
-	public readonly id: string
-
-	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })
-	#initialized = false
-	#recordingActions = false
-
-	#lastConfig: TConfig = {} as any
-	#lastSecrets: TSecrets = {} as any
-
-	readonly #actionManager: ActionManager
-	readonly #feedbackManager: FeedbackManager
-
-	readonly #sharedUdpSocketHandlers = new Map<string, SharedUdpSocketImpl>()
-	readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
-
-	readonly #variableValues = new Map<string, CompanionVariableValue>()
+	readonly #context: InstanceContext<TConfig, TSecrets>
+	readonly #logger: ModuleLogger
 
 	readonly #options: InstanceBaseOptions
-	#label: string
+
+	public get id(): string {
+		return this.#context.id
+	}
 
 	public get instanceOptions(): InstanceBaseOptions {
 		return this.#options
@@ -105,17 +54,21 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * This can be changed just before `configUpdated` is called
 	 */
 	public get label(): string {
-		return this.#label
+		return this.#context.label
 	}
 
 	/**
 	 * Create an instance of the module
 	 */
 	constructor(internal: unknown) {
-		if (!isInstanceBaseProps<TConfig, TSecrets>(internal) || !internal._isInstanceBaseProps)
+		if (!isInstanceContext<TConfig, TSecrets>(internal) || !internal._isInstanceContext)
 			throw new Error(
 				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`,
 			)
+
+		this.#context = internal
+
+		this.#logger = createModuleLogger()
 
 		this.createSharedUdpSocket = this.createSharedUdpSocket.bind(this)
 
@@ -124,232 +77,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 			disableNewConfigLayout: false,
 		}
 
-		this.#ipcWrapper = new IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>(
-			{
-				init: this._handleInit.bind(this),
-				destroy: this._handleDestroy.bind(this),
-				updateConfigAndLabel: this._handleConfigUpdateAndLabel.bind(this),
-				updateConfig: async () => undefined, // Replaced by updateConfigAndLabel
-				executeAction: this._handleExecuteAction.bind(this),
-				updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
-				updateActions: this._handleUpdateActions.bind(this),
-				upgradeActionsAndFeedbacks: this._handleUpgradeActionsAndFeedbacks.bind(this),
-				getConfigFields: this._handleGetConfigFields.bind(this),
-				handleHttpRequest: this._handleHttpRequest.bind(this),
-				learnAction: this._handleLearnAction.bind(this),
-				learnFeedback: this._handleLearnFeedback.bind(this),
-				startStopRecordActions: this._handleStartStopRecordActions.bind(this),
-				variablesChanged: async () => undefined, // Not needed since 1.13.0
-				sharedUdpSocketMessage: this._handleSharedUdpSocketMessage.bind(this),
-				sharedUdpSocketError: this._handleSharedUdpSocketError.bind(this),
-			},
-			(msg) => {
-				process.send!(msg)
-			},
-			5000,
-		)
-		process.on('message', (msg) => {
-			this.#ipcWrapper.receivedMessage(msg as any)
-		})
-
-		const parseVariablesInStringIfNeeded = async (
-			msg: ParseVariablesInStringMessage,
-		): Promise<ParseVariablesInStringResponseMessage> => {
-			// Shortcut in case there is definitely nothing to parse
-			if (!msg.text.includes('$('))
-				return {
-					text: msg.text,
-					variableIds: undefined,
-				}
-			return this.#ipcWrapper.sendWithCb('parseVariablesInString', msg)
-		}
-
-		this.#actionManager = new ActionManager(
-			parseVariablesInStringIfNeeded,
-			(msg) => this.#ipcWrapper.sendWithNoCb('setActionDefinitions', msg),
-			(msg) => this.#ipcWrapper.sendWithNoCb('setCustomVariable', msg),
-			this.log.bind(this),
-		)
-		this.#feedbackManager = new FeedbackManager(
-			parseVariablesInStringIfNeeded,
-			(msg) => this.#ipcWrapper.sendWithNoCb('updateFeedbackValues', msg),
-			(msg) => this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', msg),
-			this.log.bind(this),
-		)
-
-		this.#upgradeScripts = internal.upgradeScripts
-		this.id = internal.id
-		this.#label = internal.id // Temporary
-
 		this.log('debug', 'Initializing')
-	}
-
-	private async _handleInit(msg: InitMessage): Promise<InitResponseMessage> {
-		return this.#lifecycleQueue.add(async () => {
-			if (this.#initialized) throw new Error('Already initialized')
-
-			this.#lastConfig = msg.config as TConfig
-			this.#lastSecrets = msg.secrets as TSecrets
-			this.#label = msg.label
-			process.title = msg.label
-
-			// Create initial config object
-			if (msg.isFirstInit) {
-				const newConfig: any = {}
-				const newSecrets: any = {}
-				const fields = this.getConfigFields()
-				for (const field of fields) {
-					if ('default' in field) {
-						if (field.type.startsWith('secret')) {
-							newSecrets[field.id] = field.default
-						} else {
-							newConfig[field.id] = field.default
-						}
-					}
-				}
-				this.#lastConfig = newConfig as TConfig
-				this.#lastSecrets = newSecrets as TSecrets
-				this.saveConfig(this.#lastConfig, this.#lastSecrets)
-
-				// this is new, so there is no point attempting to run any upgrade scripts
-				msg.lastUpgradeIndex = this.#upgradeScripts.length - 1
-			}
-
-			/**
-			 * Making this handle actions/feedbacks is hard now due to the structure of options, so instead we just upgrade the config, and the actions/feedbacks will be handled in their own calls soon after this
-			 */
-			const { updatedConfig, updatedSecrets } = runThroughUpgradeScripts(
-				[],
-				[],
-				msg.lastUpgradeIndex,
-				this.#upgradeScripts,
-				this.#lastConfig,
-				this.#lastSecrets,
-				false,
-			)
-			this.#lastConfig = (updatedConfig as TConfig | undefined) ?? this.#lastConfig
-			this.#lastSecrets = (updatedSecrets as TSecrets | undefined) ?? this.#lastSecrets
-
-			// Now we can initialise the module
-			try {
-				await this.init(this.#lastConfig, !!msg.isFirstInit, this.#lastSecrets)
-
-				this.#initialized = true
-			} catch (e) {
-				console.trace(`Init failed: ${e}`)
-				throw e
-			}
-
-			return {
-				hasHttpHandler: typeof this.handleHttpRequest === 'function',
-				hasRecordActionsHandler: typeof this.handleStartStopRecordActions == 'function',
-				newUpgradeIndex: this.#upgradeScripts.length - 1,
-				disableNewConfigLayout: this.#options.disableNewConfigLayout,
-				updatedConfig: this.#lastConfig,
-				updatedSecrets: this.#lastSecrets,
-			}
-		})
-	}
-	private async _handleDestroy(): Promise<void> {
-		await this.#lifecycleQueue.add(async () => {
-			if (!this.#initialized) throw new Error('Not initialized')
-
-			await this.destroy()
-
-			this.#initialized = false
-		})
-	}
-	private async _handleConfigUpdateAndLabel(msg: UpdateConfigAndLabelMessage): Promise<void> {
-		await this.#lifecycleQueue.add(async () => {
-			if (!this.#initialized) throw new Error('Not initialized')
-
-			this.#label = msg.label
-			process.title = msg.label
-			this.#lastConfig = msg.config as TConfig
-			this.#lastSecrets = msg.secrets as TSecrets
-
-			await this.configUpdated(this.#lastConfig, this.#lastSecrets)
-		})
-	}
-	private async _handleExecuteAction(msg: ExecuteActionMessage): Promise<ExecuteActionResponseMessage> {
-		return this.#actionManager.handleExecuteAction(msg)
-	}
-
-	private async _handleUpdateFeedbacks(msg: UpdateFeedbackInstancesMessage): Promise<void> {
-		this.#feedbackManager.handleUpdateFeedbacks(msg.feedbacks)
-	}
-	private async _handleUpdateActions(msg: UpdateActionInstancesMessage): Promise<void> {
-		this.#actionManager.handleUpdateActions(msg.actions)
-	}
-	private async _handleUpgradeActionsAndFeedbacks(
-		msg: UpgradeActionAndFeedbackInstancesMessage,
-	): Promise<UpgradeActionAndFeedbackInstancesResponse> {
-		return runThroughUpgradeScripts(
-			msg.actions,
-			msg.feedbacks,
-			null,
-			this.#upgradeScripts,
-			this.#lastConfig,
-			this.#lastSecrets,
-			true,
-		)
-	}
-
-	private async _handleGetConfigFields(_msg: GetConfigFieldsMessage): Promise<GetConfigFieldsResponseMessage> {
-		return {
-			fields: serializeIsVisibleFn(this.getConfigFields()),
-		}
-	}
-
-	private async _handleHttpRequest(msg: HandleHttpRequestMessage): Promise<HandleHttpRequestResponseMessage> {
-		if (!this.handleHttpRequest) throw new Error(`handleHttpRequest is not supported!`)
-
-		const res = await this.handleHttpRequest(msg.request)
-
-		return { response: res }
-	}
-	private async _handleLearnAction(msg: LearnActionMessage): Promise<LearnActionResponseMessage> {
-		return this.#actionManager.handleLearnAction(msg)
-	}
-	private async _handleLearnFeedback(msg: LearnFeedbackMessage): Promise<LearnFeedbackResponseMessage> {
-		return this.#feedbackManager.handleLearnFeedback(msg)
-	}
-	private async _handleStartStopRecordActions(msg: StartStopRecordActionsMessage): Promise<void> {
-		if (!msg.recording) {
-			if (!this.#recordingActions) {
-				// Already stopped
-				return
-			}
-		} else {
-			if (this.#recordingActions) {
-				// Already running
-				return
-			}
-		}
-
-		if (!this.handleStartStopRecordActions) {
-			this.#recordingActions = false
-			throw new Error('Recording actions is not supported by this module!')
-		}
-
-		this.#recordingActions = msg.recording
-
-		this.handleStartStopRecordActions(this.#recordingActions)
-	}
-
-	private async _handleSharedUdpSocketMessage(msg: SharedUdpSocketMessage): Promise<void> {
-		for (const socket of this.#sharedUdpSocketHandlers.values()) {
-			if (socket.handleId === msg.handleId) {
-				socket.receiveSocketMessage(msg)
-			}
-		}
-	}
-	private async _handleSharedUdpSocketError(msg: SharedUdpSocketError): Promise<void> {
-		for (const socket of this.#sharedUdpSocketHandlers.values()) {
-			if (socket.handleId === msg.handleId) {
-				socket.receiveSocketError(msg.error)
-			}
-		}
 	}
 
 	/**
@@ -382,9 +110,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 		newSecrets: TSecrets | undefined,
 	): void
 	saveConfig(newConfig: TConfig | undefined, newSecrets: TSecrets | undefined): void {
-		if (newConfig) this.#lastConfig = newConfig
-		if (newSecrets) this.#lastSecrets = newSecrets
-		this.#ipcWrapper.sendWithNoCb('saveConfig', { config: newConfig, secrets: newSecrets })
+		this.#context.saveConfig(newConfig, newSecrets)
 	}
 
 	/**
@@ -409,7 +135,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param actions The action definitions
 	 */
 	setActionDefinitions(actions: CompanionActionDefinitions): void {
-		this.#actionManager.setActionDefinitions(actions)
+		this.#context.setActionDefinitions(actions)
 	}
 
 	/**
@@ -417,7 +143,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param feedbacks The feedback definitions
 	 */
 	setFeedbackDefinitions(feedbacks: CompanionFeedbackDefinitions): void {
-		this.#feedbackManager.setFeedbackDefinitions(feedbacks)
+		this.#context.setFeedbackDefinitions(feedbacks)
 	}
 
 	/**
@@ -425,18 +151,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param presets The preset definitions
 	 */
 	setPresetDefinitions(presets: CompanionPresetDefinitions): void {
-		const hostPresets: SetPresetDefinitionsMessage['presets'] = []
-
-		for (const [id, preset] of Object.entries(presets)) {
-			if (preset) {
-				hostPresets.push({
-					...preset,
-					id,
-				})
-			}
-		}
-
-		this.#ipcWrapper.sendWithNoCb('setPresetDefinitions', { presets: hostPresets })
+		this.#context.setPresetDefinitions(presets)
 	}
 
 	/**
@@ -444,44 +159,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param variables The variable definitions
 	 */
 	setVariableDefinitions(variables: CompanionVariableDefinition[]): void {
-		const hostVariables: SetVariableDefinitionsMessage['variables'] = []
-		const hostValues: SetVariableDefinitionsMessage['newValues'] = []
-
-		this.#variableDefinitions.clear()
-
-		for (const variable of variables) {
-			hostVariables.push({
-				id: variable.variableId,
-				name: variable.name,
-			})
-
-			// Remember the definition locally
-			this.#variableDefinitions.set(variable.variableId, variable)
-			if (!this.#variableValues.has(variable.variableId)) {
-				// Give us a local cached value of something
-				this.#variableValues.set(variable.variableId, '')
-				hostValues.push({
-					id: variable.variableId,
-					value: '',
-				})
-			}
-		}
-
-		if (!this.#options.disableVariableValidation) {
-			const validIds = new Set(this.#variableDefinitions.keys())
-			for (const id of this.#variableValues.keys()) {
-				if (!validIds.has(id)) {
-					// Delete any local cached value
-					this.#variableValues.delete(id)
-					hostValues.push({
-						id: id,
-						value: undefined,
-					})
-				}
-			}
-		}
-
-		this.#ipcWrapper.sendWithNoCb('setVariableDefinitions', { variables: hostVariables, newValues: hostValues })
+		this.#context.setVariableDefinitions(variables)
 	}
 
 	/**
@@ -489,39 +167,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param values The new values for the variables
 	 */
 	setVariableValues(values: CompanionVariableValues): void {
-		const hostValues: SetVariableValuesMessage['newValues'] = []
-
-		for (const [variableId, value] of Object.entries(values)) {
-			if (this.#options.disableVariableValidation) {
-				// update the cached value
-				if (value === undefined) {
-					this.#variableValues.delete(variableId)
-				} else {
-					this.#variableValues.set(variableId, value)
-				}
-
-				hostValues.push({
-					id: variableId,
-					value: value,
-				})
-			} else if (this.#variableDefinitions.has(variableId)) {
-				// update the cached value
-				this.#variableValues.set(variableId, value ?? '')
-
-				hostValues.push({
-					id: variableId,
-					value: value ?? '',
-				})
-			} else {
-				// tell companion to delete the value
-				hostValues.push({
-					id: variableId,
-					value: undefined,
-				})
-			}
-		}
-
-		this.#ipcWrapper.sendWithNoCb('setVariableValues', { newValues: hostValues })
+		this.#context.setVariableValues(values)
 	}
 
 	/**
@@ -530,7 +176,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @returns The value
 	 */
 	getVariableValue(variableId: string): CompanionVariableValue | undefined {
-		return this.#variableValues.get(variableId)
+		return this.#context.getVariableValue(variableId)
 	}
 
 	/**
@@ -542,24 +188,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @returns The string with variables replaced with their values
 	 */
 	async parseVariablesInString(text: string): Promise<string> {
-		const currentContext = this.#feedbackManager.parseVariablesContext
-		if (currentContext) {
-			this.log(
-				'debug',
-				`parseVariablesInString called while in: ${currentContext}. You should use the parseVariablesInString provided to the callback instead`,
-			)
-		}
-
-		// If there are no variables, just return the text
-		if (!text.includes('$(')) return text
-
-		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
-			text: text,
-			controlId: undefined,
-			actionInstanceId: undefined,
-			feedbackInstanceId: undefined,
-		})
-		return res.text
+		return this.#context.parseVariablesInString(text)
 	}
 
 	/**
@@ -567,7 +196,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param feedbackTypes The feedback types to check
 	 */
 	checkFeedbacks(...feedbackTypes: string[]): void {
-		this.#feedbackManager.checkFeedbacks(feedbackTypes)
+		this.#context.checkFeedbacks(feedbackTypes)
 	}
 
 	/**
@@ -575,7 +204,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param feedbackIds The ids of the feedback instances to check
 	 */
 	checkFeedbacksById(...feedbackIds: string[]): void {
-		this.#feedbackManager.checkFeedbacksById(feedbackIds)
+		this.#context.checkFeedbacksById(feedbackIds)
 	}
 
 	/**
@@ -584,7 +213,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param actionIds The actionIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	subscribeActions(...actionIds: string[]): void {
-		this.#actionManager.subscribeActions(actionIds)
+		this.#context.subscribeActions(actionIds)
 	}
 	/**
 	 * Call unsubscribe on all currently known placed actions.
@@ -592,7 +221,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param actionIds The actionIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	unsubscribeActions(...actionIds: string[]): void {
-		this.#actionManager.unsubscribeActions(actionIds)
+		this.#context.unsubscribeActions(actionIds)
 	}
 
 	/**
@@ -601,7 +230,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	subscribeFeedbacks(...feedbackIds: string[]): void {
-		this.#feedbackManager.subscribeFeedbacks(feedbackIds)
+		this.#context.subscribeFeedbacks(feedbackIds)
 	}
 	/**
 	 * Call unsubscribe on all currently known placed feedbacks.
@@ -609,7 +238,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called.
 	 */
 	unsubscribeFeedbacks(...feedbackIds: string[]): void {
-		this.#feedbackManager.unsubscribeFeedbacks(feedbackIds)
+		this.#context.unsubscribeFeedbacks(feedbackIds)
 	}
 
 	/**
@@ -618,14 +247,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param uniquenessId A unique id for the action being recorded. This should be different for each action, but by passing the same as a previous call will replace the previous value.
 	 */
 	recordAction(action: CompanionRecordedAction, uniquenessId?: string): void {
-		if (!this.#recordingActions) throw new Error('Not currently recording actions')
-
-		this.#ipcWrapper.sendWithNoCb('recordAction', {
-			uniquenessId: uniquenessId ?? null,
-			actionId: action.actionId,
-			options: action.options,
-			delay: action.delay,
-		})
+		this.#context.recordAction(action, uniquenessId)
 	}
 
 	/**
@@ -636,15 +258,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param args mesage arguments
 	 */
 	oscSend(host: string, port: number, path: string, args: OSCSomeArguments): void {
-		this.#ipcWrapper.sendWithNoCb(
-			'send-osc',
-			literal<SendOscMessage>({
-				host,
-				port,
-				path,
-				args,
-			}),
-		)
+		this.#context.oscSend(host, port, path, args)
 	}
 
 	/**
@@ -658,13 +272,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * ```
 	 */
 	updateStatus(status: InstanceStatus, message?: string | null): void {
-		this.#ipcWrapper.sendWithNoCb(
-			'set-status',
-			literal<SetStatusMessage>({
-				status,
-				message: message ?? null,
-			}),
-		)
+		this.#context.updateStatus(status, message ?? null)
 	}
 
 	/**
@@ -673,13 +281,24 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 * @param message The message text to write
 	 */
 	log(level: LogLevel, message: string): void {
-		this.#ipcWrapper.sendWithNoCb(
-			'log-message',
-			literal<LogMessageMessage>({
-				level,
-				message,
-			}),
-		)
+		switch (level) {
+			case 'debug':
+				this.#logger.debug(message)
+				break
+			case 'info':
+				this.#logger.info(message)
+				break
+			case 'warn':
+				this.#logger.warn(message)
+				break
+			case 'error':
+				this.#logger.error(message)
+				break
+			default:
+				assertNever(level)
+				this.#logger.info(message)
+				break
+		}
 	}
 
 	/**
@@ -698,7 +317,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	): SharedUdpSocket {
 		const options: SharedUdpSocketOptions = typeof typeOrOptions === 'string' ? { type: typeOrOptions } : typeOrOptions
 
-		const socket = new SharedUdpSocketImpl(this.#ipcWrapper, this.#sharedUdpSocketHandlers, options)
+		const socket = new SharedUdpSocketImpl(this.#context, options)
 		if (callback) socket.on('message', callback)
 
 		return socket

@@ -13,16 +13,7 @@
 		"dev": "run build:root --watch",
 		"lint": "eslint .",
 		"unit": "vitest run",
-		"unit:watch": "vitest",
-		"_dev": "yarn build:ts --watch",
-		"_build": "yarn build:json-schema && yarn build:ajv-validator && yarn build:ts",
-		"_build:ts": "tsc -p tsconfig.build.json",
-		"_build:json-schema": "json2ts --input assets/manifest.schema.json --output generated/manifest.d.ts --additionalProperties=false",
-		"_build:ajv-validator": "node tools/schema-compile.mjs",
-		"_docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/index.ts --excludePrivate --theme default --out docs",
-		"_lint:raw": "eslint",
-		"_lint": "yarn lint:raw .",
-		"_unit": "vitest"
+		"unit:watch": "vitest"
 	},
 	"engines": {
 		"node": "^22.11"

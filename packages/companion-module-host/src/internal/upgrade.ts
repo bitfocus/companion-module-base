@@ -1,18 +1,15 @@
-import type {
-	CompanionMigrationAction,
-	CompanionMigrationFeedback,
-	CompanionStaticUpgradeScript,
-} from '../module-api/upgrade.js'
+import {
+	type CompanionMigrationAction,
+	type CompanionMigrationFeedback,
+	type CompanionStaticUpgradeScript,
+	type Complete,
+	literal,
+} from '@companion-module/base'
 import type {
 	UpgradeActionInstance,
 	UpgradeFeedbackInstance,
 	UpgradeActionAndFeedbackInstancesResponse,
-} from '../host-api/api.js'
-import { Complete, literal } from '../util.js'
-
-function clone<T>(val: T): T {
-	return JSON.parse(JSON.stringify(val))
-}
+} from '../context.js'
 
 /**
  * Run through the upgrade scripts for the given data
@@ -107,7 +104,7 @@ export function runThroughUpgradeScripts(
 			const res = fcn(
 				{
 					// Pass a clone to avoid mutations
-					currentConfig: clone(inputConfig) as any,
+					currentConfig: structuredClone(inputConfig) as any,
 				},
 				{
 					config: upgradeConfigAndSecrets ? inputConfig : null,
@@ -123,7 +120,7 @@ export function runThroughUpgradeScripts(
 									controlId: inst.controlId,
 
 									actionId: inst.actionId,
-									options: inst.options !== undefined ? clone(inst.options) : {},
+									options: inst.options !== undefined ? structuredClone(inst.options) : {},
 								})
 							}
 						})
@@ -138,7 +135,7 @@ export function runThroughUpgradeScripts(
 									controlId: inst.controlId,
 
 									feedbackId: inst.feedbackId,
-									options: inst.options !== undefined ? clone(inst.options) : {},
+									options: inst.options !== undefined ? structuredClone(inst.options) : {},
 									// TODO - style?
 
 									isInverted: inst.isInverted,

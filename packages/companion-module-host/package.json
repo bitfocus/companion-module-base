@@ -1,6 +1,6 @@
 {
 	"name": "@companion-module/host",
-	"version": "1.0.0-0",
+	"version": "0.1.0-0",
 	"type": "module",
 	"license": "MIT",
 	"repository": "https://github.com/bitfocus/companion-module-api",
@@ -15,7 +15,7 @@
 		}
 	},
 	"engines": {
-		"node": "^22.21"
+		"node": "^18.20 || ^22.21"
 	},
 	"files": [
 		"README.md",
@@ -24,6 +24,8 @@
 	],
 	"dependencies": {
 		"@companion-module/base": "workspace:~",
+		"debounce-fn": "^6.0.0",
+		"p-queue": "^8.1.1",
 		"tslib": "^2.8.1"
 	}
 }

@@ -1,12 +1,7 @@
 import type { RemoteInfo } from 'dgram'
-import type {
-	SharedUdpSocketMessage,
-	ModuleToHostEventsV0SharedSocket,
-	HostToModuleEventsV0SharedSocket,
-} from '../host-api/api.js'
-import type { IpcWrapper } from '../host-api/ipc-wrapper.js'
 import EventEmitter from 'eventemitter3'
 import { assertNever } from '../util.js'
+import type { InstanceSharedUdpSocketContext, SharedUdpSocketMessage } from '../host-api/context.js'
 
 export interface SharedUdpSocketEvents {
 	// when an error occurs
@@ -80,8 +75,7 @@ interface BoundState {
 }
 
 export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> implements SharedUdpSocket {
-	readonly #ipcWrapper: IpcWrapper<ModuleToHostEventsV0SharedSocket, HostToModuleEventsV0SharedSocket>
-	readonly #moduleUdpSockets: Map<string, SharedUdpSocketImpl>
+	readonly #context: InstanceSharedUdpSocketContext
 	readonly #options: SharedUdpSocketOptions
 
 	public get handleId(): string | undefined {
@@ -101,15 +95,10 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 
 	#state: BoundState | 'pending' | 'binding' | 'fatalError' | 'closed' = 'pending'
 
-	constructor(
-		ipcWrapper: IpcWrapper<ModuleToHostEventsV0SharedSocket, HostToModuleEventsV0SharedSocket>,
-		moduleUdpSockets: Map<string, SharedUdpSocketImpl>,
-		options: SharedUdpSocketOptions,
-	) {
+	constructor(context: InstanceSharedUdpSocketContext, options: SharedUdpSocketOptions) {
 		super()
 
-		this.#ipcWrapper = ipcWrapper
-		this.#moduleUdpSockets = moduleUdpSockets
+		this.#context = context
 		this.#options = { ...options }
 	}
 
@@ -133,8 +122,8 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 
 		if (callback) this.on('listening', callback)
 
-		this.#ipcWrapper
-			.sendWithCb('sharedUdpSocketJoin', {
+		this.#context
+			.sharedUdpSocketJoin({
 				family: this.#options.type,
 				portNumber: port,
 				// Future: use address?
@@ -142,7 +131,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 			.then(
 				(handleId) => {
 					this.#state = { portNumber: port, handleId }
-					this.#moduleUdpSockets.set(handleId, this)
+					this.#context.sharedUdpSocketHandlers.set(handleId, this)
 					this.emit('listening')
 				},
 				(err) => {
@@ -175,17 +164,17 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 
 		if (callback) this.on('close', callback)
 
-		this.#ipcWrapper
-			.sendWithCb('sharedUdpSocketLeave', {
+		this.#context
+			.sharedUdpSocketLeave({
 				handleId: handleId,
 			})
 			.then(
 				() => {
-					this.#moduleUdpSockets.delete(handleId)
+					this.#context.sharedUdpSocketHandlers.delete(handleId)
 					this.emit('close')
 				},
 				(err) => {
-					this.#moduleUdpSockets.delete(handleId)
+					this.#context.sharedUdpSocketHandlers.delete(handleId)
 					this.emit('error', err instanceof Error ? err : new Error(err))
 				},
 			)
@@ -249,8 +238,8 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 	#sendInner(buffer: Buffer, port: number, address: string, callback?: () => void): void {
 		if (!this.#state || typeof this.#state !== 'object') throw new Error('Socket is not open')
 
-		this.#ipcWrapper
-			.sendWithCb('sharedUdpSocketSend', {
+		this.#context
+			.sharedUdpSocketSend({
 				handleId: this.#state.handleId,
 				message: buffer,
 
@@ -279,7 +268,7 @@ export class SharedUdpSocketImpl extends EventEmitter<SharedUdpSocketEvents> imp
 		this.#state = 'fatalError'
 
 		const boundState = this.boundState
-		if (boundState) this.#moduleUdpSockets.delete(boundState.handleId)
+		if (boundState) this.#context.sharedUdpSocketHandlers.delete(boundState.handleId)
 
 		try {
 			this.emit('error', error)

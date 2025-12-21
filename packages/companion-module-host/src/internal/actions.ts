@@ -1,23 +1,14 @@
-import type { LogLevel } from '../logging.js'
-import type {
-	ParseVariablesInStringMessage,
-	ParseVariablesInStringResponseMessage,
-	SetActionDefinitionsMessage,
-	ActionInstance,
-	ExecuteActionMessage,
-	LearnActionMessage,
-	LearnActionResponseMessage,
-	SetCustomVariableMessage,
-	ExecuteActionResponseMessage,
-} from '../host-api/api.js'
-import type {
-	CompanionActionContext,
-	CompanionActionDefinition,
-	CompanionActionDefinitions,
-	CompanionActionInfo,
-} from '../module-api/action.js'
-import { serializeIsVisibleFn } from './base.js'
-import { CompanionVariableValue } from '../module-api/variable.js'
+import {
+	type CompanionActionContext,
+	type CompanionActionDefinition,
+	type CompanionActionDefinitions,
+	type CompanionActionInfo,
+	type CompanionOptionValues,
+	type CompanionVariableValue,
+	createModuleLogger,
+} from '@companion-module/base'
+import type { ActionInstance, HostActionDefinition, ParseVariablesInfo } from '../context.js'
+import { ExecuteActionResult } from '../instance.js'
 
 function convertActionInstanceToEvent(action: ActionInstance): CompanionActionInfo {
 	return {
@@ -29,66 +20,65 @@ function convertActionInstanceToEvent(action: ActionInstance): CompanionActionIn
 }
 
 export class ActionManager {
-	readonly #parseVariablesInString: (
-		msg: ParseVariablesInStringMessage,
-	) => Promise<ParseVariablesInStringResponseMessage>
-	readonly #setActionDefinitions: (msg: SetActionDefinitionsMessage) => void
-	readonly #setCustomVariableValue: (msg: SetCustomVariableMessage) => void
-	readonly #log: (level: LogLevel, message: string) => void
+	readonly #logger = createModuleLogger('ActionManager')
+
+	readonly #parseVariablesInString: (text: string, info: ParseVariablesInfo) => Promise<string>
+	readonly #setActionDefinitions: (actions: HostActionDefinition[]) => void
+	readonly #setCustomVariableValue: (
+		controlId: string,
+		variableId: string,
+		value: CompanionVariableValue | undefined,
+	) => void
 
 	readonly #actionDefinitions = new Map<string, CompanionActionDefinition>()
 	readonly #actionInstances = new Map<string, ActionInstance>()
 
 	constructor(
-		parseVariablesInString: (msg: ParseVariablesInStringMessage) => Promise<ParseVariablesInStringResponseMessage>,
-		setActionDefinitions: (msg: SetActionDefinitionsMessage) => void,
-		setCustomVariableValue: (msg: SetCustomVariableMessage) => void,
-		log: (level: LogLevel, message: string) => void,
+		parseVariablesInString: (text: string, info: ParseVariablesInfo) => Promise<string>,
+		setActionDefinitions: (msg: HostActionDefinition[]) => void,
+		setCustomVariableValue: (controlId: string, variableId: string, value: CompanionVariableValue | undefined) => void,
 	) {
 		this.#parseVariablesInString = parseVariablesInString
 		this.#setActionDefinitions = setActionDefinitions
 		this.#setCustomVariableValue = setCustomVariableValue
-		this.#log = log
 	}
 
-	public async handleExecuteAction(msg: ExecuteActionMessage): Promise<ExecuteActionResponseMessage> {
-		const actionDefinition = this.#actionDefinitions.get(msg.action.actionId)
+	public async handleExecuteAction(
+		action: ActionInstance,
+		surfaceId: string | undefined,
+	): Promise<ExecuteActionResult> {
+		const actionDefinition = this.#actionDefinitions.get(action.actionId)
 		if (!actionDefinition) {
 			return {
 				success: false,
-				errorMessage: `Action definition not found for: ${msg.action.actionId}`,
+				errorMessage: `Action definition not found for: ${action.actionId}`,
 			}
 		}
 
 		const context: CompanionActionContext = {
 			parseVariablesInString: async (text: string): Promise<string> => {
-				const res = await this.#parseVariablesInString({
-					text: text,
-					controlId: msg.action.controlId,
-					actionInstanceId: msg.action.id,
+				const res = await this.#parseVariablesInString(text, {
+					controlId: action.controlId,
+					actionInstanceId: action.id,
 					feedbackInstanceId: undefined,
 				})
 
-				return res.text
+				return res
 			},
 			setCustomVariableValue: (variableName: string, value: CompanionVariableValue) => {
-				this.#setCustomVariableValue({
-					customVariableId: variableName,
-					value,
-					controlId: msg.action.controlId,
-				})
+				this.#setCustomVariableValue(action.controlId, variableName, value)
 			},
 		}
 
 		try {
 			await actionDefinition.callback(
 				{
-					id: msg.action.id,
-					actionId: msg.action.actionId,
-					controlId: msg.action.controlId,
-					options: msg.action.options,
+					id: action.id,
+					actionId: action.actionId,
+					controlId: action.controlId,
+					options: action.options,
 
-					surfaceId: msg.surfaceId,
+					surfaceId: surfaceId,
 				},
 				context,
 			)
@@ -105,7 +95,7 @@ export class ActionManager {
 		}
 	}
 
-	public handleUpdateActions(actions: { [id: string]: ActionInstance | null | undefined }): void {
+	public handleUpdateActions(actions: Record<string, ActionInstance | null | undefined>): void {
 		for (const [id, action] of Object.entries(actions)) {
 			const existing = this.#actionInstances.get(id)
 			if (existing) {
@@ -123,8 +113,7 @@ export class ActionManager {
 					}
 
 					Promise.resolve(definition.unsubscribe(convertActionInstanceToEvent(existing), context)).catch((e) => {
-						this.#log(
-							'error',
+						this.#logger.error(
 							`Action unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`,
 						)
 					})
@@ -152,26 +141,25 @@ export class ActionManager {
 					}
 
 					Promise.resolve(definition.subscribe(convertActionInstanceToEvent(action), context)).catch((e) => {
-						this.#log('error', `Action subscribe failed: ${JSON.stringify(action)} - ${e?.message ?? e} ${e?.stack}`)
+						this.#logger.error(`Action subscribe failed: ${JSON.stringify(action)} - ${e?.message ?? e} ${e?.stack}`)
 					})
 				}
 			}
 		}
 	}
 
-	public async handleLearnAction(msg: LearnActionMessage): Promise<LearnActionResponseMessage> {
-		const definition = this.#actionDefinitions.get(msg.action.actionId)
+	public async handleLearnAction(action: ActionInstance): Promise<{ options: CompanionOptionValues | undefined }> {
+		const definition = this.#actionDefinitions.get(action.actionId)
 		if (definition && definition.learn) {
 			const context: CompanionActionContext = {
 				parseVariablesInString: async (text: string): Promise<string> => {
-					const res = await this.#parseVariablesInString({
-						text: text,
-						controlId: msg.action.controlId,
-						actionInstanceId: msg.action.id,
+					const res = await this.#parseVariablesInString(text, {
+						controlId: action.controlId,
+						actionInstanceId: action.id,
 						feedbackInstanceId: undefined,
 					})
 
-					return res.text
+					return res
 				},
 				setCustomVariableValue: () => {
 					throw new Error(`setCustomVariableValue is not available during learn`)
@@ -180,10 +168,10 @@ export class ActionManager {
 
 			const newOptions = await definition.learn(
 				{
-					id: msg.action.id,
-					actionId: msg.action.actionId,
-					controlId: msg.action.controlId,
-					options: msg.action.options,
+					id: action.id,
+					actionId: action.actionId,
+					controlId: action.controlId,
+					options: action.options,
 
 					surfaceId: undefined,
 				},
@@ -202,7 +190,7 @@ export class ActionManager {
 	}
 
 	setActionDefinitions(actions: CompanionActionDefinitions): void {
-		const hostActions: SetActionDefinitionsMessage['actions'] = []
+		const hostActions: HostActionDefinition[] = []
 
 		this.#actionDefinitions.clear()
 
@@ -212,7 +200,7 @@ export class ActionManager {
 					id: actionId,
 					name: action.name,
 					description: action.description,
-					options: serializeIsVisibleFn(action.options),
+					options: action.options,
 					optionsToIgnoreForSubscribe: action.optionsToIgnoreForSubscribe,
 					hasLearn: !!action.learn,
 					learnTimeout: action.learnTimeout,
@@ -224,7 +212,7 @@ export class ActionManager {
 			}
 		}
 
-		this.#setActionDefinitions({ actions: hostActions })
+		this.#setActionDefinitions(hostActions)
 	}
 
 	subscribeActions(actionIds: string[]): void {
@@ -247,7 +235,7 @@ export class ActionManager {
 				}
 
 				Promise.resolve(def.subscribe(convertActionInstanceToEvent(act), context)).catch((e) => {
-					this.#log('error', `Action subscribe failed: ${JSON.stringify(act)} - ${e?.message ?? e} ${e?.stack}`)
+					this.#logger.error(`Action subscribe failed: ${JSON.stringify(act)} - ${e?.message ?? e} ${e?.stack}`)
 				})
 			}
 		}
@@ -273,7 +261,7 @@ export class ActionManager {
 				}
 
 				Promise.resolve(def.unsubscribe(convertActionInstanceToEvent(act), context)).catch((e) => {
-					this.#log('error', `Action unsubscribe failed: ${JSON.stringify(act)} - ${e?.message ?? e} ${e?.stack}`)
+					this.#logger.error(`Action unsubscribe failed: ${JSON.stringify(act)} - ${e?.message ?? e} ${e?.stack}`)
 				})
 			}
 		}

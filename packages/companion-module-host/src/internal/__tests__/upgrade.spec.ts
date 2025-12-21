@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest'
-import { literal } from '../../util.js'
 import {
+	literal,
 	CompanionMigrationAction,
 	CompanionStaticUpgradeProps,
 	CompanionStaticUpgradeResult,
 	CompanionStaticUpgradeScript,
-} from '../../module-api/upgrade.js'
+} from '@companion-module/base'
 import { runThroughUpgradeScripts } from '../upgrade.js'
-import { UpgradeActionInstance } from '../../host-api/api.js'
+import type { UpgradeActionInstance } from '../../context.js'
 
 type MockUpgradeScript<TConfig> = Mock<CompanionStaticUpgradeScript<TConfig, any>>
 

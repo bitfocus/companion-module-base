@@ -45,6 +45,11 @@ jobs:
           yarn install
         env:
           CI: true
+      - name: Build Packages
+        run: |
+          yarn build
+        env:
+          CI: true
       - name: Run tests
         run: |
           yarn unit
@@ -154,7 +159,6 @@ jobs:
           name: publish-dist-${{ needs.determine-package.outputs.package-short-name }}
           path: |
             ${{ needs.determine-package.outputs.package-path }}/dist
-            ${{ needs.determine-package.outputs.package-path }}/lib
             ${{ needs.determine-package.outputs.package-path }}/package.json
             ${{ needs.determine-package.outputs.package-path }}/README.md
             ${{ needs.determine-package.outputs.package-path }}/CHANGELOG.md

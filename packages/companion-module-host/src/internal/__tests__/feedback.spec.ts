@@ -1,16 +1,8 @@
 import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
-import {
-	FeedbackInstance,
-	ParseVariablesInStringResponseMessage,
-	ParseVariablesInStringMessage,
-	SetFeedbackDefinitionsMessage,
-	UpdateFeedbackValuesMessage,
-} from '../../host-api/api.js'
-import { runAllTimers } from '../../__mocks__/util.js'
+import { runAllTimers } from '@companion-module/base/src/__mocks__/util.js'
 import { FeedbackManager } from '../feedback.js'
-import { CompanionFeedbackDefinition } from '../../module-api/feedback.js'
-import type { LogLevel } from '../../logging.js'
-import { literal } from '../../util.js'
+import type { FeedbackInstance, HostFeedbackDefinition, HostFeedbackValue, ParseVariablesInfo } from '../../context.js'
+import type { CompanionFeedbackDefinition } from '@companion-module/base'
 
 const mockDefinitionId = 'definition0'
 const mockDefinitionId2 = 'definition1'
@@ -49,10 +41,6 @@ const unimplementedFunction = () => {
 	throw new Error('Not implemented')
 }
 
-const mockLogger = (level: LogLevel, msg: string) => {
-	console.log(`${level}: ${msg}`)
-}
-
 describe('FeedbackManager', () => {
 	beforeEach(() => {
 		vi.useFakeTimers()
@@ -61,13 +49,8 @@ describe('FeedbackManager', () => {
 	})
 
 	it('set definitions', () => {
-		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const manager = new FeedbackManager(
-			unimplementedAsyncFunction,
-			unimplementedFunction,
-			mockSetFeedbackDefinitions,
-			mockLogger,
-		)
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const manager = new FeedbackManager(unimplementedAsyncFunction, mockSetFeedbackDefinitions, unimplementedFunction)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 		expect(manager.getInstanceIds()).toHaveLength(0)
 
@@ -83,19 +66,17 @@ describe('FeedbackManager', () => {
 
 		expect(manager.getDefinitionIds()).toEqual([mockDefinitionId])
 		expect(mockSetFeedbackDefinitions).toHaveBeenCalledTimes(1)
-		expect(mockSetFeedbackDefinitions).lastCalledWith({
-			feedbacks: [
-				{
-					id: mockDefinitionId,
-					type: 'boolean',
-					name: 'Definition0',
-					description: undefined,
-					hasLearn: false,
-					defaultStyle: {},
-					options: [],
-				},
-			],
-		})
+		expect(mockSetFeedbackDefinitions).lastCalledWith([
+			{
+				id: mockDefinitionId,
+				type: 'boolean',
+				name: 'Definition0',
+				description: undefined,
+				hasLearn: false,
+				defaultStyle: {},
+				options: [],
+			},
+		])
 
 		// replace existing
 		const mockDefinitionId2 = 'definition0'
@@ -107,13 +88,12 @@ describe('FeedbackManager', () => {
 	})
 
 	it('execute callback on registration', async () => {
-		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
-		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockUpdateFeedbackValues = vi.fn((_values: HostFeedbackValue[]) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
-			mockUpdateFeedbackValues,
 			mockSetFeedbackDefinitions,
-			mockLogger,
+			mockUpdateFeedbackValues,
 		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 		expect(manager.getInstanceIds()).toHaveLength(0)
@@ -160,25 +140,19 @@ describe('FeedbackManager', () => {
 		expect(manager.getInstanceIds()).toEqual([feedbackId])
 
 		expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(1)
-		expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith({
-			values: [
-				{
-					id: 'abcdef',
-					controlId: 'control0',
-					value: false,
-				},
-			],
-		})
+		expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith([
+			{
+				id: 'abcdef',
+				controlId: 'control0',
+				feedbackType: 'boolean',
+				value: false,
+			},
+		] satisfies HostFeedbackValue[])
 	})
 
 	it('instance: disabled', async () => {
-		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const manager = new FeedbackManager(
-			unimplementedAsyncFunction,
-			unimplementedFunction,
-			mockSetFeedbackDefinitions,
-			mockLogger,
-		)
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const manager = new FeedbackManager(unimplementedAsyncFunction, mockSetFeedbackDefinitions, unimplementedFunction)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 		expect(manager.getInstanceIds()).toHaveLength(0)
 
@@ -214,13 +188,12 @@ describe('FeedbackManager', () => {
 	})
 
 	it('instance: delete', async () => {
-		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
-		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
+		const mockUpdateFeedbackValues = vi.fn((_values: HostFeedbackValue[]) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
-			mockUpdateFeedbackValues,
 			mockSetFeedbackDefinitions,
-			mockLogger,
+			mockUpdateFeedbackValues,
 		)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 		expect(manager.getInstanceIds()).toHaveLength(0)
@@ -267,13 +240,12 @@ describe('FeedbackManager', () => {
 	})
 
 	describe('checkFeedbacks', () => {
-		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const mockUpdateFeedbackValues = vi.fn((_values: HostFeedbackValue[]) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
-			mockUpdateFeedbackValues,
 			mockSetFeedbackDefinitions,
-			mockLogger,
+			mockUpdateFeedbackValues,
 		)
 
 		const mockDefinition: CompanionFeedbackDefinition = {
@@ -334,20 +306,20 @@ describe('FeedbackManager', () => {
 			expect(mockDefinition2.callback).toHaveBeenCalledTimes(1)
 
 			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(1)
-			expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith({
-				values: [
-					{
-						id: 'abcdef',
-						controlId: 'control0',
-						value: false,
-					},
-					{
-						id: 'abc123',
-						controlId: 'control1',
-						value: {},
-					},
-				],
-			})
+			expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith([
+				{
+					id: 'abcdef',
+					controlId: 'control0',
+					feedbackType: 'boolean',
+					value: false,
+				},
+				{
+					id: 'abc123',
+					controlId: 'control1',
+					feedbackType: 'advanced',
+					value: {},
+				},
+			] satisfies HostFeedbackValue[])
 		})
 
 		it('for type', async () => {
@@ -364,15 +336,14 @@ describe('FeedbackManager', () => {
 			expect(mockDefinition2.callback).toHaveBeenCalledTimes(1)
 
 			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(1)
-			expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith({
-				values: [
-					{
-						id: 'abc123',
-						controlId: 'control1',
-						value: {},
-					},
-				],
-			})
+			expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith([
+				{
+					id: 'abc123',
+					controlId: 'control1',
+					feedbackType: 'advanced',
+					value: {},
+				},
+			] satisfies HostFeedbackValue[])
 		})
 
 		it('for ids', async () => {
@@ -389,33 +360,22 @@ describe('FeedbackManager', () => {
 			expect(mockDefinition2.callback).toHaveBeenCalledTimes(0)
 
 			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(1)
-			expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith({
-				values: [
-					{
-						id: 'abcdef',
-						controlId: 'control0',
-						value: false,
-					},
-				],
-			})
+			expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith([
+				{
+					id: 'abcdef',
+					controlId: 'control0',
+					feedbackType: 'boolean',
+					value: false,
+				},
+			] satisfies HostFeedbackValue[])
 		})
 	})
 
 	describe('check while being checked', () => {
-		const mockParseVariables = vi.fn(async (msg: ParseVariablesInStringMessage) =>
-			literal<ParseVariablesInStringResponseMessage>({
-				text: `res - ${msg.text}`,
-				variableIds: ['all', `var-${msg.text}`],
-			}),
-		)
-		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
-		const manager = new FeedbackManager(
-			mockParseVariables,
-			mockUpdateFeedbackValues,
-			mockSetFeedbackDefinitions,
-			mockLogger,
-		)
+		const mockParseVariables = vi.fn(async (text: string, _info: ParseVariablesInfo) => `res - ${text}`)
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const mockUpdateFeedbackValues = vi.fn((_values: HostFeedbackValue[]) => null)
+		const manager = new FeedbackManager(mockParseVariables, mockSetFeedbackDefinitions, mockUpdateFeedbackValues)
 
 		let waitForManualResolve = false
 		let nextResolve: (() => void) | undefined
@@ -482,15 +442,14 @@ describe('FeedbackManager', () => {
 
 			// check the value sent to the client
 			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(1)
-			expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith({
-				values: [
-					{
-						id: 'abcdef',
-						controlId: 'control0',
-						value: false,
-					},
-				],
-			})
+			expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith([
+				{
+					id: 'abcdef',
+					controlId: 'control0',
+					feedbackType: 'boolean',
+					value: false,
+				},
+			] satisfies HostFeedbackValue[])
 		})
 
 		it('freeze feedback callback', async () => {
@@ -517,15 +476,14 @@ describe('FeedbackManager', () => {
 
 			// check the value sent to the client
 			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(1)
-			expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith({
-				values: [
-					{
-						id: 'abcdef',
-						controlId: 'control0',
-						value: false,
-					},
-				],
-			})
+			expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith([
+				{
+					id: 'abcdef',
+					controlId: 'control0',
+					feedbackType: 'boolean',
+					value: false,
+				},
+			] satisfies HostFeedbackValue[])
 		})
 
 		it('update while frozen', async () => {
@@ -567,13 +525,8 @@ describe('FeedbackManager', () => {
 	})
 
 	it('learn values: no implementation', async () => {
-		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const manager = new FeedbackManager(
-			unimplementedAsyncFunction,
-			unimplementedFunction,
-			mockSetFeedbackDefinitions,
-			mockLogger,
-		)
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const manager = new FeedbackManager(unimplementedAsyncFunction, mockSetFeedbackDefinitions, unimplementedFunction)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 
 		const mockDefinitionId = 'definition0'
@@ -592,17 +545,12 @@ describe('FeedbackManager', () => {
 		expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
 
 		// make the call
-		await expect(manager.handleLearnFeedback({ feedback: feedback })).resolves.toEqual({ options: undefined })
+		await expect(manager.handleLearnFeedback(feedback)).resolves.toEqual({ options: undefined })
 	})
 
 	it('learn values: with implementation', async () => {
-		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const manager = new FeedbackManager(
-			unimplementedAsyncFunction,
-			unimplementedFunction,
-			mockSetFeedbackDefinitions,
-			mockLogger,
-		)
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const manager = new FeedbackManager(unimplementedAsyncFunction, mockSetFeedbackDefinitions, unimplementedFunction)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 
 		const mockDefinitionId = 'definition0'
@@ -622,7 +570,7 @@ describe('FeedbackManager', () => {
 		expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
 
 		// make the call
-		await expect(manager.handleLearnFeedback({ feedback: feedback })).resolves.toEqual({ options: { abc: 123 } })
+		await expect(manager.handleLearnFeedback(feedback)).resolves.toEqual({ options: { abc: 123 } })
 		expect(mockDefinition.learn).toBeCalledTimes(1)
 		expect(mockDefinition.learn).lastCalledWith(
 			{
@@ -637,19 +585,9 @@ describe('FeedbackManager', () => {
 	})
 
 	it('learn values: with implementation using variables', async () => {
-		const mockParseVariables = vi.fn(async (_msg: ParseVariablesInStringMessage) =>
-			literal<ParseVariablesInStringResponseMessage>({
-				text: 'res str',
-				variableIds: ['abc', '123'],
-			}),
-		)
-		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const manager = new FeedbackManager(
-			mockParseVariables,
-			unimplementedFunction,
-			mockSetFeedbackDefinitions,
-			mockLogger,
-		)
+		const mockParseVariables = vi.fn(async (_text: string, _info: ParseVariablesInfo) => 'res str')
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const manager = new FeedbackManager(mockParseVariables, mockSetFeedbackDefinitions, unimplementedFunction)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
 
 		const mockDefinitionId = 'definition0'
@@ -673,12 +611,11 @@ describe('FeedbackManager', () => {
 		expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
 
 		// make the call
-		await expect(manager.handleLearnFeedback({ feedback: feedback })).resolves.toEqual({
+		await expect(manager.handleLearnFeedback(feedback)).resolves.toEqual({
 			options: { abc: 'res str' },
 		})
 		expect(mockParseVariables).toHaveBeenCalledTimes(1)
-		expect(mockParseVariables).lastCalledWith({
-			text: 'test string',
+		expect(mockParseVariables).lastCalledWith('test string', {
 			controlId: 'control0',
 			actionInstanceId: undefined,
 			feedbackInstanceId: 'abcdef',
@@ -698,13 +635,12 @@ describe('FeedbackManager', () => {
 	})
 
 	describe('subscribe', () => {
-		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const mockUpdateFeedbackValues = vi.fn((_values: HostFeedbackValue[]) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
-			mockUpdateFeedbackValues,
 			mockSetFeedbackDefinitions,
-			mockLogger,
+			mockUpdateFeedbackValues,
 		)
 
 		const mockDefinition: CompanionFeedbackDefinition = {
@@ -821,13 +757,12 @@ describe('FeedbackManager', () => {
 	})
 
 	describe('unsubscribe', () => {
-		const mockSetFeedbackDefinitions = vi.fn((_msg: SetFeedbackDefinitionsMessage) => null)
-		const mockUpdateFeedbackValues = vi.fn((_msg: UpdateFeedbackValuesMessage) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const mockUpdateFeedbackValues = vi.fn((_values: HostFeedbackValue[]) => null)
 		const manager = new FeedbackManager(
 			unimplementedAsyncFunction,
-			mockUpdateFeedbackValues,
 			mockSetFeedbackDefinitions,
-			mockLogger,
+			mockUpdateFeedbackValues,
 		)
 
 		const mockDefinition: CompanionFeedbackDefinition = {
