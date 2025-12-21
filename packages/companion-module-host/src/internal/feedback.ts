@@ -255,6 +255,7 @@ export class FeedbackManager {
 				this.#pendingFeedbackValues.set(id, {
 					id: id,
 					controlId: feedback.controlId,
+					feedbackType: definition?.type,
 					value: resolvedValue,
 				})
 				this.#sendFeedbackValues()

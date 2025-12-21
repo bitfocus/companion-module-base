@@ -65,12 +65,14 @@ export interface HostActionDefinition {
 	hasLifecycleFunctions: boolean
 }
 
+export type HostFeedbackType = 'boolean' | 'value' | 'advanced'
+
 export interface HostFeedbackDefinition {
 	id: string
 	name: string
 	description: string | undefined
 	options: SomeCompanionFeedbackInputField[] // TODO module-lib - versioned types?
-	type: 'boolean' | 'value' | 'advanced'
+	type: HostFeedbackType
 	defaultStyle?: CompanionFeedbackButtonStyleResult
 	hasLearn: boolean
 	showInvert: boolean | undefined
@@ -89,7 +91,8 @@ export interface HostVariableValue {
 export interface HostFeedbackValue {
 	id: string
 	controlId: string
-	value: JsonValue | Partial<CompanionFeedbackButtonStyleResult> | undefined
+	feedbackType: HostFeedbackType | undefined
+	value: JsonValue | CompanionFeedbackButtonStyleResult | undefined
 }
 
 export interface FeedbackInstanceBase {
@@ -145,12 +148,6 @@ export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'opt
 	style?: Partial<CompanionFeedbackButtonStyleResult>
 
 	controlId: string
-}
-
-export interface UpgradeActionAndFeedbackInstancesMessage {
-	actions: UpgradeActionInstance[]
-	feedbacks: UpgradeFeedbackInstance[]
-	defaultUpgradeIndex: number | null
 }
 
 export interface UpgradeActionAndFeedbackInstancesResponse {

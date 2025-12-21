@@ -20,8 +20,9 @@ import type {
 	HostVariableValue,
 	ModuleHostContext,
 	ParseVariablesInfo,
-	UpgradeActionAndFeedbackInstancesMessage,
 	UpgradeActionAndFeedbackInstancesResponse,
+	UpgradeActionInstance,
+	UpgradeFeedbackInstance,
 } from './context.js'
 // eslint-disable-next-line n/no-missing-import
 import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/dist/host-api/context.js'
@@ -339,11 +340,13 @@ export class InstanceWrapper<TConfig, TSecrets> {
 		this.#actionManager.handleUpdateActions(actions)
 	}
 	async upgradeActionsAndFeedbacks(
-		msg: UpgradeActionAndFeedbackInstancesMessage,
+		defaultUpgradeIndex: number | null,
+		actions: UpgradeActionInstance[],
+		feedbacks: UpgradeFeedbackInstance[],
 	): Promise<UpgradeActionAndFeedbackInstancesResponse> {
 		return runThroughUpgradeScripts(
-			msg.actions,
-			msg.feedbacks,
+			actions,
+			feedbacks,
 			null,
 			this.#instanceContext.upgradeScripts,
 			this.#lastConfig,
