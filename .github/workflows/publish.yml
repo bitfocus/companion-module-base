@@ -144,7 +144,10 @@ jobs:
 
           # Bump to prerelease version if needed
           if [ "${{ needs.determine-package.outputs.prerelease }}" != "" ]; then
-            cd ${{ needs.determine-package.outputs.package-path }}
+            cd packages/companion-module-base
+            OLD_VERSION=$(node -p "require('./package.json').version")
+            yarn version ${OLD_VERSION}-${{ needs.determine-package.outputs.prerelease }}
+            cd ../companion-module-host
             OLD_VERSION=$(node -p "require('./package.json').version")
             yarn version ${OLD_VERSION}-${{ needs.determine-package.outputs.prerelease }}
             cd ../..
@@ -158,8 +161,8 @@ jobs:
         with:
           name: publish-dist-${{ needs.determine-package.outputs.package-short-name }}
           path: |
+            */package.json
             ${{ needs.determine-package.outputs.package-path }}/dist
-            ${{ needs.determine-package.outputs.package-path }}/package.json
             ${{ needs.determine-package.outputs.package-path }}/README.md
             ${{ needs.determine-package.outputs.package-path }}/CHANGELOG.md
             ${{ needs.determine-package.outputs.package-path }}/generated
