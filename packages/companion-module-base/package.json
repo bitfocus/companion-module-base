@@ -10,7 +10,7 @@
 		"docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/main.ts --excludePrivate --theme default --out docs"
 	},
 	"engines": {
-		"node": "^18.12 || ^22.8"
+		"node": "^18.20 || ^22.21"
 	},
 	"files": [
 		"README.md",

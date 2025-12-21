@@ -144,9 +144,10 @@ describe('FeedbackManager', () => {
 			{
 				id: 'abcdef',
 				controlId: 'control0',
+				feedbackType: 'boolean',
 				value: false,
 			},
-		])
+		] satisfies HostFeedbackValue[])
 	})
 
 	it('instance: disabled', async () => {
@@ -309,14 +310,16 @@ describe('FeedbackManager', () => {
 				{
 					id: 'abcdef',
 					controlId: 'control0',
+					feedbackType: 'boolean',
 					value: false,
 				},
 				{
 					id: 'abc123',
 					controlId: 'control1',
+					feedbackType: 'advanced',
 					value: {},
 				},
-			])
+			] satisfies HostFeedbackValue[])
 		})
 
 		it('for type', async () => {
@@ -337,9 +340,10 @@ describe('FeedbackManager', () => {
 				{
 					id: 'abc123',
 					controlId: 'control1',
+					feedbackType: 'advanced',
 					value: {},
 				},
-			])
+			] satisfies HostFeedbackValue[])
 		})
 
 		it('for ids', async () => {
@@ -360,9 +364,10 @@ describe('FeedbackManager', () => {
 				{
 					id: 'abcdef',
 					controlId: 'control0',
+					feedbackType: 'boolean',
 					value: false,
 				},
-			])
+			] satisfies HostFeedbackValue[])
 		})
 	})
 
@@ -441,9 +446,10 @@ describe('FeedbackManager', () => {
 				{
 					id: 'abcdef',
 					controlId: 'control0',
+					feedbackType: 'boolean',
 					value: false,
 				},
-			])
+			] satisfies HostFeedbackValue[])
 		})
 
 		it('freeze feedback callback', async () => {
@@ -474,9 +480,10 @@ describe('FeedbackManager', () => {
 				{
 					id: 'abcdef',
 					controlId: 'control0',
+					feedbackType: 'boolean',
 					value: false,
 				},
-			])
+			] satisfies HostFeedbackValue[])
 		})
 
 		it('update while frozen', async () => {
