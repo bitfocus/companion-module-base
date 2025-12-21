@@ -77,31 +77,6 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 			disableNewConfigLayout: false,
 		}
 
-		// this.#ipcWrapper = new IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>(
-		// 	{
-		// 		init: this._handleInit.bind(this),
-		// 		destroy: this._handleDestroy.bind(this),
-		// 		updateConfigAndLabel: this._handleConfigUpdateAndLabel.bind(this),
-		// 		updateConfig: async () => undefined, // Replaced by updateConfigAndLabel
-		// 		executeAction: this._handleExecuteAction.bind(this),
-		// 		updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
-		// 		updateActions: this._handleUpdateActions.bind(this),
-		// 		upgradeActionsAndFeedbacks: this._handleUpgradeActionsAndFeedbacks.bind(this),
-		// 		getConfigFields: this._handleGetConfigFields.bind(this),
-		// 		handleHttpRequest: this._handleHttpRequest.bind(this),
-		// 		learnAction: this._handleLearnAction.bind(this),
-		// 		learnFeedback: this._handleLearnFeedback.bind(this),
-		// 		startStopRecordActions: this._handleStartStopRecordActions.bind(this),
-		// 		variablesChanged: async () => undefined, // Not needed since 1.13.0
-		// 		sharedUdpSocketMessage: this._handleSharedUdpSocketMessage.bind(this),
-		// 		sharedUdpSocketError: this._handleSharedUdpSocketError.bind(this),
-		// 	},
-		// 	(msg) => {
-		// 		process.send!(msg)
-		// 	},
-		// 	5000,
-		// )
-
 		this.log('debug', 'Initializing')
 	}
 
