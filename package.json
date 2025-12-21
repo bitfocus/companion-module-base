@@ -8,10 +8,9 @@
 	"repository": "https://github.com/bitfocus/companion-module-base",
 	"scripts": {
 		"dev": "yarn build:ts --watch",
-		"build": "yarn build:json-schema && yarn build:ajv-validator && yarn build:ts",
+		"build": "yarn build:schema && yarn build:ts",
 		"build:ts": "tsc -p tsconfig.build.json",
-		"build:json-schema": "json2ts --input assets/manifest.schema.json --output generated/manifest.d.ts --additionalProperties=false",
-		"build:ajv-validator": "node tools/schema-compile.mjs",
+		"build:schema": "node tools/schema-compile.mjs",
 		"docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/index.ts --excludePrivate --theme default --out docs",
 		"lint:raw": "eslint",
 		"lint": "yarn lint:raw .",
@@ -53,7 +52,8 @@
 		"typescript": "~5.9.3",
 		"typescript-eslint": "^8.49.0",
 		"vitest": "^4.0.15",
-		"vitest-mock-extended": "^3.1.0"
+		"vitest-mock-extended": "^3.1.0",
+		"zx": "^8.8.5"
 	},
 	"packageManager": "yarn@4.12.0"
 }
