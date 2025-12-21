@@ -45,6 +45,11 @@ jobs:
           yarn install
         env:
           CI: true
+      - name: Build Packages
+        run: |
+          yarn build
+        env:
+          CI: true
       - name: Run tests
         run: |
           yarn unit
