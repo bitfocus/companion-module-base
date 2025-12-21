@@ -13,8 +13,7 @@
 		"dev": "run build:root --watch",
 		"lint": "eslint .",
 		"unit": "vitest run",
-		"unit:watch": "vitest",
-		"_docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/index.ts --excludePrivate --theme default --out docs"
+		"unit:watch": "vitest"
 	},
 	"engines": {
 		"node": "^22.11"

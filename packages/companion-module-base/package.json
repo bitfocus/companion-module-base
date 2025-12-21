@@ -7,7 +7,7 @@
 	"license": "MIT",
 	"repository": "https://github.com/bitfocus/companion-module-base",
 	"scripts": {
-		"docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/main.ts --excludePrivate --theme default --out docs"
+		"docs:html": "run -BT typedoc --tsconfig tsconfig.build.json --entryPoints src/main.ts --excludePrivate --theme default --out docs"
 	},
 	"engines": {
 		"node": "^18.20 || ^22.21"
