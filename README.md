@@ -8,17 +8,18 @@ In the future it will be possible to write modules in other languages, but it is
 
 Each version of Companion supports a limited range of versions of this library listed below. Any patch version (the third number) are not relevant for the compatibility check, so are not listed here
 
-| Companion | Module-base               |
-| --------- | ------------------------- |
-| v3.0      | v1.0 - v1.4               |
-| v3.1      | v1.0 - v1.5               |
-| v3.2      | v1.0 - v1.7               |
-| v3.3      | v1.0 - v1.8               |
-| v3.4      | v1.0 - v1.10              |
-| v3.5      | v1.0 - v1.11              |
-| v4.0      | v1.0 - v1.12              |
-| v4.1      | v1.0 - v1.13              |
-| v4.2      | v1.0 - v1.13 (unconfirmed) |
+| Companion | Module-base                |
+| --------- | -------------------------- |
+| v3.0      | v1.0 - v1.4                |
+| v3.1      | v1.0 - v1.5                |
+| v3.2      | v1.0 - v1.7                |
+| v3.3      | v1.0 - v1.8                |
+| v3.4      | v1.0 - v1.10               |
+| v3.5      | v1.0 - v1.11               |
+| v4.0      | v1.0 - v1.12               |
+| v4.1      | v1.0 - v1.13               |
+| v4.2      | v1.0 - v1.14               |
+| v4.3      | v1.0 - v1.15 (unconfirmed) |
 
 ## Getting started with a new module
 
