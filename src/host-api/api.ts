@@ -21,6 +21,7 @@ import type { CompanionVariableValue } from '../module-api/variable.js'
 import type { RemoteInfo } from 'dgram'
 import type { OptionsObject } from '../util.js'
 import type { JsonValue } from '../common/json-value.js'
+import type { SomeButtonGraphicsElement } from '../module-api/graphics.js'
 
 export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	/** The connection has a message for the Companion log */
@@ -35,6 +36,8 @@ export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	setVariableDefinitions: (msg: SetVariableDefinitionsMessage) => never
 	/** The presets provided by the connection have changed */
 	setPresetDefinitions: (msg: SetPresetDefinitionsMessage) => never
+	/** The graphics composite elements provided have changed */
+	setCompositeElementDefinitions: (msg: SetCompositeElementDefinitionsMessage) => never
 	/** The connection has some new values for variables */
 	setVariableValues: (msg: SetVariableValuesMessage) => never
 	/** The connection has some new values for feedbacks it is running */
@@ -233,6 +236,17 @@ export interface SetPresetDefinitionsMessage {
 			id: string
 		}
 	>
+}
+
+export interface SetCompositeElementDefinitionsMessage {
+	compositeElements: Array<{
+		id: string
+		type: 'composite'
+		name: string
+		description: string | undefined
+		options: EncodeIsVisible<SomeCompanionFeedbackInputField>[] // TODO module-lib - versioned types?
+		elements: SomeButtonGraphicsElement[]
+	}>
 }
 
 export interface SetVariableValuesMessage {
