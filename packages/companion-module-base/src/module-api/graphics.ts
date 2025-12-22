@@ -5,7 +5,7 @@ import type { ExpressionOrValue } from './input.js'
  */
 export type SomeButtonGraphicsElement =
 	| ButtonGraphicsGroupElement
-	// | ButtonGraphicsCompositeElement
+	| ButtonGraphicsCompositeElement
 	| ButtonGraphicsTextElement
 	| ButtonGraphicsImageElement
 	| ButtonGraphicsBoxElement
@@ -51,18 +51,17 @@ export interface ButtonGraphicsGroupElement extends ButtonGraphicsElementBase, B
 	children: SomeButtonGraphicsElement[]
 }
 
-// export interface ButtonGraphicsCompositeElement<TOptions = Record<string, any>>
-// 	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
-// 	type: 'composite'
+export interface ButtonGraphicsCompositeElement<TOptions = Record<string, any>>
+	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
+	type: 'composite'
 
-// 	elementId: string
+	elementId: string
 
-// 	/**
-// 	 * Custom elements have options defined by their composite definition
-// 	 */
-// 	options: { [key in keyof TOptions]?: ExpressionOrValue<TOptions[key]> }
-// }
-// export type CompositeElementOptionKey = `opt:${string}`
+	/**
+	 * Custom elements have options defined by their composite definition
+	 */
+	options: { [key in keyof TOptions]?: ExpressionOrValue<TOptions[key]> }
+}
 
 export type HorizontalAlignment = 'left' | 'center' | 'right'
 export type VerticalAlignment = 'top' | 'center' | 'bottom'
