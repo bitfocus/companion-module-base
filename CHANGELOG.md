@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.6](https://github.com/bitfocus/companion-module-base/compare/v1.13.5...v1.13.6) (2025-12-22)
+
+
+### Features
+
+* Set `process.title` on init and configUpdated ([#172](https://github.com/bitfocus/companion-module-base/issues/172)) ([24b8791](https://github.com/bitfocus/companion-module-base/commit/24b8791bef82215f3e0d5e7a91ba0379bad1f3d6))
+
 ## [1.13.5](https://github.com/bitfocus/companion-module-base/compare/v1.13.4...v1.13.5) (2025-11-29)
 
 
