@@ -10,13 +10,18 @@ import type { OSCSomeArguments } from '../common/osc.js'
 import type { SomeCompanionConfigField } from '../module-api/config.js'
 import type { LogLevel, InstanceStatus } from '../module-api/enums.js'
 import type { CompanionOptionValues, CompanionInputFieldBase } from '../module-api/input.js'
-import type { CompanionButtonPresetDefinition, CompanionTextPresetDefinition } from '../module-api/preset.js'
+import type {
+	CompanionButtonPresetDefinition,
+	CompanionLayeredButtonPresetDefinition,
+	CompanionTextPresetDefinition,
+} from '../module-api/preset.js'
 import type { CompanionHTTPRequest, CompanionHTTPResponse } from '../module-api/http.js'
 import type { SomeCompanionActionInputField } from '../module-api/action.js'
 import type { CompanionVariableValue } from '../module-api/variable.js'
 import type { RemoteInfo } from 'dgram'
 import type { OptionsObject } from '../util.js'
 import type { JsonValue } from '../common/json-value.js'
+import type { SomeButtonGraphicsElement } from '../module-api/graphics.js'
 
 export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	/** The connection has a message for the Companion log */
@@ -31,6 +36,8 @@ export interface ModuleToHostEventsV0 extends ModuleToHostEventsV0SharedSocket {
 	setVariableDefinitions: (msg: SetVariableDefinitionsMessage) => never
 	/** The presets provided by the connection have changed */
 	setPresetDefinitions: (msg: SetPresetDefinitionsMessage) => never
+	/** The graphics composite elements provided have changed */
+	setCompositeElementDefinitions: (msg: SetCompositeElementDefinitionsMessage) => never
 	/** The connection has some new values for variables */
 	setVariableValues: (msg: SetVariableValuesMessage) => never
 	/** The connection has some new values for feedbacks it is running */
@@ -224,7 +231,22 @@ export interface SetVariableDefinitionsMessage {
 }
 
 export interface SetPresetDefinitionsMessage {
-	presets: Array<(CompanionButtonPresetDefinition | CompanionTextPresetDefinition) & { id: string }>
+	presets: Array<
+		(CompanionButtonPresetDefinition | CompanionLayeredButtonPresetDefinition | CompanionTextPresetDefinition) & {
+			id: string
+		}
+	>
+}
+
+export interface SetCompositeElementDefinitionsMessage {
+	compositeElements: Array<{
+		id: string
+		type: 'composite'
+		name: string
+		description: string | undefined
+		options: EncodeIsVisible<SomeCompanionFeedbackInputField>[] // TODO module-lib - versioned types?
+		elements: SomeButtonGraphicsElement[]
+	}>
 }
 
 export interface SetVariableValuesMessage {

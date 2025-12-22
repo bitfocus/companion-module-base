@@ -21,6 +21,7 @@ import type {
 	ParseVariablesInStringMessage,
 	ParseVariablesInStringResponseMessage,
 	SendOscMessage,
+	SetCompositeElementDefinitionsMessage,
 	SetPresetDefinitionsMessage,
 	SetStatusMessage,
 	SetVariableDefinitionsMessage,
@@ -53,6 +54,7 @@ import {
 	SharedUdpSocketMessageCallback,
 	SharedUdpSocketOptions,
 } from './shared-udp-socket.js'
+import { CompanionGraphicsCompositeElementDefinition } from './graphics-composite.js'
 
 export interface InstanceBaseOptions {
 	/**
@@ -436,6 +438,27 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 		}
 
 		this.#ipcWrapper.sendWithNoCb('setPresetDefinitions', { presets: hostPresets })
+	}
+
+	/**
+	 * Set the composite graphics elements for this instance
+	 * @param compositeElements The composite element definitions
+	 */
+	setCompositeElementDefinitions(compositeElements: CompanionGraphicsCompositeElementDefinition[]): void {
+		const hostCompositeElements: SetCompositeElementDefinitionsMessage['compositeElements'] = []
+
+		for (const compositeElement of compositeElements) {
+			hostCompositeElements.push({
+				id: compositeElement.id,
+				name: compositeElement.name,
+				type: compositeElement.type,
+				description: compositeElement.description,
+				options: serializeIsVisibleFn(compositeElement.options),
+				elements: compositeElement.elements,
+			})
+		}
+
+		this.#ipcWrapper.sendWithNoCb('setCompositeElementDefinitions', { compositeElements: hostCompositeElements })
 	}
 
 	/**
