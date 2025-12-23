@@ -10,6 +10,7 @@ export type SomeButtonGraphicsElement =
 	| ButtonGraphicsImageElement
 	| ButtonGraphicsBoxElement
 	| ButtonGraphicsLineElement
+	| ButtonGraphicsCircleElement
 
 export interface ButtonGraphicsElementBase {
 	id?: string
@@ -48,6 +49,8 @@ export enum ButtonGraphicsDecorationType {
 export interface ButtonGraphicsGroupElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
 	type: 'group'
 
+	rotation?: ExpressionOrValue<number> // degrees 0-359
+
 	children: SomeButtonGraphicsElement[]
 }
 
@@ -73,6 +76,8 @@ export type ImageFillMode = 'crop' | 'fill' | 'fit' | 'fit_or_shrink'
 export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
 	type: 'text'
 
+	rotation?: ExpressionOrValue<number> // degrees 0-359
+
 	text: ExpressionOrValue<string>
 
 	fontsize?: ExpressionOrValue<'auto' | number> // TODO - other values?
@@ -87,6 +92,8 @@ export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, Bu
 
 export interface ButtonGraphicsImageElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
 	type: 'image'
+
+	rotation?: ExpressionOrValue<number> // degrees 0-359
 
 	base64Image: ExpressionOrValue<string | null>
 
@@ -106,6 +113,8 @@ export interface ButtonGraphicsBoxElement
 	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds, ButtonGraphicsBorderProperties {
 	type: 'box'
 
+	rotation?: ExpressionOrValue<number> // degrees 0-359
+
 	color?: ExpressionOrValue<number>
 }
 
@@ -120,4 +129,17 @@ export interface ButtonGraphicsLineElement extends ButtonGraphicsElementBase, Bu
 	toX?: ExpressionOrValue<number>
 	/* 0-100 */
 	toY?: ExpressionOrValue<number>
+}
+
+export interface ButtonGraphicsCircleElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds, ButtonGraphicsBorderProperties {
+	type: 'circle'
+
+	color?: ExpressionOrValue<number>
+
+	startAngle?: ExpressionOrValue<number> // degrees 0-359
+	endAngle?: ExpressionOrValue<number> // degrees 0-359
+
+	drawSlice?: ExpressionOrValue<boolean>
+	borderOnlyArc?: ExpressionOrValue<boolean>
 }
