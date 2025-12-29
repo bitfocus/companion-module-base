@@ -134,7 +134,6 @@ export interface InitResponseMessage {
 	hasHttpHandler: boolean
 	hasRecordActionsHandler: boolean
 	newUpgradeIndex: number
-	disableNewConfigLayout: boolean
 
 	updatedConfig: unknown | undefined
 	updatedSecrets: unknown | undefined

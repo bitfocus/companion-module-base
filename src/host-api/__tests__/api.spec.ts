@@ -416,7 +416,6 @@ describe('HostToModuleEventsV0', () => {
 			hasHttpHandler: true,
 			hasRecordActionsHandler: true,
 			newUpgradeIndex: 1,
-			disableNewConfigLayout: false,
 
 			updatedConfig: {
 				host: '192.168.1.1',
