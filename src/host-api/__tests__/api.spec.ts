@@ -416,7 +416,6 @@ describe('HostToModuleEventsV0', () => {
 			hasHttpHandler: true,
 			hasRecordActionsHandler: true,
 			newUpgradeIndex: 1,
-			disableNewConfigLayout: false,
 
 			updatedConfig: {
 				host: '192.168.1.1',
@@ -624,7 +623,6 @@ describe('HostToModuleEventsV0', () => {
 					type: 'textinput',
 					// default: '192.168.1.1',
 					// required: true,
-					width: 6,
 				},
 				{
 					id: 'port',
@@ -634,7 +632,6 @@ describe('HostToModuleEventsV0', () => {
 					// required: true,
 					// min: 1,
 					// max: 65535,
-					width: 6,
 				},
 			],
 		}
