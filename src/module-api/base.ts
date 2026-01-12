@@ -537,8 +537,6 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	 *
 	 * Parse and replace all the variables in a string
 	 * Note: You must not use this for feedbacks, as your feedback will not update when the variable changes.
-	 * There is an alternate version of this supplied to each of the action/feedback callbacks that tracks
-	 * usages properly and will retrigger the feedback when the variables change.
 	 * @param text The text to parse
 	 * @returns The string with variables replaced with their values
 	 */
