@@ -60,16 +60,6 @@ export interface InstanceBaseOptions {
 	 * It is not recommended to set this, unless you know what you are doing.
 	 */
 	disableVariableValidation: boolean
-
-	/**
-	 * Disable the new connection configuration layout.
-	 *
-	 * @deprecated This option will be removed in future versions. Avoid using this when possible.
-	 *
-	 * We acknowledge that some modules may face challenges adapting to the new configuration layout.
-	 * If this is you, we want to hear from you! Let us know what is missing in order for you to adopt the new layout.
-	 */
-	disableNewConfigLayout: boolean
 }
 
 export abstract class InstanceBase<TConfig, TSecrets = undefined> implements InstanceBaseShared<TConfig, TSecrets> {
@@ -120,7 +110,6 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 
 		this.#options = {
 			disableVariableValidation: false,
-			disableNewConfigLayout: false,
 		}
 
 		this.#ipcWrapper = new IpcWrapper<ModuleToHostEventsV0, HostToModuleEventsV0>(
@@ -128,7 +117,6 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 				init: this._handleInit.bind(this),
 				destroy: this._handleDestroy.bind(this),
 				updateConfigAndLabel: this._handleConfigUpdateAndLabel.bind(this),
-				updateConfig: async () => undefined, // Replaced by updateConfigAndLabel
 				executeAction: this._handleExecuteAction.bind(this),
 				updateFeedbacks: this._handleUpdateFeedbacks.bind(this),
 				updateActions: this._handleUpdateActions.bind(this),
@@ -138,7 +126,6 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 				learnAction: this._handleLearnAction.bind(this),
 				learnFeedback: this._handleLearnFeedback.bind(this),
 				startStopRecordActions: this._handleStartStopRecordActions.bind(this),
-				variablesChanged: async () => undefined, // Not needed since 1.13.0
 				sharedUdpSocketMessage: this._handleSharedUdpSocketMessage.bind(this),
 				sharedUdpSocketError: this._handleSharedUdpSocketError.bind(this),
 			},
@@ -184,7 +171,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	}
 
 	private async _handleInit(msg: InitMessage): Promise<InitResponseMessage> {
-		return this.#lifecycleQueue.add(async () => {
+		const res = await this.#lifecycleQueue.add(async () => {
 			if (this.#initialized) throw new Error('Already initialized')
 
 			this.#lastConfig = msg.config as TConfig
@@ -243,11 +230,13 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 				hasHttpHandler: typeof this.handleHttpRequest === 'function',
 				hasRecordActionsHandler: typeof this.handleStartStopRecordActions == 'function',
 				newUpgradeIndex: this.#upgradeScripts.length - 1,
-				disableNewConfigLayout: this.#options.disableNewConfigLayout,
 				updatedConfig: this.#lastConfig,
 				updatedSecrets: this.#lastSecrets,
 			}
 		})
+
+		if (!res) throw new Error('Failed to initialize')
+		return res
 	}
 	private async _handleDestroy(): Promise<void> {
 		await this.#lifecycleQueue.add(async () => {
@@ -346,7 +335,9 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	private async _handleSharedUdpSocketError(msg: SharedUdpSocketError): Promise<void> {
 		for (const socket of this.#sharedUdpSocketHandlers.values()) {
 			if (socket.handleId === msg.handleId) {
-				socket.receiveSocketError(msg.error)
+				const error = new Error(msg.errorMessage)
+				error.stack = msg.errorStack
+				socket.receiveSocketError(error)
 			}
 		}
 	}
