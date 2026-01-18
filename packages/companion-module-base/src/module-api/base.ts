@@ -247,7 +247,7 @@ export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends 
 	 * @param host destination ip address
 	 * @param port destination port number
 	 * @param path message path
-	 * @param args mesage arguments
+	 * @param args message arguments
 	 */
 	oscSend(host: string, port: number, path: string, args: OSCSomeArguments): void {
 		this.#context.oscSend(host, port, path, args)
@@ -295,7 +295,7 @@ export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends 
 
 	/**
 	 * Create a shared udp socket.
-	 * This can be neccessary for modules where the device/software sends UDP messages to a hardcoded port number. In those
+	 * This can be necessary for modules where the device/software sends UDP messages to a hardcoded port number. In those
 	 * cases if you don't use this then it won't be possible to use multiple instances of you module.
 	 * The api here is a subset of the `Socket` from the builtin `node:dgram`, but with Companion hosting the sockets instead of the module.
 	 * @param type Type of udp to use

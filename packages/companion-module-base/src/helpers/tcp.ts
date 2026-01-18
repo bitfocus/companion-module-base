@@ -167,7 +167,7 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 
 			const error2: Error = error instanceof Error ? error : new Error(`${error}`)
 
-			// Unhandeled socket error
+			// Unhandled socket error
 			this.#new_status(InstanceStatus.UnknownError, error2.message)
 			this.emit('error', error2)
 

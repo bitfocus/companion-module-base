@@ -32,7 +32,7 @@ export interface CompanionPresetFeedback {
 	isInverted?: boolean
 	/**
 	 * User editable description/comment for the feedback.
-	 * Intended to descibe the purpose/intent of the feedback.
+	 * Intended to describe the purpose/intent of the feedback.
 	 */
 	headline?: string
 }
@@ -49,7 +49,7 @@ export interface CompanionPresetAction {
 	options: CompanionOptionValues
 	/**
 	 * User editable description/comment for the action.
-	 * Intended to descibe the purpose/intent of the action.
+	 * Intended to describe the purpose/intent of the action.
 	 */
 	headline?: string
 }

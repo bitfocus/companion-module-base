@@ -82,7 +82,7 @@ describe('TCP', () => {
 		// TODO - options
 	})
 
-	// it('error propogation', async () => {
+	// it('error propagation', async () => {
 	// 	const rawSocket = new MinimalSocket()
 	// 	createSocketMock.mockReturnValueOnce(rawSocket as any)
 

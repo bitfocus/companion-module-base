@@ -167,7 +167,7 @@ export function parseEscapeCharacters(msg: string): string {
 }
 
 /**
- * The reverse of parseEscapeCharacters. This is useful to to ensure special charaters are displayed normally when returned to the UI.
+ * The reverse of parseEscapeCharacters. This is useful to to ensure special characters are displayed normally when returned to the UI.
  * Ie during a learn callback, or as a variable
  */
 

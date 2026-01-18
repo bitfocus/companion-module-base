@@ -67,7 +67,7 @@
 
 ### Features
 
-* add desciption line below input fields ([d86300c](https://github.com/bitfocus/companion-module-base/commit/d86300ca0e777ef55fe869e2d7b24926172e46b8))
+* add description line below input fields ([d86300c](https://github.com/bitfocus/companion-module-base/commit/d86300ca0e777ef55fe869e2d7b24926172e46b8))
 * add option to actions to skip unsubscribe being called when options change. ([3c4430d](https://github.com/bitfocus/companion-module-base/commit/3c4430d08c33311b9fae54f503518273704eb9f2))
 * add value feedback type ([2e48256](https://github.com/bitfocus/companion-module-base/commit/2e482565bdd1545a74150695e94dfeaad6eaf8ee))
 * allow actions to mark options to not treat reactively for subscription callbacks ([d959218](https://github.com/bitfocus/companion-module-base/commit/d95921803d342640a84cf638db286ebbb2e00515))
@@ -151,7 +151,7 @@
 * add delay property to `CompanionRecordedAction` with warning about lack of predictability ([82d964c](https://github.com/bitfocus/companion-module-base/commit/82d964cb80845e8551fd3c859520737b9e4ca98c))
 * allow presets to define action/feedback headlines ([b717953](https://github.com/bitfocus/companion-module-base/commit/b717953f421f068b6f1deb47bbcbcd2b5c1bfee0))
 * allow presets to define step names ([6732a7a](https://github.com/bitfocus/companion-module-base/commit/6732a7a0acf201be9ef6be1cefd08a8278ae5287))
-* propogate recorded action delay ([d067603](https://github.com/bitfocus/companion-module-base/commit/d0676037de2a4e5923f04525a3881f6cb91f23e0))
+* propagate recorded action delay ([d067603](https://github.com/bitfocus/companion-module-base/commit/d0676037de2a4e5923f04525a3881f6cb91f23e0))
 
 
 ### Bug Fixes
@@ -381,7 +381,7 @@ Requires Companion 3.1 or later
 ### Bug Fixes
 
 * typo in InstanceStatus enum ([91d8938](https://github.com/bitfocus/companion-module-base/commit/91d8938ff06d90eef5bc07ad28ae9102ceca07a2))
-* upgrade scripts running unnecesarily ([6413e90](https://github.com/bitfocus/companion-module-base/commit/6413e90957c6a27f850bc72b785dfa63b7fd93e4))
+* upgrade scripts running unnecessarily ([6413e90](https://github.com/bitfocus/companion-module-base/commit/6413e90957c6a27f850bc72b785dfa63b7fd93e4))
 
 ## [0.4.7](https://github.com/bitfocus/companion-module-base/compare/v0.4.6...v0.4.7) (2022-10-16)
 

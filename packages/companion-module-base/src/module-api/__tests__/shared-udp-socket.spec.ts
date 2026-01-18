@@ -122,7 +122,7 @@ describe('Shared UDP', () => {
 			expect(bindCb).toHaveBeenCalledTimes(0)
 			expect(ctx.sharedUdpSocketHandlers.size).toBe(0)
 
-			// Error should have propogated
+			// Error should have propagated
 			expect(errorCb).toHaveBeenCalledTimes(1)
 			expect(errorCb).toHaveBeenCalledWith(err)
 		})
@@ -198,7 +198,7 @@ describe('Shared UDP', () => {
 			// Mock receive a response
 			sendPromises[0].manualResolve(null)
 
-			// Verify the calback
+			// Verify the callback
 			await sleepImmediate()
 			expect(sendCb).toHaveBeenCalledTimes(1)
 
@@ -245,7 +245,7 @@ describe('Shared UDP', () => {
 			const err = new Error('Some backend failure')
 			sendPromises[0].manualReject(err)
 
-			// Verify the calback
+			// Verify the callback
 			await sleepImmediate()
 			expect(sendCb).toHaveBeenCalledTimes(0)
 			expect(errorCb).toHaveBeenCalledTimes(1)
@@ -288,7 +288,7 @@ describe('Shared UDP', () => {
 			// Mock receive a response
 			sendPromises[0].manualResolve(null)
 
-			// Verify the calback
+			// Verify the callback
 			await sleepImmediate()
 			expect(closeCb).toHaveBeenCalledTimes(1)
 
@@ -331,7 +331,7 @@ describe('Shared UDP', () => {
 			const err = new Error('Some backend failure')
 			sendPromises[0].manualReject(err)
 
-			// Verify the calback
+			// Verify the callback
 			await sleepImmediate()
 			expect(closeCb).toHaveBeenCalledTimes(0)
 			expect(errorCb).toHaveBeenCalledTimes(1)

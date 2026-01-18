@@ -48,7 +48,7 @@ export interface SharedUdpSocket extends EventEmitter<SharedUdpSocketEvents> {
 	 * Send a message from the shared socket
 	 * @param buffer Data to send
 	 * @param offset Offset in the buffer to start sending from
-	 * @param length Length of the data to send. Limited to the length of the bufer
+	 * @param length Length of the data to send. Limited to the length of the buffer
 	 * @param port Target port number
 	 * @param address Target address
 	 * @param callback Callback to execute once the data has been sent

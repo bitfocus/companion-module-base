@@ -34,7 +34,7 @@ export interface CompanionInputFieldBase {
 	/**
 	 * A companion expression to check whether this input should be visible, based on the current options selections within the input group
 	 *
-	 * This is the same syntax as other expressions written inside of Comapnion.
+	 * This is the same syntax as other expressions written inside of Companion.
 	 * You can access a value of the current options using `$(options:some_field_id)`.
 	 * This does not support the `isVisibleData` property, let us know if you need this.
 	 */
@@ -164,8 +164,8 @@ export interface CompanionInputFieldTextInput extends CompanionInputFieldBase {
 	 */
 	regex?: string
 	/**
-	 * Whether to suggest variables to the user
-	 * This can either be a boolean for minimal support, or an object defining additional values
+	 * Whether variables should be supported in the value mode text
+	 * Note: Even if this is false, users can toggle this field to expression mode to use variables
 	 */
 	useVariables?: boolean
 

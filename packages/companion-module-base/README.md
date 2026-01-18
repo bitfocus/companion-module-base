@@ -2,7 +2,7 @@
 
 This module provides the base class and framework needed to write a module for [Companion 3.0](https://github.com/bitfocus/companion) and later in NodeJS.
 
-In the future it will be possible to write modules in other languages, but it is not recommended as it will reduce the change of gettings other in the community to contribute features and fixes. If you interested in doing this then reach out and we can work together on creating an alternate framework for the language you are using.
+In the future it may be possible to write modules in other languages, but it is not recommended as it will reduce the change of getting other in the community to contribute features and fixes. If you interested in doing this then reach out and we can work together on creating an alternate framework for the language you are using.
 
 ## Supported versions of this library
 
