@@ -1,4 +1,4 @@
-import {
+import type {
 	CompanionHTTPRequest,
 	CompanionHTTPResponse,
 	CompanionOptionValues,
@@ -6,8 +6,9 @@ import {
 	CompanionVariableDefinition,
 	CompanionVariableValue,
 	SomeCompanionConfigField,
-	type InstanceBase,
-	type InstanceConstructor,
+	InstanceBase,
+	InstanceConstructor,
+	JsonObject,
 } from '@companion-module/base'
 import PQueue from 'p-queue'
 import { ActionManager } from './internal/actions.js'
@@ -26,7 +27,7 @@ import type {
 import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/dist/host-api/context.js'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
 
-export class InstanceWrapper<TConfig, TSecrets> {
+export class InstanceWrapper<TConfig extends JsonObject, TSecrets extends JsonObject | undefined> {
 	// readonly #logger = createModuleLogger('InstanceWrapper')
 
 	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })

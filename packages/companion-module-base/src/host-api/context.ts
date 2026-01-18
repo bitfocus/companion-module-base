@@ -19,13 +19,19 @@ import type {
 } from '../module-api/index.js'
 import type { OSCSomeArguments } from '../common/osc.js'
 import type { SharedUdpSocketImpl } from '../module-api/shared-udp-socket.js'
+import type { JsonObject } from '../common/json-value.js'
 
-export function isInstanceContext<TConfig, TSecrets>(obj: unknown): obj is InstanceContext<TConfig, TSecrets> {
+export function isInstanceContext<TConfig extends JsonObject, TSecrets extends JsonObject | undefined>(
+	obj: unknown,
+): obj is InstanceContext<TConfig, TSecrets> {
 	const obj2 = obj as InstanceContext<TConfig, TSecrets>
 	return typeof obj2 === 'object' && typeof obj2.id === 'string' && obj2._isInstanceContext === true
 }
 
-export interface InstanceContext<TConfig, TSecrets> extends InstanceSharedUdpSocketContext {
+export interface InstanceContext<
+	TConfig extends JsonObject,
+	TSecrets extends JsonObject | undefined,
+> extends InstanceSharedUdpSocketContext {
 	readonly _isInstanceContext: true
 	readonly id: string
 	label: string

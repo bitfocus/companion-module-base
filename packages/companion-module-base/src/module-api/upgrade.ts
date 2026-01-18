@@ -1,9 +1,10 @@
 import type { ExpressionOrValue } from '../util.js'
 import type { CompanionFeedbackButtonStyleResult } from './feedback.js'
 import type { InputValue } from './input.js'
+import type { JsonObject } from '../common/json-value.js'
 
 /** Additional utilities for Upgrade Scripts */
-export interface CompanionUpgradeContext<TConfig> {
+export interface CompanionUpgradeContext<TConfig extends JsonObject> {
 	/**
 	 * Current configuration of the module.
 	 * This cannot be changed
@@ -14,7 +15,7 @@ export interface CompanionUpgradeContext<TConfig> {
 /**
  * The items for an upgrade script to upgrade
  */
-export interface CompanionStaticUpgradeProps<TConfig, TSecrets = undefined> {
+export interface CompanionStaticUpgradeProps<TConfig extends JsonObject, TSecrets extends JsonObject | undefined> {
 	/**
 	 * The connection config to upgrade, if any
 	 */
@@ -36,7 +37,7 @@ export interface CompanionStaticUpgradeProps<TConfig, TSecrets = undefined> {
 /**
  * The result of an upgrade script
  */
-export interface CompanionStaticUpgradeResult<TConfig, TSecrets = undefined> {
+export interface CompanionStaticUpgradeResult<TConfig extends JsonObject, TSecrets extends JsonObject | undefined> {
 	/**
 	 * The updated config, if any changes were made
 	 */
@@ -58,7 +59,10 @@ export interface CompanionStaticUpgradeResult<TConfig, TSecrets = undefined> {
 /**
  * The definition of an upgrade script function
  */
-export type CompanionStaticUpgradeScript<TConfig, TSecrets = undefined> = (
+export type CompanionStaticUpgradeScript<
+	TConfig extends JsonObject,
+	TSecrets extends JsonObject | undefined = undefined,
+> = (
 	context: CompanionUpgradeContext<TConfig>,
 	props: CompanionStaticUpgradeProps<TConfig, TSecrets>,
 ) => CompanionStaticUpgradeResult<TConfig, TSecrets>
@@ -138,12 +142,12 @@ export interface CompanionUpgradeToBooleanFeedbackMap {
  * There are some built-in rules for properties names based on the most common cases.
  * @param upgradeMap The feedbacks to upgrade and the properties to convert
  */
-export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig = unknown>(
+export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig extends JsonObject = JsonObject>(
 	upgradeMap: CompanionUpgradeToBooleanFeedbackMap,
 ): CompanionStaticUpgradeScript<TConfig, any> {
 	// Warning: the unused parameters will often be null
 	return (_context, props) => {
-		const changedFeedbacks: CompanionStaticUpgradeResult<unknown, any>['updatedFeedbacks'] = []
+		const changedFeedbacks: CompanionStaticUpgradeResult<any, any>['updatedFeedbacks'] = []
 
 		for (const feedback of props.feedbacks) {
 			let upgrade_rules = upgradeMap[feedback.feedbackId]
@@ -187,12 +191,12 @@ export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig = unknown>(
  * The feedback definitions must be updated manually, this can only help update existing usages of the feedback.
  * @param upgradeMap The feedbacks to upgrade and the id of the option to convert
  */
-export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig = unknown>(
+export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig extends JsonObject = JsonObject>(
 	upgradeMap: Record<string, string>,
 ): CompanionStaticUpgradeScript<TConfig> {
 	// Warning: the unused parameters will often be null
 	return (_context, props) => {
-		const changedFeedbacks: CompanionStaticUpgradeResult<unknown>['updatedFeedbacks'] = []
+		const changedFeedbacks: CompanionStaticUpgradeResult<TConfig, undefined>['updatedFeedbacks'] = []
 
 		for (const feedback of props.feedbacks) {
 			const propertyName = upgradeMap[feedback.feedbackId]

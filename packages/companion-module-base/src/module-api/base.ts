@@ -4,7 +4,6 @@ import type { CompanionPresetDefinitions } from './preset.js'
 import type { InstanceStatus } from './enums.js'
 import { createModuleLogger, type LogLevel, type ModuleLogger } from '../logging.js'
 import { assertNever } from '../util.js'
-import type { InstanceBaseShared } from '../instance-base.js'
 import type { CompanionVariableDefinition, CompanionVariableValue, CompanionVariableValues } from './variable.js'
 import type { OSCSomeArguments } from '../common/osc.js'
 import type { SomeCompanionConfigField } from './config.js'
@@ -16,6 +15,7 @@ import {
 	SharedUdpSocketOptions,
 } from './shared-udp-socket.js'
 import { type InstanceContext, isInstanceContext } from '../host-api/context.js'
+import type { JsonObject } from '../common/json-value.js'
 
 export interface InstanceBaseOptions {
 	/**
@@ -35,9 +35,11 @@ export interface InstanceBaseOptions {
 	disableNewConfigLayout: boolean
 }
 
-export type InstanceConstructor<TConfig, TSecrets> = new (internal: unknown) => InstanceBase<TConfig, TSecrets>
+export type InstanceConstructor<TConfig extends JsonObject, TSecrets extends JsonObject | undefined> = new (
+	internal: unknown,
+) => InstanceBase<TConfig, TSecrets>
 
-export abstract class InstanceBase<TConfig, TSecrets = undefined> implements InstanceBaseShared<TConfig, TSecrets> {
+export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends JsonObject | undefined = undefined> {
 	readonly #context: InstanceContext<TConfig, TSecrets>
 	readonly #logger: ModuleLogger
 
