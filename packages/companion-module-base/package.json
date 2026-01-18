@@ -2,8 +2,6 @@
 	"name": "@companion-module/base",
 	"version": "1.99.0-1",
 	"type": "module",
-	"main": "dist/main.js",
-	"typings": "dist/main.d.ts",
 	"sideEffects": false,
 	"license": "MIT",
 	"repository": "https://github.com/bitfocus/companion-module-base",
@@ -15,6 +13,10 @@
 		"./manifest": {
 			"import": "./dist/manifest.js",
 			"require": "./dist/manifest.js"
+		},
+		"./host-api": {
+			"import": "./dist/host-api/main.js",
+			"require": "./dist/host-api/main.js"
 		},
 		"./package.json": {
 			"import": "./package.json",
