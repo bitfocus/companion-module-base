@@ -77,9 +77,11 @@ jobs:
             # Manual dispatch - use input
             if [ "${{ github.event.inputs.package }}" = "base" ]; then
               PACKAGE_NAME="@companion-module/base"
+              PACKAGE_SHORT_NAME="base"
               PACKAGE_PATH="packages/companion-module-base"
             else
               PACKAGE_NAME="@companion-module/host"
+              PACKAGE_SHORT_NAME="host"
               PACKAGE_PATH="packages/companion-module-host"
             fi
             
