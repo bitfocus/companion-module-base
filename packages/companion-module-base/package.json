@@ -1,6 +1,6 @@
 {
 	"name": "@companion-module/base",
-	"version": "1.99.0-1",
+	"version": "2.0.0-0",
 	"type": "module",
 	"sideEffects": false,
 	"license": "MIT",
