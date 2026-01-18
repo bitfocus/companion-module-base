@@ -6,6 +6,7 @@ import type {
 	InstanceStatus,
 	JsonValue,
 	ExpressionOptionsObject,
+	CompanionOptionValues,
 	OSCSomeArguments,
 	SomeCompanionActionInputField,
 	SomeCompanionFeedbackInputField,
@@ -98,7 +99,7 @@ export interface FeedbackInstanceBase {
 	disabled: boolean
 
 	feedbackId: string // aka 'type'
-	options: ExpressionOptionsObject
+	options: CompanionOptionValues
 }
 
 export interface FeedbackInstance extends FeedbackInstanceBase {
@@ -121,7 +122,7 @@ export interface ActionInstanceBase {
 	disabled: boolean
 
 	actionId: string // aka 'type'
-	options: ExpressionOptionsObject
+	options: CompanionOptionValues
 }
 export interface ActionInstance extends ActionInstanceBase {
 	controlId: string
