@@ -1,8 +1,10 @@
-export type InputValue = number | string | boolean | Array<string | number>
+import type { JsonValue } from '../common/json-value.js'
 
-export interface CompanionOptionValues {
-	[key: string]: InputValue | undefined
-}
+export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
+
+export type ExpressionOptionsObject = { [key: string]: ExpressionOrValue<JsonValue> | undefined }
+
+export type CompanionOptionValues = { [key: string]: JsonValue | undefined }
 
 /**
  * The common properties for an input field
@@ -165,15 +167,10 @@ export interface CompanionInputFieldTextInput extends CompanionInputFieldBase {
 	 * Whether to suggest variables to the user
 	 * This can either be a boolean for minimal support, or an object defining additional values
 	 */
-	useVariables?: boolean | CompanionFieldVariablesSupport
+	useVariables?: boolean
 
 	/** Show as a multiline input field */
 	multiline?: boolean
-}
-
-export interface CompanionFieldVariablesSupport {
-	/** Whether to include local variables */
-	local?: boolean
 }
 
 export type DropdownChoiceId = string | number

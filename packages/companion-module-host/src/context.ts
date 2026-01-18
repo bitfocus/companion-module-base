@@ -5,9 +5,8 @@ import type {
 	CompanionVariableValue,
 	InstanceStatus,
 	JsonValue,
-	OptionsObject,
+	ExpressionOptionsObject,
 	OSCSomeArguments,
-	RawOptionsObject,
 	SomeCompanionActionInputField,
 	SomeCompanionFeedbackInputField,
 } from '@companion-module/base'
@@ -99,7 +98,7 @@ export interface FeedbackInstanceBase {
 	disabled: boolean
 
 	feedbackId: string // aka 'type'
-	options: OptionsObject
+	options: ExpressionOptionsObject
 }
 
 export interface FeedbackInstance extends FeedbackInstanceBase {
@@ -122,19 +121,19 @@ export interface ActionInstanceBase {
 	disabled: boolean
 
 	actionId: string // aka 'type'
-	options: OptionsObject
+	options: ExpressionOptionsObject
 }
 export interface ActionInstance extends ActionInstanceBase {
 	controlId: string
 }
 
 export interface UpgradeActionInstance extends Omit<ActionInstanceBase, 'options'> {
-	options: RawOptionsObject
+	options: ExpressionOptionsObject
 
 	controlId: string
 }
 export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'options'> {
-	options: RawOptionsObject
+	options: ExpressionOptionsObject
 
 	isInverted: boolean
 

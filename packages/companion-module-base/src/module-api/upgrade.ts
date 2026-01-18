@@ -1,7 +1,6 @@
-import type { ExpressionOrValue } from '../util.js'
 import type { CompanionFeedbackButtonStyleResult } from './feedback.js'
-import type { InputValue } from './input.js'
-import type { JsonObject } from '../common/json-value.js'
+import type { ExpressionOrValue } from './input.js'
+import type { JsonObject, JsonValue } from '../common/json-value.js'
 
 /** Additional utilities for Upgrade Scripts */
 export interface CompanionUpgradeContext<TConfig extends JsonObject> {
@@ -68,7 +67,7 @@ export type CompanionStaticUpgradeScript<
 ) => CompanionStaticUpgradeResult<TConfig, TSecrets>
 
 export type CompanionMigrationOptionValues = {
-	[key: string]: ExpressionOrValue<InputValue> | undefined
+	[key: string]: ExpressionOrValue<JsonValue> | undefined
 }
 
 /**

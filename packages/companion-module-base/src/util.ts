@@ -1,5 +1,4 @@
 import { HslaColor, HsvaColor, colord } from 'colord'
-import type { InputValue } from './module-api/input.js'
 
 /**
  * Assert a certain type for a literal.
@@ -187,8 +186,3 @@ export function substituteEscapeCharacters(msg: string): string {
 		.replaceAll('\x03', '\\x03')
 	return message
 }
-
-export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
-
-export type OptionsObject = { [key: string]: InputValue | undefined }
-export type RawOptionsObject = { [key: string]: ExpressionOrValue<InputValue> | undefined }
