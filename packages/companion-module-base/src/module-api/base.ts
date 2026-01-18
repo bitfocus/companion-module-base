@@ -35,6 +35,8 @@ export interface InstanceBaseOptions {
 	disableNewConfigLayout: boolean
 }
 
+export type InstanceConstructor<TConfig, TSecrets> = new (internal: unknown) => InstanceBase<TConfig, TSecrets>
+
 export abstract class InstanceBase<TConfig, TSecrets = undefined> implements InstanceBaseShared<TConfig, TSecrets> {
 	readonly #context: InstanceContext<TConfig, TSecrets>
 	readonly #logger: ModuleLogger

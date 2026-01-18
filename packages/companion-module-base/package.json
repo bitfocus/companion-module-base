@@ -4,6 +4,7 @@
 	"type": "module",
 	"main": "dist/main.js",
 	"typings": "dist/main.d.ts",
+	"sideEffects": false,
 	"license": "MIT",
 	"repository": "https://github.com/bitfocus/companion-module-base",
 	"exports": {
