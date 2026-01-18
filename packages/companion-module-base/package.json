@@ -6,6 +6,20 @@
 	"typings": "dist/main.d.ts",
 	"license": "MIT",
 	"repository": "https://github.com/bitfocus/companion-module-base",
+	"exports": {
+		".": {
+			"import": "./dist/main.js",
+			"require": "./dist/main.js"
+		},
+		"./manifest": {
+			"import": "./dist/manifest.js",
+			"require": "./dist/manifest.js"
+		},
+		"./package.json": {
+			"import": "./package.json",
+			"require": "./package.json"
+		}
+	},
 	"scripts": {
 		"docs:html": "run -BT typedoc --tsconfig tsconfig.build.json --entryPoints src/main.ts --excludePrivate --theme default --out docs"
 	},
@@ -21,9 +35,11 @@
 		"lib"
 	],
 	"dependencies": {
-		"ajv": "^8.17.1",
 		"colord": "^2.9.3",
 		"tslib": "^2.8.1"
+	},
+	"devDependencies": {
+		"ajv": "^8.17.1"
 	},
 	"packageManager": "yarn@4.12.0"
 }
