@@ -1,6 +1,6 @@
 {
 	"name": "@companion-module/base",
-	"version": "1.99.0-0",
+	"version": "1.99.0-1",
 	"type": "module",
 	"main": "dist/main.js",
 	"typings": "dist/main.d.ts",
