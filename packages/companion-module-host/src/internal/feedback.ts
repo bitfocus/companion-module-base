@@ -10,7 +10,7 @@ import {
 	createModuleLogger,
 } from '@companion-module/base'
 import debounceFn from 'debounce-fn'
-import type { FeedbackInstance, HostFeedbackDefinition, HostFeedbackValue, ParseVariablesInfo } from '../context.js'
+import type { FeedbackInstance, HostFeedbackDefinition, HostFeedbackValue } from '../context.js'
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'value' | 'advanced',
@@ -33,7 +33,6 @@ interface FeedbackCheckStatus {
 export class FeedbackManager {
 	readonly #logger = createModuleLogger('FeedbackManager')
 
-	readonly #parseVariablesInString: (text: string, info: ParseVariablesInfo) => Promise<string>
 	readonly #setFeedbackDefinitions: (feedbacks: HostFeedbackDefinition[]) => void
 	readonly #updateFeedbackValues: (values: HostFeedbackValue[]) => void
 
@@ -45,19 +44,10 @@ export class FeedbackManager {
 	// Feedbacks currently being checked
 	#feedbacksBeingChecked = new Map<string, FeedbackCheckStatus>()
 
-	// while in a context which provides an alternate parseVariablesInString, we should log when the original is called
-	#parseVariablesContext: string | undefined
-
-	public get parseVariablesContext(): string | undefined {
-		return this.#parseVariablesContext
-	}
-
 	constructor(
-		parseVariablesInString: (text: string, info: ParseVariablesInfo) => Promise<string>,
 		setFeedbackDefinitions: (feedbacks: HostFeedbackDefinition[]) => void,
 		updateFeedbackValues: (values: HostFeedbackValue[]) => void,
 	) {
-		this.#parseVariablesInString = parseVariablesInString
 		this.#setFeedbackDefinitions = setFeedbackDefinitions
 		this.#updateFeedbackValues = updateFeedbackValues
 	}
@@ -77,10 +67,7 @@ export class FeedbackManager {
 				const definition = this.#feedbackDefinitions.get(existing.feedbackId)
 				if (definition?.unsubscribe) {
 					const context: CompanionFeedbackContext = {
-						parseVariablesInString: async (text: string): Promise<string> => {
-							// No-op, any values parsed here will not be stable
-							return text
-						},
+						type: 'feedback',
 					}
 
 					Promise.resolve(
@@ -105,10 +92,7 @@ export class FeedbackManager {
 					const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 					if (definition?.subscribe) {
 						const context: CompanionFeedbackContext = {
-							parseVariablesInString: async (text: string): Promise<string> => {
-								// No-op, any values parsed here will not be stable
-								return text
-							},
+							type: 'feedback',
 						}
 
 						Promise.resolve(
@@ -133,15 +117,7 @@ export class FeedbackManager {
 		const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 		if (definition && definition.learn) {
 			const context: CompanionFeedbackContext = {
-				parseVariablesInString: async (text: string): Promise<string> => {
-					const res = await this.#parseVariablesInString(text, {
-						controlId: feedback.controlId,
-						actionInstanceId: undefined,
-						feedbackInstanceId: feedback.id,
-					})
-
-					return res
-				},
+				type: 'feedback',
 			}
 
 			const newOptions = await definition.learn(
@@ -198,19 +174,8 @@ export class FeedbackManager {
 
 				// Calculate the new value for the feedback
 				if (definition) {
-					// Set this while the promise starts executing
-					this.#parseVariablesContext = `Feedback ${feedback.feedbackId} (${id})`
-
 					const context: CompanionFeedbackContext = {
-						parseVariablesInString: async (text: string): Promise<string> => {
-							const res = await this.#parseVariablesInString(text, {
-								controlId: feedback.controlId,
-								actionInstanceId: undefined,
-								feedbackInstanceId: id,
-							})
-
-							return res
-						},
+						type: 'feedback',
 					}
 
 					switch (definition.type) {
@@ -246,8 +211,6 @@ export class FeedbackManager {
 							assertNever(definition)
 							break
 					}
-
-					this.#parseVariablesContext = undefined
 				}
 
 				// Await the value before looking at this.#pendingFeedbackValues, to avoid race conditions
@@ -276,9 +239,6 @@ export class FeedbackManager {
 				console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 			})
 			.finally(() => {
-				// ensure this.#parseVariablesContext is cleared
-				this.#parseVariablesContext = undefined
-
 				// it is no longer being checked
 				this.#feedbacksBeingChecked.delete(id)
 
@@ -367,10 +327,7 @@ export class FeedbackManager {
 			const def = this.#feedbackDefinitions.get(fb.feedbackId)
 			if (def?.subscribe) {
 				const context: CompanionFeedbackContext = {
-					parseVariablesInString: async (text: string): Promise<string> => {
-						// No-op, any values parsed here will not be stable
-						return text
-					},
+					type: 'feedback',
 				}
 
 				Promise.resolve(def.subscribe(convertFeedbackInstanceToEvent(def.type, fb), context)).catch((e) => {
@@ -390,10 +347,7 @@ export class FeedbackManager {
 			const def = this.#feedbackDefinitions.get(fb.feedbackId)
 			if (def && def.unsubscribe) {
 				const context: CompanionFeedbackContext = {
-					parseVariablesInString: async (text: string): Promise<string> => {
-						// No-op, any values parsed here will not be stable
-						return text
-					},
+					type: 'feedback',
 				}
 
 				Promise.resolve(def.unsubscribe(convertFeedbackInstanceToEvent(def.type, fb), context)).catch((e) => {

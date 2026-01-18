@@ -19,7 +19,6 @@ import type {
 	HostVariableDefinition,
 	HostVariableValue,
 	ModuleHostContext,
-	ParseVariablesInfo,
 	UpgradeActionAndFeedbackInstancesResponse,
 	UpgradeActionInstance,
 	UpgradeFeedbackInstance,
@@ -58,19 +57,11 @@ export class InstanceWrapper<TConfig, TSecrets> {
 		this.#host = host
 		// this.#plugin = plugin
 
-		const parseVariablesInStringIfNeeded = async (text: string, info: ParseVariablesInfo): Promise<string> => {
-			// Shortcut in case there is definitely nothing to parse
-			if (!text.includes('$(')) return text
-			return this.#host.parseVariablesInString(text, info)
-		}
-
 		this.#actionManager = new ActionManager(
-			parseVariablesInStringIfNeeded,
 			(actions) => this.#host.setActionDefinitions(actions),
 			(controlId, variableId, value) => this.#host.setCustomVariable(controlId, variableId, value),
 		)
 		this.#feedbackManager = new FeedbackManager(
-			parseVariablesInStringIfNeeded,
 			(feedbacks) => this.#host.setFeedbackDefinitions(feedbacks),
 			(values) => this.#host.updateFeedbackValues(values),
 		)
@@ -94,21 +85,10 @@ export class InstanceWrapper<TConfig, TSecrets> {
 			},
 
 			parseVariablesInString: async (text) => {
-				const currentContext = this.#feedbackManager.parseVariablesContext
-				if (currentContext) {
-					this.#logger.debug(
-						`parseVariablesInString called while in: ${currentContext}. You should use the parseVariablesInString provided to the callback instead`,
-					)
-				}
-
 				// If there are no variables, just return the text
 				if (!text.includes('$(')) return text
 
-				const res = await this.#host.parseVariablesInString(text, {
-					controlId: undefined,
-					actionInstanceId: undefined,
-					feedbackInstanceId: undefined,
-				})
+				const res = await this.#host.parseVariablesInString(text)
 
 				return res
 			},

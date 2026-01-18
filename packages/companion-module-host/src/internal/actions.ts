@@ -7,7 +7,7 @@ import {
 	type CompanionVariableValue,
 	createModuleLogger,
 } from '@companion-module/base'
-import type { ActionInstance, HostActionDefinition, ParseVariablesInfo } from '../context.js'
+import type { ActionInstance, HostActionDefinition } from '../context.js'
 import { ExecuteActionResult } from '../instance.js'
 
 function convertActionInstanceToEvent(action: ActionInstance): CompanionActionInfo {
@@ -22,7 +22,6 @@ function convertActionInstanceToEvent(action: ActionInstance): CompanionActionIn
 export class ActionManager {
 	readonly #logger = createModuleLogger('ActionManager')
 
-	readonly #parseVariablesInString: (text: string, info: ParseVariablesInfo) => Promise<string>
 	readonly #setActionDefinitions: (actions: HostActionDefinition[]) => void
 	readonly #setCustomVariableValue: (
 		controlId: string,
@@ -34,11 +33,9 @@ export class ActionManager {
 	readonly #actionInstances = new Map<string, ActionInstance>()
 
 	constructor(
-		parseVariablesInString: (text: string, info: ParseVariablesInfo) => Promise<string>,
 		setActionDefinitions: (msg: HostActionDefinition[]) => void,
 		setCustomVariableValue: (controlId: string, variableId: string, value: CompanionVariableValue | undefined) => void,
 	) {
-		this.#parseVariablesInString = parseVariablesInString
 		this.#setActionDefinitions = setActionDefinitions
 		this.#setCustomVariableValue = setCustomVariableValue
 	}
@@ -56,15 +53,7 @@ export class ActionManager {
 		}
 
 		const context: CompanionActionContext = {
-			parseVariablesInString: async (text: string): Promise<string> => {
-				const res = await this.#parseVariablesInString(text, {
-					controlId: action.controlId,
-					actionInstanceId: action.id,
-					feedbackInstanceId: undefined,
-				})
-
-				return res
-			},
+			type: 'action',
 			setCustomVariableValue: (variableName: string, value: CompanionVariableValue) => {
 				this.#setCustomVariableValue(action.controlId, variableName, value)
 			},
@@ -103,10 +92,7 @@ export class ActionManager {
 				const definition = this.#actionDefinitions.get(existing.actionId)
 				if (definition?.unsubscribe && !definition.skipUnsubscribeOnOptionsChange) {
 					const context: CompanionActionContext = {
-						parseVariablesInString: async (text: string): Promise<string> => {
-							// No-op, any values parsed here will not be stable
-							return text
-						},
+						type: 'action',
 						setCustomVariableValue: () => {
 							throw new Error(`setCustomVariableValue is not available during unsubscribe`)
 						},
@@ -131,10 +117,7 @@ export class ActionManager {
 				const definition = this.#actionDefinitions.get(action.actionId)
 				if (definition?.subscribe) {
 					const context: CompanionActionContext = {
-						parseVariablesInString: async (text: string): Promise<string> => {
-							// No-op, any values parsed here will not be stable
-							return text
-						},
+						type: 'action',
 						setCustomVariableValue: () => {
 							throw new Error(`setCustomVariableValue is not available during subscribe`)
 						},
@@ -152,15 +135,7 @@ export class ActionManager {
 		const definition = this.#actionDefinitions.get(action.actionId)
 		if (definition && definition.learn) {
 			const context: CompanionActionContext = {
-				parseVariablesInString: async (text: string): Promise<string> => {
-					const res = await this.#parseVariablesInString(text, {
-						controlId: action.controlId,
-						actionInstanceId: action.id,
-						feedbackInstanceId: undefined,
-					})
-
-					return res
-				},
+				type: 'action',
 				setCustomVariableValue: () => {
 					throw new Error(`setCustomVariableValue is not available during learn`)
 				},
@@ -225,10 +200,7 @@ export class ActionManager {
 			const def = this.#actionDefinitions.get(act.actionId)
 			if (def?.subscribe) {
 				const context: CompanionActionContext = {
-					parseVariablesInString: async (text: string): Promise<string> => {
-						// No-op, any values parsed here will not be stable
-						return text
-					},
+					type: 'action',
 					setCustomVariableValue: () => {
 						throw new Error(`setCustomVariableValue is not available during subscribe`)
 					},
@@ -251,10 +223,7 @@ export class ActionManager {
 			const def = this.#actionDefinitions.get(act.actionId)
 			if (def && def.unsubscribe) {
 				const context: CompanionActionContext = {
-					parseVariablesInString: async (text: string): Promise<string> => {
-						// No-op, any values parsed here will not be stable
-						return text
-					},
+					type: 'action',
 					setCustomVariableValue: () => {
 						throw new Error(`setCustomVariableValue is not available during unsubscribe`)
 					},

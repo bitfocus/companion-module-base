@@ -39,9 +39,9 @@ export interface ModuleHostContext<TConfig, TSecrets> {
 	sendOSC: (host: string, port: number, path: string, args: OSCSomeArguments) => void
 	/**
 	 * Parse the variables in a string of text.
-	 * This has been semi depricated in favor of the companion parsing the options before the module.
+	 * This has been mostly deprecated in favor of the companion parsing the options before the module.
 	 */
-	parseVariablesInString: (text: string, info: ParseVariablesInfo) => Promise<string>
+	parseVariablesInString: (text: string) => Promise<string>
 	/** When the action-recorder is running, the module has recorded an action to add to the recorded stack */
 	recordAction: (action: CompanionRecordedAction, uniquenessId: string | undefined) => void
 	/**
@@ -157,10 +157,4 @@ export interface UpgradeActionAndFeedbackInstancesResponse {
 	updatedActions: UpgradeActionInstance[]
 	updatedFeedbacks: UpgradeFeedbackInstance[]
 	latestUpgradeIndex: number
-}
-
-export interface ParseVariablesInfo {
-	controlId: string | undefined
-	feedbackInstanceId: string | undefined
-	actionInstanceId: string | undefined
 }
