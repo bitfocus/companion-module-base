@@ -182,18 +182,6 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 	}
 
 	/**
-	 * @deprecated Companion now handles this for you, for actions and feedbacks. If you need this for another purpose, let us know as we intend to remove this
-	 *
-	 * Parse and replace all the variables in a string
-	 * Note: You must not use this for feedbacks, as your feedback will not update when the variable changes.
-	 * @param text The text to parse
-	 * @returns The string with variables replaced with their values
-	 */
-	async parseVariablesInString(text: string): Promise<string> {
-		return this.#context.parseVariablesInString(text)
-	}
-
-	/**
 	 * Request all feedbacks of the specified types to be checked for changes
 	 * @param feedbackTypes The feedback types to check
 	 */

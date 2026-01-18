@@ -37,11 +37,6 @@ export interface ModuleHostContext<TConfig, TSecrets> {
 	saveConfig(newConfig: TConfig | undefined, newSecrets: TSecrets | undefined): void
 	/** Send an OSC message from the default osc listener in companion */
 	sendOSC: (host: string, port: number, path: string, args: OSCSomeArguments) => void
-	/**
-	 * Parse the variables in a string of text.
-	 * This has been mostly deprecated in favor of the companion parsing the options before the module.
-	 */
-	parseVariablesInString: (text: string) => Promise<string>
 	/** When the action-recorder is running, the module has recorded an action to add to the recorded stack */
 	recordAction: (action: CompanionRecordedAction, uniquenessId: string | undefined) => void
 	/**

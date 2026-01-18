@@ -5,7 +5,6 @@ import {
 	CompanionStaticUpgradeScript,
 	CompanionVariableDefinition,
 	CompanionVariableValue,
-	createModuleLogger,
 	SomeCompanionConfigField,
 	type InstanceBase,
 	type InstanceConstructor,
@@ -28,7 +27,7 @@ import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
 
 export class InstanceWrapper<TConfig, TSecrets> {
-	readonly #logger = createModuleLogger('InstanceWrapper')
+	// readonly #logger = createModuleLogger('InstanceWrapper')
 
 	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })
 	#initialized = false
@@ -82,15 +81,6 @@ export class InstanceWrapper<TConfig, TSecrets> {
 			},
 			oscSend: (host, port, path, args) => {
 				this.#host.sendOSC(host, port, path, args)
-			},
-
-			parseVariablesInString: async (text) => {
-				// If there are no variables, just return the text
-				if (!text.includes('$(')) return text
-
-				const res = await this.#host.parseVariablesInString(text)
-
-				return res
 			},
 
 			recordAction: (action, uniquenessId) => {

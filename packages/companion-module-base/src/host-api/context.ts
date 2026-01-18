@@ -36,8 +36,6 @@ export interface InstanceContext<TConfig, TSecrets> extends InstanceSharedUdpSoc
 	updateStatus(status: InstanceStatus, message: string | null): void
 	oscSend(host: string, port: number, path: string, args: OSCSomeArguments): void
 
-	parseVariablesInString(text: string): Promise<string>
-
 	recordAction(action: CompanionRecordedAction, uniquenessId?: string): void
 
 	setActionDefinitions: (actions: CompanionActionDefinitions) => void
