@@ -1,7 +1,8 @@
 {
-	"extends": "./tsconfig.build.json",
-	"exclude": ["node_modules/**"],
-	"compilerOptions": {
-		"types": ["node"]
-	}
+	"extends": "./tsconfig.base.json",
+	"files": ["vitest.config.mts"],
+	"references": [
+		{ "path": "./packages/companion-module-base/tsconfig.json" },
+		{ "path": "./packages/companion-module-host/tsconfig.json" }
+	]
 }

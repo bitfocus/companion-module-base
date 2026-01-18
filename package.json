@@ -1,44 +1,26 @@
 {
-	"name": "@companion-module/base",
-	"version": "1.14.1",
-	"type": "module",
-	"main": "dist/index.js",
-	"typings": "dist/index.d.ts",
+	"name": "@companion-module/api",
 	"license": "MIT",
-	"repository": "https://github.com/bitfocus/companion-module-base",
+	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
 	"scripts": {
-		"dev": "tsc -p tsconfig.json --watch",
-		"build": "yarn build:schema && yarn build:ts",
-		"build:ts": "tsc -p tsconfig.build.json",
-		"build:schema": "node tools/schema-compile.mjs",
-		"docs:html": "typedoc --tsconfig tsconfig.build.json --entryPoints src/index.ts --excludePrivate --theme default --out docs",
-		"lint:raw": "eslint",
-		"lint": "yarn lint:raw .",
-		"unit": "vitest"
+		"build": "run build:schema && run build:root",
+		"build:clean": "(rm -rf ./packages/*/dist ./packages/*/generated ./packages/*/*.tsbuildinfo || true) && run build",
+		"build:root": "tsc --build tsconfig.build.json",
+		"build:schema": "cd packages/companion-module-base && node ./tools/schema-compile.mjs",
+		"dev": "run build:root --watch",
+		"lint": "eslint .",
+		"unit": "vitest run",
+		"unit:watch": "vitest"
 	},
 	"engines": {
-		"node": "^22.14"
-	},
-	"files": [
-		"README.md",
-		"CHANGELOG.md",
-		"dist",
-		"generated",
-		"assets",
-		"lib"
-	],
-	"dependencies": {
-		"ajv": "^8.17.1",
-		"colord": "^2.9.3",
-		"debounce-fn": "^6.0.0",
-		"nanoid": "^5.1.5",
-		"p-queue": "^8.1.0",
-		"p-timeout": "^6.1.4",
-		"tslib": "^2.8.1"
+		"node": "^22.11"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.4.2",
-		"@tsconfig/node22": "^22.0.1",
+		"@tsconfig/node22": "^22.0.5",
 		"@types/lodash-es": "^4.17.12",
 		"@types/node": "^22.13.14",
 		"eslint": "^9.39.1",

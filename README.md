@@ -1,35 +1,37 @@
-# @companion-module/base
+# Companion Module API
 
-This module provides the base class and framework needed to write a module for [Companion 3.0](https://github.com/bitfocus/companion) and later in NodeJS.
+Monorepo for Companion module plugin libraries.
 
-In the future it will be possible to write modules in other languages, but it is not recommended as it will reduce the change of gettings other in the community to contribute features and fixes. If you interested in doing this then reach out and we can work together on creating an alternate framework for the language you are using.
+## Packages
 
-## Supported versions of this library
+- **[@companion-module/base](packages/companion-module-base/)** - Plugin API for writing module integrations. Small, stable, versioned conservatively.
+- **[@companion-module/host](packages/companion-module-host/)** - Host-side wrapper that runs plugins in-process. Handles API version compatibility and provides the interface to Companion.
 
-Each version of Companion supports a limited range of versions of this library listed below. Any patch version (the third number) are not relevant for the compatibility check, so are not listed here
+## Development
 
-| Companion | Module-base                |
-| --------- | -------------------------- |
-| v3.0      | v1.0 - v1.4                |
-| v3.1      | v1.0 - v1.5                |
-| v3.2      | v1.0 - v1.7                |
-| v3.3      | v1.0 - v1.8                |
-| v3.4      | v1.0 - v1.10               |
-| v3.5      | v1.0 - v1.11               |
-| v4.0      | v1.0 - v1.12               |
-| v4.1      | v1.0 - v1.13               |
-| v4.2      | v1.0 - v1.14               |
-| v4.3      | v1.0 - v1.15 (unconfirmed) |
+```bash
+# Install dependencies
+yarn install
 
-## Getting started with a new module
+# Build all packages
+yarn build
 
-To get started with creating a new module, you should start with one of the following templates. These should be kept up to date, but you should make sure all the dependencies are up to date before you begin.
+# Run in watch mode
+yarn dev
 
-- https://github.com/bitfocus/companion-module-template-js (JavaScript)
-- https://github.com/bitfocus/companion-module-template-ts (TypeScript)
+# Lint
+yarn lint
 
-## Documentation
+# Run tests
+yarn unit
+```
 
-You can view detailed generated documentation [here](https://bitfocus.github.io/companion-module-base/).
+## Creating a Module Plugin
 
-Or refer to [the wiki](https://github.com/bitfocus/companion-module-base/wiki) for a more handwritten version
+Use the [TypeScript template](https://github.com/bitfocus/companion-module-template-ts) or [Javascript template](https://github.com/bitfocus/companion-module-template-js) to get started.
+
+Your plugin only needs to depend on `@companion-module/base`. The host package is used by Companion itself.
+
+## Architecture
+
+Plugins implement the base API (`@companion-module/base`). The host package wraps these plugins with additional logic, manages lifecycle, and bridges to Companion's core. This separation keeps the plugin API minimal and stable while allowing the host side to evolve more freely.

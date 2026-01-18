@@ -1,0 +1,22 @@
+{
+	"extends": "@tsconfig/node22/tsconfig.json",
+	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
+	"include": ["src/**/*"],
+	"compilerOptions": {
+        "composite": true,
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"baseUrl": "./",
+		"paths": {
+		},
+		"module": "node20",
+		"moduleResolution": "node16",
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+		"importHelpers": true,
+		"pretty": true,
+		"types": ["node"],
+		"esModuleInterop": true
+	}
+}
