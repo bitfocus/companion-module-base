@@ -1,4 +1,5 @@
 import type {
+	CompanionInputFieldBase,
 	CompanionInputFieldBonjourDevice,
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldColor,
@@ -11,9 +12,16 @@ import type {
 } from './input.js'
 
 /**
+ * A configuration input field
+ */
+export interface CompanionConfigField extends CompanionInputFieldBase {
+	width: number
+}
+
+/**
  * Some configuration input field
  */
-export type SomeCompanionConfigField =
+export type SomeCompanionConfigField = (
 	| CompanionInputFieldStaticText
 	| CompanionInputFieldColor
 	| CompanionInputFieldTextInput
@@ -23,3 +31,5 @@ export type SomeCompanionConfigField =
 	| CompanionInputFieldCheckbox
 	| CompanionInputFieldBonjourDevice
 	| CompanionInputFieldSecret
+) &
+	CompanionConfigField
