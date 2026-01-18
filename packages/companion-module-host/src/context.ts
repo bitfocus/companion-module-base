@@ -7,6 +7,7 @@ import type {
 	JsonValue,
 	OptionsObject,
 	OSCSomeArguments,
+	RawOptionsObject,
 	SomeCompanionActionInputField,
 	SomeCompanionFeedbackInputField,
 } from '@companion-module/base'
@@ -133,12 +134,12 @@ export interface ActionInstance extends ActionInstanceBase {
 }
 
 export interface UpgradeActionInstance extends Omit<ActionInstanceBase, 'options'> {
-	options: OptionsObject
+	options: RawOptionsObject
 
 	controlId: string
 }
 export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'options'> {
-	options: OptionsObject
+	options: RawOptionsObject
 
 	isInverted: boolean
 

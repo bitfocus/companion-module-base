@@ -20,11 +20,9 @@
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.4.2",
-		"@tsconfig/node18": "^18.2.6",
 		"@tsconfig/node22": "^22.0.5",
-		"@types/ejson": "^2.2.2",
 		"@types/lodash-es": "^4.17.12",
-		"@types/node": "^18.19.130",
+		"@types/node": "^22.13.14",
 		"eslint": "^9.39.1",
 		"json-schema-to-typescript": "^15.0.4",
 		"lodash-es": "^4.17.21",

@@ -21,11 +21,9 @@ __metadata:
   resolution: "@companion-module/api@workspace:."
   dependencies:
     "@companion-module/tools": "npm:^2.4.2"
-    "@tsconfig/node18": "npm:^18.2.6"
     "@tsconfig/node22": "npm:^22.0.5"
-    "@types/ejson": "npm:^2.2.2"
     "@types/lodash-es": "npm:^4.17.12"
-    "@types/node": "npm:^18.19.130"
+    "@types/node": "npm:^22.13.14"
     eslint: "npm:^9.39.1"
     json-schema-to-typescript: "npm:^15.0.4"
     lodash-es: "npm:^4.17.21"
@@ -45,7 +43,6 @@ __metadata:
   dependencies:
     ajv: "npm:^8.17.1"
     colord: "npm:^2.9.3"
-    eventemitter3: "npm:^5.0.1"
     tslib: "npm:^2.8.1"
   languageName: unknown
   linkType: soft
@@ -734,13 +731,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node18@npm:^18.2.6":
-  version: 18.2.6
-  resolution: "@tsconfig/node18@npm:18.2.6"
-  checksum: 10c0/52fc3fadd9d60225c30983f1236f9d16a83f942d27accf3a71d71aee7c76e705307aefb89baa5b3df631c93fe41b47a25ede4f14c6816019000233f1e4df3302
-  languageName: node
-  linkType: hard
-
 "@tsconfig/node22@npm:^22.0.5":
   version: 22.0.5
   resolution: "@tsconfig/node22@npm:22.0.5"
@@ -761,13 +751,6 @@ __metadata:
   version: 4.0.2
   resolution: "@types/deep-eql@npm:4.0.2"
   checksum: 10c0/bf3f811843117900d7084b9d0c852da9a044d12eb40e6de73b552598a6843c21291a8a381b0532644574beecd5e3491c5ff3a0365ab86b15d59862c025384844
-  languageName: node
-  linkType: hard
-
-"@types/ejson@npm:^2.2.2":
-  version: 2.2.2
-  resolution: "@types/ejson@npm:2.2.2"
-  checksum: 10c0/601afc9299b0ee645f14ce78b7d7cd618afb865ec4220f0b9b4082d9e729c1f6bcabeb328b43a08b25d3a0b63e9b1b48d825080eee717d1537bd693e7455c9bb
   languageName: node
   linkType: hard
 
@@ -830,21 +813,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*":
-  version: 22.6.1
-  resolution: "@types/node@npm:22.6.1"
+"@types/node@npm:*, @types/node@npm:^22.13.14":
+  version: 22.13.14
+  resolution: "@types/node@npm:22.13.14"
   dependencies:
-    undici-types: "npm:~6.19.2"
-  checksum: 10c0/79fdb14f268070eb21d25f3e81811b73c10dfcc65a638a6546fd97aa3e7dfe473f31a547fd21c43b8559a435b6ab26057066a47b5453bd1b1cdffe14430ac399
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^18.19.130":
-  version: 18.19.130
-  resolution: "@types/node@npm:18.19.130"
-  dependencies:
-    undici-types: "npm:~5.26.4"
-  checksum: 10c0/22ba2bc9f8863101a7e90a56aaeba1eb3ebdc51e847cef4a6d188967ab1acbce9b4f92251372fd0329ecb924bbf610509e122c3dfe346c04dbad04013d4ad7d0
+    undici-types: "npm:~6.20.0"
+  checksum: 10c0/fa2ab5b8277bfbcc86c42e46a3ea9871b0d559894cc9d955685d17178c9499f0b1bf03d1d1ea8d92ef2dda818988f4035acb8abf9dc15423a998fa56173ab804
   languageName: node
   linkType: hard
 
@@ -3881,17 +3855,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici-types@npm:~5.26.4":
-  version: 5.26.5
-  resolution: "undici-types@npm:5.26.5"
-  checksum: 10c0/bb673d7876c2d411b6eb6c560e0c571eef4a01c1c19925175d16e3a30c4c428181fb8d7ae802a261f283e4166a0ac435e2f505743aa9e45d893f9a3df017b501
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~6.19.2":
-  version: 6.19.8
-  resolution: "undici-types@npm:6.19.8"
-  checksum: 10c0/078afa5990fba110f6824823ace86073b4638f1d5112ee26e790155f481f2a868cc3e0615505b6f4282bdf74a3d8caad715fd809e870c2bb0704e3ea6082f344
+"undici-types@npm:~6.20.0":
+  version: 6.20.0
+  resolution: "undici-types@npm:6.20.0"
+  checksum: 10c0/68e659a98898d6a836a9a59e6adf14a5d799707f5ea629433e025ac90d239f75e408e2e5ff086afc3cace26f8b26ee52155293564593fbb4a2f666af57fc59bf
   languageName: node
   linkType: hard
 

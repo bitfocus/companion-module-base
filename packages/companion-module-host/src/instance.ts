@@ -411,7 +411,9 @@ export class InstanceWrapper<TConfig, TSecrets> {
 	async sharedUdpSocketError(msg: SharedUdpSocketError): Promise<void> {
 		for (const socket of this.#instanceContext.sharedUdpSocketHandlers.values()) {
 			if (socket.handleId === msg.handleId) {
-				socket.receiveSocketError(msg.error)
+				const error = new Error(msg.errorMessage)
+				error.stack = msg.errorStack
+				socket.receiveSocketError(error)
 			}
 		}
 	}
@@ -445,5 +447,6 @@ export interface SharedUdpSocketError {
 	handleId: string
 	portNumber: number
 
-	error: Error
+	errorMessage: string
+	errorStack: string | undefined
 }
