@@ -24,7 +24,7 @@
 		}
 	},
 	"scripts": {
-		"docs:html": "run -BT typedoc --tsconfig tsconfig.build.json --entryPoints src/main.ts --excludePrivate --theme default --out docs"
+		"docs:html": "run -BT typedoc --tsconfig tsconfig.json --entryPoints src/main.ts --excludePrivate --theme default --out docs"
 	},
 	"engines": {
 		"node": "^18.20 || ^22.21"

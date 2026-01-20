@@ -1,8 +1,0 @@
-{
-	"extends": "./tsconfig.base.json",
-	"files": [],
-	"references": [
-		{ "path": "./packages/companion-module-base/tsconfig.build.json" },
-		{ "path": "./packages/companion-module-host/tsconfig.build.json" }
-	]
-}
