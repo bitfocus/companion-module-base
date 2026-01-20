@@ -48,10 +48,11 @@ export interface CompanionActionDefinition {
 	options: SomeCompanionActionInputField[]
 
 	/**
-	 * Ignore changes to certain options and don't allow them to trigger the subscribe/unsubscribe callbacks
-	 * This allows for ensuring that the subscribe callback is only called when values the action cares about change
+	 * Only monitor the specified options for re-running the subscribe/unsubscribe callbacks
+	 * It is recommended to set this for all actions using subscribe, to reduce unnecessary calls when the user has the values driven by expressions.
+	 * If not set, all options changes will trigger unsubscribe/subscribe
 	 */
-	optionsToIgnoreForSubscribe?: string[]
+	optionsToMonitorForSubscribe?: string[]
 
 	/**
 	 * If true, the unsubscribe callback will not be called when the options change, only when the action is removed or disabled

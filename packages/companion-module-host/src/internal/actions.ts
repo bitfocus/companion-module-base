@@ -176,7 +176,7 @@ export class ActionManager {
 					name: action.name,
 					description: action.description,
 					options: action.options,
-					optionsToIgnoreForSubscribe: action.optionsToIgnoreForSubscribe,
+					optionsToMonitorForSubscribe: action.optionsToMonitorForSubscribe,
 					hasLearn: !!action.learn,
 					learnTimeout: action.learnTimeout,
 					hasLifecycleFunctions: !!action.subscribe || !!action.unsubscribe,
