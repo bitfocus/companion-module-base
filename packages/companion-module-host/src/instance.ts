@@ -103,9 +103,6 @@ export class InstanceWrapper<TConfig extends JsonObject, TSecrets extends JsonOb
 			setFeedbackDefinitions: (feedbacks) => {
 				this.#feedbackManager.setFeedbackDefinitions(feedbacks)
 			},
-			subscribeFeedbacks: (feedbackIds) => {
-				this.#feedbackManager.subscribeFeedbacks(feedbackIds)
-			},
 			unsubscribeFeedbacks: (feedbackIds) => {
 				this.#feedbackManager.unsubscribeFeedbacks(feedbackIds)
 			},

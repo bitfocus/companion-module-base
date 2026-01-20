@@ -49,7 +49,6 @@ export interface InstanceContext<
 	unsubscribeActions: (actionIds: string[]) => void
 
 	setFeedbackDefinitions: (feedbacks: CompanionFeedbackDefinitions) => void
-	subscribeFeedbacks: (feedbackIds: string[]) => void
 	unsubscribeFeedbacks: (feedbackIds: string[]) => void
 	checkFeedbacks: (feedbackTypes: string[]) => void
 	checkFeedbacksById: (feedbackIds: string[]) => void

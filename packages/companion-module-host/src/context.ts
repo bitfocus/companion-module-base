@@ -55,7 +55,7 @@ export interface HostActionDefinition {
 	name: string
 	description: string | undefined
 	options: SomeCompanionActionInputField[] // TODO module-lib - versioned types?
-	optionsToIgnoreForSubscribe: string[] | undefined
+	optionsToMonitorForSubscribe: string[] | undefined
 	hasLearn: boolean
 	learnTimeout: number | undefined
 	hasLifecycleFunctions: boolean

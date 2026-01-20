@@ -217,14 +217,6 @@ export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends 
 	}
 
 	/**
-	 * Call subscribe on all currently known placed feedbacks.
-	 * It can be useful to trigger this upon establishing a connection, to ensure all data is loaded.
-	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called.
-	 */
-	subscribeFeedbacks(...feedbackIds: string[]): void {
-		this.#context.subscribeFeedbacks(feedbackIds)
-	}
-	/**
 	 * Call unsubscribe on all currently known placed feedbacks.
 	 * It can be useful to do some cleanup upon a connection closing.
 	 * @param feedbackIds The feedbackIds to call subscribe for. If no values are provided, then all are called.

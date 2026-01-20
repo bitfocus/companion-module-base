@@ -87,24 +87,6 @@ export class FeedbackManager {
 				// TODO module-lib - deep freeze the feedback to avoid mutation?
 				this.#feedbackInstances.set(id, { ...feedback })
 
-				// Inserted
-				if (!existing) {
-					const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
-					if (definition?.subscribe) {
-						const context: CompanionFeedbackContext = {
-							type: 'feedback',
-						}
-
-						Promise.resolve(
-							definition.subscribe(convertFeedbackInstanceToEvent(definition.type, feedback), context),
-						).catch((e) => {
-							this.#logger.error(
-								`Feedback subscribe failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`,
-							)
-						})
-					}
-				}
-
 				// update the feedback value
 				this.#triggerCheckFeedback(id)
 			}
@@ -314,26 +296,6 @@ export class FeedbackManager {
 		for (const id of feedbackIds) {
 			// update the feedback value
 			this.#triggerCheckFeedback(id)
-		}
-	}
-
-	subscribeFeedbacks(feedbackIds: string[]): void {
-		let feedbacks = Array.from(this.#feedbackInstances.values())
-
-		const feedbackIdSet = new Set(feedbackIds)
-		if (feedbackIdSet.size) feedbacks = feedbacks.filter((fb) => feedbackIdSet.has(fb.feedbackId))
-
-		for (const fb of feedbacks) {
-			const def = this.#feedbackDefinitions.get(fb.feedbackId)
-			if (def?.subscribe) {
-				const context: CompanionFeedbackContext = {
-					type: 'feedback',
-				}
-
-				Promise.resolve(def.subscribe(convertFeedbackInstanceToEvent(def.type, fb), context)).catch((e) => {
-					this.#logger.error(`Feedback subscribe failed: ${JSON.stringify(fb)} - ${e?.message ?? e} ${e?.stack}`)
-				})
-			}
 		}
 	}
 

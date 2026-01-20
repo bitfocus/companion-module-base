@@ -108,14 +108,10 @@ export interface CompanionFeedbackDefinitionBase {
 	description?: string
 	/** The input fields for the feedback */
 	options: SomeCompanionFeedbackInputField[]
+
 	/**
-	 * Called to report the existence of a feedback.
-	 * Useful to ensure necessary data is loaded
-	 */
-	subscribe?: (feedback: CompanionFeedbackInfo, context: CompanionFeedbackContext) => void | Promise<void>
-	/**
-	 * Called to report an feedback has been edited/removed.
-	 * Useful to cleanup subscriptions setup in subscribe
+	 * Called to report an feedback has been removed or disabled.
+	 * Useful to cleanup subscriptions setup in the callback
 	 */
 	unsubscribe?: (feedback: CompanionFeedbackInfo, context: CompanionFeedbackContext) => void | Promise<void>
 
