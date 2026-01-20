@@ -9,6 +9,7 @@ import {
 } from '@companion-module/base'
 import type { ActionInstance, HostActionDefinition } from '../context.js'
 import { ExecuteActionResult } from '../instance.js'
+import { hasAnyOldIsVisibleFunctions } from './util.js'
 
 function convertActionInstanceToEvent(action: ActionInstance): CompanionActionInfo {
 	return {
@@ -169,25 +170,58 @@ export class ActionManager {
 
 		this.#actionDefinitions.clear()
 
-		for (const [actionId, action] of Object.entries(actions)) {
-			if (action) {
-				hostActions.push({
-					id: actionId,
-					name: action.name,
-					description: action.description,
-					options: action.options,
-					optionsToMonitorForSubscribe: action.optionsToMonitorForSubscribe,
-					hasLearn: !!action.learn,
-					learnTimeout: action.learnTimeout,
-					hasLifecycleFunctions: !!action.subscribe || !!action.unsubscribe,
-				})
+		const definitionsWantingOptionsToMonitor: string[] = []
+		const definitionsWithOptionsToIgnore: string[] = []
+		const definitionsWithOldIsVisible: string[] = []
 
-				// Remember the definition locally
-				this.#actionDefinitions.set(actionId, action)
-			}
+		for (const [actionId, action] of Object.entries(actions)) {
+			if (!action) continue
+
+			const hasSubscriptionMethods = !!action.subscribe || !!action.unsubscribe
+
+			hostActions.push({
+				id: actionId,
+				name: action.name,
+				description: action.description,
+				options: action.options,
+				optionsToMonitorForSubscribe: action.optionsToMonitorForSubscribe,
+				hasLearn: !!action.learn,
+				learnTimeout: action.learnTimeout,
+				hasLifecycleFunctions: hasSubscriptionMethods,
+			})
+
+			// Remember the definition locally
+			this.#actionDefinitions.set(actionId, action)
+
+			// Check for old removed properties
+			if (hasSubscriptionMethods && !action.optionsToMonitorForSubscribe) definitionsWithOptionsToIgnore.push(actionId)
+			if ('optionsToIgnoreForSubscribe' in action) definitionsWithOptionsToIgnore.push(actionId)
+			if (hasAnyOldIsVisibleFunctions(action.options)) definitionsWithOldIsVisible.push(actionId)
 		}
 
 		this.#setActionDefinitions(hostActions)
+
+		if (definitionsWantingOptionsToMonitor.length > 0) {
+			this.#logger.warn(
+				`Some actions definitions have a subscribe or unsubscribe method without a optionsToMonitorForSubscribe property. This is not recommended and will cause more calls of those methods than is necessary.\nThe affected actions are: ${definitionsWantingOptionsToMonitor
+					.sort()
+					.join(', ')}`,
+			)
+		}
+		if (definitionsWantingOptionsToMonitor.length > 0) {
+			this.#logger.warn(
+				`The following action definitions have a removed optionsToIgnoreForSubscribe property. Please use optionsToMonitorForSubscribe instead: ${definitionsWithOptionsToIgnore
+					.sort()
+					.join(', ')}`,
+			)
+		}
+		if (definitionsWithOldIsVisible.length > 0) {
+			this.#logger.warn(
+				`The following action definitions have options with the old isVisible functions. These should be replaced with isVisibleExpression to continue to operate. The definitions: ${definitionsWithOldIsVisible
+					.sort()
+					.join(', ')}`,
+			)
+		}
 	}
 
 	subscribeActions(actionIds: string[]): void {

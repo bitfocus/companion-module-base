@@ -11,6 +11,7 @@ import {
 } from '@companion-module/base'
 import debounceFn from 'debounce-fn'
 import type { FeedbackInstance, HostFeedbackDefinition, HostFeedbackValue } from '../context.js'
+import { hasAnyOldIsVisibleFunctions } from './util.js'
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'value' | 'advanced',
@@ -257,26 +258,49 @@ export class FeedbackManager {
 
 		this.#feedbackDefinitions.clear()
 
-		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
-			if (feedback) {
-				hostFeedbacks.push({
-					id: feedbackId,
-					name: feedback.name,
-					description: feedback.description,
-					options: feedback.options,
-					type: feedback.type,
-					defaultStyle: feedback.type === 'boolean' ? feedback.defaultStyle : undefined,
-					hasLearn: !!feedback.learn,
-					learnTimeout: feedback.learnTimeout,
-					showInvert: feedback.type === 'boolean' ? feedback.showInvert : false,
-				})
+		const definitionsWithSubscribeMethod: string[] = []
+		const definitionsWithOldIsVisible: string[] = []
 
-				// Remember the definition locally
-				this.#feedbackDefinitions.set(feedbackId, feedback)
-			}
+		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
+			if (!feedback) continue
+
+			hostFeedbacks.push({
+				id: feedbackId,
+				name: feedback.name,
+				description: feedback.description,
+				options: feedback.options,
+				type: feedback.type,
+				defaultStyle: feedback.type === 'boolean' ? feedback.defaultStyle : undefined,
+				hasLearn: !!feedback.learn,
+				learnTimeout: feedback.learnTimeout,
+				showInvert: feedback.type === 'boolean' ? feedback.showInvert : false,
+			})
+
+			// Remember the definition locally
+			this.#feedbackDefinitions.set(feedbackId, feedback)
+
+			// Check for old subscribe method
+			if ('subscribe' in feedback && typeof feedback.subscribe === 'function')
+				definitionsWithSubscribeMethod.push(feedbackId)
+			if (hasAnyOldIsVisibleFunctions(feedback.options)) definitionsWithOldIsVisible.push(feedbackId)
 		}
 
 		this.#setFeedbackDefinitions(hostFeedbacks)
+
+		if (definitionsWithSubscribeMethod.length > 0) {
+			this.#logger.warn(
+				`The following feedback definitions have a subscribe method, which is no longer supported: ${definitionsWithSubscribeMethod
+					.sort()
+					.join(', ')}`,
+			)
+		}
+		if (definitionsWithOldIsVisible.length > 0) {
+			this.#logger.warn(
+				`The following feedback definitions have options with the old isVisible functions. These should be replaced with isVisibleExpression to continue to operate. The definitions: ${definitionsWithOldIsVisible
+					.sort()
+					.join(', ')}`,
+			)
+		}
 	}
 
 	checkFeedbacks(feedbackTypes: string[]): void {
