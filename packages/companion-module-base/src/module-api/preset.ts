@@ -6,8 +6,6 @@ import type { CompanionButtonStyleProps } from './style.js'
  * The options for a button preset
  */
 export interface CompanionButtonPresetOptions {
-	/** Use relative delays between the actions executing (default = false) */
-	relativeDelay?: boolean
 	/** Auto-progress the current step when releasing the button (default = true) */
 	stepAutoProgress?: boolean
 	/** Enable rotary actions for this button (default = false) */
