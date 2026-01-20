@@ -73,6 +73,7 @@ export interface CompanionActionDefinition {
 
 	/**
 	 * The user requested to 'learn' the values for this action.
+	 * Note: As of 2.0, you should only return the values that have been learned, so that expressions in any id fields will be preserved
 	 */
 	learn?: (
 		action: CompanionActionEvent,
