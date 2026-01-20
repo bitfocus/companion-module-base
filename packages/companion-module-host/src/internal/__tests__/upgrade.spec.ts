@@ -5,23 +5,28 @@ import {
 	CompanionStaticUpgradeProps,
 	CompanionStaticUpgradeResult,
 	CompanionStaticUpgradeScript,
+	JsonObject,
 } from '@companion-module/base'
 import { runThroughUpgradeScripts } from '../upgrade.js'
 import type { UpgradeActionInstance } from '../../context.js'
 
-type MockUpgradeScript<TConfig> = Mock<CompanionStaticUpgradeScript<TConfig, any>>
+type MockUpgradeScript<TConfig extends JsonObject, TSecrets extends JsonObject> = Mock<
+	CompanionStaticUpgradeScript<TConfig, TSecrets>
+>
 
 function clone<T>(val: T): T {
 	return JSON.parse(JSON.stringify(val))
 }
 
-const createMockScripts = <TConfig>(count: number): MockUpgradeScript<TConfig>[] => {
-	const result: MockUpgradeScript<TConfig>[] = []
+const createMockScripts = <TConfig extends JsonObject, TSecrets extends JsonObject>(
+	count: number,
+): MockUpgradeScript<TConfig, TSecrets>[] => {
+	const result: MockUpgradeScript<TConfig, TSecrets>[] = []
 
 	for (let i = 0; i < count; i++)
 		result.push(
-			vi.fn((..._args: Parameters<CompanionStaticUpgradeScript<TConfig>>) =>
-				literal<CompanionStaticUpgradeResult<TConfig>>({
+			vi.fn((..._args: Parameters<CompanionStaticUpgradeScript<TConfig, TSecrets>>) =>
+				literal<CompanionStaticUpgradeResult<TConfig, TSecrets>>({
 					updatedActions: [],
 					updatedFeedbacks: [],
 					updatedConfig: null,
@@ -107,7 +112,7 @@ describe('runThroughUpgradeScripts', () => {
 		const scripts = createMockScripts(2)
 		scripts[1].mockImplementation((ctx, args) => {
 			expect(args.config).toBeTruthy()
-			return literal<CompanionStaticUpgradeResult<any>>({
+			return literal<CompanionStaticUpgradeResult<JsonObject, JsonObject>>({
 				updatedActions: [],
 				updatedFeedbacks: [],
 				updatedConfig: {
@@ -226,7 +231,7 @@ describe('runThroughUpgradeScripts', () => {
 
 			args.actions[0].actionId = 'new-action'
 			args.actions[1].actionId = 'new-action' // Modified in place, but not reported as such
-			return literal<CompanionStaticUpgradeResult<any>>({
+			return literal<CompanionStaticUpgradeResult<JsonObject, JsonObject>>({
 				updatedActions: [args.actions[0]],
 				updatedFeedbacks: [],
 				updatedConfig: null,
@@ -287,7 +292,7 @@ describe('runThroughUpgradeScripts', () => {
 		const scripts = createMockScripts(2)
 		scripts[1].mockImplementation((ctx, args) => {
 			expect(args).toEqual(
-				literal<CompanionStaticUpgradeProps<any>>({
+				literal<CompanionStaticUpgradeProps<JsonObject, JsonObject>>({
 					actions: [stripActionInstance(action1Before), stripActionInstance(action0Before)],
 					feedbacks: [],
 					config: null,
@@ -296,7 +301,7 @@ describe('runThroughUpgradeScripts', () => {
 			)
 
 			args.actions[1].actionId = 'new-action'
-			return literal<CompanionStaticUpgradeResult<any>>({
+			return literal<CompanionStaticUpgradeResult<JsonObject, JsonObject>>({
 				updatedActions: [args.actions[1]],
 				updatedFeedbacks: [],
 				updatedConfig: null,
