@@ -10,6 +10,7 @@ import type {
 	OSCSomeArguments,
 	SomeCompanionActionInputField,
 	SomeCompanionFeedbackInputField,
+	ExpressionOrValue,
 } from '@companion-module/base'
 import {
 	SharedUdpSocketMessageJoin,
@@ -105,8 +106,6 @@ export interface FeedbackInstanceBase {
 export interface FeedbackInstance extends FeedbackInstanceBase {
 	controlId: string
 
-	isInverted: boolean
-
 	/** If control supports an imageBuffer, the dimensions the buffer must be */
 	image?: {
 		width: number
@@ -136,7 +135,7 @@ export interface UpgradeActionInstance extends Omit<ActionInstanceBase, 'options
 export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'options'> {
 	options: ExpressionOptionsObject
 
-	isInverted: boolean
+	isInverted: ExpressionOrValue<boolean> | undefined
 
 	/**
 	 * Only used as an output from the module, when the feedback is being converted to a boolean feedback

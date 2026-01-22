@@ -19,7 +19,6 @@ const feedback: FeedbackInstance = {
 
 	feedbackId: mockDefinitionId,
 	options: { a: 1, b: 4 },
-	isInverted: false,
 
 	controlId: 'control0',
 	image: undefined,
@@ -33,7 +32,6 @@ const feedback2: FeedbackInstance = {
 
 	feedbackId: mockDefinitionId2,
 	options: { a: 1, b: 4 },
-	isInverted: false,
 
 	controlId: 'control1',
 	image: undefined,

@@ -109,7 +109,7 @@ export interface CompanionMigrationFeedback {
 	 * Only valid for a boolean feedback.
 	 * True if this feedback has been inverted inside Companion, you do not have access to this when the feedback is executed.
 	 */
-	isInverted: boolean
+	isInverted?: ExpressionOrValue<boolean>
 }
 
 /**
@@ -207,12 +207,14 @@ export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig extends 
 			delete feedback.options[propertyName]
 
 			// Interpret it to a boolean, it could be stored in a few ways
-			if (rawValue.isExpression) {
-				feedback.isInverted =
-					rawValue.value === 'true' || Boolean(rawValue.value) === true || Number(rawValue.value) > 0
+			if (!rawValue.isExpression) {
+				feedback.isInverted = {
+					isExpression: false,
+					value: rawValue.value === 'true' || Boolean(rawValue.value) === true || Number(rawValue.value) > 0,
+				}
 			} else {
 				// We can't fix this case for them
-				feedback.isInverted = false
+				feedback.isInverted = rawValue
 			}
 
 			changedFeedbacks.push(feedback)

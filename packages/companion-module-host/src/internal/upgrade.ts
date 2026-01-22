@@ -177,7 +177,7 @@ export function runThroughUpgradeScripts(
 							...instance,
 							style: updatedFeedbacks[feedback.id]?.style ?? feedback.style,
 
-							isInverted: feedback.isInverted ?? false,
+							isInverted: feedback.isInverted,
 						}
 					}
 				}
