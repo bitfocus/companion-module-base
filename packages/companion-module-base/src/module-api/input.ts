@@ -30,15 +30,24 @@ export interface CompanionInputFieldBase {
 	tooltip?: string
 	/** A longer description/summary/notes for this field */
 	description?: string
+	/** An alternate description to show when the field is in expression mode. This will replace the normal description */
+	expressionDescription?: string
 
 	/**
 	 * A companion expression to check whether this input should be visible, based on the current options selections within the input group
 	 *
 	 * This is the same syntax as other expressions written inside of Companion.
 	 * You can access a value of the current options using `$(options:some_field_id)`.
-	 * This does not support the `isVisibleData` property, let us know if you need this.
+	 * Note: you can only reference fields which are set to `disableAutoExpression` here, as other fields can be expressions and frequently changing values
 	 */
 	isVisibleExpression?: string
+
+	/**
+	 * Whether to disable support for toggling this field to be an expression
+	 * Danger: Be careful if setting this to true for an existing option, if the user has already defined an expression for this,
+	 * it will no longer be parsed and will break their configuration.
+	 */
+	disableAutoExpression?: boolean
 }
 
 /**
