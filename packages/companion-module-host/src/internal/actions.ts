@@ -9,7 +9,7 @@ import {
 } from '@companion-module/base'
 import type { ActionInstance, HostActionDefinition } from '../context.js'
 import { ExecuteActionResult } from '../instance.js'
-import { hasAnyOldIsVisibleFunctions } from './util.js'
+import { hasAnyOldIsVisibleFunctions, hasAnyOldRequiredProperties } from './util.js'
 
 function convertActionInstanceToEvent(action: ActionInstance): CompanionActionInfo {
 	return {
@@ -173,6 +173,7 @@ export class ActionManager {
 		const definitionsWantingOptionsToMonitor: string[] = []
 		const definitionsWithOptionsToIgnore: string[] = []
 		const definitionsWithOldIsVisible: string[] = []
+		const definitionsWithOldRequiredProperties: string[] = []
 
 		for (const [actionId, action] of Object.entries(actions)) {
 			if (!action) continue
@@ -197,6 +198,7 @@ export class ActionManager {
 			if (hasSubscriptionMethods && !action.optionsToMonitorForSubscribe) definitionsWithOptionsToIgnore.push(actionId)
 			if ('optionsToIgnoreForSubscribe' in action) definitionsWithOptionsToIgnore.push(actionId)
 			if (hasAnyOldIsVisibleFunctions(action.options)) definitionsWithOldIsVisible.push(actionId)
+			if (hasAnyOldRequiredProperties(action.options)) definitionsWithOldRequiredProperties.push(actionId)
 		}
 
 		this.#setActionDefinitions(hostActions)
@@ -218,6 +220,13 @@ export class ActionManager {
 		if (definitionsWithOldIsVisible.length > 0) {
 			this.#logger.warn(
 				`The following action definitions have options with the old isVisible functions. These should be replaced with isVisibleExpression to continue to operate. The definitions: ${definitionsWithOldIsVisible
+					.sort()
+					.join(', ')}`,
+			)
+		}
+		if (definitionsWithOldRequiredProperties.length > 0) {
+			this.#logger.warn(
+				`The following action definitions have options with the old required properties. These should be replaced with requiredExpression to continue to operate. The definitions: ${definitionsWithOldRequiredProperties
 					.sort()
 					.join(', ')}`,
 			)

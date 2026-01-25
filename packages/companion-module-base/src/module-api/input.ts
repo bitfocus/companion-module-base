@@ -170,13 +170,13 @@ export interface CompanionInputFieldTextInput extends CompanionInputFieldBase {
 	 */
 	default?: string
 	/**
-	 * Whether a value is required
-	 * Note: values may not conform to this, it is a visual hint only
+	 * Minimum rqeuried length of the value
+	 * Note: values may not conform to this, you should validate the value in your code
 	 */
-	required?: boolean
+	minLength?: number
 	/**
 	 * A regex to use to inform the user if the current input is valid.
-	 * Note: values may not conform to this, it is a visual hint only
+	 * Note: values may not conform to this, you should validate the value in your code
 	 */
 	regex?: string
 	/**
@@ -321,18 +321,13 @@ export interface CompanionInputFieldNumber extends CompanionInputFieldBase {
 	default: number
 
 	/**
-	 * Whether a value is required
-	 * Note: values may not conform to this, it is a visual hint only
-	 */
-	required?: boolean
-	/**
 	 * The minimum value to allow
-	 * Note: values may not conform to this, it is a visual hint only
+	 * Note: values may not conform to this, you should validate the value in your code
 	 */
 	min: number
 	/**
 	 * The maximum value to allow
-	 * Note: values may not conform to this, it is a visual hint only
+	 * Note: values may not conform to this, you should validate the value in your code
 	 */
 	max: number
 
@@ -409,13 +404,13 @@ export interface CompanionInputFieldSecret extends CompanionInputFieldBase {
 	 */
 	default?: string
 	/**
-	 * Whether a value is required
-	 * Note: values may not conform to this, it is a visual hint only
+	 * Minimum rqeuried length of the value
+	 * Note: values may not conform to this, you should validate the value in your code
 	 */
-	required?: boolean
+	minLength?: number
 	/**
 	 * A regex to use to inform the user if the current input is valid.
-	 * Note: values may not conform to this, it is a visual hint only
+	 * Note: values may not conform to this, you should validate the value in your code
 	 */
 	regex?: string
 }

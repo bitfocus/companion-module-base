@@ -11,7 +11,7 @@ import {
 } from '@companion-module/base'
 import debounceFn from 'debounce-fn'
 import type { FeedbackInstance, HostFeedbackDefinition, HostFeedbackValue } from '../context.js'
-import { hasAnyOldIsVisibleFunctions } from './util.js'
+import { hasAnyOldIsVisibleFunctions, hasAnyOldRequiredProperties } from './util.js'
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'value' | 'advanced',
@@ -260,6 +260,7 @@ export class FeedbackManager {
 
 		const definitionsWithSubscribeMethod: string[] = []
 		const definitionsWithOldIsVisible: string[] = []
+		const definitionsWithOldRequiredProperties: string[] = []
 
 		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
 			if (!feedback) continue
@@ -283,6 +284,7 @@ export class FeedbackManager {
 			if ('subscribe' in feedback && typeof feedback.subscribe === 'function')
 				definitionsWithSubscribeMethod.push(feedbackId)
 			if (hasAnyOldIsVisibleFunctions(feedback.options)) definitionsWithOldIsVisible.push(feedbackId)
+			if (hasAnyOldRequiredProperties(feedback.options)) definitionsWithOldRequiredProperties.push(feedbackId)
 		}
 
 		this.#setFeedbackDefinitions(hostFeedbacks)
@@ -297,6 +299,13 @@ export class FeedbackManager {
 		if (definitionsWithOldIsVisible.length > 0) {
 			this.#logger.warn(
 				`The following feedback definitions have options with the old isVisible functions. These should be replaced with isVisibleExpression to continue to operate. The definitions: ${definitionsWithOldIsVisible
+					.sort()
+					.join(', ')}`,
+			)
+		}
+		if (definitionsWithOldRequiredProperties.length > 0) {
+			this.#logger.warn(
+				`The following feedback definitions have options with the old required properties. These should be replaced with requiredExpression to continue to operate. The definitions: ${definitionsWithOldRequiredProperties
 					.sort()
 					.join(', ')}`,
 			)

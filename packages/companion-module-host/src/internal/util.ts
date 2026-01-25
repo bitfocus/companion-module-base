@@ -11,3 +11,15 @@ export function hasAnyOldIsVisibleFunctions(
 
 	return false
 }
+
+export function hasAnyOldRequiredProperties(
+	options: (SomeCompanionActionInputField | SomeCompanionFeedbackInputField)[] | undefined,
+): boolean {
+	if (!options) return false
+
+	for (const option of options) {
+		if ('required' in option && typeof option.required === 'boolean') return true
+	}
+
+	return false
+}
