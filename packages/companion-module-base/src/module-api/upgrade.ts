@@ -67,7 +67,7 @@ export type CompanionStaticUpgradeScript<
 ) => CompanionStaticUpgradeResult<TConfig, TSecrets>
 
 export type CompanionMigrationOptionValues = {
-	[key: string]: ExpressionOrValue<JsonValue> | undefined
+	[key: string]: ExpressionOrValue<JsonValue | undefined> | undefined
 }
 
 /**

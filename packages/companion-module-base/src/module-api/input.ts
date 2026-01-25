@@ -2,7 +2,7 @@ import type { JsonValue } from '../common/json-value.js'
 
 export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
 
-export type ExpressionOptionsObject = { [key: string]: ExpressionOrValue<JsonValue> | undefined }
+export type ExpressionOptionsObject = { [key: string]: ExpressionOrValue<JsonValue | undefined> | undefined }
 
 export type CompanionOptionValues = { [key: string]: JsonValue | undefined }
 
@@ -48,6 +48,13 @@ export interface CompanionInputFieldBase {
 	 * it will no longer be parsed and will break their configuration.
 	 */
 	disableAutoExpression?: boolean
+
+	/**
+	 * Enabling this will tell companion to validate the value of this field against the definition of the field.
+	 * If it is invalid, it will instead provide the default value you have set.
+	 * Note: This only applies when in expression mode.
+	 */
+	allowInvalidValues?: boolean
 }
 
 /**
