@@ -35,6 +35,9 @@ export interface CompanionFeedbackInfo {
 	readonly feedbackId: string
 	/** The user selected options for the feedback */
 	readonly options: CompanionOptionValues
+
+	/** The old user selected options from the previous execution of the feedback */
+	readonly previousOptions: CompanionOptionValues | null
 }
 
 /**

@@ -130,6 +130,7 @@ describe('FeedbackManager', () => {
 				feedbackId: feedback.feedbackId,
 				controlId: feedback.controlId,
 				options: feedback.options,
+				previousOptions: null,
 			},
 			expect.anything(),
 		)
@@ -144,6 +145,59 @@ describe('FeedbackManager', () => {
 				value: false,
 			},
 		] satisfies HostFeedbackValue[])
+	})
+
+	it('execute callback on update', async () => {
+		const mockUpdateFeedbackValues = vi.fn((_values: HostFeedbackValue[]) => null)
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const manager = new FeedbackManager(mockSetFeedbackDefinitions, mockUpdateFeedbackValues)
+
+		const mockDefinitionId = 'definition0'
+		const mockDefinition: CompanionFeedbackDefinition = {
+			type: 'boolean',
+			name: 'Definition0',
+			defaultStyle: {},
+			options: [],
+			callback: vi.fn<CompanionBooleanFeedbackDefinition['callback']>(() => false),
+		}
+
+		// setup definition
+		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+		// report a feedback
+		manager.handleUpdateFeedbacks({
+			[feedbackId]: feedback,
+		})
+		// wait for debounce
+		await runAllTimers()
+		expect(mockDefinition.callback).toHaveBeenCalledTimes(1)
+
+		// update the feedback
+		const updatedFeedback = {
+			...feedback,
+			options: { c: 5 },
+		}
+		manager.handleUpdateFeedbacks({
+			[feedbackId]: updatedFeedback,
+		})
+
+		// wait for debounce
+		await runAllTimers()
+		expect(mockDefinition.callback).toHaveBeenCalledTimes(2)
+
+		expect(mockDefinition.callback).toHaveBeenLastCalledWith(
+			{
+				id: feedbackId,
+				type: mockDefinition.type,
+				feedbackId: feedback.feedbackId,
+				controlId: feedback.controlId,
+				options: updatedFeedback.options,
+				previousOptions: feedback.options,
+			},
+			expect.anything(),
+		)
+
+		// Make sure the options were updated
+		expect(updatedFeedback.options).not.toEqual(feedback.options)
 	})
 
 	it('instance: disabled', async () => {
@@ -562,6 +616,7 @@ describe('FeedbackManager', () => {
 				feedbackId: feedback.feedbackId,
 				controlId: feedback.controlId,
 				options: feedback.options,
+				previousOptions: null,
 			},
 			expect.anything(),
 		)
@@ -655,6 +710,7 @@ describe('FeedbackManager', () => {
 					feedbackId: mockDefinitionId,
 					controlId: feedback.controlId,
 					options: feedback.options,
+					previousOptions: null,
 				},
 				expect.anything(),
 			)

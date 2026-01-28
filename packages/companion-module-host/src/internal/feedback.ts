@@ -15,7 +15,8 @@ import { hasAnyOldIsVisibleFunctions, hasAnyOldRequiredProperties } from './util
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'value' | 'advanced',
-	feedback: FeedbackInstance,
+	feedback: FeedbackCheckInstance,
+	includePrevious: boolean,
 ): CompanionFeedbackInfo {
 	return {
 		type: type,
@@ -23,12 +24,18 @@ function convertFeedbackInstanceToEvent(
 		feedbackId: feedback.feedbackId,
 		controlId: feedback.controlId,
 		options: feedback.options,
+		previousOptions: includePrevious ? feedback.previousOptions : null,
 	}
 }
 
 interface FeedbackCheckStatus {
 	/** whether a recheck has been requested while it was being checked */
 	needsRecheck: boolean
+}
+
+interface FeedbackCheckInstance extends FeedbackInstance {
+	/** The options the last time the feedback was run */
+	previousOptions: CompanionOptionValues | null
 }
 
 export class FeedbackManager {
@@ -38,7 +45,7 @@ export class FeedbackManager {
 	readonly #updateFeedbackValues: (values: HostFeedbackValue[]) => void
 
 	readonly #feedbackDefinitions = new Map<string, CompanionFeedbackDefinition>()
-	readonly #feedbackInstances = new Map<string, FeedbackInstance>()
+	readonly #feedbackInstances = new Map<string, FeedbackCheckInstance>()
 
 	// Feedback values waiting to be sent
 	#pendingFeedbackValues = new Map<string, HostFeedbackValue>()
@@ -72,7 +79,7 @@ export class FeedbackManager {
 					}
 
 					Promise.resolve(
-						definition.unsubscribe(convertFeedbackInstanceToEvent(definition.type, existing), context),
+						definition.unsubscribe(convertFeedbackInstanceToEvent(definition.type, existing, false), context),
 					).catch((e) => {
 						this.#logger.error(
 							`Feedback unsubscribe failed: ${JSON.stringify(existing)} - ${e?.message ?? e} ${e?.stack}`,
@@ -86,7 +93,12 @@ export class FeedbackManager {
 				this.#feedbackInstances.delete(id)
 			} else {
 				// TODO module-lib - deep freeze the feedback to avoid mutation?
-				this.#feedbackInstances.set(id, { ...feedback })
+				this.#feedbackInstances.set(id, {
+					...feedback,
+
+					// Preserve previous options, if they exist
+					previousOptions: existing?.options ?? null,
+				})
 
 				// update the feedback value
 				this.#triggerCheckFeedback(id)
@@ -109,6 +121,7 @@ export class FeedbackManager {
 					feedbackId: feedback.feedbackId,
 					controlId: feedback.controlId,
 					options: feedback.options,
+					previousOptions: null,
 					type: definition.type,
 				},
 				context,
@@ -163,28 +176,15 @@ export class FeedbackManager {
 
 					switch (definition.type) {
 						case 'boolean':
-							value = definition.callback(
-								{
-									...convertFeedbackInstanceToEvent('boolean', feedback),
-									type: 'boolean',
-								},
-								context,
-							)
+							value = definition.callback(convertFeedbackInstanceToEvent('boolean', feedback, true), context)
 							break
 						case 'value':
-							value = definition.callback(
-								{
-									...convertFeedbackInstanceToEvent('value', feedback),
-									type: 'value',
-								},
-								context,
-							)
+							value = definition.callback(convertFeedbackInstanceToEvent('value', feedback, true), context)
 							break
 						case 'advanced':
 							value = definition.callback(
 								{
-									...convertFeedbackInstanceToEvent('advanced', feedback),
-									type: 'advanced',
+									...convertFeedbackInstanceToEvent('advanced', feedback, true),
 									image: feedback.image,
 								},
 								context,
@@ -345,7 +345,7 @@ export class FeedbackManager {
 					type: 'feedback',
 				}
 
-				Promise.resolve(def.unsubscribe(convertFeedbackInstanceToEvent(def.type, fb), context)).catch((e) => {
+				Promise.resolve(def.unsubscribe(convertFeedbackInstanceToEvent(def.type, fb, false), context)).catch((e) => {
 					this.#logger.error(`Feedback unsubscribe failed: ${JSON.stringify(fb)} - ${e?.message ?? e} ${e?.stack}`)
 				})
 			}
