@@ -261,6 +261,7 @@ export class FeedbackManager {
 		const definitionsWithSubscribeMethod: string[] = []
 		const definitionsWithOldIsVisible: string[] = []
 		const definitionsWithOldRequiredProperties: string[] = []
+		const definitionSubscriptionMentionsChangeStyle: string[] = []
 
 		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
 			if (!feedback) continue
@@ -285,6 +286,8 @@ export class FeedbackManager {
 				definitionsWithSubscribeMethod.push(feedbackId)
 			if (hasAnyOldIsVisibleFunctions(feedback.options)) definitionsWithOldIsVisible.push(feedbackId)
 			if (hasAnyOldRequiredProperties(feedback.options)) definitionsWithOldRequiredProperties.push(feedbackId)
+			if (typeof feedback.description === 'string' && feedback.description.match(/change style/))
+				definitionSubscriptionMentionsChangeStyle.push(feedbackId)
 		}
 
 		this.#setFeedbackDefinitions(hostFeedbacks)
@@ -306,6 +309,13 @@ export class FeedbackManager {
 		if (definitionsWithOldRequiredProperties.length > 0) {
 			this.#logger.warn(
 				`The following feedback definitions have options with the old required properties. These should be replaced with requiredExpression to continue to operate. The definitions: ${definitionsWithOldRequiredProperties
+					.sort()
+					.join(', ')}`,
+			)
+		}
+		if (definitionSubscriptionMentionsChangeStyle.length > 0) {
+			this.#logger.warn(
+				`The following feedback definitions have a description that mentions 'change style'. Feedbacks no longer only affect style, making this is misleading. The definitions: ${definitionSubscriptionMentionsChangeStyle
 					.sort()
 					.join(', ')}`,
 			)
