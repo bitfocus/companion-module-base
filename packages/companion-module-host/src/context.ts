@@ -11,6 +11,7 @@ import type {
 	SomeCompanionActionInputField,
 	SomeCompanionFeedbackInputField,
 	ExpressionOrValue,
+	CompanionGraphicsCompositeElementDefinition,
 } from '@companion-module/base'
 import {
 	SharedUdpSocketMessageJoin,
@@ -30,6 +31,8 @@ export interface ModuleHostContext<TConfig, TSecrets> {
 	setVariableDefinitions: (definitions: HostVariableDefinition[], values: HostVariableValue[]) => void
 	/** The presets provided by the connection have changed */
 	setPresetDefinitions: (presets: CompanionPresetDefinitions) => void
+	/** The composite graphics elements provided by the connection have changed */
+	setCompositeElementDefinitions: (compositeElements: CompanionGraphicsCompositeElementDefinition[]) => void
 	/** The connection has some new values for variables */
 	setVariableValues: (values: HostVariableValue[]) => void
 	/** The connection has some new values for feedbacks it is running */

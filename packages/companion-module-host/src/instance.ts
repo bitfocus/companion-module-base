@@ -116,6 +116,9 @@ export class InstanceWrapper<TConfig extends JsonObject, TSecrets extends JsonOb
 			setPresetDefinitions: (presets) => {
 				this.#host.setPresetDefinitions(presets)
 			},
+			setCompositeElementDefinitions: (compositeElements) => {
+				this.#host.setCompositeElementDefinitions(compositeElements)
+			},
 
 			setVariableDefinitions: (variables) => {
 				const hostVariables: HostVariableDefinition[] = []

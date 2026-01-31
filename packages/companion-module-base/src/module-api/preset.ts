@@ -1,5 +1,6 @@
 import type { CompanionFeedbackButtonStyleResult } from './feedback.js'
-import type { CompanionOptionValues } from './input.js'
+import type { ButtonGraphicsCanvasElement, SomeButtonGraphicsElement } from './graphics.js'
+import type { CompanionOptionValues, ExpressionOrValue } from './input.js'
 import type { CompanionButtonStyleProps } from './style.js'
 
 /**
@@ -33,6 +34,38 @@ export interface CompanionPresetFeedback {
 	 * Intended to describe the purpose/intent of the feedback.
 	 */
 	headline?: string
+}
+
+/**
+ * The configuration of an feedback in a preset
+ */
+export interface CompanionPresetLayeredFeedback {
+	/** The id of the feedback definition */
+	feedbackId: string
+	/** The option values for the action */
+	options: CompanionOptionValues
+
+	/**
+	 * Element styles to override when this feedback is active
+	 */
+	styleOverrides: CompanionPresetFeedbackStyleOverride[]
+
+	/**
+	 * If a boolean feedback, invert the value of the feedback
+	 */
+	isInverted?: boolean
+	/**
+	 * User editable description/comment for the feedback.
+	 * Intended to descibe the purpose/intent of the feedback.
+	 */
+	headline?: string
+}
+
+export interface CompanionPresetFeedbackStyleOverride {
+	elementId: string
+	elementProperty: string
+	// Note: When overriding advanced feedbacks, this should be set to `{ isExpression: false, value: 'color' }` or similar to indicate which property it is using
+	override: ExpressionOrValue<any>
 }
 
 /**
@@ -76,6 +109,29 @@ export interface CompanionButtonPresetDefinition {
 }
 
 /**
+ * The definition of a press button preset
+ */
+export interface CompanionLayeredButtonPresetDefinition {
+	/** The type of this preset */
+	type: 'layered-button'
+	/** The category of this preset, for grouping */
+	category: string
+	/** The name of this preset */
+	name: string
+
+	/** The drawing elements for this preset, this will be copied to the button */
+	elements: SomeButtonGraphicsElement[]
+
+	canvas?: ButtonGraphicsCanvasElement
+
+	/** Options for this preset */
+	options?: CompanionButtonPresetOptions
+	/** The feedbacks on the button */
+	feedbacks: CompanionPresetLayeredFeedback[]
+	steps: CompanionButtonStepActions[]
+}
+
+/**
  * The definition of a text preset
  */
 export interface CompanionTextPresetDefinition {
@@ -115,5 +171,9 @@ export interface CompanionButtonStepActions {
  * The definitions of a group of feedbacks
  */
 export interface CompanionPresetDefinitions {
-	[id: string]: CompanionButtonPresetDefinition | CompanionTextPresetDefinition | undefined
+	[id: string]:
+		| CompanionButtonPresetDefinition
+		| CompanionLayeredButtonPresetDefinition
+		| CompanionTextPresetDefinition
+		| undefined
 }

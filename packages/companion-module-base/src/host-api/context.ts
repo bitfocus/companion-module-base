@@ -9,6 +9,7 @@ import type { RemoteInfo } from 'dgram'
 import type {
 	CompanionActionDefinitions,
 	CompanionFeedbackDefinitions,
+	CompanionGraphicsCompositeElementDefinition,
 	CompanionPresetDefinitions,
 	CompanionRecordedAction,
 	CompanionStaticUpgradeScript,
@@ -54,6 +55,7 @@ export interface InstanceContext<
 	checkFeedbacksById: (feedbackIds: string[]) => void
 
 	setPresetDefinitions: (presets: CompanionPresetDefinitions) => void
+	setCompositeElementDefinitions: (compositeElements: CompanionGraphicsCompositeElementDefinition[]) => void
 
 	setVariableDefinitions: (variables: CompanionVariableDefinition[]) => void
 	setVariableValues: (values: CompanionVariableValues) => void

@@ -16,6 +16,7 @@ import {
 } from './shared-udp-socket.js'
 import { type InstanceContext, isInstanceContext } from '../host-api/context.js'
 import type { JsonObject } from '../common/json-value.js'
+import type { CompanionGraphicsCompositeElementDefinition } from './graphics-composite.js'
 
 export interface InstanceBaseOptions {
 	/**
@@ -156,6 +157,14 @@ export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends 
 	 */
 	setPresetDefinitions(presets: CompanionPresetDefinitions): void {
 		this.#context.setPresetDefinitions(presets)
+	}
+
+	/**
+	 * Set the composite graphics elements for this instance
+	 * @param compositeElements The composite element definitions
+	 */
+	setCompositeElementDefinitions(compositeElements: CompanionGraphicsCompositeElementDefinition[]): void {
+		this.#context.setCompositeElementDefinitions(compositeElements)
 	}
 
 	/**
