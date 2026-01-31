@@ -222,14 +222,17 @@ jobs:
           CI: true
 
   publish-docs:
-    name: Publish to NPM
+    name: Publish docs
     needs:
       - prepare
       - publish
+      - determine-package
     runs-on: ubuntu-latest
     permissions:
       pages: write # to deploy to Pages
       id-token: write # to verify the deployment originates from an appropriate source
+
+    if: ${{ needs.determine-package.outputs.tag == 'latest' }}
 
     # Deploy to the github-pages environment
     environment:
@@ -238,6 +241,5 @@ jobs:
 
     steps:
       - name: Deploy to GitHub Pages
-        if: ${{ needs.prepare.outputs.tag == 'latest' }}
         id: deployment
         uses: actions/deploy-pages@v4
