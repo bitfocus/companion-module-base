@@ -26,7 +26,7 @@
 		"esbuild": "^0.27.1",
 		"eslint": "^9.39.1",
 		"json-schema-to-typescript": "^15.0.4",
-		"lodash-es": "^4.17.21",
+		"lodash-es": "^4.17.23",
 		"prettier": "^3.7.4",
 		"typedoc": "^0.28.15",
 		"typescript": "~5.9.3",
