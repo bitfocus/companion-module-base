@@ -1,3 +1,4 @@
 {
-	".": "1.14.1"
+	"packages/companion-module-base": "1.14.1",
+	"packages/companion-module-host": "0.0.0"
 }

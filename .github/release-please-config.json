@@ -6,8 +6,15 @@
 	"include-component-in-tag": false,
 
 	"packages": {
-		".": {
-			"release-type": "node"
+		"packages/companion-module-base": {
+			"release-type": "node",
+			"component": "companion-module-base",
+			"package-name": "@companion-module/base"
+		},
+		"packages/companion-module-host": {
+			"release-type": "node",
+			"component": "companion-module-host",
+			"package-name": "@companion-module/host"
 		}
 	}
 }
