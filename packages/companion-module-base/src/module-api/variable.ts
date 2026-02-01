@@ -1,3 +1,5 @@
+import type { JsonValue } from '../common/json-value.js'
+
 /**
  * The definition of a variable
  */
@@ -16,4 +18,4 @@ export interface CompanionVariableValues {
 /**
  * The value of a variable
  */
-export type CompanionVariableValue = string | number | boolean
+export type CompanionVariableValue = JsonValue | undefined

@@ -82,7 +82,7 @@ export interface HostVariableDefinition {
 }
 export interface HostVariableValue {
 	id: string
-	value: string | number | boolean | undefined
+	value: JsonValue | undefined
 }
 
 export interface HostFeedbackValue {
