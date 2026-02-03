@@ -5,6 +5,8 @@ export * from './config.js'
 export * from './enums.js'
 export * from './feedback.js'
 export * from './http.js'
+export * from './graphics.js'
+export * from './graphics-composite.js'
 export * from './input.js'
 export * from './preset.js'
 export {
