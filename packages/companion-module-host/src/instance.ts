@@ -194,7 +194,8 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 				this.#host.setVariableValues(hostValues)
 			},
 			getVariableValue: (variableId) => {
-				return this.#variableValues.get(variableId)
+				// Loose type, because we can't easily do the correct type lookup
+				return this.#variableValues.get(variableId) as any
 			},
 
 			sharedUdpSocketHandlers: new Map(),

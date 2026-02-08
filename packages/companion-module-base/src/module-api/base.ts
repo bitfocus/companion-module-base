@@ -4,7 +4,7 @@ import type { CompanionPresetDefinitions } from './preset.js'
 import type { InstanceStatus } from './enums.js'
 import { createModuleLogger, type LogLevel, type ModuleLogger } from '../logging.js'
 import { assertNever } from '../util.js'
-import type { CompanionVariableDefinition, CompanionVariableValue, CompanionVariableValues } from './variable.js'
+import type { CompanionVariableDefinition, CompanionVariableValues } from './variable.js'
 import type { OSCSomeArguments } from '../common/osc.js'
 import type { SomeCompanionConfigField } from './config.js'
 import type { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
@@ -46,6 +46,7 @@ export interface InstanceTypes {
 	secrets: JsonObject | undefined
 	actions: Record<string, CompanionActionSchema<CompanionOptionValues>>
 	feedbacks: Record<string, CompanionFeedbackSchema<CompanionOptionValues>>
+	variables: CompanionVariableValues
 }
 
 export type InstanceConstructor<TManifest extends InstanceTypes = InstanceTypes> = new (
@@ -183,7 +184,7 @@ export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTyp
 	 * Set the values of some variables
 	 * @param values The new values for the variables
 	 */
-	setVariableValues(values: CompanionVariableValues): void {
+	setVariableValues(values: Partial<TManifest['variables']>): void {
 		this.#context.setVariableValues(values)
 	}
 
@@ -192,7 +193,7 @@ export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTyp
 	 * @param variableId id of the variable
 	 * @returns The value
 	 */
-	getVariableValue(variableId: string): CompanionVariableValue | undefined {
+	getVariableValue<T extends string>(variableId: T): TManifest['variables'][T] | undefined {
 		return this.#context.getVariableValue(variableId)
 	}
 

@@ -13,8 +13,6 @@ import type {
 	CompanionRecordedAction,
 	CompanionStaticUpgradeScript,
 	CompanionVariableDefinition,
-	CompanionVariableValue,
-	CompanionVariableValues,
 	InstanceStatus,
 	InstanceTypes,
 } from '../module-api/index.js'
@@ -52,8 +50,8 @@ export interface InstanceContext<TManifest extends InstanceTypes> extends Instan
 	setPresetDefinitions: (presets: CompanionPresetDefinitions<TManifest>) => void
 
 	setVariableDefinitions: (variables: CompanionVariableDefinition[]) => void
-	setVariableValues: (values: CompanionVariableValues) => void
-	getVariableValue: (variableId: string) => CompanionVariableValue | undefined
+	setVariableValues: (values: Partial<TManifest['variables']>) => void
+	getVariableValue: <T extends string>(variableId: T) => TManifest['variables'][T] | undefined
 }
 
 export interface InstanceSharedUdpSocketContext {
