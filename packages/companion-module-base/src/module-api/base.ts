@@ -1,5 +1,5 @@
-import type { CompanionActionDefinitions, CompanionRecordedAction } from './action.js'
-import type { CompanionFeedbackDefinitions } from './feedback.js'
+import type { CompanionActionDefinitions, CompanionActionSchema, CompanionRecordedAction } from './action.js'
+import type { CompanionFeedbackDefinitions, CompanionFeedbackSchema } from './feedback.js'
 import type { CompanionPresetDefinitions } from './preset.js'
 import type { InstanceStatus } from './enums.js'
 import { createModuleLogger, type LogLevel, type ModuleLogger } from '../logging.js'
@@ -16,6 +16,8 @@ import {
 } from './shared-udp-socket.js'
 import { type InstanceContext, isInstanceContext } from '../host-api/context.js'
 import type { JsonObject } from '../common/json-value.js'
+import type { CompanionOptionValues } from './input.js'
+import type { StringKeys } from '../util.js'
 
 export interface InstanceBaseOptions {
 	/**
@@ -35,12 +37,23 @@ export interface InstanceBaseOptions {
 	disableNewConfigLayout: boolean
 }
 
-export type InstanceConstructor<TConfig extends JsonObject, TSecrets extends JsonObject | undefined> = new (
-	internal: unknown,
-) => InstanceBase<TConfig, TSecrets>
+/**
+ * The generic type arguments for the module instance.
+ * This is optional, but allows you to have better type safety in various places
+ */
+export interface InstanceTypes {
+	config: JsonObject
+	secrets: JsonObject | undefined
+	actions: Record<string, CompanionActionSchema<CompanionOptionValues>>
+	feedbacks: Record<string, CompanionFeedbackSchema<CompanionOptionValues>>
+}
 
-export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends JsonObject | undefined = undefined> {
-	readonly #context: InstanceContext<TConfig, TSecrets>
+export type InstanceConstructor<TManifest extends InstanceTypes = InstanceTypes> = new (
+	internal: unknown,
+) => InstanceBase<TManifest>
+
+export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTypes> {
+	readonly #context: InstanceContext<TManifest>
 	readonly #logger: ModuleLogger
 
 	readonly #options: InstanceBaseOptions
@@ -65,7 +78,7 @@ export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends 
 	 * Create an instance of the module
 	 */
 	constructor(internal: unknown) {
-		if (!isInstanceContext<TConfig, TSecrets>(internal) || !internal._isInstanceContext)
+		if (!isInstanceContext<TManifest>(internal) || !internal._isInstanceContext)
 			throw new Error(
 				`Module instance is being constructed incorrectly. Make sure you aren't trying to do this manually`,
 			)
@@ -88,7 +101,7 @@ export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends 
 	 * Main initialization function called
 	 * once the module is OK to start doing things.
 	 */
-	abstract init(config: TConfig, isFirstInit: boolean, secrets: TSecrets): Promise<void>
+	abstract init(config: TManifest['config'], isFirstInit: boolean, secrets: TManifest['secrets']): Promise<void>
 
 	/**
 	 * Clean up the instance before it is destroyed.
@@ -99,7 +112,7 @@ export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends 
 	 * Called when the configuration is updated.
 	 * @param config The new config object
 	 */
-	abstract configUpdated(config: TConfig, secrets: TSecrets): Promise<void>
+	abstract configUpdated(config: TManifest['config'], secrets: TManifest['secrets']): Promise<void>
 
 	/**
 	 * Save an updated configuration object
@@ -107,13 +120,13 @@ export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends 
 	 * @param newConfig The new config object, or undefined to not update the config
 	 * @param newSecrets The new secrets object, or undefined to not update the secrets
 	 */
-	saveConfig(this: InstanceBase<TConfig, undefined>, newConfig: TConfig | undefined, newSecrets?: undefined): void
+	saveConfig(this: InstanceBase<TManifest & { secrets: undefined }>, newConfig: TManifest['config'] | undefined): void
 	saveConfig(
-		this: InstanceBase<TConfig, TSecrets>,
-		newConfig: TConfig | undefined,
-		newSecrets: TSecrets | undefined,
+		this: InstanceBase<TManifest>,
+		newConfig: TManifest['config'] | undefined,
+		newSecrets: TManifest['secrets'] | undefined,
 	): void
-	saveConfig(newConfig: TConfig | undefined, newSecrets: TSecrets | undefined): void {
+	saveConfig(newConfig: TManifest['config'] | undefined, newSecrets?: TManifest['secrets']): void {
 		this.#context.saveConfig(newConfig, newSecrets)
 	}
 
@@ -138,7 +151,7 @@ export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends 
 	 * Set the action definitions for this instance
 	 * @param actions The action definitions
 	 */
-	setActionDefinitions(actions: CompanionActionDefinitions): void {
+	setActionDefinitions(actions: CompanionActionDefinitions<TManifest['actions']>): void {
 		this.#context.setActionDefinitions(actions)
 	}
 
@@ -146,7 +159,7 @@ export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends 
 	 * Set the feedback definitions for this instance
 	 * @param feedbacks The feedback definitions
 	 */
-	setFeedbackDefinitions(feedbacks: CompanionFeedbackDefinitions): void {
+	setFeedbackDefinitions(feedbacks: CompanionFeedbackDefinitions<TManifest['feedbacks']>): void {
 		this.#context.setFeedbackDefinitions(feedbacks)
 	}
 
@@ -154,7 +167,7 @@ export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends 
 	 * Set the peset definitions for this instance
 	 * @param presets The preset definitions
 	 */
-	setPresetDefinitions(presets: CompanionPresetDefinitions): void {
+	setPresetDefinitions(presets: CompanionPresetDefinitions<TManifest>): void {
 		this.#context.setPresetDefinitions(presets)
 	}
 
@@ -187,7 +200,7 @@ export abstract class InstanceBase<TConfig extends JsonObject, TSecrets extends 
 	 * Request all feedbacks of the specified types to be checked for changes
 	 * @param feedbackTypes The feedback types to check
 	 */
-	checkFeedbacks(...feedbackTypes: string[]): void {
+	checkFeedbacks(...feedbackTypes: StringKeys<TManifest['feedbacks']>[]): void {
 		this.#context.checkFeedbacks(feedbackTypes)
 	}
 

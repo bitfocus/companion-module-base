@@ -1,6 +1,8 @@
-import type { CompanionFeedbackButtonStyleResult } from './feedback.js'
+import type { CompanionFeedbackButtonStyleResult, CompanionFeedbackSchema } from './feedback.js'
 import type { CompanionOptionValues } from './input.js'
 import type { CompanionButtonStyleProps } from './style.js'
+import type { InstanceTypes } from './base.js'
+import type { CompanionActionSchema } from './action.js'
 
 /**
  * The options for a button preset
@@ -15,49 +17,85 @@ export interface CompanionButtonPresetOptions {
 /**
  * The configuration of an feedback in a preset
  */
-export interface CompanionPresetFeedback {
-	/** The id of the feedback definition */
-	feedbackId: string
-	/** The option values for the action */
-	options: CompanionOptionValues
-	/**
-	 * If a boolean feedback, the style effect of the feedback
-	 */
-	style?: CompanionFeedbackButtonStyleResult
-	/**
-	 * If a boolean feedback, invert the value of the feedback
-	 */
-	isInverted?: boolean
-	/**
-	 * User editable description/comment for the feedback.
-	 * Intended to describe the purpose/intent of the feedback.
-	 */
-	headline?: string
-}
+export type CompanionPresetFeedback<
+	TFeedbackManifest extends Record<string, CompanionFeedbackSchema<CompanionOptionValues>> = Record<
+		string,
+		CompanionFeedbackSchema<CompanionOptionValues>
+	>,
+> = {
+	[K in keyof TFeedbackManifest]: {
+		/** The id of the feedback definition */
+		feedbackId: K
+		/** The option values for the action */
+		options: TFeedbackManifest[K]['options']
+		/**
+		 * User editable description/comment for the feedback.
+		 * Intended to describe the purpose/intent of the feedback.
+		 */
+		headline?: string
+	} & ('boolean' extends TFeedbackManifest[K]['type']
+		? // boolean feedbacks can have a few more properties
+			{
+				/**
+				 * If a boolean feedback, the style effect of the feedback
+				 */
+				style?: CompanionFeedbackButtonStyleResult
+				/**
+				 * If a boolean feedback, invert the value of the feedback
+				 */
+				isInverted?: boolean
+			}
+		: TFeedbackManifest[K]['type'] extends 'boolean'
+			? // definitely boolean
+				{
+					/**
+					 * If a boolean feedback, the style effect of the feedback
+					 */
+					style: CompanionFeedbackButtonStyleResult
+					/**
+					 * If a boolean feedback, invert the value of the feedback
+					 */
+					isInverted?: boolean
+				}
+			: // definitely not boolean
+				{
+					style?: never
+					isInverted?: never
+				})
+}[keyof TFeedbackManifest]
 
 /**
  * The configuration of an action in a preset
  */
-export interface CompanionPresetAction {
-	/** The id of the action definition */
-	actionId: string
-	/** The execution delay of the action */
-	delay?: number
-	/** The option values for the action */
-	options: CompanionOptionValues
-	/**
-	 * User editable description/comment for the action.
-	 * Intended to describe the purpose/intent of the action.
-	 */
-	headline?: string
-}
+export type CompanionPresetAction<
+	TActionManifest extends Record<string, CompanionActionSchema<CompanionOptionValues>> = Record<
+		string,
+		CompanionActionSchema<CompanionOptionValues>
+	>,
+> = {
+	[K in keyof TActionManifest]: {
+		/** The id of the action definition */
+		actionId: K
+		/** The execution delay of the action */
+		delay?: number
+		/** The option values for the action */
+		options: TActionManifest[K]['options']
+		/**
+		 * User editable description/comment for the action.
+		 * Intended to describe the purpose/intent of the action.
+		 */
+		headline?: string
+	}
+}[keyof TActionManifest]
 
-export type CompanionPresetDefinition = CompanionButtonPresetDefinition | CompanionTextPresetDefinition
+export type CompanionPresetDefinition<TManifest extends InstanceTypes = InstanceTypes> =
+	| CompanionButtonPresetDefinition<TManifest>
+	| CompanionTextPresetDefinition
 
 /**
  * The definition of a press button preset
  */
-export interface CompanionButtonPresetDefinition {
+export interface CompanionButtonPresetDefinition<TManifest extends InstanceTypes = InstanceTypes> {
 	/** The type of this preset */
 	type: 'button'
 	/** The category of this preset, for grouping */
@@ -71,8 +109,8 @@ export interface CompanionButtonPresetDefinition {
 	/** Options for this preset */
 	options?: CompanionButtonPresetOptions
 	/** The feedbacks on the button */
-	feedbacks: CompanionPresetFeedback[]
-	steps: CompanionButtonStepActions[]
+	feedbacks: CompanionPresetFeedback<TManifest['feedbacks']>[]
+	steps: CompanionButtonStepActions<TManifest>[]
 }
 
 /**
@@ -89,31 +127,31 @@ export interface CompanionTextPresetDefinition {
 	text: string
 }
 
-export interface CompanionPresetActionsWithOptions {
+export interface CompanionPresetActionsWithOptions<TManifest extends InstanceTypes = InstanceTypes> {
 	options?: CompanionActionSetOptions
-	actions: CompanionPresetAction[]
+	actions: CompanionPresetAction<TManifest['actions']>[]
 }
 export interface CompanionActionSetOptions {
 	runWhileHeld?: boolean
 }
-export interface CompanionButtonStepActions {
+export interface CompanionButtonStepActions<TManifest extends InstanceTypes = InstanceTypes> {
 	/** Name of this step */
 	name?: string
 
 	/** The button down actions */
-	down: CompanionPresetAction[]
+	down: CompanionPresetAction<TManifest['actions']>[]
 	/** The button up actions */
-	up: CompanionPresetAction[]
+	up: CompanionPresetAction<TManifest['actions']>[]
 
-	rotate_left?: CompanionPresetAction[]
-	rotate_right?: CompanionPresetAction[]
+	rotate_left?: CompanionPresetAction<TManifest['actions']>[]
+	rotate_right?: CompanionPresetAction<TManifest['actions']>[]
 
-	[delay: number]: CompanionPresetActionsWithOptions | CompanionPresetAction[]
+	[delay: number]: CompanionPresetActionsWithOptions<TManifest> | CompanionPresetAction<TManifest['actions']>[]
 }
 
 /**
  * The definitions of a group of feedbacks
  */
-export interface CompanionPresetDefinitions {
-	[id: string]: CompanionButtonPresetDefinition | CompanionTextPresetDefinition | undefined
+export type CompanionPresetDefinitions<TManifest extends InstanceTypes = InstanceTypes> = {
+	[id: string]: CompanionPresetDefinition<TManifest> | undefined
 }

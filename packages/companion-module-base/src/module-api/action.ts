@@ -11,16 +11,21 @@ import type {
 	CompanionInputFieldCustomVariable,
 } from './input.js'
 import type { CompanionVariableValue } from './variable.js'
+import type { StringKeys } from '../util.js'
 
-export type SomeCompanionActionInputField =
-	| CompanionInputFieldStaticText
-	| CompanionInputFieldColor
-	| CompanionInputFieldTextInput
-	| CompanionInputFieldDropdown
-	| CompanionInputFieldMultiDropdown
-	| CompanionInputFieldNumber
-	| CompanionInputFieldCheckbox
-	| CompanionInputFieldCustomVariable
+export type SomeCompanionActionInputField<TKey extends string = string> =
+	| CompanionInputFieldStaticText<TKey>
+	| CompanionInputFieldColor<TKey>
+	| CompanionInputFieldTextInput<TKey>
+	| CompanionInputFieldDropdown<TKey>
+	| CompanionInputFieldMultiDropdown<TKey>
+	| CompanionInputFieldNumber<TKey>
+	| CompanionInputFieldCheckbox<TKey>
+	| CompanionInputFieldCustomVariable<TKey>
+
+export interface CompanionActionSchema<TOptions extends CompanionOptionValues> {
+	options: TOptions
+}
 
 /**
  * Utility functions available in the context of the current action
@@ -39,20 +44,20 @@ export interface CompanionActionContext extends CompanionCommonCallbackContext {
 /**
  * The definition of an action
  */
-export interface CompanionActionDefinition {
+export interface CompanionActionDefinition<TOptions extends CompanionOptionValues = CompanionOptionValues> {
 	/** Name to show in the actions list */
 	name: string
 	/** Additional description of the action */
 	description?: string
 	/** The input fields for the action */
-	options: SomeCompanionActionInputField[]
+	options: SomeCompanionActionInputField<StringKeys<TOptions>>[]
 
 	/**
 	 * Only monitor the specified options for re-running the subscribe/unsubscribe callbacks
 	 * It is recommended to set this for all actions using subscribe, to reduce unnecessary calls when the user has the values driven by expressions.
 	 * If not set, all options changes will trigger unsubscribe/subscribe
 	 */
-	optionsToMonitorForSubscribe?: string[]
+	optionsToMonitorForSubscribe?: StringKeys<TOptions>[]
 
 	/**
 	 * If true, the unsubscribe callback will not be called when the options change, only when the action is removed or disabled
@@ -60,26 +65,26 @@ export interface CompanionActionDefinition {
 	skipUnsubscribeOnOptionsChange?: boolean
 
 	/** Called to execute the action */
-	callback: (action: CompanionActionEvent, context: CompanionActionContext) => Promise<void> | void
+	callback: (action: CompanionActionEvent<TOptions>, context: CompanionActionContext) => Promise<void> | void
 	/**
 	 * Called to report the existence of an action
 	 * Useful to ensure necessary data is loaded
 	 */
-	subscribe?: (action: CompanionActionInfo, context: CompanionActionContext) => Promise<void> | void
+	subscribe?: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
 	/**
 	 * Called to report an action has been edited/removed
 	 * Useful to cleanup subscriptions setup in subscribe
 	 */
-	unsubscribe?: (action: CompanionActionInfo, context: CompanionActionContext) => Promise<void> | void
+	unsubscribe?: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
 
 	/**
 	 * The user requested to 'learn' the values for this action.
 	 * Note: As of 2.0, you should only return the values that have been learned, so that expressions in any id fields will be preserved
 	 */
 	learn?: (
-		action: CompanionActionEvent,
+		action: CompanionActionEvent<TOptions>,
 		context: CompanionActionContext,
-	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
+	) => Partial<TOptions> | undefined | Promise<Partial<TOptions> | undefined>
 
 	/**
 	 * Timeout for the 'learn' function (in milliseconds)
@@ -92,14 +97,19 @@ export interface CompanionActionDefinition {
 /**
  * The definitions of a group of actions
  */
-export interface CompanionActionDefinitions {
-	[actionId: string]: CompanionActionDefinition | undefined
+export type CompanionActionDefinitions<
+	Tschemas extends Record<string, CompanionActionSchema<CompanionOptionValues>> = Record<
+		string,
+		CompanionActionSchema<CompanionOptionValues>
+	>,
+> = {
+	[K in keyof Tschemas]: CompanionActionDefinition<Tschemas[K]['options']> | false | undefined
 }
 
 /**
  * Basic information about an instance of an action
  */
-export interface CompanionActionInfo {
+export interface CompanionActionInfo<TOptions extends CompanionOptionValues = CompanionOptionValues> {
 	/** The unique id for this action */
 	readonly id: string
 	/** The unique id for the location of this action */
@@ -107,13 +117,15 @@ export interface CompanionActionInfo {
 	/** The id of the action definition */
 	readonly actionId: string
 	/** The user selected options for the action */
-	readonly options: CompanionOptionValues
+	readonly options: TOptions
 }
 
 /**
  * Extended information for execution of an action
  */
-export interface CompanionActionEvent extends CompanionActionInfo {
+export interface CompanionActionEvent<
+	TOptions extends CompanionOptionValues = CompanionOptionValues,
+> extends CompanionActionInfo<TOptions> {
 	/** Identifier of the surface which triggered this action */
 	readonly surfaceId: string | undefined
 }
