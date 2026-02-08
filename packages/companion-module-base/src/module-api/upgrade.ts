@@ -228,3 +228,46 @@ export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig extends 
 		}
 	}
 }
+
+/**
+ * Helper to fix up values which could be a number or a string of variables into the new expression format
+ * This has some logic to try to preserve the existing behaviour as much as possible, while also keeping the output user friendly
+ * @param value The value to fix up
+ * @returns The fixed up value, or the original value if it did not need to be changed
+ */
+export function FixupNumericOrVariablesValueToExpressions(
+	value: ExpressionOrValue<JsonValue | undefined> | undefined,
+): ExpressionOrValue<JsonValue | undefined> | undefined {
+	// Nothing to do if already an expression!
+	if (!value || value.isExpression) return value
+
+	const oldValNum = Number(value.value)
+	const oldValRaw = value.value
+	if (typeof value.value === 'number' || !isNaN(oldValNum)) {
+		// It looks like a plain number, so store it as one
+		return {
+			isExpression: false,
+			value: oldValNum,
+		}
+	} else if (typeof oldValRaw === 'string') {
+		const trimmedStr = oldValRaw.trim()
+		// Crudely check if it looks like a simple variable
+		if (trimmedStr.startsWith('$(') && trimmedStr.endsWith(')') && !trimmedStr.slice(2).includes('$(')) {
+			// It does, so we can treat that as a plain expression!
+			return {
+				isExpression: true,
+				value: oldValRaw,
+			}
+		} else {
+			// Otherwise its something more complex, so wrap it in a parseVariables and hope for the best!
+			return {
+				isExpression: true,
+				value: `parseVariables("${oldValRaw.replace(/"/g, '\\"')}")`,
+			}
+		}
+	} else {
+		// Its not a string, or anything vaguely sane..
+		// Nothing really we can do
+		return value
+	}
+}

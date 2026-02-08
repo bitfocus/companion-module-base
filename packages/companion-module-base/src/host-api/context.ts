@@ -16,44 +16,40 @@ import type {
 	CompanionVariableValue,
 	CompanionVariableValues,
 	InstanceStatus,
+	InstanceTypes,
 } from '../module-api/index.js'
 import type { OSCSomeArguments } from '../common/osc.js'
 import type { SharedUdpSocketImpl } from '../module-api/shared-udp-socket.js'
-import type { JsonObject } from '../common/json-value.js'
+import type { StringKeys } from '../util.js'
 
-export function isInstanceContext<TConfig extends JsonObject, TSecrets extends JsonObject | undefined>(
-	obj: unknown,
-): obj is InstanceContext<TConfig, TSecrets> {
-	const obj2 = obj as InstanceContext<TConfig, TSecrets>
+export function isInstanceContext<TManifest extends InstanceTypes>(obj: unknown): obj is InstanceContext<TManifest> {
+	const obj2 = obj as InstanceContext<TManifest>
 	return typeof obj2 === 'object' && typeof obj2.id === 'string' && obj2._isInstanceContext === true
 }
 
-export interface InstanceContext<
-	TConfig extends JsonObject,
-	TSecrets extends JsonObject | undefined,
-> extends InstanceSharedUdpSocketContext {
+export interface InstanceContext<TManifest extends InstanceTypes> extends InstanceSharedUdpSocketContext {
 	readonly _isInstanceContext: true
 	readonly id: string
 	label: string
 
-	readonly upgradeScripts: CompanionStaticUpgradeScript<TConfig, TSecrets>[]
+	readonly upgradeScripts: CompanionStaticUpgradeScript<TManifest['config'], TManifest['secrets']>[]
 
-	saveConfig: (config: TConfig | undefined, secrets: TSecrets | undefined) => void
+	saveConfig: (config: TManifest['config'] | undefined, secrets: TManifest['secrets'] | undefined) => void
 	updateStatus(status: InstanceStatus, message: string | null): void
 	oscSend(host: string, port: number, path: string, args: OSCSomeArguments): void
 
 	recordAction(action: CompanionRecordedAction, uniquenessId?: string): void
 
-	setActionDefinitions: (actions: CompanionActionDefinitions) => void
+	setActionDefinitions: (actions: CompanionActionDefinitions<TManifest['actions']>) => void
 	subscribeActions: (actionIds: string[]) => void
 	unsubscribeActions: (actionIds: string[]) => void
 
-	setFeedbackDefinitions: (feedbacks: CompanionFeedbackDefinitions) => void
+	setFeedbackDefinitions: (feedbacks: CompanionFeedbackDefinitions<TManifest['feedbacks']>) => void
 	unsubscribeFeedbacks: (feedbackIds: string[]) => void
-	checkFeedbacks: (feedbackTypes: string[]) => void
+	checkFeedbacks: (feedbackTypes: StringKeys<TManifest['feedbacks']>[]) => void
 	checkFeedbacksById: (feedbackIds: string[]) => void
 
-	setPresetDefinitions: (presets: CompanionPresetDefinitions) => void
+	setPresetDefinitions: (presets: CompanionPresetDefinitions<TManifest>) => void
 
 	setVariableDefinitions: (variables: CompanionVariableDefinition[]) => void
 	setVariableValues: (values: CompanionVariableValues) => void

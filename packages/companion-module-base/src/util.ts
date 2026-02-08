@@ -146,6 +146,11 @@ export type Complete<T> = {
 }
 
 /**
+ * Get all the string keys of an object
+ */
+export type StringKeys<T> = Extract<keyof T, string>
+
+/**
  * Parse common escape characters in strings passed to callback from action or feedback options.
  * This is useful to ensure \r, \n etc are represented as such rather than as \\r, \\n
  */

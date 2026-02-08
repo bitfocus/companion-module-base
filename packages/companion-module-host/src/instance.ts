@@ -8,7 +8,8 @@ import type {
 	SomeCompanionConfigField,
 	InstanceBase,
 	InstanceConstructor,
-	JsonObject,
+	InstanceTypes,
+	CompanionPresetDefinitions,
 } from '@companion-module/base'
 import PQueue from 'p-queue'
 import { ActionManager } from './internal/actions.js'
@@ -27,32 +28,32 @@ import type {
 import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/dist/host-api/context.js'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
 
-export class InstanceWrapper<TConfig extends JsonObject, TSecrets extends JsonObject | undefined> {
+export class InstanceWrapper<TManifest extends InstanceTypes> {
 	// readonly #logger = createModuleLogger('InstanceWrapper')
 
 	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })
 	#initialized = false
 	#recordingActions = false
 
-	#lastConfig: TConfig = {} as any
-	#lastSecrets: TSecrets = {} as any
+	#lastConfig: TManifest['config'] = {} as any
+	#lastSecrets: TManifest['secrets'] = {} as any
 
 	readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
 
 	readonly #variableValues = new Map<string, CompanionVariableValue>()
 
-	readonly #host: ModuleHostContext<TConfig, TSecrets>
+	readonly #host: ModuleHostContext<TManifest['config'], TManifest['secrets']>
 	readonly #actionManager: ActionManager
 	readonly #feedbackManager: FeedbackManager
 
-	readonly #instanceContext: InstanceContext<TConfig, TSecrets>
-	readonly #instance: InstanceBase<TConfig, TSecrets>
+	readonly #instanceContext: InstanceContext<TManifest>
+	readonly #instance: InstanceBase<TManifest>
 
 	constructor(
 		id: string,
-		host: ModuleHostContext<TConfig, TSecrets>,
-		instanceFactory: InstanceConstructor<TConfig, TSecrets>,
-		upgradeScripts: CompanionStaticUpgradeScript<TConfig, TSecrets>[],
+		host: ModuleHostContext<TManifest['config'], TManifest['secrets']>,
+		instanceFactory: InstanceConstructor<TManifest>,
+		upgradeScripts: CompanionStaticUpgradeScript<TManifest['config'], TManifest['secrets']>[],
 	) {
 		this.#host = host
 		// this.#plugin = plugin
@@ -114,7 +115,7 @@ export class InstanceWrapper<TConfig extends JsonObject, TSecrets extends JsonOb
 			},
 
 			setPresetDefinitions: (presets) => {
-				this.#host.setPresetDefinitions(presets)
+				this.#host.setPresetDefinitions(presets as CompanionPresetDefinitions<any>)
 			},
 
 			setVariableDefinitions: (variables) => {
@@ -290,7 +291,7 @@ export class InstanceWrapper<TConfig extends JsonObject, TSecrets extends JsonOb
 		})
 	}
 
-	async configUpdateAndLabel(label: string, config: TConfig, secrets: TSecrets): Promise<void> {
+	async configUpdateAndLabel(label: string, config: TManifest['config'], secrets: TManifest['secrets']): Promise<void> {
 		await this.#lifecycleQueue.add(async () => {
 			if (!this.#initialized) throw new Error('Not initialized')
 
@@ -321,7 +322,7 @@ export class InstanceWrapper<TConfig extends JsonObject, TSecrets extends JsonOb
 		return runThroughUpgradeScripts(
 			actions,
 			feedbacks,
-			null,
+			defaultUpgradeIndex,
 			this.#instanceContext.upgradeScripts,
 			this.#lastConfig,
 			this.#lastSecrets,

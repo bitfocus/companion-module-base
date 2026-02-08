@@ -9,9 +9,9 @@ export type CompanionOptionValues = { [key: string]: JsonValue | undefined }
 /**
  * The common properties for an input field
  */
-export interface CompanionInputFieldBase {
+export interface CompanionInputFieldBase<TKey extends string = string> {
 	/** The unique id of this input field within the input group */
-	id: string
+	id: TKey
 	/** The type of this input field */
 	type:
 		| 'static-text'
@@ -72,7 +72,7 @@ export interface CompanionInputFieldBase {
  * }
  * ```
  */
-export interface CompanionInputFieldStaticText extends CompanionInputFieldBase {
+export interface CompanionInputFieldStaticText<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
 	type: 'static-text'
 	/** The text to show */
 	value: string
@@ -111,7 +111,7 @@ export type CompanionColorPresetValue = string | { color: string; title: string 
  * }
  * ```
  */
-export interface CompanionInputFieldColor extends CompanionInputFieldBase {
+export interface CompanionInputFieldColor<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
 	type: 'colorpicker'
 	/**
 	 * The default color value to set when creating this action/feedback/instance
@@ -163,7 +163,7 @@ export interface CompanionInputFieldColor extends CompanionInputFieldBase {
  * }
  * ```
  */
-export interface CompanionInputFieldTextInput extends CompanionInputFieldBase {
+export interface CompanionInputFieldTextInput<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
 	type: 'textinput'
 	/**
 	 * The default text value
@@ -221,7 +221,7 @@ export interface DropdownChoice {
  * }
  * ```
  */
-export interface CompanionInputFieldDropdown extends CompanionInputFieldBase {
+export interface CompanionInputFieldDropdown<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
 	type: 'dropdown'
 
 	/** The possible choices */
@@ -258,7 +258,7 @@ export interface CompanionInputFieldDropdown extends CompanionInputFieldBase {
  * }
  * ```
  */
-export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldBase {
+export interface CompanionInputFieldMultiDropdown<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
 	type: 'multidropdown'
 
 	/** The possible choices */
@@ -291,7 +291,7 @@ export interface CompanionInputFieldMultiDropdown extends CompanionInputFieldBas
  * }
  * ```
  */
-export interface CompanionInputFieldCheckbox extends CompanionInputFieldBase {
+export interface CompanionInputFieldCheckbox<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
 	type: 'checkbox'
 	/** The default value */
 	default: boolean
@@ -314,7 +314,7 @@ export interface CompanionInputFieldCheckbox extends CompanionInputFieldBase {
  * }
  * ```
  */
-export interface CompanionInputFieldNumber extends CompanionInputFieldBase {
+export interface CompanionInputFieldNumber<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
 	type: 'number'
 
 	/** The default value */
@@ -357,7 +357,7 @@ export interface CompanionInputFieldNumber extends CompanionInputFieldBase {
  * }
  * ```
  */
-export interface CompanionInputFieldCustomVariable extends CompanionInputFieldBase {
+export interface CompanionInputFieldCustomVariable<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
 	type: 'custom-variable'
 }
 
@@ -378,7 +378,7 @@ export interface CompanionInputFieldCustomVariable extends CompanionInputFieldBa
  * }
  * ```
  */
-export interface CompanionInputFieldBonjourDevice extends CompanionInputFieldBase {
+export interface CompanionInputFieldBonjourDevice<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
 	type: 'bonjour-device'
 }
 
@@ -397,7 +397,7 @@ export interface CompanionInputFieldBonjourDevice extends CompanionInputFieldBas
  * }
  * ```
  */
-export interface CompanionInputFieldSecret extends CompanionInputFieldBase {
+export interface CompanionInputFieldSecret<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
 	type: 'secret-text'
 	/**
 	 * The default text value

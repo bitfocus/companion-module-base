@@ -11,20 +11,26 @@ import type {
 	CompanionInputFieldTextInput,
 } from './input.js'
 import type { CompanionButtonStyleProps } from './style.js'
+import type { StringKeys } from '../util.js'
 
-export type SomeCompanionFeedbackInputField =
-	| CompanionInputFieldStaticText
-	| CompanionInputFieldColor
-	| CompanionInputFieldTextInput
-	| CompanionInputFieldDropdown
-	| CompanionInputFieldMultiDropdown
-	| CompanionInputFieldNumber
-	| CompanionInputFieldCheckbox
+export type SomeCompanionFeedbackInputField<TKey extends string = string> =
+	| CompanionInputFieldStaticText<TKey>
+	| CompanionInputFieldColor<TKey>
+	| CompanionInputFieldTextInput<TKey>
+	| CompanionInputFieldDropdown<TKey>
+	| CompanionInputFieldMultiDropdown<TKey>
+	| CompanionInputFieldNumber<TKey>
+	| CompanionInputFieldCheckbox<TKey>
+
+export interface CompanionFeedbackSchema<TOptions extends CompanionOptionValues> {
+	type: 'boolean' | 'value' | 'advanced'
+	options: TOptions
+}
 
 /**
  * Basic information about an instance of a feedback
  */
-export interface CompanionFeedbackInfo {
+export interface CompanionFeedbackInfo<TOptions extends CompanionOptionValues = CompanionOptionValues> {
 	/** The type of the feedback */
 	readonly type: 'boolean' | 'value' | 'advanced'
 	/** The unique id for this feedback */
@@ -34,16 +40,17 @@ export interface CompanionFeedbackInfo {
 	/** The id of the feedback definition */
 	readonly feedbackId: string
 	/** The user selected options for the feedback */
-	readonly options: CompanionOptionValues
+	readonly options: TOptions
 
 	/** The old user selected options from the previous execution of the feedback */
-	readonly previousOptions: CompanionOptionValues | null
+	readonly previousOptions: TOptions | null
 }
 
 /**
  * Extended information for execution of a boolean feedback
  */
-export type CompanionFeedbackBooleanEvent = CompanionFeedbackInfo
+export type CompanionFeedbackBooleanEvent<TOptions extends CompanionOptionValues = CompanionOptionValues> =
+	CompanionFeedbackInfo<TOptions>
 // {
 // 	// readonly type: 'boolean'
 // }
@@ -51,12 +58,15 @@ export type CompanionFeedbackBooleanEvent = CompanionFeedbackInfo
 /**
  * Extended information for execution of a value feedback
  */
-export type CompanionFeedbackValueEvent = CompanionFeedbackInfo
+export type CompanionFeedbackValueEvent<TOptions extends CompanionOptionValues = CompanionOptionValues> =
+	CompanionFeedbackInfo<TOptions>
 
 /**
  * Extended information for execution of an advanced feedback
  */
-export interface CompanionFeedbackAdvancedEvent extends CompanionFeedbackInfo {
+export interface CompanionFeedbackAdvancedEvent<
+	TOptions extends CompanionOptionValues = CompanionOptionValues,
+> extends CompanionFeedbackInfo<TOptions> {
 	// readonly type: 'advanced'
 
 	/** If control supports an imageBuffer, the dimensions the buffer should be */
@@ -103,29 +113,29 @@ export interface CompanionAdvancedFeedbackResult extends CompanionFeedbackButton
 /**
  * The common definition of a feedback
  */
-export interface CompanionFeedbackDefinitionBase {
+export interface CompanionFeedbackDefinitionBase<TOptions extends CompanionOptionValues = CompanionOptionValues> {
 	type: 'boolean' | 'value' | 'advanced'
 	/** Name to show in the feedbacks list */
 	name: string
 	/** Additional description of the feedback */
 	description?: string
 	/** The input fields for the feedback */
-	options: SomeCompanionFeedbackInputField[]
+	options: SomeCompanionFeedbackInputField<StringKeys<TOptions>>[]
 
 	/**
 	 * Called to report an feedback has been removed or disabled.
 	 * Useful to cleanup subscriptions setup in the callback
 	 */
-	unsubscribe?: (feedback: CompanionFeedbackInfo, context: CompanionFeedbackContext) => void | Promise<void>
+	unsubscribe?: (feedback: CompanionFeedbackInfo<TOptions>, context: CompanionFeedbackContext) => void | Promise<void>
 
 	/**
 	 * The user requested to 'learn' the values for this feedback.
 	 * Note: As of 2.0, you should only return the values that have been learned, so that expressions in any id fields will be preserved
 	 */
 	learn?: (
-		action: CompanionFeedbackInfo,
+		action: CompanionFeedbackInfo<TOptions>,
 		context: CompanionFeedbackContext,
-	) => CompanionOptionValues | undefined | Promise<CompanionOptionValues | undefined>
+	) => Partial<TOptions> | undefined | Promise<Partial<TOptions> | undefined>
 
 	/**
 	 * Timeout for the 'learn' function (in milliseconds)
@@ -138,13 +148,18 @@ export interface CompanionFeedbackDefinitionBase {
 /**
  * The definition of a boolean feedback
  */
-export interface CompanionBooleanFeedbackDefinition extends CompanionFeedbackDefinitionBase {
+export interface CompanionBooleanFeedbackDefinition<
+	TOptions extends CompanionOptionValues = CompanionOptionValues,
+> extends CompanionFeedbackDefinitionBase<TOptions> {
 	/** The type of the feedback */
 	type: 'boolean'
 	/** The default style properties for this feedback */
 	defaultStyle: Partial<CompanionFeedbackButtonStyleResult>
 	/** Called to get the feedback value */
-	callback: (feedback: CompanionFeedbackBooleanEvent, context: CompanionFeedbackContext) => boolean | Promise<boolean>
+	callback: (
+		feedback: CompanionFeedbackBooleanEvent<TOptions>,
+		context: CompanionFeedbackContext,
+	) => boolean | Promise<boolean>
 
 	/**
 	 * If `undefined` or true, Companion will add an 'Inverted' checkbox for your feedback, and handle the logic for you.
@@ -156,22 +171,29 @@ export interface CompanionBooleanFeedbackDefinition extends CompanionFeedbackDef
 /**
  * The definition of a value feedback
  */
-export interface CompanionValueFeedbackDefinition extends CompanionFeedbackDefinitionBase {
+export interface CompanionValueFeedbackDefinition<
+	TOptions extends CompanionOptionValues = CompanionOptionValues,
+> extends CompanionFeedbackDefinitionBase<TOptions> {
 	/** The type of the feedback */
 	type: 'value'
 	/** Called to get the feedback value */
-	callback: (feedback: CompanionFeedbackValueEvent, context: CompanionFeedbackContext) => JsonValue | Promise<JsonValue>
+	callback: (
+		feedback: CompanionFeedbackValueEvent<TOptions>,
+		context: CompanionFeedbackContext,
+	) => JsonValue | Promise<JsonValue>
 }
 
 /**
  * The definition of an advanced feedback
  */
-export interface CompanionAdvancedFeedbackDefinition extends CompanionFeedbackDefinitionBase {
+export interface CompanionAdvancedFeedbackDefinition<
+	TOptions extends CompanionOptionValues = CompanionOptionValues,
+> extends CompanionFeedbackDefinitionBase<TOptions> {
 	/** The type of the feedback */
 	type: 'advanced'
 	/** Called to get the feedback value */
 	callback: (
-		feedback: CompanionFeedbackAdvancedEvent,
+		feedback: CompanionFeedbackAdvancedEvent<TOptions>,
 		context: CompanionFeedbackContext,
 	) => CompanionAdvancedFeedbackResult | Promise<CompanionAdvancedFeedbackResult>
 }
@@ -184,14 +206,30 @@ export type CompanionFeedbackContext = CompanionCommonCallbackContext
 /**
  * The definition of some feedback
  */
-export type CompanionFeedbackDefinition =
-	| CompanionBooleanFeedbackDefinition
-	| CompanionValueFeedbackDefinition
-	| CompanionAdvancedFeedbackDefinition
+export type CompanionFeedbackDefinition<
+	TSchema extends CompanionFeedbackSchema<CompanionOptionValues> = CompanionFeedbackSchema<CompanionOptionValues>,
+> =
+	TSchema extends CompanionFeedbackSchema<infer TOptions>
+		? TSchema['type'] extends 'boolean'
+			? CompanionBooleanFeedbackDefinition<TOptions>
+			: TSchema['type'] extends 'value'
+				? CompanionValueFeedbackDefinition<TOptions>
+				: TSchema['type'] extends 'advanced'
+					? CompanionAdvancedFeedbackDefinition<TOptions>
+					: // Unspecific, try anything
+							| CompanionBooleanFeedbackDefinition<TOptions>
+							| CompanionValueFeedbackDefinition<TOptions>
+							| CompanionAdvancedFeedbackDefinition<TOptions>
+		: never
 
 /**
  * The definitions of a group of feedbacks
  */
-export interface CompanionFeedbackDefinitions {
-	[id: string]: CompanionFeedbackDefinition | undefined
+export type CompanionFeedbackDefinitions<
+	TSchemas extends Record<string, CompanionFeedbackSchema<CompanionOptionValues>> = Record<
+		string,
+		CompanionFeedbackSchema<CompanionOptionValues>
+	>,
+> = {
+	[K in keyof TSchemas]: CompanionFeedbackDefinition<TSchemas[K]> | false | undefined
 }
