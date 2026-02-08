@@ -189,15 +189,9 @@ export interface CompanionInputFieldTextInput<TKey extends string = string> exte
 	multiline?: boolean
 }
 
-export type DropdownChoiceId = string | number
-/**
- * An option for a dropdown input
- *
- * Available for actions/feedbacks/config
- */
-export interface DropdownChoice {
+export interface DropdownChoice<TId extends JsonValue = string | number> {
 	/** Value of the option */
-	id: DropdownChoiceId
+	id: TId
 	/** Label to show to users */
 	label: string
 }
@@ -221,16 +215,21 @@ export interface DropdownChoice {
  * }
  * ```
  */
-export interface CompanionInputFieldDropdown<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
+export interface CompanionInputFieldDropdown<
+	TKey extends string = string,
+	TChoiceId extends JsonValue = string | number,
+> extends CompanionInputFieldBase<TKey> {
 	type: 'dropdown'
 
 	/** The possible choices */
-	choices: DropdownChoice[]
-
+	choices: DropdownChoice<TChoiceId>[]
 	/** The default selected value */
-	default: DropdownChoiceId
+	default: TChoiceId
 
-	/** Allow custom values to be defined by the user */
+	/**
+	 * Allow custom values to be defined by the user
+	 * Note: These will always come through as strings
+	 */
 	allowCustom?: boolean
 	/** Check custom value against regex */
 	regex?: string
@@ -258,14 +257,16 @@ export interface CompanionInputFieldDropdown<TKey extends string = string> exten
  * }
  * ```
  */
-export interface CompanionInputFieldMultiDropdown<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
+export interface CompanionInputFieldMultiDropdown<
+	TKey extends string = string,
+	TChoiceId extends JsonValue = string | number,
+> extends CompanionInputFieldBase<TKey> {
 	type: 'multidropdown'
 
 	/** The possible choices */
-	choices: DropdownChoice[]
-
+	choices: DropdownChoice<TChoiceId>[]
 	/** The default selected values */
-	default: DropdownChoiceId[]
+	default: TChoiceId[]
 
 	/** The minimum number of entries the dropdown must have before it allows searching */
 	minChoicesForSearch?: number
