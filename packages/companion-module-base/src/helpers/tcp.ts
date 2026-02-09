@@ -49,6 +49,35 @@ export interface TCPHelperOptions {
 	reconnect?: boolean
 }
 
+/**
+ * A helper class for TCP socket communication with automatic reconnection.
+ *
+ * This class provides a managed TCP client connection with automatic reconnection
+ * on errors or disconnects. It emits events for connection status, data, errors,
+ * and provides both synchronous and asynchronous send methods.
+ *
+ * @example
+ * ```typescript
+ * const tcp = new TCPHelper('192.168.1.100', 8080)
+ *
+ * tcp.on('error', (err) => console.error('TCP Error:', err))
+ * tcp.on('connect', () => console.log('Connected!'))
+ * tcp.on('data', (data) => console.log('Received:', data.toString()))
+ * tcp.on('status_change', (status, message) => console.log('Status:', status))
+ *
+ * // Wait for connection...
+ * // Then send data
+ *
+ * // Synchronous send (errors emitted via 'error' event)
+ * const sent = tcp.send('Hello')  // returns false if not connected
+ *
+ * // Asynchronous send (errors thrown/rejected)
+ * const sent = await tcp.sendAsync('Hello')  // returns false if not connected
+ *
+ * // Cleanup
+ * tcp.destroy()
+ * ```
+ */
 export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 	readonly #host: string
 	readonly #port: number
@@ -62,16 +91,38 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 	#reconnectTimer: NodeJS.Timeout | undefined
 	#missingErrorHandlerTimer: NodeJS.Timeout | undefined
 
+	/**
+	 * Returns whether the socket is currently connected and ready for sending.
+	 */
 	get isConnected(): boolean {
 		return this.#connected
 	}
+
+	/**
+	 * Returns whether a connection attempt is currently in progress.
+	 */
 	get isConnecting(): boolean {
 		return this.#connecting
 	}
+
+	/**
+	 * Returns whether the socket has been permanently destroyed.
+	 */
 	get isDestroyed(): boolean {
 		return this.#destroyed
 	}
 
+	/**
+	 * Creates a new TCP helper instance.
+	 *
+	 * The socket will automatically attempt to connect via setImmediate after construction.
+	 * If reconnection is enabled (default), it will automatically reconnect on errors or disconnects.
+	 * After 5 seconds, if no error handler is attached, a warning will be logged to the console.
+	 *
+	 * @param host - The destination host address
+	 * @param port - The destination port number
+	 * @param options - Optional configuration for reconnection behavior
+	 */
 	constructor(host: string, port: number, options?: TCPHelperOptions) {
 		super()
 
@@ -135,6 +186,15 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 		}, 5000)
 	}
 
+	/**
+	 * Manually initiates a connection to the configured host and port.
+	 *
+	 * This is typically called automatically after construction, but can be used
+	 * to manually trigger reconnection if needed.
+	 *
+	 * @returns true if connection attempt started, false if already connecting
+	 * @throws {Error} If the socket has been destroyed
+	 */
 	connect(): boolean {
 		if (this.#destroyed) throw new Error('Cannot connect destroyed socket')
 		if (this.#connecting) return false
@@ -143,6 +203,18 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 		this._socket.connect(this.#port, this.#host)
 		return true
 	}
+
+	/**
+	 * Sends data over the TCP connection (synchronous).
+	 *
+	 * This method returns immediately. Any send errors will be emitted via the 'error' event.
+	 * For error handling via promises, use {@link sendAsync} instead.
+	 *
+	 * @param message - The message to send (string or Buffer)
+	 * @returns true if data was queued for sending, false if not connected
+	 * @throws {Error} If the socket has been destroyed
+	 * @throws {Error} If the message is empty or undefined
+	 */
 	send(message: string | Buffer): boolean {
 		if (this.#destroyed || this._socket.destroyed) throw new Error('Cannot write to destroyed socket')
 		if (!message || !message.length) throw new Error('No message to send')
@@ -163,6 +235,20 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 
 		return true
 	}
+
+	/**
+	 * Sends data over the TCP connection (asynchronous).
+	 *
+	 * This method returns a promise that resolves when the send completes successfully,
+	 * or rejects if an error occurs. The 'error' event will NOT be emitted for send errors
+	 * when using this method.
+	 *
+	 * @param message - The message to send (string or Buffer)
+	 * @returns A promise that resolves to true if sent, false if not connected
+	 * @throws {Error} If the socket has been destroyed
+	 * @throws {Error} If the message is empty or undefined
+	 * @throws {Error} If the underlying socket write operation fails
+	 */
 	async sendAsync(message: string | Buffer): Promise<boolean> {
 		if (this.#destroyed || this._socket.destroyed) throw new Error('Cannot write to destroyed socket')
 		if (!message || !message.length) throw new Error('No message to send')
@@ -191,6 +277,13 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 
 		return true
 	}
+
+	/**
+	 * Closes the TCP connection and cleans up all resources.
+	 *
+	 * After calling this method, the socket cannot be used for sending or receiving.
+	 * All event listeners are removed and automatic reconnection is disabled.
+	 */
 	destroy(): void {
 		this.#destroyed = true
 

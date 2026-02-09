@@ -50,6 +50,30 @@ export interface UDPHelperOptions {
 	multicast_interface?: string
 }
 
+/**
+ * A helper class for UDP socket communication.
+ *
+ * This class provides a simplified interface for sending and receiving UDP datagrams.
+ * It automatically manages socket lifecycle, binding, and provides both synchronous
+ * and asynchronous send methods.
+ *
+ * @example
+ * ```typescript
+ * const udp = new UDPHelper('192.168.1.100', 9000)
+ *
+ * udp.on('error', (err) => console.error('UDP Error:', err))
+ * udp.on('data', (msg, rinfo) => console.log('Received:', msg.toString()))
+ *
+ * // Synchronous send (errors emitted via 'error' event)
+ * udp.send('Hello')
+ *
+ * // Asynchronous send (errors thrown/rejected)
+ * await udp.sendAsync('Hello')
+ *
+ * // Cleanup
+ * udp.destroy()
+ * ```
+ */
 export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 	readonly #host: string
 	readonly #port: number
@@ -60,10 +84,24 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 	#lastStatus: InstanceStatus | undefined
 	#missingErrorHandlerTimer: NodeJS.Timeout | undefined
 
+	/**
+	 * Returns whether the UDP socket has been destroyed.
+	 */
 	get isDestroyed(): boolean {
 		return this.#destroyed
 	}
 
+	/**
+	 * Creates a new UDP helper instance.
+	 *
+	 * The socket is automatically bound on construction. After 5 seconds, if no error
+	 * handler is attached, a warning will be logged to the console.
+	 *
+	 * @param host - The destination host address for sending datagrams
+	 * @param port - The destination port number for sending datagrams
+	 * @param options - Optional configuration for binding, broadcast, TTL, etc.
+	 * @throws {Error} If unable to bind to the specified IP/port
+	 */
 	constructor(host: string, port: number, options?: UDPHelperOptions) {
 		super()
 
@@ -130,6 +168,16 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 		}, 5000)
 	}
 
+	/**
+	 * Sends a message to the configured destination host and port (synchronous).
+	 *
+	 * This method returns immediately. Any send errors will be emitted via the 'error' event.
+	 * For error handling via promises, use {@link sendAsync} instead.
+	 *
+	 * @param message - The message to send (string or Buffer)
+	 * @throws {Error} If the socket has been destroyed
+	 * @throws {Error} If the message is empty or undefined
+	 */
 	send(message: string | Buffer): void {
 		if (this.#destroyed) throw new Error('Cannot write to destroyed socket')
 		if (!message || !message.length) throw new Error('No message to send')
@@ -140,6 +188,19 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 			}
 		})
 	}
+
+	/**
+	 * Sends a message to the configured destination host and port (asynchronous).
+	 *
+	 * This method returns a promise that resolves when the send completes successfully,
+	 * or rejects if an error occurs. The 'error' event will NOT be emitted for send errors.
+	 *
+	 * @param message - The message to send (string or Buffer)
+	 * @returns A promise that resolves when the message is sent
+	 * @throws {Error} If the socket has been destroyed
+	 * @throws {Error} If the message is empty or undefined
+	 * @throws {Error} If the underlying socket send operation fails
+	 */
 	async sendAsync(message: string | Buffer): Promise<void> {
 		if (this.#destroyed) throw new Error('Cannot write to destroyed socket')
 		if (!message || !message.length) throw new Error('No message to send')
@@ -164,6 +225,13 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 	// 		this.socket.addMembership(member)
 	// 	}
 	// }
+
+	/**
+	 * Closes the UDP socket and cleans up all resources.
+	 *
+	 * After calling this method, the socket cannot be used for sending or receiving.
+	 * All event listeners are removed.
+	 */
 	destroy(): void {
 		this.#destroyed = true
 

@@ -35,21 +35,70 @@ export interface TelnetHelperEvents extends TCPHelperEvents {
 }
 export type TelnetHelperOptions = TCPHelperOptions
 
+/**
+ * A helper class for Telnet protocol communication.
+ *
+ * This class extends TCP functionality with Telnet protocol parsing, handling IAC
+ * (Interpret As Command) sequences and subnegotiation blocks. It automatically
+ * processes the Telnet command stream and emits parsed events.
+ *
+ * All TCP events (connect, end, error, status_change, drain) are forwarded.
+ * Additional Telnet-specific events are emitted for IAC commands and subnegotiation.
+ *
+ * @example
+ * ```typescript
+ * const telnet = new TelnetHelper('192.168.1.100', 23)
+ *
+ * telnet.on('error', (err) => console.error('Telnet Error:', err))
+ * telnet.on('connect', () => console.log('Connected!'))
+ * telnet.on('data', (data) => console.log('Received:', data.toString()))
+ * telnet.on('iac', (command, option) => console.log('IAC:', command, option))
+ * telnet.on('sb', (buffer) => console.log('Subnegotiation:', buffer))
+ *
+ * // Send data
+ * telnet.send('username\r\n')
+ *
+ * // Cleanup
+ * telnet.destroy()
+ * ```
+ */
 export class TelnetHelper extends EventEmitter<TelnetHelperEvents> {
 	readonly #tcp: TCPHelper
 	readonly #stream: TelnetStream
 	#missingErrorHandlerTimer: NodeJS.Timeout | undefined
 
+	/**
+	 * Returns whether the underlying TCP connection is established and ready for sending.
+	 */
 	get isConnected(): boolean {
 		return this.#tcp.isConnected
 	}
+
+	/**
+	 * Returns whether a connection attempt is currently in progress.
+	 */
 	get isConnecting(): boolean {
 		return this.#tcp.isConnecting
 	}
+
+	/**
+	 * Returns whether the Telnet connection has been permanently destroyed.
+	 */
 	get isDestroyed(): boolean {
 		return this.#tcp.isDestroyed
 	}
 
+	/**
+	 * Creates a new Telnet helper instance.
+	 *
+	 * The underlying TCP connection will automatically attempt to connect.
+	 * All data is piped through a Telnet stream parser that handles IAC sequences.
+	 * After 5 seconds, if no error handler is attached, a warning will be logged to the console.
+	 *
+	 * @param host - The destination host address
+	 * @param port - The destination port number
+	 * @param options - Optional TCP connection configuration
+	 */
 	constructor(host: string, port: number, options?: TelnetHelperOptions) {
 		super()
 
@@ -78,16 +127,53 @@ export class TelnetHelper extends EventEmitter<TelnetHelperEvents> {
 		}, 5000)
 	}
 
+	/**
+	 * Manually initiates a connection to the configured host and port.
+	 *
+	 * @returns true if connection attempt started, false if already connecting
+	 * @throws {Error} If the socket has been destroyed
+	 */
 	connect(): boolean {
 		return this.#tcp.connect()
 	}
+
+	/**
+	 * Sends data over the Telnet connection (synchronous).
+	 *
+	 * Data is sent as-is without Telnet protocol encoding. Any send errors will be
+	 * emitted via the 'error' event.
+	 *
+	 * @param message - The message to send (string or Buffer)
+	 * @returns true if data was queued for sending, false if not connected
+	 * @throws {Error} If the socket has been destroyed
+	 * @throws {Error} If the message is empty or undefined
+	 */
 	send(message: string | Buffer): boolean {
 		return this.#tcp.send(message)
 	}
+
+	/**
+	 * Sends data over the Telnet connection (asynchronous).
+	 *
+	 * Data is sent as-is without Telnet protocol encoding. Returns a promise that
+	 * resolves when the send completes or rejects on error.
+	 *
+	 * @param message - The message to send (string or Buffer)
+	 * @returns A promise that resolves to true if sent, false if not connected
+	 * @throws {Error} If the socket has been destroyed
+	 * @throws {Error} If the message is empty or undefined
+	 * @throws {Error} If the underlying socket write operation fails
+	 */
 	async sendAsync(message: string | Buffer): Promise<boolean> {
 		return this.#tcp.sendAsync(message)
 	}
 
+	/**
+	 * Closes the Telnet connection and cleans up all resources.
+	 *
+	 * After calling this method, the socket cannot be used for sending or receiving.
+	 * All event listeners are removed and the Telnet stream is destroyed.
+	 */
 	destroy(): void {
 		this.#tcp.destroy()
 
