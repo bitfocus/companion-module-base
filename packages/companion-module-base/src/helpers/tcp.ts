@@ -285,6 +285,8 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 	 * All event listeners are removed and automatic reconnection is disabled.
 	 */
 	destroy(): void {
+		this.#connected = false
+		this.#connecting = false
 		this.#destroyed = true
 
 		if (this.#reconnectTimer !== undefined) {

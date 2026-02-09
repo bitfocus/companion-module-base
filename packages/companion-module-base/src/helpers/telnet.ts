@@ -183,6 +183,7 @@ export class TelnetHelper extends EventEmitter<TelnetHelperEvents> {
 		}
 
 		this.#stream.removeAllListeners()
+		this.removeAllListeners()
 		this.#stream.destroy()
 	}
 }
