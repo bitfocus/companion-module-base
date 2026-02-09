@@ -5,10 +5,25 @@ import { defineConfig } from 'vite'
 export default defineConfig({
 	test: {
 		environment: 'node',
-		exclude: ['**/node_modules/**', '**/dist/**'],
 		coverage: {
 			provider: 'v8',
 			include: ['**/src/**/*.ts', '!**/node_modules/**'],
 		},
+		projects: [
+			{
+				test: {
+					name: 'base',
+					root: 'packages/companion-module-base',
+					exclude: ['**/node_modules/**', '**/dist/**'],
+				},
+			},
+			{
+				test: {
+					name: 'host',
+					root: 'packages/companion-module-host',
+					exclude: ['**/node_modules/**', '**/dist/**'],
+				},
+			},
+		],
 	},
 })
