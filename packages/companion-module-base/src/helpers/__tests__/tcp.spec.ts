@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach, beforeAll, beforeEach, afterAll } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from 'vitest'
 import { TCPHelper } from '../tcp.js'
 import type { Socket as TMockSocket } from '../../__mocks__/net.js'
 import { Socket } from 'net'
