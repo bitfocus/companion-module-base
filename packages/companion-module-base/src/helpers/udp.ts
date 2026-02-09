@@ -130,13 +130,25 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 		}, 5000)
 	}
 
-	async send(message: string | Buffer): Promise<void> {
+	send(message: string | Buffer): void {
+		if (this.#destroyed) throw new Error('Cannot write to destroyed socket')
+		if (!message || !message.length) throw new Error('No message to send')
+
+		this.#socket.send(message, this.#port, this.#host, (error) => {
+			if (error) {
+				this.emit('error', error)
+			}
+		})
+	}
+	async sendAsync(message: string | Buffer): Promise<void> {
 		if (this.#destroyed) throw new Error('Cannot write to destroyed socket')
 		if (!message || !message.length) throw new Error('No message to send')
 
 		return new Promise<void>((resolve, reject) => {
 			this.#socket.send(message, this.#port, this.#host, (error) => {
 				if (error) {
+					// Note: Don't emit error, as there is a listener for the event (the promise)
+
 					reject(error)
 					return
 				}

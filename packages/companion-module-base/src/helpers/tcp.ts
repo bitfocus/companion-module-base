@@ -143,7 +143,7 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 		this._socket.connect(this.#port, this.#host)
 		return true
 	}
-	async send(message: string | Buffer): Promise<boolean> {
+	send(message: string | Buffer): boolean {
 		if (this.#destroyed || this._socket.destroyed) throw new Error('Cannot write to destroyed socket')
 		if (!message || !message.length) throw new Error('No message to send')
 
@@ -151,28 +151,45 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 			return false
 		}
 
-		try {
-			return new Promise((resolve, reject) => {
-				this._socket.write(message, (error) => {
-					if (error) {
-						reject(error)
-						return
-					}
+		this._socket.write(message, (error) => {
+			if (!error) return
 
-					resolve(true)
-				})
-			})
-		} catch (error) {
 			this.#connected = false
 
-			const error2: Error = error instanceof Error ? error : new Error(`${error}`)
-
 			// Unhandled socket error
-			this.#new_status(InstanceStatus.UnknownError, error2.message)
-			this.emit('error', error2)
+			this.#new_status(InstanceStatus.UnknownError, error.message)
+			this.emit('error', error)
+		})
 
-			throw error2
+		return true
+	}
+	async sendAsync(message: string | Buffer): Promise<boolean> {
+		if (this.#destroyed || this._socket.destroyed) throw new Error('Cannot write to destroyed socket')
+		if (!message || !message.length) throw new Error('No message to send')
+
+		if (!this.#connected) {
+			return false
 		}
+
+		await new Promise<void>((resolve, reject) => {
+			this._socket.write(message, (error) => {
+				if (error) {
+					this.#connected = false
+
+					// Unhandled socket error
+					this.#new_status(InstanceStatus.UnknownError, error.message)
+
+					// Note: Don't emit error, as there is a listener for the event (the promise)
+
+					reject(error)
+					return
+				}
+
+				resolve()
+			})
+		})
+
+		return true
 	}
 	destroy(): void {
 		this.#destroyed = true

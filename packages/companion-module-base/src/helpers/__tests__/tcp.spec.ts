@@ -1,32 +1,21 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeAll, beforeEach, afterAll } from 'vitest'
 import { TCPHelper } from '../tcp.js'
 import type { Socket as TMockSocket } from '../../__mocks__/net.js'
 import { Socket } from 'net'
+import { InstanceStatus } from '../../module-api/enums.js'
 
 const MockSocket = Socket as unknown as typeof TMockSocket
 
 vi.mock('net', async () => import('../../__mocks__/net.js'))
 
-// async function sleepImmediate() {
-// 	return new Promise((resolve) => setImmediate(resolve))
-// }
+async function sleepImmediate() {
+	return new Promise((resolve) => setImmediate(resolve))
+}
 
 describe('TCP', () => {
-	// beforeEach(() => {
-	// 	createSocketMock.mockClear()
-	// })
-
 	afterEach(() => {
 		MockSocket.mockClearSockets()
 	})
-
-	// it('call fail before open', () => {
-	// 	const { mockIpcWrapper, moduleTcpSockets } = createDeps()
-	// 	const socket = new TCPHelper(mockIpcWrapper, moduleTcpSockets, { type: 'tcp4' })
-
-	// 	expect(() => socket.destroy()).toThrow(/Socket is not open/)
-	// 	expect(() => socket.send('', 12, '')).toThrow(/Socket is not open/)
-	// })
 
 	describe('construct', () => {
 		it('ok', () => {
@@ -46,188 +35,255 @@ describe('TCP', () => {
 				socket.destroy()
 			}
 		})
-
-		// it('bad bind', async () => {
-		// 	const rawSocket = new MinimalSocket()
-		// 	createSocketMock.mockReturnValueOnce(rawSocket as any)
-
-		// 	expect(() => new TCPHelper('1.2.3.4', 852)).toThrow('Unable to bind')
-		// 	expect(createSocketMock).toHaveBeenCalledTimes(1)
-
-		// 	expect(rawSocket.bind).toHaveBeenCalledTimes(1)
-		// 	expect(rawSocket.bind).toHaveBeenCalledWith(0, undefined)
-		// })
-
-		// it('ok', async () => {
-		// 	const rawSocket = new MinimalSocket()
-		// 	createSocketMock.mockReturnValueOnce(rawSocket as any)
-
-		// 	rawSocket.bind.mockImplementationOnce(() => {
-		// 		// No op
-		// 		return rawSocket as any
-		// 	})
-
-		// 	const socket = new TCPHelper('1.2.3.4', 852)
-		// 	try {
-		// 		expect(socket).toBeTruthy()
-		// 		expect(createSocketMock).toHaveBeenCalledTimes(1)
-
-		// 		expect(rawSocket.bind).toHaveBeenCalledTimes(1)
-		// 		expect(rawSocket.bind).toHaveBeenCalledWith(0, undefined)
-		// 	} finally {
-		// 		socket.destroy()
-		// 	}
-		// })
-
-		// TODO - options
 	})
 
-	// it('error propagation', async () => {
-	// 	const rawSocket = new MinimalSocket()
-	// 	createSocketMock.mockReturnValueOnce(rawSocket as any)
+	it('error propagation', async () => {
+		const socket = new TCPHelper('1.2.3.4', 852)
+		try {
+			expect(socket).toBeTruthy()
 
-	// 	rawSocket.bind.mockImplementationOnce(() => rawSocket as any)
+			const errorHandler = vi.fn()
+			const statusHandler = vi.fn()
+			socket.on('error', errorHandler)
+			socket.on('status_change', statusHandler)
 
-	// 	const socket = new TCPHelper('1.2.3.4', 852)
-	// 	try {
-	// 		expect(socket).toBeTruthy()
+			const rawSocket = MockSocket.mockSockets()[0]
+			rawSocket.emit('error', new Error('My fake error'))
 
-	// 		const errorHandler = vi.fn(() => {})
-	// 		const statusHandler = vi.fn(() => {})
-	// 		socket.on('error', errorHandler)
-	// 		socket.on('status_change', statusHandler)
+			expect(errorHandler).toHaveBeenCalledTimes(1)
+			expect(errorHandler).toHaveBeenCalledWith(new Error('My fake error'))
+			expect(statusHandler).toHaveBeenCalledTimes(1)
+			expect(statusHandler).toHaveBeenCalledWith(InstanceStatus.UnknownError, 'My fake error')
+		} finally {
+			socket.destroy()
+		}
+	})
 
-	// 		expect(createSocketMock).toHaveBeenCalledTimes(1)
+	describe('events', () => {
+		it('connect event', async () => {
+			const socket = new TCPHelper('1.2.3.4', 852)
+			try {
+				const connectHandler = vi.fn()
+				const statusHandler = vi.fn()
+				socket.on('connect', connectHandler)
+				socket.on('status_change', statusHandler)
 
-	// 		rawSocket.emit('error', new Error('My fake error'))
+				// Wait for auto-connect from constructor
+				await sleepImmediate()
 
-	// 		expect(errorHandler).toHaveBeenCalledTimes(1)
-	// 		expect(errorHandler).toHaveBeenCalledWith(new Error('My fake error'))
-	// 		expect(statusHandler).toHaveBeenCalledTimes(1)
-	// 		expect(statusHandler).toHaveBeenCalledWith(InstanceStatus.UnknownError, 'My fake error')
-	// 	} finally {
-	// 		socket.destroy()
-	// 	}
-	// })
+				const rawSocket = MockSocket.mockSockets()[0]
+				rawSocket.emit('ready')
 
-	// describe('listening', () => {
-	// 	it('ok', async () => {
-	// 		const rawSocket = new MinimalSocket()
-	// 		createSocketMock.mockReturnValueOnce(rawSocket as any)
+				expect(connectHandler).toHaveBeenCalledTimes(1)
+				expect(statusHandler).toHaveBeenCalledWith(InstanceStatus.Ok, undefined)
+			} finally {
+				socket.destroy()
+			}
+		})
 
-	// 		rawSocket.bind.mockImplementationOnce(() => rawSocket as any)
+		it('data event', async () => {
+			const socket = new TCPHelper('1.2.3.4', 852)
+			try {
+				const dataHandler = vi.fn()
+				socket.on('data', dataHandler)
 
-	// 		const socket = new TCPHelper('1.2.3.4', 852)
-	// 		try {
-	// 			expect(socket).toBeTruthy()
+				const rawSocket = MockSocket.mockSockets()[0]
+				const msg = Buffer.from('hello')
+				rawSocket.emit('data', msg)
 
-	// 			const listeningHandler = vi.fn(() => {})
-	// 			const statusHandler = vi.fn(() => {})
-	// 			socket.on('connect', listeningHandler)
-	// 			socket.on('status_change', statusHandler)
+				expect(dataHandler).toHaveBeenCalledTimes(1)
+				expect(dataHandler).toHaveBeenCalledWith(msg)
+			} finally {
+				socket.destroy()
+			}
+		})
 
-	// 			expect(createSocketMock).toHaveBeenCalledTimes(1)
+		it('end event', async () => {
+			const socket = new TCPHelper('1.2.3.4', 852)
+			try {
+				const endHandler = vi.fn()
+				socket.on('end', endHandler)
 
-	// 			rawSocket.emit('listening')
+				const rawSocket = MockSocket.mockSockets()[0]
+				rawSocket.emit('end')
 
-	// 			expect(listeningHandler).toHaveBeenCalledTimes(1)
-	// 			expect(statusHandler).toHaveBeenCalledTimes(1)
-	// 			expect(statusHandler).toHaveBeenCalledWith(InstanceStatus.Ok, undefined)
-	// 		} finally {
-	// 			socket.destroy()
-	// 		}
-	// 	})
+				expect(endHandler).toHaveBeenCalledTimes(1)
+			} finally {
+				socket.destroy()
+			}
+		})
 
-	// 	// TODO - options
-	// })
+		it('drain event', async () => {
+			const socket = new TCPHelper('1.2.3.4', 852)
+			try {
+				const drainHandler = vi.fn()
+				socket.on('drain', drainHandler)
 
-	// it('no error handler timeout', () => {
-	// 	const rawSocket = new MinimalSocket()
-	// 	createSocketMock.mockReturnValueOnce(rawSocket as any)
+				const rawSocket = MockSocket.mockSockets()[0]
+				rawSocket.emit('drain')
 
-	// 	rawSocket.bind.mockImplementationOnce(() => rawSocket as any)
+				expect(drainHandler).toHaveBeenCalledTimes(1)
+			} finally {
+				socket.destroy()
+			}
+		})
 
-	// 	vi.advanceTimersByTimeAsync(10000)
-	// })
+		it('isConnected/isConnecting toggles', async () => {
+			const socket = new TCPHelper('1.2.3.4', 852)
+			try {
+				expect(socket.isConnected).toBe(false)
+				expect(socket.isConnecting).toBe(false)
 
-	// describe('send', () => {
-	// 	const rawSocket = new MinimalSocket()
-	// 	rawSocket.bind.mockImplementation(() => rawSocket as any)
-	// 	let socket: TCPHelper
+				// Wait for auto-connect
+				await sleepImmediate()
+				expect(socket.isConnecting).toBe(true)
 
-	// 	beforeAll(() => {
-	// 		createSocketMock.mockReturnValueOnce(rawSocket as any)
+				const rawSocket = MockSocket.mockSockets()[0]
+				rawSocket.emit('ready')
 
-	// 		socket = new TCPHelper('1.2.3.4', 852)
-	// 		expect(socket).toBeTruthy()
-	// 	})
+				expect(socket.isConnected).toBe(true)
+				expect(socket.isConnecting).toBe(false)
+			} finally {
+				socket.destroy()
+			}
+		})
 
-	// 	beforeEach(() => {
-	// 		rawSocket.close.mockClear()
-	// 		rawSocket.send.mockClear()
-	// 	})
+		it('isDestroyed toggles after destroy', () => {
+			const socket = new TCPHelper('1.2.3.4', 852)
+			try {
+				expect(socket.isDestroyed).toBe(false)
+				socket.destroy()
+				expect(socket.isDestroyed).toBe(true)
+			} finally {
+				// no-op: already destroyed
+			}
+		})
+	})
 
-	// 	afterAll(() => {
-	// 		if (socket) socket.destroy()
-	// 	})
+	describe('send (sync)', () => {
+		let socket: TCPHelper
+		let rawSocket: TMockSocket
 
-	// 	it('destroyed', async () => {
-	// 		createSocketMock.mockReturnValueOnce(rawSocket as any)
+		beforeAll(async () => {
+			socket = new TCPHelper('1.2.3.4', 852)
+			expect(socket).toBeTruthy()
 
-	// 		const mySocket = new TCPHelper('1.2.3.4', 852)
-	// 		expect(mySocket).toBeTruthy()
+			// Wait for auto-connect and emit ready
+			await sleepImmediate()
+			rawSocket = MockSocket.mockSockets()[0]
+			rawSocket.emit('ready')
+		})
 
-	// 		mySocket.destroy()
-	// 		expect(rawSocket.close).toHaveBeenCalledTimes(1)
+		afterAll(() => {
+			if (socket) socket.destroy()
+		})
 
-	// 		await expect(mySocket.send('test')).rejects.toThrow('Cannot write to destroyed socket')
-	// 	})
+		it('destroyed', () => {
+			const mySocket = new TCPHelper('1.2.3.4', 852)
+			expect(mySocket).toBeTruthy()
 
-	// 	it('no message', async () => {
-	// 		await expect(socket.send(undefined as any)).rejects.toThrow('No message to send')
+			mySocket.destroy()
 
-	// 		expect(rawSocket.send).toHaveBeenCalledTimes(0)
-	// 	})
+			expect(() => mySocket.send('test')).toThrow('Cannot write to destroyed socket')
+		})
 
-	// 	it('ok: string', async () => {
-	// 		rawSocket.send.mockImplementation((msg, offset, length, cb) => {
-	// 			if (!cb) return
+		it('no message', () => {
+			expect(() => socket.send(undefined as any)).toThrow('No message to send')
+		})
 
-	// 			cb(null, length)
-	// 		})
+		it('not connected returns false', () => {
+			const disconnectedSocket = new TCPHelper('1.2.3.4', 852, { reconnect: false })
+			try {
+				const result = disconnectedSocket.send('test')
+				expect(result).toBe(false)
+			} finally {
+				disconnectedSocket.destroy()
+			}
+		})
 
-	// 		await expect(socket.send('test 123')).resolves.toBeUndefined()
+		it('ok: string', () => {
+			const result = socket.send('test 123')
+			expect(result).toBe(true)
+		})
 
-	// 		expect(rawSocket.send).toHaveBeenCalledTimes(1)
-	// 		expect(rawSocket.send).toHaveBeenCalledWith('test 123', 852, '1.2.3.4', expect.any(Function))
-	// 	})
+		it('ok: buffer', () => {
+			const msg = Buffer.from('test 123')
+			const result = socket.send(msg)
+			expect(result).toBe(true)
+		})
+	})
 
-	// 	it('ok: buffer', async () => {
-	// 		rawSocket.send.mockImplementation((msg, offset, length, cb) => {
-	// 			if (!cb) return
+	describe('sendAsync', () => {
+		let socket: TCPHelper
+		let rawSocket: TMockSocket
 
-	// 			cb(null, length)
-	// 		})
+		beforeAll(async () => {
+			socket = new TCPHelper('1.2.3.4', 852)
+			expect(socket).toBeTruthy()
 
-	// 		const msg = Buffer.from('test 123')
-	// 		await expect(socket.send(msg)).resolves.toBeUndefined()
+			// Wait for auto-connect and emit ready
+			await sleepImmediate()
+			rawSocket = MockSocket.mockSockets()[0]
+			rawSocket.emit('ready')
+		})
 
-	// 		expect(rawSocket.send).toHaveBeenCalledTimes(1)
-	// 		expect(rawSocket.send).toHaveBeenCalledWith(msg, 852, '1.2.3.4', expect.any(Function))
-	// 	})
+		afterAll(() => {
+			if (socket) socket.destroy()
+		})
 
-	// 	it('send error', async () => {
-	// 		rawSocket.send.mockImplementation((msg, offset, length, cb) => {
-	// 			if (!cb) return
+		it('destroyed', async () => {
+			const mySocket = new TCPHelper('1.2.3.4', 852)
+			expect(mySocket).toBeTruthy()
 
-	// 			cb(new Error('buffer overflow'), 0)
-	// 		})
+			mySocket.destroy()
 
-	// 		const msg = Buffer.from('test 123')
-	// 		await expect(socket.send(msg)).rejects.toThrow('buffer overflow')
+			await expect(mySocket.sendAsync('test')).rejects.toThrow('Cannot write to destroyed socket')
+		})
 
-	// 		expect(rawSocket.send).toHaveBeenCalledTimes(1)
-	// 		expect(rawSocket.send).toHaveBeenCalledWith(msg, 852, '1.2.3.4', expect.any(Function))
-	// 	})
-	// })
+		it('no message', async () => {
+			await expect(socket.sendAsync(undefined as any)).rejects.toThrow('No message to send')
+		})
+
+		it('not connected returns false', async () => {
+			const disconnectedSocket = new TCPHelper('1.2.3.4', 852, { reconnect: false })
+			try {
+				const result = await disconnectedSocket.sendAsync('test')
+				expect(result).toBe(false)
+			} finally {
+				disconnectedSocket.destroy()
+			}
+		})
+
+		it('ok: string', async () => {
+			const result = await socket.sendAsync('test 123')
+			expect(result).toBe(true)
+		})
+
+		it('ok: buffer', async () => {
+			const msg = Buffer.from('test 123')
+			const result = await socket.sendAsync(msg)
+			expect(result).toBe(true)
+		})
+	})
+
+	describe('missing error-handler timer', () => {
+		it('logs error when no error listener', async () => {
+			vi.useFakeTimers()
+
+			const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+			const socket = new TCPHelper('1.2.3.4', 852)
+			try {
+				// advance past the 5s timer used in the implementation
+				await vi.advanceTimersByTimeAsync(5000)
+
+				expect(spy).toHaveBeenCalled()
+				expect(spy).toHaveBeenCalledWith(expect.stringContaining('Danger: TCP client'))
+			} finally {
+				spy.mockRestore()
+				socket.destroy()
+				vi.useRealTimers()
+			}
+		})
+	})
 })

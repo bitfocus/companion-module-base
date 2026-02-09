@@ -81,8 +81,11 @@ export class TelnetHelper extends EventEmitter<TelnetHelperEvents> {
 	connect(): boolean {
 		return this.#tcp.connect()
 	}
-	async send(message: string | Buffer): Promise<boolean> {
+	send(message: string | Buffer): boolean {
 		return this.#tcp.send(message)
+	}
+	async sendAsync(message: string | Buffer): Promise<boolean> {
+		return this.#tcp.sendAsync(message)
 	}
 
 	destroy(): void {
