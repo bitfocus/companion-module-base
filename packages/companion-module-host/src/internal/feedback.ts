@@ -61,10 +61,10 @@ export class FeedbackManager {
 	}
 
 	public getDefinitionIds(): string[] {
-		return Array.from(this.#feedbackDefinitions.keys())
+		return this.#feedbackDefinitions.keys().toArray()
 	}
 	public getInstanceIds(): string[] {
-		return Array.from(this.#feedbackInstances.keys())
+		return this.#feedbackInstances.keys().toArray()
 	}
 
 	public handleUpdateFeedbacks(feedbacks: Record<string, FeedbackInstance | null | undefined>): void {
@@ -244,7 +244,7 @@ export class FeedbackManager {
 
 			// Send the new values back
 			if (newValues.size > 0) {
-				this.#updateFeedbackValues(Array.from(newValues.values()))
+				this.#updateFeedbackValues(newValues.values().toArray())
 			}
 		},
 		{
@@ -343,7 +343,7 @@ export class FeedbackManager {
 	}
 
 	unsubscribeFeedbacks(feedbackIds: string[]): void {
-		let feedbacks = Array.from(this.#feedbackInstances.values())
+		let feedbacks = this.#feedbackInstances.values().toArray()
 
 		const feedbackIdSet = new Set(feedbackIds)
 		if (feedbackIdSet.size) feedbacks = feedbacks.filter((fb) => feedbackIdSet.has(fb.feedbackId))

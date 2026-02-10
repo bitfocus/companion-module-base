@@ -73,7 +73,7 @@ export function runThroughUpgradeScripts(
 
 	if (pendingUpgradesGrouped.size > 0) {
 		// Figure out which script to run first. Note: we track the last index we ran, so it is offset by one
-		const pendingUpgradeGroups = Array.from(pendingUpgradesGrouped.keys()).sort()
+		const pendingUpgradeGroups = pendingUpgradesGrouped.keys().toArray().sort()
 		const firstUpgradeGroup = Math.min(...pendingUpgradeGroups, defaultUpgradeIndex ?? -1) + 1
 
 		// Start building arrays of the ids which we are upgrading as we go

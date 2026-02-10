@@ -41,6 +41,10 @@ export class ActionManager {
 		this.#setCustomVariableValue = setCustomVariableValue
 	}
 
+	public getDefinitionIds(): string[] {
+		return this.#actionDefinitions.keys().toArray()
+	}
+
 	public async handleExecuteAction(
 		action: ActionInstance,
 		surfaceId: string | undefined,
@@ -234,7 +238,7 @@ export class ActionManager {
 	}
 
 	subscribeActions(actionIds: string[]): void {
-		let actions = Array.from(this.#actionInstances.values())
+		let actions = this.#actionInstances.values().toArray()
 
 		const actionIdSet = new Set(actionIds)
 		if (actionIdSet.size) actions = actions.filter((fb) => actionIdSet.has(fb.actionId))
@@ -257,7 +261,7 @@ export class ActionManager {
 	}
 
 	unsubscribeActions(actionIds: string[]): void {
-		let actions = Array.from(this.#actionInstances.values())
+		let actions = this.#actionInstances.values().toArray()
 
 		const actionIdSet = new Set(actionIds)
 		if (actionIdSet.size) actions = actions.filter((fb) => actionIdSet.has(fb.actionId))
