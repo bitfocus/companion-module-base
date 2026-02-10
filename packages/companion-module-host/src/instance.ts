@@ -27,6 +27,7 @@ import type {
 // eslint-disable-next-line n/no-missing-import
 import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/dist/host-api/context.js'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
+import { validatePresetDefinitions } from './internal/presets.js'
 
 export class InstanceWrapper<TManifest extends InstanceTypes> {
 	// readonly #logger = createModuleLogger('InstanceWrapper')
@@ -115,6 +116,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 			},
 
 			setPresetDefinitions: (presets) => {
+				validatePresetDefinitions(this.#actionManager, this.#feedbackManager, presets)
 				this.#host.setPresetDefinitions(presets as CompanionPresetDefinitions<any>)
 			},
 
