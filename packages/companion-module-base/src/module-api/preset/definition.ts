@@ -19,12 +19,6 @@ export type CompanionPresetDefinition<TManifest extends InstanceTypes = Instance
 
 export interface CompanionPresetDefinitionBase<TType extends string> {
 	/**
-	 * Unique identifier for the preset
-	 * This should be stable across updates to the presets
-	 */
-	id: string
-
-	/**
 	 * A name for this preset
 	 * This is typically shown as a tooltip
 	 */
@@ -123,7 +117,7 @@ export type CompanionPresetAction<
 		/** The execution delay of the action, relative to the previous action */
 		delay?: number
 		/** The option values for the action */
-		options: TActionManifest[K]['options']
+		options: CompanionPresetOptionValues<TActionManifest[K]['options']>
 		/**
 		 * User editable description/comment for the action.
 		 * Intended to describe the purpose/intent of the action.
@@ -145,7 +139,7 @@ export type CompanionPresetFeedback<
 		/** The id of the feedback definition */
 		feedbackId: K
 		/** The option values for the action */
-		options: TFeedbackManifest[K]['options']
+		options: CompanionPresetOptionValues<TFeedbackManifest[K]['options']>
 		/**
 		 * User editable description/comment for the feedback.
 		 * Intended to describe the purpose/intent of the feedback.
@@ -207,4 +201,6 @@ export interface CompanionSimplePresetLocalVariable {
 }
 
 export type CompanionPresetValue<T extends JsonValue | undefined> = T | ExpressionOrValue<T>
-export type CompanionPresetOptionValues = { [key: string]: JsonValue | undefined }
+export type CompanionPresetOptionValues<T extends Record<string, JsonValue | undefined>> = {
+	[K in keyof T]: CompanionPresetValue<T[K]>
+}

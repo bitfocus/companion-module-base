@@ -33,9 +33,19 @@ export interface CompanionPresetGroupTemplate<
 	 */
 	templateVariableName: string
 	/**
-	 * The values to inject into the template variable, to generate presets for each value
+	 * The values to inject into the template, to generate presets for each value
 	 */
-	templateVariableValues: CompanionVariableValue[]
+	templateValues: {
+		/**
+		 * An optional name for the preset, to be shown in the UI, if not provided the name of the referenced preset will be used instead
+		 */
+		name?: string
+
+		/**
+		 * The value to inject into the template variable
+		 */
+		value: CompanionVariableValue
+	}[]
 
 	/**
 	 * Local variable values to override on the template
@@ -73,7 +83,15 @@ export interface CompanionPresetGroupBase<TType extends string> {
 }
 
 export interface CompanionPresetSection<TManifest extends InstanceTypes = InstanceTypes> {
+	/**
+	 * Unique identifier for the preset
+	 * This should be stable across updates to the presets
+	 */
 	id: string
+
+	/**
+	 * The name of the category of presets, to be shown above the presets
+	 */
 	name: string
 
 	/**
