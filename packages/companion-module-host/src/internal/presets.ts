@@ -1,4 +1,8 @@
-import { createModuleLogger, type CompanionPresetDefinitions } from '@companion-module/base'
+import {
+	createModuleLogger,
+	type CompanionPresetDefinitions,
+	type CompanionPresetSection,
+} from '@companion-module/base'
 import type { ActionManager } from './actions.js'
 import type { FeedbackManager } from './feedback.js'
 
@@ -7,6 +11,7 @@ const logger = createModuleLogger('PresetDefinitionsManager')
 export function validatePresetDefinitions(
 	actionsManager: ActionManager,
 	feedbacksManager: FeedbackManager,
+	structure: CompanionPresetSection<any>[],
 	presets: CompanionPresetDefinitions<any>,
 ): void {
 	const validActionIds = new Set(actionsManager.getDefinitionIds())

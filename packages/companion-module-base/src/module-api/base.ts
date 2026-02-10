@@ -1,6 +1,6 @@
 import type { CompanionActionDefinitions, CompanionActionSchema, CompanionRecordedAction } from './action.js'
 import type { CompanionFeedbackDefinitions, CompanionFeedbackSchema } from './feedback.js'
-import type { CompanionPresetDefinitions } from './preset.js'
+import type { CompanionPresetSection, CompanionPresetDefinitions } from './preset/main.js'
 import type { InstanceStatus } from './enums.js'
 import { createModuleLogger, type LogLevel, type ModuleLogger } from '../logging.js'
 import { assertNever } from '../util.js'
@@ -166,10 +166,14 @@ export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTyp
 
 	/**
 	 * Set the peset definitions for this instance
-	 * @param presets The preset definitions
+	 * @param structure The structure of the preset sections
+	 * @param presets The unstructured preset definitions
 	 */
-	setPresetDefinitions(presets: CompanionPresetDefinitions<TManifest>): void {
-		this.#context.setPresetDefinitions(presets)
+	setPresetDefinitions(
+		structure: CompanionPresetSection<TManifest>[],
+		presets: CompanionPresetDefinitions<TManifest>,
+	): void {
+		this.#context.setPresetDefinitions(structure, presets)
 	}
 
 	/**
