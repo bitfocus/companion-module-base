@@ -1,15 +1,46 @@
 import { InstanceTypes } from '../base.js'
+import { CompanionVariableValue, CompanionVariableValues } from '../variable.js'
 
 export type CompanionPresetGroup<TManifest extends InstanceTypes = InstanceTypes> =
-	CompanionPresetGroupCustom<TManifest> // | CompanionPresetGroupMatrix
+	| CompanionPresetGroupSimple<TManifest>
+	| CompanionPresetGroupTemplate<TManifest>
 
-export interface CompanionPresetGroupCustom<
+export type CompanionPresetReference = string
+
+export interface CompanionPresetGroupSimple<
 	_TManifest extends InstanceTypes = InstanceTypes,
-> extends CompanionPresetGroupBase<'custom'> {
+> extends CompanionPresetGroupBase<'simple'> {
 	/**
 	 * The preset ids which are part of this group
 	 */
-	presets: string[]
+	presets: CompanionPresetReference[]
+}
+
+/**
+ * A preset which generates a series of buttons from a matrix of values
+ * Tip: This allows you to avoid generating repetetive presets which vary just by a few simple values
+ */
+export interface CompanionPresetGroupTemplate<
+	_TManifest extends InstanceTypes = InstanceTypes,
+> extends CompanionPresetGroupBase<'template'> {
+	/**
+	 * The id of preset definition to use as the template for this group
+	 */
+	presetId: CompanionPresetReference
+
+	/**
+	 * The name of the local variable on the template which will be replaced by the values
+	 */
+	templateVariableName: string
+	/**
+	 * The values to inject into the template variable, to generate presets for each value
+	 */
+	templateVariableValues: CompanionVariableValue[]
+
+	/**
+	 * Local variable values to override on the template
+	 */
+	commonVariableValues?: CompanionVariableValues
 }
 
 export interface CompanionPresetGroupBase<TType extends string> {
@@ -53,7 +84,7 @@ export interface CompanionPresetSection<TManifest extends InstanceTypes = Instan
 	/**
 	 * The definitions of presets or groups in this category
 	 */
-	definitions: CompanionPresetGroup<TManifest>[] | string[]
+	definitions: CompanionPresetGroup<TManifest>[] | CompanionPresetReference[]
 
 	/**
 	 * Keywords for the preset

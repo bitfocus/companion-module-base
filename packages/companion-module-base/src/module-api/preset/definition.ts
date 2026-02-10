@@ -6,6 +6,13 @@ import type { CompanionVariableValue } from '../variable.js'
 import type { InstanceTypes } from '../base.js'
 import { CompanionActionSchema } from '../action.js'
 
+/**
+ * The definitions of a group of feedbacks
+ */
+export type CompanionPresetDefinitions<TManifest extends InstanceTypes = InstanceTypes> = {
+	[id: string]: CompanionPresetDefinition<TManifest> | undefined
+}
+
 // Future: Additional types will be added, as part of the graphics overhaul
 export type CompanionPresetDefinition<TManifest extends InstanceTypes = InstanceTypes> =
 	CompanionSimplePresetDefinition<TManifest>

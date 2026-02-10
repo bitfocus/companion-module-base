@@ -23,7 +23,7 @@ export function validatePresetDefinitions(
 
 	for (const [_id, preset] of Object.entries(presets)) {
 		if (!preset) continue
-		if (preset.type !== 'button') continue
+		if (preset.type !== 'simple') continue
 
 		const presetName = typeof preset.name === 'string' ? preset.name : 'Unknown'
 
