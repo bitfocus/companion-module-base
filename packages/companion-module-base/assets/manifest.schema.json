@@ -201,6 +201,11 @@
 							"type": "string"
 						}
 					}
+				},
+				"addressFamily": {
+					"type": "string",
+					"description": "The address family to use when connecting to the device. If not specified, it will default to ipv4. This is useful for devices or modules that do not support ipv4 and ipv6, but discovery will find them on both",
+					"enum": ["ipv4", "ipv6", "ipv4+6"]
 				}
 			},
 			"required": ["type", "protocol"]
