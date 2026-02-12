@@ -117,6 +117,11 @@ export interface CompanionFeedbackDefinitionBase<TOptions extends CompanionOptio
 	type: 'boolean' | 'value' | 'advanced'
 	/** Name to show in the feedbacks list */
 	name: string
+	/**
+	 * Alternate value to use when sorting the list of actions
+	 * By default, the actions are ordered by the name field, but you can override this without altering the visible name by setting this value
+	 */
+	sortName?: string
 	/** Additional description of the feedback */
 	description?: string
 	/** The input fields for the feedback */

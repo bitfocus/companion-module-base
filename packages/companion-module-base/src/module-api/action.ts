@@ -47,6 +47,11 @@ export interface CompanionActionContext extends CompanionCommonCallbackContext {
 export interface CompanionActionDefinition<TOptions extends CompanionOptionValues = CompanionOptionValues> {
 	/** Name to show in the actions list */
 	name: string
+	/**
+	 * Alternate value to use when sorting the list of actions
+	 * By default, the actions are ordered by the name field, but you can override this without altering the visible name by setting this value
+	 */
+	sortName?: string
 	/** Additional description of the action */
 	description?: string
 	/** The input fields for the action */
