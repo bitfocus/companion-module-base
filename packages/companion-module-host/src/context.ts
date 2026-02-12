@@ -54,6 +54,7 @@ export interface ModuleHostContext<TConfig, TSecrets> {
 export interface HostActionDefinition {
 	id: string
 	name: string
+	sortName: string | undefined
 	description: string | undefined
 	options: SomeCompanionActionInputField[] // TODO module-lib - versioned types?
 	optionsToMonitorForSubscribe: string[] | undefined
@@ -67,6 +68,7 @@ export type HostFeedbackType = 'boolean' | 'value' | 'advanced'
 export interface HostFeedbackDefinition {
 	id: string
 	name: string
+	sortName: string | undefined
 	description: string | undefined
 	options: SomeCompanionFeedbackInputField[] // TODO module-lib - versioned types?
 	type: HostFeedbackType

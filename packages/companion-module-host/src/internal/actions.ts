@@ -187,6 +187,7 @@ export class ActionManager {
 			hostActions.push({
 				id: actionId,
 				name: action.name,
+				sortName: action.sortName,
 				description: action.description,
 				options: action.options,
 				optionsToMonitorForSubscribe: action.optionsToMonitorForSubscribe,

@@ -269,6 +269,7 @@ export class FeedbackManager {
 			hostFeedbacks.push({
 				id: feedbackId,
 				name: feedback.name,
+				sortName: feedback.sortName,
 				description: feedback.description,
 				options: feedback.options,
 				type: feedback.type,
