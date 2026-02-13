@@ -165,7 +165,7 @@ export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTyp
 	}
 
 	/**
-	 * Set the peset definitions for this instance
+	 * Set the preset definitions for this instance
 	 * @param structure The structure of the preset sections
 	 * @param presets The unstructured preset definitions
 	 */

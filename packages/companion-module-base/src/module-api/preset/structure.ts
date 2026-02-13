@@ -18,7 +18,7 @@ export interface CompanionPresetGroupSimple<
 
 /**
  * A preset which generates a series of buttons from a matrix of values
- * Tip: This allows you to avoid generating repetetive presets which vary just by a few simple values
+ * Tip: This allows you to avoid generating repetitive presets which vary just by a few simple values
  */
 export interface CompanionPresetGroupTemplate<
 	_TManifest extends InstanceTypes = InstanceTypes,
