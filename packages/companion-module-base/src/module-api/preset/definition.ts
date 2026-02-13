@@ -7,7 +7,7 @@ import type { InstanceTypes } from '../base.js'
 import { CompanionActionSchema } from '../action.js'
 
 /**
- * The definitions of a group of feedbacks
+ * The definitions of a group of presets
  */
 export type CompanionPresetDefinitions<TManifest extends InstanceTypes = InstanceTypes> = {
 	[id: string]: CompanionPresetDefinition<TManifest> | undefined
@@ -180,11 +180,11 @@ export type CompanionPresetFeedback<
  * The configuration of a simple local variable in a preset
  */
 export interface CompanionSimplePresetLocalVariable {
-	/** The name of the action definition */
+	/** The name of the local variable */
 	variableName: string
 	/**
-	 * User editable description/comment for the action.
-	 * Intended to describe the purpose/intent of the action.
+	 * User editable description/comment for the local variable.
+	 * Intended to describe the purpose/intent of the local variable.
 	 */
 	headline?: string
 

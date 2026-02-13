@@ -55,7 +55,7 @@ export interface CompanionPresetGroupTemplate<
 
 export interface CompanionPresetGroupBase<TType extends string> {
 	/**
-	 * Unique identifier for the preset
+	 * Unique identifier for the preset group
 	 * This should be stable across updates to the presets
 	 */
 	id: string
@@ -84,23 +84,23 @@ export interface CompanionPresetGroupBase<TType extends string> {
 
 export interface CompanionPresetSection<TManifest extends InstanceTypes = InstanceTypes> {
 	/**
-	 * Unique identifier for the preset
+	 * Unique identifier for the preset section
 	 * This should be stable across updates to the presets
 	 */
 	id: string
 
 	/**
-	 * The name of the category of presets, to be shown above the presets
+	 * The name of the section of presets, to be shown above the presets
 	 */
 	name: string
 
 	/**
-	 * A description of the category, to be shown above the presets
+	 * A description of the section, to be shown above the presets
 	 */
 	description?: string
 
 	/**
-	 * The definitions of presets or groups in this category
+	 * The definitions of presets or groups in this section
 	 */
 	definitions: CompanionPresetGroup<TManifest>[] | CompanionPresetReference[]
 
