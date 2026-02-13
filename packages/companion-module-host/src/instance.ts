@@ -288,7 +288,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 		await this.#lifecycleQueue.add(async () => {
 			if (!this.#initialized) throw new Error('Not initialized')
 
-			await this.destroy()
+			await this.#instance.destroy()
 
 			this.#initialized = false
 		})
