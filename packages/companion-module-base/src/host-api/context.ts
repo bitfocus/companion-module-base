@@ -10,6 +10,7 @@ import type {
 	CompanionActionDefinitions,
 	CompanionFeedbackDefinitions,
 	CompanionPresetDefinitions,
+	CompanionPresetSection,
 	CompanionRecordedAction,
 	CompanionStaticUpgradeScript,
 	CompanionVariableDefinition,
@@ -47,7 +48,10 @@ export interface InstanceContext<TManifest extends InstanceTypes> extends Instan
 	checkFeedbacks: (feedbackTypes: StringKeys<TManifest['feedbacks']>[]) => void
 	checkFeedbacksById: (feedbackIds: string[]) => void
 
-	setPresetDefinitions: (presets: CompanionPresetDefinitions<TManifest>) => void
+	setPresetDefinitions: (
+		structure: CompanionPresetSection<TManifest>[],
+		presets: CompanionPresetDefinitions<TManifest>,
+	) => void
 
 	setVariableDefinitions: (variables: CompanionVariableDefinition[]) => void
 	setVariableValues: (values: Partial<TManifest['variables']>) => void

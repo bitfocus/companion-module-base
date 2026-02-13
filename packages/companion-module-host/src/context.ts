@@ -1,6 +1,7 @@
 import type {
 	CompanionFeedbackButtonStyleResult,
 	CompanionPresetDefinitions,
+	CompanionPresetSection,
 	CompanionRecordedAction,
 	CompanionVariableValue,
 	InstanceStatus,
@@ -29,7 +30,7 @@ export interface ModuleHostContext<TConfig, TSecrets> {
 	/** The variables available in the connection have changed */
 	setVariableDefinitions: (definitions: HostVariableDefinition[], values: HostVariableValue[]) => void
 	/** The presets provided by the connection have changed */
-	setPresetDefinitions: (presets: CompanionPresetDefinitions) => void
+	setPresetDefinitions: (structure: CompanionPresetSection[], presets: CompanionPresetDefinitions) => void
 	/** The connection has some new values for variables */
 	setVariableValues: (values: HostVariableValue[]) => void
 	/** The connection has some new values for feedbacks it is running */

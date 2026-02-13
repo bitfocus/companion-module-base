@@ -115,9 +115,9 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 				this.#feedbackManager.checkFeedbacksById(feedbackIds)
 			},
 
-			setPresetDefinitions: (presets) => {
-				validatePresetDefinitions(this.#actionManager, this.#feedbackManager, presets)
-				this.#host.setPresetDefinitions(presets as CompanionPresetDefinitions<any>)
+			setPresetDefinitions: (structure, presets) => {
+				validatePresetDefinitions(this.#actionManager, this.#feedbackManager, structure, presets)
+				this.#host.setPresetDefinitions(structure, presets as CompanionPresetDefinitions<any>)
 			},
 
 			setVariableDefinitions: (variables) => {
