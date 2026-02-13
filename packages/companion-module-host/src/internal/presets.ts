@@ -107,4 +107,61 @@ export function validatePresetDefinitions(
 				.join(', ')}`,
 		)
 	}
+
+	// Cross-reference validation between structure and presets
+	const referencedPresetIds = new Set<string>()
+
+	for (const section of structure) {
+		if (!Array.isArray(section.definitions)) continue
+
+		for (const def of section.definitions) {
+			if (typeof def === 'string') {
+				// Direct preset reference
+				referencedPresetIds.add(def)
+			} else if (def && typeof def === 'object') {
+				// Preset group
+				if (def.type === 'simple' && 'presets' in def && Array.isArray(def.presets)) {
+					for (const presetId of def.presets) {
+						if (typeof presetId === 'string') {
+							referencedPresetIds.add(presetId)
+						}
+					}
+				} else if (def.type === 'template' && 'presetId' in def && typeof def.presetId === 'string') {
+					referencedPresetIds.add(def.presetId)
+				}
+			}
+		}
+	}
+
+	// Check for presets not referenced by structure
+	const presetsNotReferenced: string[] = []
+	for (const presetId of Object.keys(presets)) {
+		if (!referencedPresetIds.has(presetId)) {
+			presetsNotReferenced.push(presetId)
+		}
+	}
+
+	// Check for missing presets referenced by structure
+	const referencedMissing: string[] = []
+	for (const presetId of referencedPresetIds) {
+		if (!(presetId in presets)) {
+			referencedMissing.push(presetId)
+		}
+	}
+
+	if (presetsNotReferenced.length > 0) {
+		logger.warn(
+			`The following preset definitions exist in presets but are not referenced by structure: ${presetsNotReferenced
+				.sort()
+				.join(', ')}`,
+		)
+	}
+
+	if (referencedMissing.length > 0) {
+		logger.warn(
+			`The following presets are referenced in structure but do not exist in presets: ${referencedMissing
+				.sort()
+				.join(', ')}`,
+		)
+	}
 }
