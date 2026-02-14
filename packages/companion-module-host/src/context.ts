@@ -17,8 +17,7 @@ import {
 	SharedUdpSocketMessageJoin,
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
-	// eslint-disable-next-line n/no-missing-import
-} from '@companion-module/base/dist/host-api/context.js'
+} from '@companion-module/base/host-api'
 
 export interface ModuleHostContext<TConfig, TSecrets> {
 	/** The connection status has changed */

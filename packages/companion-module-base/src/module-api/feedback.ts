@@ -118,8 +118,8 @@ export interface CompanionFeedbackDefinitionBase<TOptions extends CompanionOptio
 	/** Name to show in the feedbacks list */
 	name: string
 	/**
-	 * Alternate value to use when sorting the list of actions
-	 * By default, the actions are ordered by the name field, but you can override this without altering the visible name by setting this value
+	 * Alternate value to use when sorting the list of feedbacks
+	 * By default, the feedbacks are ordered by the name field, but you can override this without altering the visible name by setting this value
 	 */
 	sortName?: string
 	/** Additional description of the feedback */
@@ -128,7 +128,7 @@ export interface CompanionFeedbackDefinitionBase<TOptions extends CompanionOptio
 	options: SomeCompanionFeedbackInputField<StringKeys<TOptions>>[]
 
 	/**
-	 * Called to report an feedback has been removed or disabled.
+	 * Called to report a feedback has been removed or disabled.
 	 * Useful to cleanup subscriptions setup in the callback
 	 */
 	unsubscribe?: (feedback: CompanionFeedbackInfo<TOptions>, context: CompanionFeedbackContext) => void | Promise<void>
@@ -138,7 +138,7 @@ export interface CompanionFeedbackDefinitionBase<TOptions extends CompanionOptio
 	 * Note: As of 2.0, you should only return the values that have been learned, so that expressions in any id fields will be preserved
 	 */
 	learn?: (
-		action: CompanionFeedbackInfo<TOptions>,
+		feedback: CompanionFeedbackInfo<TOptions>,
 		context: CompanionFeedbackContext,
 	) => Partial<TOptions> | undefined | Promise<Partial<TOptions> | undefined>
 

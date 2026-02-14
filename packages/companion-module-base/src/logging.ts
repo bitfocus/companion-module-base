@@ -2,7 +2,7 @@ declare global {
 	/**
 	 * INTERNAL USE ONLY
 	 */
-	var SURFACE_LOGGER: LoggingSink | undefined
+	var COMPANION_LOGGER: LoggingSink | undefined
 }
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug'
@@ -22,7 +22,7 @@ const defaultLoggingSink: LoggingSink = (source, level, message) => {
 }
 
 function logToSink(source: string | undefined, level: LogLevel, message: string) {
-	const sink = typeof global.SURFACE_LOGGER === 'function' ? global.SURFACE_LOGGER : defaultLoggingSink
+	const sink = typeof global.COMPANION_LOGGER === 'function' ? global.COMPANION_LOGGER : defaultLoggingSink
 	sink(source, level, message)
 }
 

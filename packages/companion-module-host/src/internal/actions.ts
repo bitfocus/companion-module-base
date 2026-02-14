@@ -95,7 +95,7 @@ export class ActionManager {
 			if (existing) {
 				// Call unsubscribe
 				const definition = this.#actionDefinitions.get(existing.actionId)
-				if (definition?.unsubscribe && !definition.skipUnsubscribeOnOptionsChange) {
+				if (definition?.unsubscribe && (!action || !definition.skipUnsubscribeOnOptionsChange)) {
 					const context: CompanionActionContext = {
 						type: 'action',
 						setCustomVariableValue: () => {
@@ -215,7 +215,7 @@ export class ActionManager {
 					.join(', ')}`,
 			)
 		}
-		if (definitionsWantingOptionsToMonitor.length > 0) {
+		if (definitionsWithOptionsToIgnore.length > 0) {
 			this.#logger.warn(
 				`The following action definitions have a removed optionsToIgnoreForSubscribe property. Please use optionsToMonitorForSubscribe instead: ${definitionsWithOptionsToIgnore
 					.sort()
@@ -242,7 +242,7 @@ export class ActionManager {
 		let actions = this.#actionInstances.values().toArray()
 
 		const actionIdSet = new Set(actionIds)
-		if (actionIdSet.size) actions = actions.filter((fb) => actionIdSet.has(fb.actionId))
+		if (actionIdSet.size) actions = actions.filter((act) => actionIdSet.has(act.actionId))
 
 		for (const act of actions) {
 			const def = this.#actionDefinitions.get(act.actionId)
@@ -265,7 +265,7 @@ export class ActionManager {
 		let actions = this.#actionInstances.values().toArray()
 
 		const actionIdSet = new Set(actionIds)
-		if (actionIdSet.size) actions = actions.filter((fb) => actionIdSet.has(fb.actionId))
+		if (actionIdSet.size) actions = actions.filter((act) => actionIdSet.has(act.actionId))
 
 		for (const act of actions) {
 			const def = this.#actionDefinitions.get(act.actionId)

@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { nanoid } from 'nanoid'
 import { SharedUdpSocketImpl } from '../shared-udp-socket.js'
-import { ManualPromise, createManualPromise } from '../../__mocks__/util.js'
 import type {
 	InstanceSharedUdpSocketContext,
 	SharedUdpSocketMessageJoin,
@@ -43,11 +42,11 @@ describe('Shared UDP', () => {
 			const socket = new SharedUdpSocketImpl(ctx, { type: 'udp4' })
 			expect(socket.eventNames()).toHaveLength(0)
 
-			const sendPromises: ManualPromise<any>[] = []
+			const sendPromises: PromiseWithResolvers<any>[] = []
 			ctx.sharedUdpSocketJoin.mockImplementationOnce(async () => {
-				const sendPromise = createManualPromise<any>()
+				const sendPromise = Promise.withResolvers<any>()
 				sendPromises.push(sendPromise)
-				return sendPromise
+				return sendPromise.promise
 			})
 
 			const bindCb = vi.fn()
@@ -75,7 +74,7 @@ describe('Shared UDP', () => {
 
 			// Mock receive a response
 			const handleId = nanoid()
-			sendPromises[0].manualResolve(handleId)
+			sendPromises[0].resolve(handleId)
 
 			// Verify that opened successfully
 			await sleepImmediate()
@@ -90,11 +89,11 @@ describe('Shared UDP', () => {
 			const socket = new SharedUdpSocketImpl(ctx, { type: 'udp4' })
 			expect(socket.eventNames()).toHaveLength(0)
 
-			const sendPromises: ManualPromise<any>[] = []
+			const sendPromises: PromiseWithResolvers<any>[] = []
 			ctx.sharedUdpSocketJoin.mockImplementationOnce(async () => {
-				const sendPromise = createManualPromise<any>()
+				const sendPromise = Promise.withResolvers<any>()
 				sendPromises.push(sendPromise)
-				return sendPromise
+				return sendPromise.promise
 			})
 
 			const bindCb = vi.fn()
@@ -115,7 +114,7 @@ describe('Shared UDP', () => {
 
 			// Mock receive a response
 			const err = new Error('Some backend failure')
-			sendPromises[0].manualReject(err)
+			sendPromises[0].reject(err)
 
 			// Verify that opening failed
 			await sleepImmediate()
@@ -132,11 +131,11 @@ describe('Shared UDP', () => {
 		const socket = new SharedUdpSocketImpl(ctx, { type: 'udp4' })
 		expect(socket.eventNames()).toHaveLength(0)
 
-		const sendPromises: ManualPromise<any>[] = []
+		const sendPromises: PromiseWithResolvers<any>[] = []
 		ctx.sharedUdpSocketJoin.mockImplementationOnce(async () => {
-			const sendPromise = createManualPromise<any>()
+			const sendPromise = Promise.withResolvers<any>()
 			sendPromises.push(sendPromise)
-			return sendPromise
+			return sendPromise.promise
 		})
 
 		const bindCb = vi.fn()
@@ -148,7 +147,7 @@ describe('Shared UDP', () => {
 		expect(ctx.sharedUdpSocketSend).toHaveBeenCalledTimes(0)
 		expect(sendPromises).toHaveLength(1)
 		const handleId = nanoid()
-		sendPromises[0].manualResolve(handleId)
+		sendPromises[0].resolve(handleId)
 
 		// Verify that opened successfully
 		await sleepImmediate()
@@ -167,11 +166,11 @@ describe('Shared UDP', () => {
 
 			const { socket, handleId } = await createAndOpenSocket(ctx)
 
-			const sendPromises: ManualPromise<any>[] = []
+			const sendPromises: PromiseWithResolvers<any>[] = []
 			ctx.sharedUdpSocketSend.mockImplementationOnce(async () => {
-				const sendPromise = createManualPromise<any>()
+				const sendPromise = Promise.withResolvers<any>()
 				sendPromises.push(sendPromise)
-				return sendPromise
+				return sendPromise.promise
 			})
 
 			// Do send
@@ -196,7 +195,7 @@ describe('Shared UDP', () => {
 			} satisfies SharedUdpSocketMessageSend)
 
 			// Mock receive a response
-			sendPromises[0].manualResolve(null)
+			sendPromises[0].resolve(null)
 
 			// Verify the callback
 			await sleepImmediate()
@@ -210,11 +209,11 @@ describe('Shared UDP', () => {
 
 			const { socket, handleId } = await createAndOpenSocket(ctx)
 
-			const sendPromises: ManualPromise<any>[] = []
+			const sendPromises: PromiseWithResolvers<any>[] = []
 			ctx.sharedUdpSocketSend.mockImplementationOnce(async () => {
-				const sendPromise = createManualPromise<any>()
+				const sendPromise = Promise.withResolvers<any>()
 				sendPromises.push(sendPromise)
-				return sendPromise
+				return sendPromise.promise
 			})
 
 			// Do send
@@ -243,7 +242,7 @@ describe('Shared UDP', () => {
 
 			// Mock receive a response
 			const err = new Error('Some backend failure')
-			sendPromises[0].manualReject(err)
+			sendPromises[0].reject(err)
 
 			// Verify the callback
 			await sleepImmediate()
@@ -261,11 +260,11 @@ describe('Shared UDP', () => {
 
 			const { socket, handleId } = await createAndOpenSocket(ctx)
 
-			const sendPromises: ManualPromise<any>[] = []
+			const sendPromises: PromiseWithResolvers<any>[] = []
 			ctx.sharedUdpSocketLeave.mockImplementationOnce(async () => {
-				const sendPromise = createManualPromise<any>()
+				const sendPromise = Promise.withResolvers<any>()
 				sendPromises.push(sendPromise)
-				return sendPromise
+				return sendPromise.promise
 			})
 
 			// Do send
@@ -286,7 +285,7 @@ describe('Shared UDP', () => {
 			} satisfies SharedUdpSocketMessageLeave)
 
 			// Mock receive a response
-			sendPromises[0].manualResolve(null)
+			sendPromises[0].resolve(null)
 
 			// Verify the callback
 			await sleepImmediate()
@@ -300,11 +299,11 @@ describe('Shared UDP', () => {
 
 			const { socket, handleId } = await createAndOpenSocket(ctx)
 
-			const sendPromises: ManualPromise<any>[] = []
+			const sendPromises: PromiseWithResolvers<any>[] = []
 			ctx.sharedUdpSocketLeave.mockImplementationOnce(async () => {
-				const sendPromise = createManualPromise<any>()
+				const sendPromise = Promise.withResolvers<any>()
 				sendPromises.push(sendPromise)
-				return sendPromise
+				return sendPromise.promise
 			})
 
 			// Do send
@@ -329,7 +328,7 @@ describe('Shared UDP', () => {
 
 			// Mock receive a response
 			const err = new Error('Some backend failure')
-			sendPromises[0].manualReject(err)
+			sendPromises[0].reject(err)
 
 			// Verify the callback
 			await sleepImmediate()

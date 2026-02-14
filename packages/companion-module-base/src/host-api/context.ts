@@ -23,7 +23,7 @@ import type { StringKeys } from '../util.js'
 
 export function isInstanceContext<TManifest extends InstanceTypes>(obj: unknown): obj is InstanceContext<TManifest> {
 	const obj2 = obj as InstanceContext<TManifest>
-	return typeof obj2 === 'object' && typeof obj2.id === 'string' && obj2._isInstanceContext === true
+	return !!obj2 && typeof obj2 === 'object' && typeof obj2.id === 'string' && obj2._isInstanceContext === true
 }
 
 export interface InstanceContext<TManifest extends InstanceTypes> extends InstanceSharedUdpSocketContext {

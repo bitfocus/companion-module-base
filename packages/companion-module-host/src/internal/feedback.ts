@@ -219,7 +219,7 @@ export class FeedbackManager {
 				this.#sendFeedbackValues()
 			})
 			.catch((e) => {
-				console.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
+				this.#logger.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 			})
 			.finally(() => {
 				// it is no longer being checked
@@ -316,7 +316,7 @@ export class FeedbackManager {
 		}
 		if (definitionSubscriptionMentionsChangeStyle.length > 0) {
 			this.#logger.warn(
-				`The following feedback definitions have a description that mentions 'change style'. Feedbacks no longer only affect style, making this is misleading. The definitions: ${definitionSubscriptionMentionsChangeStyle
+				`The following feedback definitions have a description that mentions 'change style'. Feedbacks no longer only affect style, making this misleading. The definitions: ${definitionSubscriptionMentionsChangeStyle
 					.sort()
 					.join(', ')}`,
 			)

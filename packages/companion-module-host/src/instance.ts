@@ -24,8 +24,7 @@ import type {
 	UpgradeActionInstance,
 	UpgradeFeedbackInstance,
 } from './context.js'
-// eslint-disable-next-line n/no-missing-import
-import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/dist/host-api/context.js'
+import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/host-api'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
 import { validatePresetDefinitions } from './internal/presets.js'
 
@@ -272,7 +271,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 
 			return {
 				hasHttpHandler: typeof this.#instance.handleHttpRequest === 'function',
-				hasRecordActionsHandler: typeof this.#instance.handleStartStopRecordActions == 'function',
+				hasRecordActionsHandler: typeof this.#instance.handleStartStopRecordActions === 'function',
 				newUpgradeIndex: this.#instanceContext.upgradeScripts.length - 1,
 				disableNewConfigLayout: this.#instance.instanceOptions.disableNewConfigLayout,
 				updatedConfig: this.#lastConfig,

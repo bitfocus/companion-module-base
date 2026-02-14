@@ -3,8 +3,6 @@
 
 	"bootstrap-sha": "4ad1f98582367d23c5e396f8a1843d34938a4574",
 
-	"include-component-in-tag": false,
-
 	"packages": {
 		"packages/companion-module-base": {
 			"release-type": "node",

@@ -101,6 +101,7 @@ export interface CompanionPresetSection<TManifest extends InstanceTypes = Instan
 
 	/**
 	 * The definitions of presets or groups in this section
+	 * This can either be an array of groups, or a direct array of preset references, which will be shown without grouping
 	 */
 	definitions: CompanionPresetGroup<TManifest>[] | CompanionPresetReference[]
 

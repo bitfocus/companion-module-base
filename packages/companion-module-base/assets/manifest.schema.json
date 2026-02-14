@@ -148,12 +148,12 @@
 				"": {
 					"oneOf": [
 						{
-							"$ref": "#/definitions/bonjourQuery"
+							"$ref": "#/$defs/bonjourQuery"
 						},
 						{
 							"type": "array",
 							"items": {
-								"$ref": "#/definitions/bonjourQuery"
+								"$ref": "#/$defs/bonjourQuery"
 							}
 						}
 					]
@@ -177,7 +177,7 @@
 		"products",
 		"keywords"
 	],
-	"definitions": {
+	"$defs": {
 		"bonjourQuery": {
 			"type": "object",
 			"title": "ModuleBonjourQuery",

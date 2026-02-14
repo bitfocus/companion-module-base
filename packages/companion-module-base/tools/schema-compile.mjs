@@ -10,8 +10,7 @@ import { fileURLToPath } from 'url'
 await $`json2ts --input assets/manifest.schema.json --output generated/manifest.d.ts --additionalProperties=false`
 
 {
-	// The generated code will have a default export:
-	// `module.exports = <validateFunctionCode>;module.exports.default = <validateFunctionCode>;`
+	// The generated code be in esm export format:
 	const ajv = new Ajv2020({ code: { source: true, esm: true } })
 	const validate = ajv.compile(manifestSchema)
 	const moduleCode = standaloneCode(ajv, validate)

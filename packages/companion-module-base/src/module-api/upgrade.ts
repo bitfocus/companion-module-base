@@ -166,8 +166,9 @@ export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig extends Json
 				if (!feedback.style) feedback.style = {}
 
 				for (const [option_key, style_key] of Object.entries(upgrade_rules)) {
-					if (feedback.options[option_key] !== undefined) {
-						feedback.style[style_key] = feedback.options[option_key] as any
+					const rawVal = feedback.options[option_key]
+					if (rawVal !== undefined) {
+						feedback.style[style_key] = rawVal as any
 						delete feedback.options[option_key]
 
 						changedFeedbacks.push(feedback)
@@ -243,7 +244,7 @@ export function FixupNumericOrVariablesValueToExpressions(
 
 	const oldValNum = Number(value.value)
 	const oldValRaw = value.value
-	if (typeof value.value === 'number' || !isNaN(oldValNum)) {
+	if (typeof value.value === 'number' || (!!oldValNum && !isNaN(oldValNum))) {
 		// It looks like a plain number, so store it as one
 		return {
 			isExpression: false,
@@ -262,7 +263,7 @@ export function FixupNumericOrVariablesValueToExpressions(
 			// Otherwise its something more complex, so wrap it in a parseVariables and hope for the best!
 			return {
 				isExpression: true,
-				value: `parseVariables("${oldValRaw.replace(/"/g, '\\"')}")`,
+				value: `parseVariables("${oldValRaw.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}")`,
 			}
 		}
 	} else {

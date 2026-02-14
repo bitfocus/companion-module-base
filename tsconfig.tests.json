@@ -1,5 +1,5 @@
 {
-	"extends": "@tsconfig/node22/tsconfig.json",
+	"extends": "./tsconfig.base.json",
 	"exclude": ["node_modules/**", ],
 	"include": [
 		"vitest.config.mts",
@@ -8,18 +8,8 @@
 		"packages/**/src/**/__mocks__/*"
 	],
 	"compilerOptions": {
-        "composite": true,
 		"paths": {
 		},
-		"module": "node20",
-		"moduleResolution": "node16",
-		"sourceMap": true,
-		"declaration": true,
-		"declarationMap": true,
-		"importHelpers": true,
-		"pretty": true,
-		"types": ["node"],
-		"esModuleInterop": true,
 		"noEmit": true
 	},
 	"references": [

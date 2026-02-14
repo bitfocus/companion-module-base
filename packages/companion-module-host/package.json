@@ -15,7 +15,7 @@
 		}
 	},
 	"engines": {
-		"node": "^18.20 || ^22.21"
+		"node": "^22.20"
 	},
 	"files": [
 		"README.md",

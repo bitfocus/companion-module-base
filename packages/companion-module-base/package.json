@@ -27,7 +27,7 @@
 		"docs:html": "run -BT typedoc --tsconfig tsconfig.json --entryPoints src/main.ts --excludePrivate --theme default --out docs"
 	},
 	"engines": {
-		"node": "^18.20 || ^22.21"
+		"node": "^22.20"
 	},
 	"files": [
 		"README.md",

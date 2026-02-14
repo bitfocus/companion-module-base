@@ -4,7 +4,7 @@ import type { CompanionButtonStyleProps } from '../style.js'
 import type { JsonValue } from '../../common/json-value.js'
 import type { CompanionVariableValue } from '../variable.js'
 import type { InstanceTypes } from '../base.js'
-import { CompanionActionSchema } from '../action.js'
+import type { CompanionActionSchema } from '../action.js'
 
 /**
  * The definitions of a group of presets
@@ -138,7 +138,7 @@ export type CompanionPresetFeedback<
 	[K in keyof TFeedbackManifest]: {
 		/** The id of the feedback definition */
 		feedbackId: K
-		/** The option values for the action */
+		/** The option values for the feedback */
 		options: CompanionPresetOptionValues<TFeedbackManifest[K]['options']>
 		/**
 		 * User editable description/comment for the feedback.

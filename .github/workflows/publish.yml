@@ -170,12 +170,12 @@ jobs:
           if-no-files-found: error
 
       - name: Prepare docs
-        if: ${{ steps.do-publish.outputs.tag == 'latest' }}
+        if: ${{ needs.determine-package.outputs.tag == 'latest' }}
         run: |
           yarn docs:html
 
       - name: Upload docs artifact
-        if: ${{ steps.do-publish.outputs.tag == 'latest' }}
+        if: ${{ needs.determine-package.outputs.tag == 'latest' }}
         uses: actions/upload-pages-artifact@v4
         with:
           path: docs/

@@ -51,7 +51,8 @@ export interface CompanionInputFieldBase<TKey extends string = string> {
 
 	/**
 	 * Enabling this will tell companion to validate the value of this field against the definition of the field.
-	 * If it is invalid, it will instead provide the default value you have set.
+	 * If the computed value for this option does not match the validation rules, it will be passed through unchanged.
+	 * If this is not set, then any invalid value will result in the action/feedback being skipped entirely.
 	 * Note: This only applies when in expression mode.
 	 */
 	allowInvalidValues?: boolean
@@ -170,7 +171,7 @@ export interface CompanionInputFieldTextInput<TKey extends string = string> exte
 	 */
 	default?: string
 	/**
-	 * Minimum rqeuried length of the value
+	 * Minimum required length of the value
 	 * Note: values may not conform to this, you should validate the value in your code
 	 */
 	minLength?: number
@@ -405,7 +406,7 @@ export interface CompanionInputFieldSecret<TKey extends string = string> extends
 	 */
 	default?: string
 	/**
-	 * Minimum rqeuried length of the value
+	 * Minimum required length of the value
 	 * Note: values may not conform to this, you should validate the value in your code
 	 */
 	minLength?: number

@@ -9,7 +9,6 @@
 		"paths": {
 			"*": ["./node_modules/*"],
 		},
-		"types": ["node"]
 	},
 	"references": [
 		{ "path": "../companion-module-base/" }
