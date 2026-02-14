@@ -14,7 +14,6 @@ const mockDefinitionId2 = 'definition1'
 const feedbackId = 'abcdef'
 const feedback: FeedbackInstance = {
 	id: feedbackId,
-	upgradeIndex: null,
 
 	feedbackId: mockDefinitionId,
 	options: { a: 1, b: 4 },
@@ -26,7 +25,6 @@ const feedback: FeedbackInstance = {
 const feedbackId2 = 'abc123'
 const feedback2: FeedbackInstance = {
 	id: feedbackId2,
-	upgradeIndex: null,
 
 	feedbackId: mockDefinitionId2,
 	options: { a: 1, b: 4 },

@@ -97,9 +97,6 @@ export interface HostFeedbackValue {
 export interface FeedbackInstanceBase {
 	id: string
 
-	// If this is pending being run through upgrade scripts, the version it needs upgraded from is tracked here
-	upgradeIndex: number | null
-
 	feedbackId: string // aka 'type'
 	options: CompanionOptionValues
 }
@@ -117,9 +114,6 @@ export interface FeedbackInstance extends FeedbackInstanceBase {
 export interface ActionInstanceBase {
 	id: string
 
-	// If this is pending being run through upgrade scripts, the version it needs upgraded from is tracked here
-	upgradeIndex: number | null
-
 	actionId: string // aka 'type'
 	options: CompanionOptionValues
 }
@@ -131,6 +125,9 @@ export interface UpgradeActionInstance extends Omit<ActionInstanceBase, 'options
 	options: ExpressionOptionsObject
 
 	controlId: string
+
+	// If this is pending being run through upgrade scripts, the version it needs upgraded from is tracked here
+	upgradeIndex: number | null
 }
 export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'options'> {
 	options: ExpressionOptionsObject
@@ -143,6 +140,9 @@ export interface UpgradeFeedbackInstance extends Omit<FeedbackInstanceBase, 'opt
 	style?: Partial<CompanionFeedbackButtonStyleResult>
 
 	controlId: string
+
+	// If this is pending being run through upgrade scripts, the version it needs upgraded from is tracked here
+	upgradeIndex: number | null
 }
 
 export interface UpgradeActionAndFeedbackInstancesResponse {
