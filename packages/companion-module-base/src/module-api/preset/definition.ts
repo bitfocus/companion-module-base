@@ -74,7 +74,7 @@ export interface CompanionPresetActionsWithOptions<TManifest extends InstanceTyp
 export interface CompanionActionSetOptions {
 	/**
 	 * If true, the actions will be executed once the button crosses the duration,
-	 * otherwise they only be executed if released before the next duration
+	 * otherwise they will only be executed if released before the next duration
 	 */
 	runWhileHeld?: boolean
 }
@@ -127,7 +127,7 @@ export type CompanionPresetAction<
 }[keyof TActionManifest]
 
 /**
- * The configuration of an feedback in a preset
+ * The configuration of a feedback in a preset
  */
 export type CompanionPresetFeedback<
 	TFeedbackManifest extends Record<string, CompanionFeedbackSchema<CompanionOptionValues>> = Record<

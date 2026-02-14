@@ -6,6 +6,11 @@
 		"$schema": {
 			"type": "string"
 		},
+		"type": {
+			"type": "string",
+			"enum": ["connection"],
+			"description": "Type of module. Must be: connection"
+		},
 		"id": {
 			"type": "string",
 			"description": "Unique identifier for the module"
