@@ -3,8 +3,17 @@ name: Publish Release
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
+      - 'companion-module-base-v[0-9]+.[0-9]+.[0-9]+*'
+      - 'companion-module-host-v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to publish'
+        required: true
+        type: choice
+        options:
+          - base
+          - host
 
 permissions:
   contents: read
@@ -13,8 +22,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# This workflow will perform a publish whenever it is triggered
-# If you are using a fork, and want to push tags you can disable this workflow in the github ui
 jobs:
   test:
     name: Test
@@ -24,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [18.x, 22.x]
+        node-version: [22.x]
 
     steps:
       - uses: actions/checkout@v6
@@ -38,110 +45,148 @@ jobs:
           yarn install
         env:
           CI: true
+      - name: Build Packages
+        run: |
+          yarn build
+        env:
+          CI: true
       - name: Run tests
         run: |
           yarn unit
         env:
           CI: true
 
+  determine-package:
+    name: Determine which package to publish
+    runs-on: ubuntu-latest
+    outputs:
+      package-name: ${{ steps.determine.outputs.package-name }}
+      package-short-name: ${{ steps.determine.outputs.package-short-name }}
+      package-path: ${{ steps.determine.outputs.package-path }}
+      tag: ${{ steps.determine.outputs.tag }}
+      prerelease: ${{ steps.determine.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Determine package from tag or input
+        id: determine
+        run: |
+          # Determine which package we're publishing
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual dispatch - use input
+            if [ "${{ github.event.inputs.package }}" = "base" ]; then
+              PACKAGE_NAME="@companion-module/base"
+              PACKAGE_SHORT_NAME="base"
+              PACKAGE_PATH="packages/companion-module-base"
+            else
+              PACKAGE_NAME="@companion-module/host"
+              PACKAGE_SHORT_NAME="host"
+              PACKAGE_PATH="packages/companion-module-host"
+            fi
+            
+            # Determine tag based on branch
+            if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+              echo "Publishing nightly"
+              TAG="nightly"
+            else
+              echo "Publishing experimental"
+              TAG="experimental"
+            fi
+            
+            # Generate prerelease version suffix
+            HASH=$(git rev-parse --short HEAD)
+            TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+            PRERELEASE_TAG=nightly-$(echo "${{ github.ref_name }}" | sed -r 's/[^a-z0-9]+/-/gi')
+            PRERELEASE="${PRERELEASE_TAG}-${TIMESTAMP}-${HASH}"
+            
+            echo "tag=${TAG}" >> $GITHUB_OUTPUT
+            echo "prerelease=${PRERELEASE}" >> $GITHUB_OUTPUT
+          else
+            # Tag push - parse tag name
+            TAG="${{ github.ref_name }}"
+            if [[ "$TAG" == companion-module-base-v* ]]; then
+              PACKAGE_NAME="@companion-module/base"
+              PACKAGE_SHORT_NAME="base"
+              PACKAGE_PATH="packages/companion-module-base"
+            elif [[ "$TAG" == companion-module-host-v* ]]; then
+              PACKAGE_NAME="@companion-module/host"
+              PACKAGE_SHORT_NAME="host"
+              PACKAGE_PATH="packages/companion-module-host"
+            else
+              echo "Unknown tag format: $TAG"
+              exit 1
+            fi
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          fi
+
+          echo "package-name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
+          echo "package-short-name=${PACKAGE_SHORT_NAME}" >> $GITHUB_OUTPUT
+          echo "package-path=${PACKAGE_PATH}" >> $GITHUB_OUTPUT
+
   prepare:
     name: Prepare package
     runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.do-publish.outputs.tag }}
-      prerelease: ${{ steps.do-publish.outputs.prerelease }}
+    needs: determine-package
     timeout-minutes: 15
-
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Use Node.js 18.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
-          node-version: 18.x
+          node-version: 22.x
       - name: Enable corepack
         run: corepack enable
-      - name: Determine publish info
-        id: do-publish
-        run: |
-          # If this run was started manually, choose nightly for main and experimental otherwise.
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-              echo "Publishing nightly"
-              echo "tag=nightly" >> $GITHUB_OUTPUT
-            else
-              echo "Publishing experimental"
-              echo "tag=experimental" >> $GITHUB_OUTPUT
-            fi
-            
-            HASH=$(git rev-parse --short HEAD)
-            TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-            PRERELEASE_TAG=nightly-$(echo "${{ github.ref_name }}" | sed -r 's/[^a-z0-9]+/-/gi')
-            echo "prerelease=${PRERELEASE_TAG}-${TIMESTAMP}-${HASH}" >> $GITHUB_OUTPUT
-
-          else
-            # Otherwise (push by tag), keep the previous logic: compare published vs package.json
-            PUBLISHED_VERSION=$(yarn npm info --json . | jq -c '.version' -r)
-            THIS_VERSION=$(node -p "require('./package.json').version")
-            # Simple bash helper to compare version numbers
-            verlte() {
-              [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ]
-            }
-            verlt() {
-              [ "$1" = "$2" ] && return 1 || verlte $1 $2
-            }
-            if verlt $PUBLISHED_VERSION $THIS_VERSION
-            then
-              echo "Publishing latest"
-              echo "tag=latest" >> $GITHUB_OUTPUT
-            else
-              echo "Publishing hotfix"
-              echo "tag=hotfix" >> $GITHUB_OUTPUT
-            fi
-          fi
       - name: Prepare build
         run: |
           yarn install
 
           # Bump to prerelease version if needed
-          if [ "${{ steps.do-publish.outputs.prerelease }}" != "" ]; then
+          if [ "${{ needs.determine-package.outputs.prerelease }}" != "" ]; then
+            cd ${{ needs.determine-package.outputs.package-path }}
             OLD_VERSION=$(node -p "require('./package.json').version")
-            yarn version ${OLD_VERSION}-${{ steps.do-publish.outputs.prerelease }}
+            yarn version ${OLD_VERSION}-${{ needs.determine-package.outputs.prerelease }}
+            cd ../..
           fi
 
           yarn build
         env:
           CI: true
-
       - name: Upload release artifact
         uses: actions/upload-artifact@v6
         with:
-          name: publish-dist
+          name: publish-dist-${{ needs.determine-package.outputs.package-short-name }}
           path: |
-            dist
-            generated
-            package.json
+            ${{ needs.determine-package.outputs.package-path }}/dist
+            ${{ needs.determine-package.outputs.package-path }}/package.json
+            ${{ needs.determine-package.outputs.package-path }}/README.md
+            ${{ needs.determine-package.outputs.package-path }}/CHANGELOG.md
+            ${{ needs.determine-package.outputs.package-path }}/generated
+            ${{ needs.determine-package.outputs.package-path }}/assets
           retention-days: 1
           if-no-files-found: error
 
       - name: Prepare docs
-        if: ${{ steps.do-publish.outputs.tag == 'latest' }}
+        if: ${{ needs.determine-package.outputs.tag == 'latest' && needs.determine-package.outputs.package-short-name == 'base' }}
         run: |
+          cd packages/companion-module-base
           yarn docs:html
 
       - name: Upload docs artifact
-        if: ${{ steps.do-publish.outputs.tag == 'latest' }}
+        if: ${{ needs.determine-package.outputs.tag == 'latest' && needs.determine-package.outputs.package-short-name == 'base' }}
         uses: actions/upload-pages-artifact@v4
         with:
-          path: docs/
+          path: packages/companion-module-base/docs/
 
   publish:
     name: Publish to NPM
     needs:
       - prepare
       - test
+      - determine-package
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -152,38 +197,43 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Use Node.js 18.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
-          node-version: 18.x
+          node-version: 22.x
 
       - name: Download release artifact
         uses: actions/download-artifact@v7
         with:
-          name: publish-dist
+          name: publish-dist-${{ needs.determine-package.outputs.package-short-name }}
+          path: ${{ needs.determine-package.outputs.package-path }}
 
       - name: Publish to NPM
         run: |
+          cd ${{ needs.determine-package.outputs.package-path }}
           corepack enable
           yarn install
 
           # Publish from the extracted release (build output present)
-          yarn npm publish --access=public --provenance --tag ${{ needs.prepare.outputs.tag }}
+          yarn npm publish --access=public --provenance --tag ${{ needs.determine-package.outputs.tag }}
 
           NEW_VERSION=$(node -p "require('./package.json').version")
-          echo "**Published:** $NEW_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "**Published:** ${{ needs.determine-package.outputs.package-name }}@${NEW_VERSION}" >> $GITHUB_STEP_SUMMARY
         env:
           CI: true
 
   publish-docs:
-    name: Publish to NPM
+    name: Publish docs
     needs:
       - prepare
       - publish
+      - determine-package
     runs-on: ubuntu-latest
     permissions:
       pages: write # to deploy to Pages
       id-token: write # to verify the deployment originates from an appropriate source
+
+    if: ${{ needs.determine-package.outputs.tag == 'latest' && needs.determine-package.outputs.package-short-name == 'base' }}
 
     # Deploy to the github-pages environment
     environment:
@@ -192,6 +242,5 @@ jobs:
 
     steps:
       - name: Deploy to GitHub Pages
-        if: ${{ needs.prepare.outputs.tag == 'latest' }}
         id: deployment
         uses: actions/deploy-pages@v4

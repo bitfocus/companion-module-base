@@ -1,8 +1,8 @@
 {
-	"extends": "./tsconfig.build.json",
-	"exclude": ["node_modules/**"],
-	"compilerOptions": {
-		"types": ["node"],
-		"lib": ["ES2021.String"]
-	}
+	"files": [],
+	"references": [
+		{ "path": "./tsconfig.tests.json"},
+		{ "path": "./packages/companion-module-base/tsconfig.json" },
+		{ "path": "./packages/companion-module-host/tsconfig.json" },
+	]
 }

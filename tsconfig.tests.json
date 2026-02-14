@@ -1,0 +1,19 @@
+{
+	"extends": "./tsconfig.base.json",
+	"exclude": ["node_modules/**", ],
+	"include": [
+		"vitest.config.mts",
+		"packages/**/src/**/*spec.ts",
+		"packages/**/src/**/__tests__/*",
+		"packages/**/src/**/__mocks__/*"
+	],
+	"compilerOptions": {
+		"paths": {
+		},
+		"noEmit": true
+	},
+	"references": [
+		{ "path": "./packages/companion-module-base/tsconfig.json" },
+		{ "path": "./packages/companion-module-host/tsconfig.json" }
+	]
+}

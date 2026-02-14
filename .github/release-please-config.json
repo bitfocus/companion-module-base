@@ -3,11 +3,16 @@
 
 	"bootstrap-sha": "4ad1f98582367d23c5e396f8a1843d34938a4574",
 
-	"include-component-in-tag": false,
-
 	"packages": {
-		".": {
-			"release-type": "node"
+		"packages/companion-module-base": {
+			"release-type": "node",
+			"component": "companion-module-base",
+			"package-name": "@companion-module/base"
+		},
+		"packages/companion-module-host": {
+			"release-type": "node",
+			"component": "companion-module-host",
+			"package-name": "@companion-module/host"
 		}
 	}
 }
