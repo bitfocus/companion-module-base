@@ -23,7 +23,7 @@ class MinimalSocket extends EventEmitter {
 		super()
 	}
 
-	public async emitMessage(address: string, port: number, msg: Buffer): Promise<void> {
+	public emitMessage(address: string, port: number, msg: Buffer): void {
 		const rinfo: RemoteInfo = {
 			address: address,
 			port: port,
@@ -31,8 +31,6 @@ class MinimalSocket extends EventEmitter {
 			size: msg.length,
 		}
 		this.emit('message', msg, rinfo)
-
-		await vi.runAllTimersAsync()
 	}
 
 	public bind = vi.fn<Socket['bind']>(() => {
@@ -168,7 +166,165 @@ describe('UDP', () => {
 	// 	vi.advanceTimersByTimeAsync(10000)
 	// })
 
-	describe('send', () => {
+	describe('events', () => {
+		it('data event passes message and rinfo', async () => {
+			const rawSocket = new MinimalSocket()
+			createSocketMock.mockReturnValueOnce(rawSocket as any)
+
+			rawSocket.bind.mockImplementationOnce(() => rawSocket as any)
+
+			const socket = new UDPHelper('1.2.3.4', 852)
+			try {
+				const dataHandler = vi.fn()
+				socket.on('data', dataHandler)
+
+				const msg = Buffer.from('hello')
+				rawSocket.emitMessage('9.8.7.6', 9999, msg)
+
+				expect(dataHandler).toHaveBeenCalledTimes(1)
+				const [received, rinfo] = dataHandler.mock.calls[0]
+				expect(received).toEqual(msg)
+				expect(rinfo).toBeDefined()
+				expect(rinfo.address).toBe('9.8.7.6')
+				expect(rinfo.port).toBe(9999)
+			} finally {
+				socket.destroy()
+			}
+		})
+
+		it('isDestroyed toggles after destroy', () => {
+			const rawSocket = new MinimalSocket()
+			createSocketMock.mockReturnValueOnce(rawSocket as any)
+
+			rawSocket.bind.mockImplementationOnce(() => rawSocket as any)
+
+			const socket = new UDPHelper('1.2.3.4', 852)
+			try {
+				expect(socket.isDestroyed).toBe(false)
+				socket.destroy()
+				expect(socket.isDestroyed).toBe(true)
+			} finally {
+				// no-op: already destroyed
+			}
+		})
+	})
+
+	describe('missing error-handler timer', () => {
+		it('logs error when no error listener', async () => {
+			vi.useFakeTimers()
+
+			const rawSocket = new MinimalSocket()
+			createSocketMock.mockReturnValueOnce(rawSocket as any)
+
+			rawSocket.bind.mockImplementationOnce(() => rawSocket as any)
+
+			const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+			const socket = new UDPHelper('1.2.3.4', 852)
+			try {
+				// advance past the 5s timer used in the implementation
+				await vi.advanceTimersByTimeAsync(5000)
+
+				expect(spy).toHaveBeenCalled()
+			} finally {
+				spy.mockRestore()
+				socket.destroy()
+				vi.useRealTimers()
+			}
+		})
+	})
+
+	describe('send (sync)', () => {
+		const rawSocket = new MinimalSocket()
+		rawSocket.bind.mockImplementation(() => rawSocket as any)
+		let socket: UDPHelper
+
+		beforeAll(() => {
+			createSocketMock.mockReturnValueOnce(rawSocket as any)
+
+			socket = new UDPHelper('1.2.3.4', 852)
+			expect(socket).toBeTruthy()
+		})
+
+		beforeEach(() => {
+			rawSocket.close.mockClear()
+			rawSocket.send.mockClear()
+		})
+
+		afterAll(() => {
+			if (socket) socket.destroy()
+		})
+
+		it('destroyed', () => {
+			createSocketMock.mockReturnValueOnce(rawSocket as any)
+
+			const mySocket = new UDPHelper('1.2.3.4', 852)
+			expect(mySocket).toBeTruthy()
+
+			mySocket.destroy()
+			expect(rawSocket.close).toHaveBeenCalledTimes(1)
+
+			expect(() => mySocket.send('test')).toThrow('Cannot write to destroyed socket')
+		})
+
+		it('no message', () => {
+			expect(() => socket.send(undefined as any)).toThrow('No message to send')
+
+			expect(rawSocket.send).toHaveBeenCalledTimes(0)
+		})
+
+		it('ok: string', () => {
+			rawSocket.send.mockImplementation((msg, offset, length, cb) => {
+				if (!cb) return
+
+				cb(null, length)
+			})
+
+			socket.send('test 123')
+
+			expect(rawSocket.send).toHaveBeenCalledTimes(1)
+			expect(rawSocket.send).toHaveBeenCalledWith('test 123', 852, '1.2.3.4', expect.any(Function))
+		})
+
+		it('ok: buffer', () => {
+			rawSocket.send.mockImplementation((msg, offset, length, cb) => {
+				if (!cb) return
+
+				cb(null, length)
+			})
+
+			const msg = Buffer.from('test 123')
+			socket.send(msg)
+
+			expect(rawSocket.send).toHaveBeenCalledTimes(1)
+			expect(rawSocket.send).toHaveBeenCalledWith(msg, 852, '1.2.3.4', expect.any(Function))
+		})
+
+		it('send error emits error event', () => {
+			const errorHandler = vi.fn()
+			socket.on('error', errorHandler)
+
+			rawSocket.send.mockImplementation((msg, offset, length, cb) => {
+				if (!cb) return
+
+				// Call the callback synchronously to emit error
+				cb(new Error('buffer overflow'), 0)
+			})
+
+			const msg = Buffer.from('test 123')
+			socket.send(msg)
+
+			expect(rawSocket.send).toHaveBeenCalledTimes(1)
+			expect(rawSocket.send).toHaveBeenCalledWith(msg, 852, '1.2.3.4', expect.any(Function))
+
+			expect(errorHandler).toHaveBeenCalledTimes(1)
+			expect(errorHandler).toHaveBeenCalledWith(new Error('buffer overflow'))
+
+			socket.off('error', errorHandler)
+		})
+	})
+
+	describe('sendAsync', () => {
 		const rawSocket = new MinimalSocket()
 		rawSocket.bind.mockImplementation(() => rawSocket as any)
 		let socket: UDPHelper
@@ -198,11 +354,11 @@ describe('UDP', () => {
 			mySocket.destroy()
 			expect(rawSocket.close).toHaveBeenCalledTimes(1)
 
-			await expect(mySocket.send('test')).rejects.toThrow('Cannot write to destroyed socket')
+			await expect(mySocket.sendAsync('test')).rejects.toThrow('Cannot write to destroyed socket')
 		})
 
 		it('no message', async () => {
-			await expect(socket.send(undefined as any)).rejects.toThrow('No message to send')
+			await expect(socket.sendAsync(undefined as any)).rejects.toThrow('No message to send')
 
 			expect(rawSocket.send).toHaveBeenCalledTimes(0)
 		})
@@ -214,7 +370,7 @@ describe('UDP', () => {
 				cb(null, length)
 			})
 
-			await expect(socket.send('test 123')).resolves.toBeUndefined()
+			await expect(socket.sendAsync('test 123')).resolves.toBeUndefined()
 
 			expect(rawSocket.send).toHaveBeenCalledTimes(1)
 			expect(rawSocket.send).toHaveBeenCalledWith('test 123', 852, '1.2.3.4', expect.any(Function))
@@ -228,7 +384,7 @@ describe('UDP', () => {
 			})
 
 			const msg = Buffer.from('test 123')
-			await expect(socket.send(msg)).resolves.toBeUndefined()
+			await expect(socket.sendAsync(msg)).resolves.toBeUndefined()
 
 			expect(rawSocket.send).toHaveBeenCalledTimes(1)
 			expect(rawSocket.send).toHaveBeenCalledWith(msg, 852, '1.2.3.4', expect.any(Function))
@@ -242,7 +398,7 @@ describe('UDP', () => {
 			})
 
 			const msg = Buffer.from('test 123')
-			await expect(socket.send(msg)).rejects.toThrow('buffer overflow')
+			await expect(socket.sendAsync(msg)).rejects.toThrow('buffer overflow')
 
 			expect(rawSocket.send).toHaveBeenCalledTimes(1)
 			expect(rawSocket.send).toHaveBeenCalledWith(msg, 852, '1.2.3.4', expect.any(Function))
