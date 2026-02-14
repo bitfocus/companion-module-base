@@ -99,7 +99,6 @@ export interface FeedbackInstanceBase {
 
 	// If this is pending being run through upgrade scripts, the version it needs upgraded from is tracked here
 	upgradeIndex: number | null
-	disabled: boolean
 
 	feedbackId: string // aka 'type'
 	options: CompanionOptionValues
@@ -120,7 +119,6 @@ export interface ActionInstanceBase {
 
 	// If this is pending being run through upgrade scripts, the version it needs upgraded from is tracked here
 	upgradeIndex: number | null
-	disabled: boolean
 
 	actionId: string // aka 'type'
 	options: CompanionOptionValues

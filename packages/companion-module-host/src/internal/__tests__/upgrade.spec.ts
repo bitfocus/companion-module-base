@@ -198,7 +198,6 @@ describe('runThroughUpgradeScripts', () => {
 		const action0Before: UpgradeActionInstance = {
 			id: 'act0',
 			upgradeIndex: null,
-			disabled: false,
 			actionId: 'my-action',
 			options: {
 				a: { value: 1, isExpression: false },
@@ -209,7 +208,6 @@ describe('runThroughUpgradeScripts', () => {
 		const action1Before: UpgradeActionInstance = {
 			id: 'act1',
 			upgradeIndex: null,
-			disabled: false,
 			actionId: 'my-action',
 			options: {
 				c: { value: 1, isExpression: false },
@@ -269,7 +267,6 @@ describe('runThroughUpgradeScripts', () => {
 		const action0Before: UpgradeActionInstance = {
 			id: 'act0',
 			upgradeIndex: null,
-			disabled: false,
 			actionId: 'my-action',
 			options: {
 				a: { value: 1, isExpression: false },
@@ -280,7 +277,6 @@ describe('runThroughUpgradeScripts', () => {
 		const action1Before: UpgradeActionInstance = {
 			id: 'act1',
 			upgradeIndex: -1,
-			disabled: false,
 			actionId: 'my-action',
 			options: {
 				c: { value: 1, isExpression: false },

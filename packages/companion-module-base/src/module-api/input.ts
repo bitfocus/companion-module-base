@@ -254,7 +254,7 @@ export interface CompanionInputFieldDropdown<
  * 		{ id: 'bob', label: 'Bob' },
  * 		{ id: 'sally', label: 'Sally' },
  * 	],
- * 	default: 'bob'
+ * 	default: ['bob']
  * }
  * ```
  */

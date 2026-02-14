@@ -15,7 +15,6 @@ const feedbackId = 'abcdef'
 const feedback: FeedbackInstance = {
 	id: feedbackId,
 	upgradeIndex: null,
-	disabled: false,
 
 	feedbackId: mockDefinitionId,
 	options: { a: 1, b: 4 },
@@ -28,7 +27,6 @@ const feedbackId2 = 'abc123'
 const feedback2: FeedbackInstance = {
 	id: feedbackId2,
 	upgradeIndex: null,
-	disabled: false,
 
 	feedbackId: mockDefinitionId2,
 	options: { a: 1, b: 4 },
@@ -198,43 +196,6 @@ describe('FeedbackManager', () => {
 
 		// Make sure the options were updated
 		expect(updatedFeedback.options).not.toEqual(feedback.options)
-	})
-
-	it('instance: disabled', async () => {
-		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
-		const manager = new FeedbackManager(mockSetFeedbackDefinitions, unimplementedFunction)
-		expect(manager.getDefinitionIds()).toHaveLength(0)
-		expect(manager.getInstanceIds()).toHaveLength(0)
-
-		const mockDefinitionId = 'definition0'
-		const mockDefinition: CompanionFeedbackDefinition = {
-			type: 'boolean',
-			name: 'Definition0',
-			defaultStyle: {},
-			options: [],
-			callback: vi.fn<CompanionBooleanFeedbackDefinition['callback']>(() => false),
-		}
-
-		// setup definition
-		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
-		expect(manager.getDefinitionIds()).toEqual([mockDefinitionId])
-		expect(manager.getInstanceIds()).toHaveLength(0)
-		expect(mockSetFeedbackDefinitions).toHaveBeenCalledTimes(1)
-
-		expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
-
-		// report a feedback
-		manager.handleUpdateFeedbacks({
-			[feedbackId]: {
-				...feedback,
-				disabled: true,
-			},
-		})
-
-		// wait for debounce
-		await runAllTimers()
-		expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
-		expect(manager.getInstanceIds()).toHaveLength(0)
 	})
 
 	it('instance: delete', async () => {

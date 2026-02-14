@@ -88,7 +88,7 @@ export class FeedbackManager {
 				}
 			}
 
-			if (!feedback || feedback.disabled) {
+			if (!feedback) {
 				// Deleted
 				this.#feedbackInstances.delete(id)
 			} else {

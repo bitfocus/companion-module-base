@@ -145,7 +145,7 @@ export type CompanionPresetFeedback<
 		 * Intended to describe the purpose/intent of the feedback.
 		 */
 		headline?: string
-	} & TFeedbackManifest[K]['type'] extends 'boolean'
+	} & (TFeedbackManifest[K]['type'] extends 'boolean'
 		? // definitely boolean
 			{
 				/**
@@ -173,7 +173,7 @@ export type CompanionPresetFeedback<
 				{
 					style?: never
 					isInverted?: never
-				}
+				})
 }[keyof TFeedbackManifest]
 
 /**

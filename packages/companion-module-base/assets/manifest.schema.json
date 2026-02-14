@@ -43,7 +43,7 @@
 		},
 		"maintainers": {
 			"type": "array",
-			"description": "List of active maintiners",
+			"description": "List of active maintainers",
 			"uniqueItems": true,
 			"items": {
 				"type": "object",

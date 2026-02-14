@@ -233,7 +233,7 @@ jobs:
       pages: write # to deploy to Pages
       id-token: write # to verify the deployment originates from an appropriate source
 
-    if: ${{ needs.determine-package.outputs.tag == 'latest' }}
+    if: ${{ needs.determine-package.outputs.tag == 'latest' && needs.determine-package.outputs.package-short-name == 'base' }}
 
     # Deploy to the github-pages environment
     environment:

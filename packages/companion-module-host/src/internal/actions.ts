@@ -111,7 +111,7 @@ export class ActionManager {
 				}
 			}
 
-			if (!action || action.disabled) {
+			if (!action) {
 				// Deleted
 				this.#actionInstances.delete(id)
 			} else {
