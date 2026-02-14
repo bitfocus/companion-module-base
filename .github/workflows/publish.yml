@@ -170,15 +170,16 @@ jobs:
           if-no-files-found: error
 
       - name: Prepare docs
-        if: ${{ needs.determine-package.outputs.tag == 'latest' }}
+        if: ${{ needs.determine-package.outputs.tag == 'latest' && needs.determine-package.outputs.package-short-name == 'base' }}
         run: |
+          cd packages/companion-module-base
           yarn docs:html
 
       - name: Upload docs artifact
-        if: ${{ needs.determine-package.outputs.tag == 'latest' }}
+        if: ${{ needs.determine-package.outputs.tag == 'latest' && needs.determine-package.outputs.package-short-name == 'base' }}
         uses: actions/upload-pages-artifact@v4
         with:
-          path: docs/
+          path: packages/companion-module-base/docs/
 
   publish:
     name: Publish to NPM

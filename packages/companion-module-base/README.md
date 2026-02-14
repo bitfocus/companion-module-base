@@ -6,7 +6,7 @@ In the future it may be possible to write modules in other languages, but it is 
 
 ## Supported versions of this library
 
-Each version of Companion supports a limited range of versions of this library listed below. Any patch version (the third number) is not relevant for the compatibility check, so are not listed here
+Each version of Companion supports a limited range of versions of this library listed below. Any patch version (the third number) is not relevant for the compatibility check, so they are not listed here
 
 | Companion | Module-base                |
 | --------- | -------------------------- |

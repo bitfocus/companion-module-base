@@ -369,7 +369,7 @@ export interface CompanionInputFieldCustomVariable<TKey extends string = string>
  * Available for config
  *
  * Note: Bonjour does not work in all environments, so the user is always able to select 'Manual' (null).
- * You must make sure to handle this, we recommend using the `isVisible` function to hide the manual input fields when a bonjour device is selected.
+ * You must make sure to handle this, we recommend using the `isVisibleExpression` to hide the manual input fields when a bonjour device is selected.
  *
  * ### Example
  * ```js

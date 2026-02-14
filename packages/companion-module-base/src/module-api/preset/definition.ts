@@ -145,25 +145,25 @@ export type CompanionPresetFeedback<
 		 * Intended to describe the purpose/intent of the feedback.
 		 */
 		headline?: string
-	} & ('boolean' extends TFeedbackManifest[K]['type']
-		? // boolean feedbacks can have a few more properties
+	} & TFeedbackManifest[K]['type'] extends 'boolean'
+		? // definitely boolean
 			{
 				/**
 				 * If a boolean feedback, the style effect of the feedback
 				 */
-				style?: CompanionFeedbackButtonStyleResult
+				style: CompanionFeedbackButtonStyleResult
 				/**
 				 * If a boolean feedback, invert the value of the feedback
 				 */
 				isInverted?: boolean
 			}
-		: TFeedbackManifest[K]['type'] extends 'boolean'
-			? // definitely boolean
+		: 'boolean' extends TFeedbackManifest[K]['type']
+			? // boolean feedbacks can have a few more properties
 				{
 					/**
 					 * If a boolean feedback, the style effect of the feedback
 					 */
-					style: CompanionFeedbackButtonStyleResult
+					style?: CompanionFeedbackButtonStyleResult
 					/**
 					 * If a boolean feedback, invert the value of the feedback
 					 */
@@ -173,7 +173,7 @@ export type CompanionPresetFeedback<
 				{
 					style?: never
 					isInverted?: never
-				})
+				}
 }[keyof TFeedbackManifest]
 
 /**

@@ -244,7 +244,10 @@ export function FixupNumericOrVariablesValueToExpressions(
 
 	const oldValNum = Number(value.value)
 	const oldValRaw = value.value
-	if (typeof value.value === 'number' || (!!oldValNum && !isNaN(oldValNum))) {
+	if (
+		typeof value.value === 'number' ||
+		(typeof value.value === 'string' && value.value.trim() !== '' && !isNaN(oldValNum))
+	) {
 		// It looks like a plain number, so store it as one
 		return {
 			isExpression: false,
