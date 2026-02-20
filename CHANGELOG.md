@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.0](https://github.com/bitfocus/companion-module-base/compare/v1.14.1...v1.15.0) (2026-02-20)
+
+
+### Features
+
+* add insecure-algorithms permission property ([#189](https://github.com/bitfocus/companion-module-base/issues/189)) ([004b942](https://github.com/bitfocus/companion-module-base/commit/004b942da6408bad8ab92fae236a1b7158ef267d))
+
 ## [1.14.1](https://github.com/bitfocus/companion-module-base/compare/v1.14.0...v1.14.1) (2025-12-22)
 
 
