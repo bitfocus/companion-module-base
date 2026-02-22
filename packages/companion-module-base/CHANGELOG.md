@@ -1,5 +1,70 @@
 # Changelog
 
+## [2.0.0-alpha.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v1.14.1...companion-module-base-v2.0.0-alpha.0) (2026-02-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* split out `checkAllFeedbacks` to trigger all feedbacks to be checked
+* rework async behaviour of tcp/udp helpers ([#186](https://github.com/bitfocus/companion-module-base/issues/186))
+* require type property in manifest
+* allow better typings for variables
+* better typings for dropdown choices
+* allow better typings for actions & feedbacks
+* support expression for isInverted value
+* remove subscribe callbacks for feedbacks
+* swap action optionsToIgnoreForSubscribe for optionsToMonitorForSubscribe
+* signal change of behaviour of learn callbacks, indicating that only 'values' should be returned, not the identifier fields
+* remove relativeDelay from presets, delays are now always relative
+* replace `InputValue` with `JsonValue`
+* add generic constraint to TConfig and TSecrets
+* remove parseVariablesInString off class, it should no longer be necessary
+* remove parseVariablesInString methods from callback context, as they are no longer appropriate
+* remove runEntrypoint method, expect default export instead
+
+### Features
+
+* add generic constraint to TConfig and TSecrets ([a836ece](https://github.com/bitfocus/companion-module-base/commit/a836eceea95d00f7ebe865e2cc0bc86502b78dab))
+* add scoped logging api ([752f85b](https://github.com/bitfocus/companion-module-base/commit/752f85bb62f9c79e884d33f0516b6444026d6692))
+* add sortName property to actions and feedbacks ([c001c93](https://github.com/bitfocus/companion-module-base/commit/c001c93c4f6c3ccec7621c640ed33c718b3290cd))
+* allow better typings for actions & feedbacks ([6929e96](https://github.com/bitfocus/companion-module-base/commit/6929e9636abb2a16add296a988fa15b5abdce0be))
+* allow better typings for variables ([59350ed](https://github.com/bitfocus/companion-module-base/commit/59350edf642dfe569969e39cb9c60f3ba91e9278))
+* allow specifying addressFamily in bonjour queries ([0f5947a](https://github.com/bitfocus/companion-module-base/commit/0f5947a1d0d1377dacd1166108a597e39617ac84))
+* allow variables to produce any json ([b97e028](https://github.com/bitfocus/companion-module-base/commit/b97e028a80d4a899eb4c326617874e154ffede59))
+* better typings for dropdown choices ([9b53800](https://github.com/bitfocus/companion-module-base/commit/9b53800e80157c9ef56e24327290e776cc164e5e))
+* expose expression configuration on option fields ([1de1938](https://github.com/bitfocus/companion-module-base/commit/1de19387af9c3f819c997348cf284b019aafd3da))
+* overhaul preset definitions ([#182](https://github.com/bitfocus/companion-module-base/issues/182)) ([440847a](https://github.com/bitfocus/companion-module-base/commit/440847a8dadfdb808911eb9676a8fa083a1e25a1))
+* provide previous options to feedback callbacks ([227acd4](https://github.com/bitfocus/companion-module-base/commit/227acd426fc8f28a875c67d16bc1471b510f454f))
+* rearrange into monorepo ([4fb57ce](https://github.com/bitfocus/companion-module-base/commit/4fb57cee8dc81dc6aa17bc7e5a5fc1d55e5c2c69))
+* remove parseVariablesInString methods from callback context, as they are no longer appropriate ([4a85b3e](https://github.com/bitfocus/companion-module-base/commit/4a85b3e0f16f99688ebe1bb467ab3a7e8bd6148f))
+* remove parseVariablesInString off class, it should no longer be necessary ([cd65d67](https://github.com/bitfocus/companion-module-base/commit/cd65d67213b602f426f949b9368e295023eb7330))
+* remove relativeDelay from presets, delays are now always relative ([c150acb](https://github.com/bitfocus/companion-module-base/commit/c150acbf1da42262d2444d9e1b8b1f40484f05ad))
+* remove runEntrypoint method, expect default export instead ([48dbe4c](https://github.com/bitfocus/companion-module-base/commit/48dbe4ce020ab203eca485e2d6402d1fa5a171e8))
+* remove subscribe callbacks for feedbacks ([0c17af0](https://github.com/bitfocus/companion-module-base/commit/0c17af09cab3a324daab75073fdce178a5ecc8ca))
+* replace 'required' properties on input fields ([63855dc](https://github.com/bitfocus/companion-module-base/commit/63855dc8cf98c952c575fc746c88faf5eaf2a238))
+* replace `InputValue` with `JsonValue` ([58aa5f5](https://github.com/bitfocus/companion-module-base/commit/58aa5f539ce6c7903b35210c0f962a744b451a81))
+* require type property in manifest ([08b1aa9](https://github.com/bitfocus/companion-module-base/commit/08b1aa969f46c3dccc4efefe0f34c6f9134efb90))
+* rework async behaviour of tcp/udp helpers ([#186](https://github.com/bitfocus/companion-module-base/issues/186)) ([00c1db7](https://github.com/bitfocus/companion-module-base/commit/00c1db7a6f9ffaa9d3838dda910e7ee97628f7b1))
+* rework module-api into split package structure ([cde0a91](https://github.com/bitfocus/companion-module-base/commit/cde0a910f5c38a24da3af286c0cb0bf7c272b4aa))
+* signal change of behaviour of learn callbacks, indicating that only 'values' should be returned, not the identifier fields ([cd6ce32](https://github.com/bitfocus/companion-module-base/commit/cd6ce32d8ec95ecc4c0baa5f0f59f8884fb7ccfc))
+* simplify startup ([ae3e4c2](https://github.com/bitfocus/companion-module-base/commit/ae3e4c2943fa2682b86ffa1de39679b0daeeb9a6))
+* split out `checkAllFeedbacks` to trigger all feedbacks to be checked ([5a95f6d](https://github.com/bitfocus/companion-module-base/commit/5a95f6d04dc28f3ce29c6ddf11f89214107d6209))
+* support expression for isInverted value ([88e0911](https://github.com/bitfocus/companion-module-base/commit/88e0911375163a4a1f588690f1bc6c08addc098c))
+* swap action optionsToIgnoreForSubscribe for optionsToMonitorForSubscribe ([4a7f428](https://github.com/bitfocus/companion-module-base/commit/4a7f428f8f5566f028d505e716df5113d0cc98ab))
+
+
+### Bug Fixes
+
+* better handle undefined values ([edafde1](https://github.com/bitfocus/companion-module-base/commit/edafde106ab538038fd42b85cec5fa41c3fa9f59))
+* improve message for `checkFeedbacks` ([48cce9c](https://github.com/bitfocus/companion-module-base/commit/48cce9c7ec4d018a67efafc77766a5e4c8ae3670))
+* incorrect type in setVariableDefinitions ([06ed89e](https://github.com/bitfocus/companion-module-base/commit/06ed89eb5352521d3ca36cb12e00d52cfbdd1e70))
+* remove unnecessary 'disabled' properties ([b85164a](https://github.com/bitfocus/companion-module-base/commit/b85164ab6ae0a61a4c2a8d5a10c9270ffa63e1b1))
+
+
+### Miscellaneous Chores
+
+* **companion-module-base:** trigger prerelease ([7d0b98f](https://github.com/bitfocus/companion-module-base/commit/7d0b98ff0b2d740318345ce3e95ae68c3745071a))
+
 ## [1.14.1](https://github.com/bitfocus/companion-module-base/compare/v1.14.0...v1.14.1) (2025-12-22)
 
 
