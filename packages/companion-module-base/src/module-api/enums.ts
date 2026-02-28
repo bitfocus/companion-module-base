@@ -11,7 +11,7 @@ export enum InstanceStatus {
 	UnknownError = 'unknown_error',
 	UnknownWarning = 'unknown_warning',
 	AuthenticationFailure = 'authentication_failure',
-	InsufficientPermissions = 'insufficient_permissions'
+	InsufficientPermissions = 'insufficient_permissions',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
