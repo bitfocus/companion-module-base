@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.0.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.0.0-alpha.0...companion-module-base-v2.0.0) (2026-03-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* change setVariableDefinitions to expect an object instead of an array
+
+### Features
+
+* Add InsufficientPermissions to InstanceStatus enum ([#194](https://github.com/bitfocus/companion-module-base/issues/194)) ([a1045e8](https://github.com/bitfocus/companion-module-base/commit/a1045e82fe5f78ddb83d929b537ae43ff2f33e6d))
+* change setVariableDefinitions to expect an object instead of an array ([23e05d7](https://github.com/bitfocus/companion-module-base/commit/23e05d7270a0820b0e79ce42354cbed03f7df812))
+
+
+### Miscellaneous Chores
+
+* **companion-module-base:** force version ([8618ede](https://github.com/bitfocus/companion-module-base/commit/8618ede40606e0531be4010317ecc007e01727cd))
+* **companion-module-base:** trigger prerelease ([5baccec](https://github.com/bitfocus/companion-module-base/commit/5baccec7e63f5964d677895bfe79b6e66890045d))
+
 ## [2.0.0-alpha.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v1.14.1...companion-module-base-v2.0.0-alpha.0) (2026-02-22)
 
 
