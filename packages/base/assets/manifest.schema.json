@@ -5,6 +5,9 @@
     "allOf": [
         {
             "$ref": "./loose-manifest.schema.json"
+        },
+        {
+            "$ref": "./strict-refinements.schema.json"
         }
     ]
 }
