@@ -5,6 +5,7 @@ import Ajv2020 from 'ajv/dist/2020.js'
 import standaloneCode from 'ajv/dist/standalone/index.js'
 import manifestSchema from '../assets/manifest.schema.json' with { type: 'json' }
 import looseManifestSchema from '../assets/loose-manifest.schema.json' with { type: 'json' }
+import strictRefinementsSchema from '../assets/strict-refinements.schema.json' with { type: 'json' }
 import { fileURLToPath } from 'url'
 
 // Compile Typescript definitions from the JSON schema
@@ -12,8 +13,14 @@ await $`json2ts --cwd assets --input assets/manifest.schema.json --output genera
 
 {
 	// The generated code be in esm export format:
-	const ajv = new Ajv2020({ schemas: [manifestSchema, looseManifestSchema], code: { source: true, esm: true } })
-	const moduleCode = standaloneCode(ajv, { ModuleManifest: '/assets/manifest.schema.json' })
+	const ajv = new Ajv2020({
+		schemas: [manifestSchema, looseManifestSchema, strictRefinementsSchema],
+		code: { source: true, esm: true },
+	})
+	const moduleCode = standaloneCode(ajv, {
+		ModuleManifest: '/assets/manifest.schema.json',
+		LooseModuleManifest: '/assets/loose-manifest.schema.json',
+	})
 
 	// Now you can write the module code to file
 	const outputPath = new URL('../generated/validate_manifest.js', import.meta.url)
