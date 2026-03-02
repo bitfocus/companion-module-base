@@ -128,19 +128,19 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 
 				this.#variableDefinitions.clear()
 
-				for (const variable of variables) {
+				for (const [variableId, definition] of Object.entries(variables)) {
 					hostVariables.push({
-						id: variable.variableId,
-						name: variable.name,
+						id: variableId,
+						name: definition.name,
 					})
 
 					// Remember the definition locally
-					this.#variableDefinitions.set(variable.variableId, variable)
-					if (!this.#variableValues.has(variable.variableId)) {
+					this.#variableDefinitions.set(variableId, definition)
+					if (!this.#variableValues.has(variableId)) {
 						// Give us a local cached value of something
-						this.#variableValues.set(variable.variableId, '')
+						this.#variableValues.set(variableId, '')
 						hostValues.push({
-							id: variable.variableId,
+							id: variableId,
 							value: '',
 						})
 					}

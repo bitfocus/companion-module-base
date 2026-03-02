@@ -4,7 +4,7 @@ import type { CompanionPresetSection, CompanionPresetDefinitions } from './prese
 import type { InstanceStatus } from './enums.js'
 import { createModuleLogger, type LogLevel, type ModuleLogger } from '../logging.js'
 import { assertNever } from '../util.js'
-import type { CompanionVariableDefinition, CompanionVariableValues } from './variable.js'
+import type { CompanionVariableDefinitions, CompanionVariableValues } from './variable.js'
 import type { OSCSomeArguments } from '../common/osc.js'
 import type { SomeCompanionConfigField } from './config.js'
 import type { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
@@ -180,7 +180,9 @@ export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTyp
 	 * Set the variable definitions for this instance
 	 * @param variables The variable definitions
 	 */
-	setVariableDefinitions(variables: CompanionVariableDefinition<TManifest['variables']>[]): void {
+	setVariableDefinitions(variables: CompanionVariableDefinitions<TManifest['variables']>): void {
+		if (Array.isArray(variables)) throw new Error('Variable definitions should be an object, not an array')
+
 		this.#context.setVariableDefinitions(variables)
 	}
 

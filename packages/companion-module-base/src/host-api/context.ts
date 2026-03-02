@@ -13,7 +13,7 @@ import type {
 	CompanionPresetSection,
 	CompanionRecordedAction,
 	CompanionStaticUpgradeScript,
-	CompanionVariableDefinition,
+	CompanionVariableDefinitions,
 	InstanceStatus,
 	InstanceTypes,
 } from '../module-api/index.js'
@@ -54,7 +54,7 @@ export interface InstanceContext<TManifest extends InstanceTypes> extends Instan
 		presets: CompanionPresetDefinitions<TManifest>,
 	) => void
 
-	setVariableDefinitions: (variables: CompanionVariableDefinition[]) => void
+	setVariableDefinitions: (variables: CompanionVariableDefinitions<TManifest['variables']>) => void
 	setVariableValues: (values: Partial<TManifest['variables']>) => void
 	getVariableValue: <T extends string>(variableId: T) => TManifest['variables'][T] | undefined
 }

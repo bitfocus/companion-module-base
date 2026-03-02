@@ -4,9 +4,15 @@ import type { JsonValue } from '../common/json-value.js'
 /**
  * The definition of a variable
  */
-export interface CompanionVariableDefinition<TManifest extends CompanionVariableValues = CompanionVariableValues> {
-	variableId: StringKeys<TManifest>
+export interface CompanionVariableDefinition<_TManifest extends CompanionVariableValues = CompanionVariableValues> {
+	// variableId: StringKeys<TManifest>
 	name: string
+}
+/**
+ * The definition of a variable
+ */
+export type CompanionVariableDefinitions<TManifest extends CompanionVariableValues = CompanionVariableValues> = {
+	[variableId in StringKeys<TManifest>]: CompanionVariableDefinition<TManifest>
 }
 
 /**
