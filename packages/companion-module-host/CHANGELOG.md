@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v0.2.0...companion-module-host-v1.0.0) (2026-03-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* change setVariableDefinitions to expect an object instead of an array
+
+### Features
+
+* change setVariableDefinitions to expect an object instead of an array ([23e05d7](https://github.com/bitfocus/companion-module-base/commit/23e05d7270a0820b0e79ce42354cbed03f7df812))
+
 ## 0.2.0 (2026-02-22)
 
 
