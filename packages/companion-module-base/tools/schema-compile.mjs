@@ -3,11 +3,11 @@ import { $ } from 'zx'
 import fs from 'fs'
 import Ajv2020 from 'ajv/dist/2020.js'
 import standaloneCode from 'ajv/dist/standalone/index.js'
-import manifestSchema from '../assets/manifest.schema.json' with { type: 'json' }
+import manifestSchema from '../assets/loose-manifest.schema.json' with { type: 'json' }
 import { fileURLToPath } from 'url'
 
 // Compile Typescript definitions from the JSON schema
-await $`json2ts --input assets/manifest.schema.json --output generated/manifest.d.ts --additionalProperties=false`
+await $`json2ts --input assets/loose-manifest.schema.json --output generated/manifest.d.ts --additionalProperties=false`
 
 {
 	// The generated code be in esm export format:
