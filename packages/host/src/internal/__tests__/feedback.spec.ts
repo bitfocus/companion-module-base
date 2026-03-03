@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
-import { runAllTimers } from '../../../../companion-module-base/src/__mocks__/util.js'
+import { runAllTimers } from '../../../../base/src/__mocks__/util.js'
 import { FeedbackManager } from '../feedback.js'
 import type { FeedbackInstance, HostFeedbackDefinition, HostFeedbackValue } from '../../context.js'
 import type {
