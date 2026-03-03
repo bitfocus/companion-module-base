@@ -2,7 +2,7 @@
 	"files": [],
 	"references": [
 		{ "path": "./tsconfig.tests.json"},
-		{ "path": "./packages/companion-module-base/tsconfig.json" },
-		{ "path": "./packages/companion-module-host/tsconfig.json" },
+		{ "path": "./packages/base/tsconfig.json" },
+		{ "path": "./packages/host/tsconfig.json" },
 	]
 }

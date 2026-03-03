@@ -13,14 +13,14 @@ export default defineConfig({
 			{
 				test: {
 					name: 'base',
-					root: 'packages/companion-module-base',
+					root: 'packages/base',
 					exclude: ['**/node_modules/**', '**/dist/**'],
 				},
 			},
 			{
 				test: {
 					name: 'host',
-					root: 'packages/companion-module-host',
+					root: 'packages/host',
 					exclude: ['**/node_modules/**', '**/dist/**'],
 				},
 			},
