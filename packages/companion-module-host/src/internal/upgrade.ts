@@ -174,13 +174,13 @@ export function runThroughUpgradeScripts(
 						instance.feedbackId = feedback.feedbackId
 						instance.options = feedback.options
 						instance.upgradeIndex = i
+						instance.isInverted = feedback.isInverted ?? instance.isInverted
 
 						// Mark it as changed
 						updatedFeedbacks[feedback.id] = {
 							...instance,
+							// Note: preserve the first generation, as we don't allow changing it after it is set
 							style: updatedFeedbacks[feedback.id]?.style ?? feedback.style,
-
-							isInverted: feedback.isInverted,
 						}
 					}
 				}

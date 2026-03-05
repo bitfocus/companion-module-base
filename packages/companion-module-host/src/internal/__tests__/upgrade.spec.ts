@@ -2,13 +2,14 @@ import { describe, it, expect, beforeEach, vi, Mock } from 'vitest'
 import {
 	literal,
 	CompanionMigrationAction,
+	CompanionMigrationFeedback,
 	CompanionStaticUpgradeProps,
 	CompanionStaticUpgradeResult,
 	CompanionStaticUpgradeScript,
 	JsonObject,
 } from '@companion-module/base'
 import { runThroughUpgradeScripts } from '../upgrade.js'
-import type { UpgradeActionInstance } from '../../context.js'
+import type { UpgradeActionInstance, UpgradeFeedbackInstance } from '../../context.js'
 
 type MockUpgradeScript<TConfig extends JsonObject, TSecrets extends JsonObject> = Mock<
 	CompanionStaticUpgradeScript<TConfig, TSecrets>
@@ -35,6 +36,14 @@ const createMockScripts = <TConfig extends JsonObject, TSecrets extends JsonObje
 		)
 
 	return result
+}
+
+function makeFeedbacksInput(...feedbacks: UpgradeFeedbackInstance[]): UpgradeFeedbackInstance[] {
+	const res: UpgradeFeedbackInstance[] = []
+	for (const feedback of feedbacks) {
+		res.push(clone(feedback))
+	}
+	return res
 }
 
 function makeActionsInput(...actions: UpgradeActionInstance[]): UpgradeActionInstance[] {
@@ -261,6 +270,101 @@ describe('runThroughUpgradeScripts', () => {
 		expectedInput[0].actionId = 'new-action'
 		expectedInput[0].upgradeIndex = 1
 		expect(actionsInput).toEqual(expectedInput)
+	})
+
+	it('isInverted change in one script is visible to the next script', () => {
+		const feedbackBefore: UpgradeFeedbackInstance = {
+			id: 'fb0',
+			upgradeIndex: -1,
+			feedbackId: 'my-feedback',
+			options: {},
+			isInverted: { value: true, isExpression: false },
+			controlId: 'control0',
+		}
+
+		const scripts = createMockScripts(2)
+
+		// Script 0 flips isInverted to false
+		scripts[0].mockImplementation((_ctx, args) => {
+			const fb = args.feedbacks[0]
+			return literal<CompanionStaticUpgradeResult<JsonObject, JsonObject>>({
+				updatedActions: [],
+				updatedFeedbacks: [
+					{
+						...fb,
+						isInverted: { value: false, isExpression: false },
+					},
+				],
+				updatedConfig: null,
+			})
+		})
+
+		// Script 1 must see the updated isInverted (false), not the original (true)
+		let receivedIsInverted: unknown = 'not-called'
+		scripts[1].mockImplementation((_ctx, args) => {
+			receivedIsInverted = args.feedbacks[0]?.isInverted
+			return literal<CompanionStaticUpgradeResult<JsonObject, JsonObject>>({
+				updatedActions: [],
+				updatedFeedbacks: [],
+				updatedConfig: null,
+			})
+		})
+
+		runThroughUpgradeScripts([], makeFeedbacksInput(feedbackBefore), -1, scripts, {}, {}, true)
+
+		expect(scripts[1]).toHaveBeenCalledTimes(1)
+		// Bug: without the fix, script 1 would see the original isInverted: true
+		expect(receivedIsInverted).toEqual({ value: false, isExpression: false })
+	})
+
+	it('style set by an earlier script is preserved and not overwritten by a later script', () => {
+		const feedbackBefore: UpgradeFeedbackInstance = {
+			id: 'fb0',
+			upgradeIndex: -1,
+			feedbackId: 'my-feedback',
+			options: {},
+			isInverted: undefined,
+			controlId: 'control0',
+		}
+
+		const scripts = createMockScripts(2)
+
+		// Script 0 sets style to red
+		scripts[0].mockImplementation((_ctx, args) => {
+			const fb = args.feedbacks[0]
+			return literal<CompanionStaticUpgradeResult<JsonObject, JsonObject>>({
+				updatedActions: [],
+				updatedFeedbacks: [
+					literal<CompanionMigrationFeedback>({
+						...fb,
+						style: { bgcolor: 0xff0000 },
+					}),
+				],
+				updatedConfig: null,
+			})
+		})
+
+		// Script 1 tries to overwrite style to green — but should not win
+		scripts[1].mockImplementation((_ctx, args) => {
+			const fb = args.feedbacks[0]
+			return literal<CompanionStaticUpgradeResult<JsonObject, JsonObject>>({
+				updatedActions: [],
+				updatedFeedbacks: [
+					literal<CompanionMigrationFeedback>({
+						...fb,
+						style: { bgcolor: 0x00ff00 },
+					}),
+				],
+				updatedConfig: null,
+			})
+		})
+
+		const result = runThroughUpgradeScripts([], makeFeedbacksInput(feedbackBefore), -1, scripts, {}, {}, true)
+
+		expect(scripts[0]).toHaveBeenCalledTimes(1)
+		expect(scripts[1]).toHaveBeenCalledTimes(1)
+		// The first generation of style is preserved; later scripts cannot overwrite it
+		expect(result.updatedFeedbacks[0]?.style).toEqual({ bgcolor: 0xff0000 })
 	})
 
 	it('an actions to upgrade, from earlier than the rest', () => {
