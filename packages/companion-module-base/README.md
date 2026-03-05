@@ -32,4 +32,4 @@ To get started with creating a new module, you should start with one of the foll
 
 You can view detailed [generated documentation here](https://bitfocus.github.io/companion-module-base/).
 
-Or refer to [the wiki](https://github.com/bitfocus/companion-module-base/wiki) for a more handwritten version
+Or refer to [the developer documentation](https://companion.free/for-developers/module-development/) for more details and examples.
