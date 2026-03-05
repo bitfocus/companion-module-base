@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.0.0...companion-module-host-v1.0.1) (2026-03-05)
+
+
+### Bug Fixes
+
+* isInverted upgrades being lost if run through another upgrade script ([8df4440](https://github.com/bitfocus/companion-module-base/commit/8df44405e34335a80e76a3222f260eeed94d1cfb))
+
 ## [1.0.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v0.2.0...companion-module-host-v1.0.0) (2026-03-02)
 
 
