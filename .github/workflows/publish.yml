@@ -84,13 +84,13 @@ jobs:
             if [ "${{ github.event.inputs.package }}" = "base" ]; then
               PACKAGE_NAME="@companion-module/base"
               PACKAGE_SHORT_NAME="base"
-              PACKAGE_PATH="packages/companion-module-base"
+              PACKAGE_PATH="packages/base"
             else
               PACKAGE_NAME="@companion-module/host"
               PACKAGE_SHORT_NAME="host"
-              PACKAGE_PATH="packages/companion-module-host"
+              PACKAGE_PATH="packages/host"
             fi
-            
+
             # Determine tag based on branch
             if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
               echo "Publishing nightly"
@@ -99,13 +99,13 @@ jobs:
               echo "Publishing experimental"
               TAG="experimental"
             fi
-            
+
             # Generate prerelease version suffix
             HASH=$(git rev-parse --short HEAD)
             TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
             PRERELEASE_TAG=nightly-$(echo "${{ github.ref_name }}" | sed -r 's/[^a-z0-9]+/-/gi')
             PRERELEASE="${PRERELEASE_TAG}-${TIMESTAMP}-${HASH}"
-            
+
             echo "tag=${TAG}" >> $GITHUB_OUTPUT
             echo "prerelease=${PRERELEASE}" >> $GITHUB_OUTPUT
             echo "publish-docs=${{ github.event.inputs.publish-docs }}" >> $GITHUB_OUTPUT
@@ -115,11 +115,11 @@ jobs:
             if [[ "$TAG" == companion-module-base-v* ]]; then
               PACKAGE_NAME="@companion-module/base"
               PACKAGE_SHORT_NAME="base"
-              PACKAGE_PATH="packages/companion-module-base"
+              PACKAGE_PATH="packages/base"
             elif [[ "$TAG" == companion-module-host-v* ]]; then
               PACKAGE_NAME="@companion-module/host"
               PACKAGE_SHORT_NAME="host"
-              PACKAGE_PATH="packages/companion-module-host"
+              PACKAGE_PATH="packages/host"
             else
               echo "Unknown tag format: $TAG"
               exit 1
@@ -180,14 +180,14 @@ jobs:
       - name: Prepare docs
         if: ${{ needs.determine-package.outputs.publish-docs == 'true' && needs.determine-package.outputs.package-short-name == 'base' }}
         run: |
-          cd packages/companion-module-base
+          cd packages/base
           yarn docs:html
 
       - name: Upload docs artifact
         if: ${{ needs.determine-package.outputs.publish-docs == 'true' && needs.determine-package.outputs.package-short-name == 'base' }}
         uses: actions/upload-pages-artifact@v4
         with:
-          path: packages/companion-module-base/docs/
+          path: packages/base/docs/
 
   publish:
     name: Publish to NPM
