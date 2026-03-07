@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.0.1...companion-module-base-v2.0.2) (2026-03-07)
+
+
+### Bug Fixes
+
+* respect optional properties in CompanionVariableDefinitions ([957bfc5](https://github.com/bitfocus/companion-module-base/commit/957bfc58c96d2837bdd736ca2ae1438bec376b43))
+
 ## [2.0.1](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.0.0...companion-module-base-v2.0.1) (2026-03-07)
 
 
