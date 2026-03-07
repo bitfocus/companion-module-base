@@ -343,6 +343,11 @@ export interface CompanionInputFieldNumber<TKey extends string = string> extends
 	showMinAsNegativeInfinity?: boolean
 	/** When true, show the max value as a visual ∞ when value >= max */
 	showMaxAsPositiveInfinity?: boolean
+
+	/** When value validation occurs, clamp values to the min/max instead of rejecting them as invalid */
+	clampValues?: boolean
+	/** Whether to only allow integer values */
+	asInteger?: boolean
 }
 
 /**
