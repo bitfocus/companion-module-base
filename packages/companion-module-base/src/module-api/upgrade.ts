@@ -275,3 +275,62 @@ export function FixupNumericOrVariablesValueToExpressions(
 		return value
 	}
 }
+
+/**
+ * Helper to fix up values which could be a boolean, number, or a string of variables into the new expression format.
+ * Numbers are coerced to booleans (0 = false, non-zero = true).
+ * The string literals "true" and "false" (case-insensitive) are also coerced to booleans.
+ * @param value The value to fix up
+ * @returns The fixed up value, or the original value if it did not need to be changed
+ */
+export function FixupBooleanOrVariablesValueToExpressions(
+	value: ExpressionOrValue<JsonValue | undefined> | undefined,
+): ExpressionOrValue<JsonValue | undefined> | undefined {
+	// Nothing to do if already an expression!
+	if (!value || value.isExpression) return value
+
+	const oldValRaw = value.value
+
+	if (typeof oldValRaw === 'boolean') {
+		// Already a boolean, nothing to do
+		return value
+	} else if (typeof oldValRaw === 'number') {
+		// Coerce number to boolean
+		return {
+			isExpression: false,
+			value: oldValRaw !== 0,
+		}
+	} else if (typeof oldValRaw === 'string') {
+		const trimmedStr = oldValRaw.trim()
+		const lowerStr = trimmedStr.toLowerCase()
+
+		if (lowerStr === 'true' || lowerStr === 'false') {
+			// Coerce string literal to boolean
+			return {
+				isExpression: false,
+				value: lowerStr === 'true',
+			}
+		} else if (!isNaN(Number(trimmedStr)) && trimmedStr !== '') {
+			// Coerce numeric string to boolean
+			return {
+				isExpression: false,
+				value: Number(trimmedStr) !== 0,
+			}
+		} else if (trimmedStr.startsWith('$(') && trimmedStr.endsWith(')') && !trimmedStr.slice(2).includes('$(')) {
+			// It looks like a simple variable, treat as a plain expression
+			return {
+				isExpression: true,
+				value: oldValRaw,
+			}
+		} else {
+			// Something more complex, wrap it in a parseVariables and hope for the best!
+			return {
+				isExpression: true,
+				value: `bool(parseVariables("${oldValRaw.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"))`,
+			}
+		}
+	} else {
+		// Not a string, boolean, or number — nothing we can do
+		return value
+	}
+}
