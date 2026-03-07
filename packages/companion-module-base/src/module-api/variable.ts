@@ -1,4 +1,3 @@
-import type { StringKeys } from '../util.js'
 import type { JsonValue } from '../common/json-value.js'
 
 /**
@@ -12,7 +11,9 @@ export interface CompanionVariableDefinition<_TManifest extends CompanionVariabl
  * The definition of a variable
  */
 export type CompanionVariableDefinitions<TManifest extends CompanionVariableValues = CompanionVariableValues> = {
-	[variableId in StringKeys<TManifest>]: CompanionVariableDefinition<TManifest>
+	[variableId in keyof TManifest as variableId extends string
+		? variableId
+		: never]: CompanionVariableDefinition<TManifest>
 }
 
 /**
