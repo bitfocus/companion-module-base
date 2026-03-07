@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.1](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.0.0...companion-module-base-v2.0.1) (2026-03-07)
+
+
+### Bug Fixes
+
+* add FixupBooleanOrVariablesValueToExpressions upgrade helper ([7034b4e](https://github.com/bitfocus/companion-module-base/commit/7034b4ef701e8848004fcc4f82cacde947fe36ce))
+* add more number field value validation rules ([65fde30](https://github.com/bitfocus/companion-module-base/commit/65fde30360b26d35a0cec34f29052769ad892260))
+
 ## [2.0.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.0.0-alpha.0...companion-module-base-v2.0.0) (2026-03-02)
 
 
