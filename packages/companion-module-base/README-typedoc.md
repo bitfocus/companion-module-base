@@ -7,7 +7,7 @@ Use the navigation on the left to browse classes, interfaces, types, and functio
 ## Links
 
 - [Developer documentation & guides](https://companion.free/for-developers/module-development/)
-- [API reference v1](../v1/)
+- [API reference v1](./v1/)
 - [GitHub repository](https://github.com/bitfocus/companion-module-base)
 
 ## Getting started
