@@ -266,14 +266,12 @@ jobs:
 
       - name: Collect docs
         run: |
-          mkdir -p combined-docs
-          cp -R packages/companion-module-base/docs combined-docs
-          cp -R v1.x/docs combined-docs/v1
+          cp -R v1.x/docs packages/companion-module-base/docs/v1
 
       - name: Upload docs artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: combined-docs/
+          path: packages/companion-module-base/docs/
 
   publish-docs:
     name: Publish docs
