@@ -177,18 +177,6 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-      - name: Prepare docs
-        if: ${{ needs.determine-package.outputs.publish-docs == 'true' && needs.determine-package.outputs.package-short-name == 'base' }}
-        run: |
-          cd packages/companion-module-base
-          yarn docs:html
-
-      - name: Upload docs artifact
-        if: ${{ needs.determine-package.outputs.publish-docs == 'true' && needs.determine-package.outputs.package-short-name == 'base' }}
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: packages/companion-module-base/docs/
-
   publish:
     name: Publish to NPM
     needs:
@@ -230,10 +218,68 @@ jobs:
         env:
           CI: true
 
+  prepare-docs:
+    name: Prepare docs for publishing
+    needs: determine-package
+    runs-on: ubuntu-latest
+
+    if: ${{ needs.determine-package.outputs.publish-docs == 'true' && needs.determine-package.outputs.package-short-name == 'base' }}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+      - name: Enable corepack
+        run: corepack enable
+      - name: Prepare build
+        run: |
+          yarn install
+          yarn build
+
+      - name: Prepare v2 docs
+        run: |
+          cd packages/companion-module-base
+          yarn docs:html
+
+      - name: Clone v1.x branch for docs
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          path: v1.x
+          ref: v1.x
+      - name: Prepare v1.x build
+        run: |
+          cd v1.x
+          yarn install
+          yarn build
+
+      - name: Prepare v1 docs
+        run: |
+          cd v1.x
+          yarn docs:html
+
+      - name: Collect docs
+        run: |
+          mkdir -p combined-docs
+          cp -R packages/companion-module-base/docs combined-docs/v2
+          cp -R v1.x/docs combined-docs/v1
+          cp assets/docs-index.html combined-docs/index.html
+
+      - name: Upload docs artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: packages/companion-module-base/docs/
+
   publish-docs:
     name: Publish docs
     needs:
-      - prepare
+      - prepare-docs
       - publish
       - determine-package
     runs-on: ubuntu-latest
