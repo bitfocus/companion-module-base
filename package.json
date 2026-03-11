@@ -9,7 +9,7 @@
 		"build": "run build:schema && run build:root",
 		"build:clean": "(rm -rf ./packages/*/dist ./packages/*/generated ./packages/*/*.tsbuildinfo || true) && run build",
 		"build:root": "tsc --build tsconfig.json",
-		"build:schema": "cd packages/companion-module-base && node ./tools/schema-compile.mjs",
+		"build:schema": "cd packages/base && node ./tools/schema-compile.mjs",
 		"dev": "run build:root --watch",
 		"lint": "eslint .",
 		"unit": "vitest run",
