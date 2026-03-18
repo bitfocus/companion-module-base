@@ -36,9 +36,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-module/base@workspace:packages/companion-module-base, @companion-module/base@workspace:~":
+"@companion-module/base@workspace:packages/base, @companion-module/base@workspace:~":
   version: 0.0.0-use.local
-  resolution: "@companion-module/base@workspace:packages/companion-module-base"
+  resolution: "@companion-module/base@workspace:packages/base"
   dependencies:
     ajv: "npm:^8.18.0"
     colord: "npm:^2.9.3"
@@ -46,9 +46,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-module/host@workspace:packages/companion-module-host":
+"@companion-module/host@workspace:packages/host":
   version: 0.0.0-use.local
-  resolution: "@companion-module/host@workspace:packages/companion-module-host"
+  resolution: "@companion-module/host@workspace:packages/host"
   dependencies:
     "@companion-module/base": "workspace:~"
     debounce-fn: "npm:^6.0.0"

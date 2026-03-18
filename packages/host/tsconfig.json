@@ -11,6 +11,6 @@
 		},
 	},
 	"references": [
-		{ "path": "../companion-module-base/" }
+		{ "path": "../base/" }
 	]
 }

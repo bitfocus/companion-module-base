@@ -12,8 +12,8 @@ Find full documentation on how to create a module [on the website](https://compa
 
 ## Packages
 
-- **[@companion-module/base](packages/companion-module-base/)** - Plugin API for writing module integrations. Small, stable, versioned conservatively.
-- **[@companion-module/host](packages/companion-module-host/)** - Host-side wrapper that runs plugins in-process. Handles API version compatibility and provides the interface to Companion.
+- **[@companion-module/base](packages/base/)** - Plugin API for writing module integrations. Small, stable, versioned conservatively.
+- **[@companion-module/host](packages/host/)** - Host-side wrapper that runs plugins in-process. Handles API version compatibility and provides the interface to Companion.
 
 ## Development
 
