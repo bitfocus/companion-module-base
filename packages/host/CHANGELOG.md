@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.0.1...companion-module-host-v1.0.2) (2026-03-18)
+
+
+### Bug Fixes
+
+* ensure modules dont use a few reserved words as ids ([cf22b69](https://github.com/bitfocus/companion-module-base/commit/cf22b6907581f85699b4b539c46a1f502ad4d4f5))
+
 ## [1.0.1](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.0.0...companion-module-host-v1.0.1) (2026-03-05)
 
 
