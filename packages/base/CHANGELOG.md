@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.3](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.0.2...companion-module-base-v2.0.3) (2026-03-18)
+
+
+### Bug Fixes
+
+* validateManifest order of operations ([86cb1c1](https://github.com/bitfocus/companion-module-base/commit/86cb1c11d1ca2f23d9dbda6e447dcda7ec4dba83))
+
 ## [2.0.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.0.1...companion-module-base-v2.0.2) (2026-03-10)
 
 
