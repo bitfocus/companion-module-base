@@ -16,6 +16,17 @@ export function validateManifest(manifest: ModuleManifest, looseChecks: boolean)
 		throw new Error(`Manifest is not an object`)
 	}
 
+	if (!validateManifestSchema(manifest)) {
+		const errors = validateManifestSchema.errors
+		if (!errors) throw new Error(`Manifest failed validation with unknown reason`)
+
+		throw new Error(`Manifest validation failed: ${JSON.stringify(errors)}`)
+	}
+
+	if (manifest.legacyIds.includes(manifest.id)) {
+		throw new Error(`Manifest contains itself '${manifest.id}' in legacyIds`)
+	}
+
 	if (!looseChecks) {
 		const manifestStr = JSON.stringify(manifest)
 		if (manifestStr.includes('companion-module-your-module-name'))
@@ -38,16 +49,5 @@ export function validateManifest(manifest: ModuleManifest, looseChecks: boolean)
 
 		if (manifestStr.includes('Your product'))
 			throw new Error(`Manifest incorrectly references template module 'Your product'`)
-	}
-
-	if (Array.isArray(manifest.legacyIds) && manifest.legacyIds.includes(manifest.id)) {
-		throw new Error(`Manifest contains itself '${manifest.id}' in legacyIds`)
-	}
-
-	if (!validateManifestSchema(manifest)) {
-		const errors = validateManifestSchema.errors
-		if (!errors) throw new Error(`Manifest failed validation with unknown reason`)
-
-		throw new Error(`Manifest validation failed: ${JSON.stringify(errors)}`)
 	}
 }
