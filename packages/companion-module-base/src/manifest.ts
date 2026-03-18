@@ -12,6 +12,10 @@ export { ModuleManifest, ModuleManifestMaintainer, ModuleManifestRuntime, Module
 
 /** Validate that a manifest looks correctly populated */
 export function validateManifest(manifest: ModuleManifest, looseChecks: boolean): void {
+	if (!manifest || typeof manifest !== 'object') {
+		throw new Error(`Manifest is not an object`)
+	}
+
 	if (!looseChecks) {
 		const manifestStr = JSON.stringify(manifest)
 		if (manifestStr.includes('companion-module-your-module-name'))
@@ -36,7 +40,7 @@ export function validateManifest(manifest: ModuleManifest, looseChecks: boolean)
 			throw new Error(`Manifest incorrectly references template module 'Your product'`)
 	}
 
-	if (manifest.legacyIds.includes(manifest.id)) {
+	if (Array.isArray(manifest.legacyIds) && manifest.legacyIds.includes(manifest.id)) {
 		throw new Error(`Manifest contains itself '${manifest.id}' in legacyIds`)
 	}
 
