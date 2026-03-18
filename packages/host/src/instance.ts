@@ -11,6 +11,7 @@ import type {
 	InstanceTypes,
 	CompanionPresetDefinitions,
 } from '@companion-module/base'
+import { BANNED_PROPS } from './internal/util.js'
 import PQueue from 'p-queue'
 import { ActionManager } from './internal/actions.js'
 import { FeedbackManager } from './internal/feedback.js'
@@ -129,6 +130,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 				this.#variableDefinitions.clear()
 
 				for (const [variableId, definition] of Object.entries(variables)) {
+					if (BANNED_PROPS.has(variableId)) throw new Error(`Variable id "${variableId}" is a reserved word`)
 					hostVariables.push({
 						id: variableId,
 						name: definition.name,
@@ -166,6 +168,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 				const hostValues: HostVariableValue[] = []
 
 				for (const [variableId, value] of Object.entries(values)) {
+					if (BANNED_PROPS.has(variableId)) continue
 					if (this.#instance.instanceOptions.disableVariableValidation) {
 						// update the cached value
 						if (value === undefined) {

@@ -7,6 +7,7 @@ import {
 	type CompanionVariableValue,
 	createModuleLogger,
 } from '@companion-module/base'
+import { BANNED_PROPS } from './util.js'
 import type { ActionInstance, HostActionDefinition } from '../context.js'
 import { ExecuteActionResult } from '../instance.js'
 import { hasAnyOldIsVisibleFunctions, hasAnyOldRequiredProperties } from './util.js'
@@ -91,6 +92,10 @@ export class ActionManager {
 
 	public handleUpdateActions(actions: Record<string, ActionInstance | null | undefined>): void {
 		for (const [id, action] of Object.entries(actions)) {
+			if (BANNED_PROPS.has(id)) {
+				this.#logger.warn(`Ignoring action instance with reserved id "${id}"`)
+				continue
+			}
 			const existing = this.#actionInstances.get(id)
 			if (existing) {
 				// Call unsubscribe
@@ -181,6 +186,7 @@ export class ActionManager {
 
 		for (const [actionId, action] of Object.entries(actions)) {
 			if (!action) continue
+			if (BANNED_PROPS.has(actionId)) throw new Error(`Action id "${actionId}" is a reserved word`)
 
 			const hasSubscriptionMethods = !!action.subscribe || !!action.unsubscribe
 

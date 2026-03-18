@@ -3,6 +3,7 @@ import {
 	type CompanionPresetDefinitions,
 	type CompanionPresetSection,
 } from '@companion-module/base'
+import { BANNED_PROPS } from './util.js'
 import type { ActionManager } from './actions.js'
 import type { FeedbackManager } from './feedback.js'
 
@@ -23,6 +24,10 @@ export function validatePresetDefinitions(
 
 	for (const [_id, preset] of Object.entries(presets)) {
 		if (!preset) continue
+		if (BANNED_PROPS.has(_id)) {
+			presetsFailedValidation.push(typeof preset.name === 'string' ? preset.name : _id)
+			continue
+		}
 		if (preset.type !== 'simple') continue
 
 		const presetName = typeof preset.name === 'string' ? preset.name : 'Unknown'

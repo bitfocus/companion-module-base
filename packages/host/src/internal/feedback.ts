@@ -9,6 +9,7 @@ import {
 	assertNever,
 	createModuleLogger,
 } from '@companion-module/base'
+import { BANNED_PROPS } from './util.js'
 import debounceFn from 'debounce-fn'
 import type { FeedbackInstance, HostFeedbackDefinition, HostFeedbackValue } from '../context.js'
 import { hasAnyOldIsVisibleFunctions, hasAnyOldRequiredProperties } from './util.js'
@@ -69,6 +70,10 @@ export class FeedbackManager {
 
 	public handleUpdateFeedbacks(feedbacks: Record<string, FeedbackInstance | null | undefined>): void {
 		for (const [id, feedback] of Object.entries(feedbacks)) {
+			if (BANNED_PROPS.has(id)) {
+				this.#logger.warn(`Ignoring feedback instance with reserved id "${id}"`)
+				continue
+			}
 			const existing = this.#feedbackInstances.get(id)
 			if (existing && !feedback) {
 				// Call unsubscribe
@@ -265,6 +270,7 @@ export class FeedbackManager {
 
 		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
 			if (!feedback) continue
+			if (BANNED_PROPS.has(feedbackId)) throw new Error(`Feedback id "${feedbackId}" is a reserved word`)
 
 			hostFeedbacks.push({
 				id: feedbackId,
