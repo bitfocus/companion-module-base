@@ -106,10 +106,7 @@ export interface CompanionButtonStepActions<TManifest extends InstanceTypes = In
  * The configuration of an action in a preset
  */
 export type CompanionPresetAction<
-	TActionManifest extends Record<string, CompanionActionSchema<CompanionOptionValues>> = Record<
-		string,
-		CompanionActionSchema<CompanionOptionValues>
-	>,
+	TActionManifest extends Record<string, CompanionActionSchema> = Record<string, CompanionActionSchema>,
 > = {
 	[K in keyof TActionManifest]: {
 		/** The id of the action definition */

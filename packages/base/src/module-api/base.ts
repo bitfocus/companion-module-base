@@ -44,7 +44,7 @@ export interface InstanceBaseOptions {
 export interface InstanceTypes {
 	config: JsonObject
 	secrets: JsonObject | undefined
-	actions: Record<string, CompanionActionSchema<CompanionOptionValues>>
+	actions: Record<string, CompanionActionSchema>
 	feedbacks: Record<string, CompanionFeedbackSchema<CompanionOptionValues>>
 	variables: CompanionVariableValues
 }

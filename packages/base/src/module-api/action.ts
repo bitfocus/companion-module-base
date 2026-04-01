@@ -1,3 +1,4 @@
+import type { JsonValue } from '../common/json-value.js'
 import type { CompanionCommonCallbackContext } from './common.js'
 import type {
 	CompanionOptionValues,
@@ -23,9 +24,56 @@ export type SomeCompanionActionInputField<TKey extends string = string> =
 	| CompanionInputFieldCheckbox<TKey>
 	| CompanionInputFieldCustomVariable<TKey>
 
-export interface CompanionActionSchema<TOptions extends CompanionOptionValues> {
+/** An action's options type must always be specified. */
+export interface CompanionActionSchemaOptions<TOptions extends CompanionOptionValues> {
+	/** The types of the action's options. */
 	options: TOptions
 }
+
+/**
+ * An action whose callback returns a result must specify the result type.
+ */
+export interface CompanionActionSchemaWithResult<
+	TOptions extends CompanionOptionValues,
+	TResult extends JsonValue,
+> extends CompanionActionSchemaOptions<TOptions> {
+	/**
+	 * The action callback returns a value of this type (possibly behind a
+	 * promise).
+	 */
+	result: TResult
+}
+
+/**
+ * An action whose callback doesn't return a result must not specify the result
+ * type.
+ */
+export interface CompanionActionSchemaNoResult<
+	TOptions extends CompanionOptionValues,
+> extends CompanionActionSchemaOptions<TOptions> {
+	/**
+	 * When no result type is specified, the action callback returns `void`
+	 * (possibly behind a promise).
+	 */
+	result?: never
+}
+
+/**
+ * Two kinds of action can be described:
+ *
+ *   * {@link CompanionActionSchemaWithResult}: an action with indicated options
+ *     that produces a result
+ *   * {@link CompanionActionSchemaNoResult}: an action with indicated options
+ *     that produces no result
+ */
+export type CompanionActionSchema<
+	TOptions extends CompanionOptionValues = CompanionOptionValues,
+	TResult extends JsonValue | void = JsonValue | void,
+> = TResult extends JsonValue
+	? CompanionActionSchemaWithResult<TOptions, TResult>
+	: TResult extends void
+		? CompanionActionSchemaNoResult<TOptions>
+		: never
 
 /**
  * Utility functions available in the context of the current action
@@ -41,10 +89,11 @@ export interface CompanionActionContext extends CompanionCommonCallbackContext {
 	setCustomVariableValue(variableName: string, value: CompanionVariableValue): void
 }
 
-/**
- * The definition of an action
- */
-export interface CompanionActionDefinition<TOptions extends CompanionOptionValues = CompanionOptionValues> {
+/** Fields shared across all action definitions. */
+export interface CompanionActionDefinitionBase<
+	TOptions extends CompanionOptionValues,
+	TResult extends JsonValue | void,
+> {
 	/** Name to show in the actions list */
 	name: string
 	/**
@@ -69,8 +118,11 @@ export interface CompanionActionDefinition<TOptions extends CompanionOptionValue
 	 */
 	skipUnsubscribeOnOptionsChange?: boolean
 
-	/** Called to execute the action */
-	callback: (action: CompanionActionEvent<TOptions>, context: CompanionActionContext) => Promise<void> | void
+	/**
+	 * A function called when the callback executes, potentially returning a
+	 * result value.
+	 */
+	callback: (action: CompanionActionEvent<TOptions>, context: CompanionActionContext) => Promise<TResult> | TResult
 	/**
 	 * Called to report the existence of an action
 	 * Useful to ensure necessary data is loaded
@@ -100,15 +152,60 @@ export interface CompanionActionDefinition<TOptions extends CompanionOptionValue
 }
 
 /**
- * The definitions of a group of actions
+ * The definition of an action that returns a result must opt into returning a
+ * result by specifying `hasResult: true`.
+ */
+export interface CompanionActionDefinitionCallbackWithResult<
+	TOptions extends CompanionOptionValues,
+	TResult extends JsonValue,
+> extends CompanionActionDefinitionBase<TOptions, TResult> {
+	/* The callback returns a result. */
+	hasResult: true
+}
+
+/**
+ * The definition of an action that doesn't return a result omits `hasResult` or
+ * explicitly specifies `hasResult: false`.
+ */
+export interface CompanionActionDefinitionCallbackNoResult<
+	TOptions extends CompanionOptionValues,
+> extends CompanionActionDefinitionBase<TOptions, void> {
+	/* The callback doesn't return a result. */
+	hasResult?: false
+}
+
+/**
+ * The definition of an action as one of two flavors, per the supplied type
+ * arguments:
+ *
+ *   * {@link CompanionActionDefinitionCallbackWithResult}: an action whose
+ *     callback returns a result
+ *   * {@link CompanionActionDefinitionCallbackNoResult}: an action whose
+ *     callback returns `void`
+ */
+export type CompanionActionDefinition<
+	TOptions extends CompanionOptionValues = CompanionOptionValues,
+	TResult extends JsonValue | void = JsonValue | void,
+> = TResult extends JsonValue
+	? CompanionActionDefinitionCallbackWithResult<TOptions, TResult>
+	: TResult extends void
+		? CompanionActionDefinitionCallbackNoResult<TOptions>
+		: never
+
+/**
+ * The definition of a set of actions, as a record of
+ * {@link CompanionActionDefinition}s.
  */
 export type CompanionActionDefinitions<
-	Tschemas extends Record<string, CompanionActionSchema<CompanionOptionValues>> = Record<
-		string,
-		CompanionActionSchema<CompanionOptionValues>
-	>,
+	Tschemas extends Record<string, CompanionActionSchema> = Record<string, CompanionActionSchema>,
 > = {
-	[K in keyof Tschemas]: CompanionActionDefinition<Tschemas[K]['options']> | false | undefined
+	[K in keyof Tschemas]: Tschemas[K] extends infer Schema // just to abbreviate
+		? Schema extends CompanionActionSchemaWithResult<infer Options, infer Result>
+			? CompanionActionDefinitionCallbackWithResult<Options, Result>
+			: Schema extends CompanionActionSchemaNoResult<infer Options>
+				? CompanionActionDefinitionCallbackNoResult<Options>
+				: never
+		: never
 }
 
 /**
