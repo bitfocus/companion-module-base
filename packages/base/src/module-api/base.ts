@@ -1,9 +1,14 @@
-import type { JsonObject } from '../common/json-value.js'
+import type { JsonObject, JsonValue } from '../common/json-value.js'
 import type { OSCSomeArguments } from '../common/osc.js'
 import { isInstanceContext, type InstanceContext } from '../host-api/context.js'
 import { createModuleLogger, type LogLevel, type ModuleLogger } from '../logging.js'
 import { assertNever, type StringKeys } from '../util.js'
-import type { CompanionActionDefinitions, CompanionActionSchema, CompanionRecordedAction } from './action.js'
+import type {
+	CompanionActionDefinitions,
+	CompanionActionSchemaWithoutResult,
+	CompanionActionSchemaWithResult,
+	CompanionRecordedAction,
+} from './action.js'
 import type { SomeCompanionConfigField } from './config.js'
 import type { InstanceStatus } from './enums.js'
 import type { CompanionFeedbackDefinitions, CompanionFeedbackSchema } from './feedback.js'
@@ -47,7 +52,11 @@ export interface InstanceBaseOptions {
 export interface InstanceTypes {
 	config: JsonObject
 	secrets: JsonObject | undefined
-	actions: Record<string, CompanionActionSchema<CompanionOptionValues>>
+	actions: Record<
+		string,
+		| CompanionActionSchemaWithoutResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>
+	>
 	feedbacks: Record<string, CompanionFeedbackSchema<CompanionOptionValues>>
 	variables: CompanionVariableValues
 	compositeElements?: Record<string, CompanionCompositeElementSchema<CompanionOptionValues>>

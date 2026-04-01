@@ -5,8 +5,11 @@ import {
 	type CompanionActionDefinitions,
 	type CompanionActionInfo,
 	type CompanionActionLearnContext,
+	type CompanionActionSchemaWithoutResult,
+	type CompanionActionSchemaWithResult,
 	type CompanionOptionValues,
 	type CompanionVariableValue,
+	type JsonValue,
 } from '@companion-module/base'
 import type { ActionInstance, HostActionDefinition } from '../context.js'
 import type { ExecuteActionResult } from '../instance.js'
@@ -31,7 +34,13 @@ export class ActionManager {
 		value: CompanionVariableValue | undefined,
 	) => void
 
-	readonly #actionDefinitions = new Map<string, CompanionActionDefinition>()
+	readonly #actionDefinitions = new Map<
+		string,
+		CompanionActionDefinition<
+			| CompanionActionSchemaWithoutResult<CompanionOptionValues>
+			| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>
+		>
+	>()
 	readonly #actionInstances = new Map<string, ActionInstance>()
 
 	constructor(
@@ -70,7 +79,7 @@ export class ActionManager {
 		}
 
 		try {
-			await actionDefinition.callback(
+			const result = await actionDefinition.callback(
 				{
 					id: action.id,
 					actionId: action.actionId,
@@ -84,7 +93,7 @@ export class ActionManager {
 
 			return {
 				success: true,
-				errorMessage: undefined,
+				result: actionDefinition.hasResult ? (result as JsonValue) : undefined,
 			}
 		} catch (e: any) {
 			return {
@@ -226,6 +235,7 @@ export class ActionManager {
 				sortName: action.sortName,
 				description: action.description,
 				options: action.options,
+				hasResult: !!action.hasResult,
 				optionsToMonitorForSubscribe: action.optionsToMonitorForSubscribe,
 				hasLearn: !!action.learn,
 				learnTimeout: action.learnTimeout,
