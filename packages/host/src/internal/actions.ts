@@ -3,6 +3,7 @@ import {
 	type CompanionActionDefinition,
 	type CompanionActionDefinitions,
 	type CompanionActionInfo,
+	type CompanionActionSchema,
 	type CompanionOptionValues,
 	type CompanionVariableValue,
 	createModuleLogger,
@@ -32,7 +33,10 @@ export class ActionManager {
 		value: CompanionVariableValue | undefined,
 	) => void
 
-	readonly #actionDefinitions = new Map<string, CompanionActionDefinition<CompanionOptionValues, JsonValue | void>>()
+	readonly #actionDefinitions = new Map<
+		string,
+		CompanionActionDefinition<CompanionActionSchema<CompanionOptionValues, any>>
+	>()
 	readonly #actionInstances = new Map<string, ActionInstance>()
 
 	constructor(

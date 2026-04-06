@@ -184,12 +184,11 @@ export interface CompanionActionDefinitionCallbackNoResult<
  *     callback returns `void`
  */
 export type CompanionActionDefinition<
-	TOptions extends CompanionOptionValues = CompanionOptionValues,
-	TResult extends JsonValue | void = void,
-> = TResult extends JsonValue
-	? CompanionActionDefinitionCallbackWithResult<TOptions, TResult>
-	: TResult extends void
-		? CompanionActionDefinitionCallbackNoResult<TOptions>
+	TSchema extends CompanionActionSchema<CompanionOptionValues> = CompanionActionSchema<CompanionOptionValues>,
+> = TSchema['result'] extends JsonValue
+	? CompanionActionDefinitionCallbackWithResult<TSchema['options'], TSchema['result']>
+	: TSchema['result'] extends void
+		? CompanionActionDefinitionCallbackNoResult<TSchema['options']>
 		: never
 
 /**
@@ -200,11 +199,11 @@ export type CompanionActionDefinitions<
 	Tschemas extends Record<string, CompanionActionSchema> = Record<string, CompanionActionSchema>,
 > = {
 	[K in keyof Tschemas]: Tschemas[K] extends infer Schema // just to abbreviate
-		? Schema extends CompanionActionSchemaWithResult<infer Options, infer Result>
-			? CompanionActionDefinitionCallbackWithResult<Options, Result>
-			: Schema extends CompanionActionSchemaNoResult<infer Options>
-				? CompanionActionDefinitionCallbackNoResult<Options>
-				: never
+		? Schema extends CompanionActionSchema<infer Options, infer Result>
+			? Result extends JsonValue
+				? CompanionActionDefinitionCallbackWithResult<Options, Result>
+				: CompanionActionDefinitionCallbackNoResult<Options>
+			: never
 		: never
 }
 
