@@ -67,7 +67,7 @@ export interface CompanionActionSchemaNoResult<
  *     that produces no result
  */
 export type CompanionActionSchema<
-	TOptions extends CompanionOptionValues = CompanionOptionValues,
+	TOptions extends CompanionOptionValues,
 	TResult extends JsonValue | void = JsonValue | void,
 > = TResult extends JsonValue
 	? CompanionActionSchemaWithResult<TOptions, TResult>
@@ -196,7 +196,10 @@ export type CompanionActionDefinition<
  * {@link CompanionActionDefinition}s.
  */
 export type CompanionActionDefinitions<
-	Tschemas extends Record<string, CompanionActionSchema> = Record<string, CompanionActionSchema>,
+	Tschemas extends Record<string, CompanionActionSchema<CompanionOptionValues>> = Record<
+		string,
+		CompanionActionSchema<CompanionOptionValues>
+	>,
 > = {
 	[K in keyof Tschemas]: Tschemas[K] extends infer Schema // just to abbreviate
 		? Schema extends CompanionActionSchema<infer Options, infer Result>
