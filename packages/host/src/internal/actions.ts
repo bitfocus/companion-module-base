@@ -32,7 +32,7 @@ export class ActionManager {
 		value: CompanionVariableValue | undefined,
 	) => void
 
-	readonly #actionDefinitions = new Map<string, CompanionActionDefinition>()
+	readonly #actionDefinitions = new Map<string, CompanionActionDefinition<CompanionOptionValues, JsonValue | void>>()
 	readonly #actionInstances = new Map<string, ActionInstance>()
 
 	constructor(

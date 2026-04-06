@@ -185,7 +185,7 @@ export interface CompanionActionDefinitionCallbackNoResult<
  */
 export type CompanionActionDefinition<
 	TOptions extends CompanionOptionValues = CompanionOptionValues,
-	TResult extends JsonValue | void = JsonValue | void,
+	TResult extends JsonValue | void = void,
 > = TResult extends JsonValue
 	? CompanionActionDefinitionCallbackWithResult<TOptions, TResult>
 	: TResult extends void
