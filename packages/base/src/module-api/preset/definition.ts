@@ -4,7 +4,7 @@ import type { CompanionButtonStyleProps } from '../style.js'
 import type { JsonValue } from '../../common/json-value.js'
 import type { CompanionVariableValue } from '../variable.js'
 import type { InstanceTypes } from '../base.js'
-import type { CompanionActionSchema } from '../action.js'
+import type { CompanionActionSchemaNoResult, CompanionActionSchemaWithResult } from '../action.js'
 
 /**
  * The definitions of a group of presets
@@ -106,9 +106,14 @@ export interface CompanionButtonStepActions<TManifest extends InstanceTypes = In
  * The configuration of an action in a preset
  */
 export type CompanionPresetAction<
-	TActionManifest extends Record<string, CompanionActionSchema<CompanionOptionValues>> = Record<
+	TActionManifest extends Record<
 		string,
-		CompanionActionSchema<CompanionOptionValues>
+		| CompanionActionSchemaNoResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>
+	> = Record<
+		string,
+		| CompanionActionSchemaNoResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>
 	>,
 > = {
 	[K in keyof TActionManifest]: {

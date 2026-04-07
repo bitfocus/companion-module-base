@@ -3,7 +3,8 @@ import {
 	type CompanionActionDefinition,
 	type CompanionActionDefinitions,
 	type CompanionActionInfo,
-	type CompanionActionSchema,
+	type CompanionActionSchemaNoResult,
+	type CompanionActionSchemaWithResult,
 	type CompanionOptionValues,
 	type CompanionVariableValue,
 	createModuleLogger,
@@ -35,7 +36,10 @@ export class ActionManager {
 
 	readonly #actionDefinitions = new Map<
 		string,
-		CompanionActionDefinition<CompanionActionSchema<CompanionOptionValues, any>>
+		CompanionActionDefinition<
+			| CompanionActionSchemaNoResult<CompanionOptionValues>
+			| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>
+		>
 	>()
 	readonly #actionInstances = new Map<string, ActionInstance>()
 

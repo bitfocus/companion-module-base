@@ -1,4 +1,9 @@
-import type { CompanionActionDefinitions, CompanionActionSchema, CompanionRecordedAction } from './action.js'
+import type {
+	CompanionActionDefinitions,
+	CompanionActionSchemaNoResult,
+	CompanionActionSchemaWithResult,
+	CompanionRecordedAction,
+} from './action.js'
 import type { CompanionFeedbackDefinitions, CompanionFeedbackSchema } from './feedback.js'
 import type { CompanionPresetSection, CompanionPresetDefinitions } from './preset/main.js'
 import type { InstanceStatus } from './enums.js'
@@ -15,7 +20,7 @@ import {
 	SharedUdpSocketOptions,
 } from './shared-udp-socket.js'
 import { type InstanceContext, isInstanceContext } from '../host-api/context.js'
-import type { JsonObject } from '../common/json-value.js'
+import type { JsonObject, JsonValue } from '../common/json-value.js'
 import type { CompanionOptionValues } from './input.js'
 import type { StringKeys } from '../util.js'
 
@@ -44,7 +49,11 @@ export interface InstanceBaseOptions {
 export interface InstanceTypes {
 	config: JsonObject
 	secrets: JsonObject | undefined
-	actions: Record<string, CompanionActionSchema<CompanionOptionValues>>
+	actions: Record<
+		string,
+		| CompanionActionSchemaNoResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>
+	>
 	feedbacks: Record<string, CompanionFeedbackSchema<CompanionOptionValues>>
 	variables: CompanionVariableValues
 }

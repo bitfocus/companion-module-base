@@ -1,3 +1,10 @@
+import type {
+	Equal,
+	Expect,
+	ExpectFalse,
+	IsUnion,
+	// eslint-disable-next-line n/no-missing-import
+} from 'type-testing'
 import type { JsonValue } from '../common/json-value.js'
 import type { CompanionCommonCallbackContext } from './common.js'
 import type {
@@ -66,14 +73,24 @@ export interface CompanionActionSchemaNoResult<
  *   * {@link CompanionActionSchemaNoResult}: an action with indicated options
  *     that produces no result
  */
-export type CompanionActionSchema<
-	TOptions extends CompanionOptionValues,
-	TResult extends JsonValue | void = JsonValue | void,
-> = TResult extends JsonValue
-	? CompanionActionSchemaWithResult<TOptions, TResult>
-	: TResult extends void
-		? CompanionActionSchemaNoResult<TOptions>
-		: never
+export type CompanionActionSchema<TOptions extends CompanionOptionValues, TResult extends JsonValue | void = void> =
+	// Don't distribute a union `TResult` across its constituent members.  The
+	// reason is subtle: action callbacks that return a result, return
+	// `TResult | Promise<TResult>`.  When `TResult` is a union, for example
+	// `TResult = M1 | ... | MN`, the callback therefore should return
+	// `M1 | ... | MN | Promise<M1 | ... | MN>`.  But if `TResult` is broken
+	// up, the distributed schema types will contain callbacks that return
+	// `M1 | Promise<M1>`, ..., `MN | Promise<MN>` -- which is not the same
+	// thing.
+	[TResult] extends [JsonValue]
+		? CompanionActionSchemaWithResult<TOptions, TResult>
+		: [TResult] extends [void]
+			? CompanionActionSchemaNoResult<TOptions>
+			: never
+
+type _CompanionActionSchemaDoesntDistributeUnionResult = ExpectFalse<
+	IsUnion<CompanionActionSchema<{ x: number }, number | string>>
+>
 
 /**
  * Utility functions available in the context of the current action
@@ -184,29 +201,49 @@ export interface CompanionActionDefinitionCallbackNoResult<
  *     callback returns `void`
  */
 export type CompanionActionDefinition<
-	TSchema extends CompanionActionSchema<CompanionOptionValues> = CompanionActionSchema<CompanionOptionValues>,
-> = TSchema['result'] extends JsonValue
-	? CompanionActionDefinitionCallbackWithResult<TSchema['options'], TSchema['result']>
-	: TSchema['result'] extends void
-		? CompanionActionDefinitionCallbackNoResult<TSchema['options']>
-		: never
+	TSchema extends
+		| CompanionActionSchemaNoResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue> =
+		| CompanionActionSchemaNoResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>,
+> =
+	TSchema extends CompanionActionSchemaWithResult<infer Options, infer Result>
+		? CompanionActionDefinitionCallbackWithResult<Options, Result>
+		: TSchema extends CompanionActionSchemaNoResult<infer Options>
+			? CompanionActionDefinitionCallbackNoResult<Options>
+			: never
+
+// Verify that for `TResult = M1 | ... | MN`, the callback function returns
+// `M1 | ... | MN | Promise<M1 | ... | MN>`, not
+// `M1 | ... | MN | Promise<M1> | ... | Promise<MN>`.
+type _CallbackReturnTypePreservesUnionResult = Expect<
+	Equal<
+		ReturnType<CompanionActionDefinition<CompanionActionSchema<{ x: number }, number | string>>['callback']>,
+		number | string | Promise<number | string>
+	>
+>
 
 /**
  * The definition of a set of actions, as a record of
  * {@link CompanionActionDefinition}s.
  */
 export type CompanionActionDefinitions<
-	Tschemas extends Record<string, CompanionActionSchema<CompanionOptionValues>> = Record<
+	Tschemas extends Record<
 		string,
-		CompanionActionSchema<CompanionOptionValues>
+		| CompanionActionSchemaNoResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>
+	> = Record<
+		string,
+		| CompanionActionSchemaNoResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>
 	>,
 > = {
 	[K in keyof Tschemas]: Tschemas[K] extends infer Schema // just to abbreviate
-		? Schema extends CompanionActionSchema<infer Options, infer Result>
-			? Result extends JsonValue
-				? CompanionActionDefinitionCallbackWithResult<Options, Result>
-				: CompanionActionDefinitionCallbackNoResult<Options>
-			: never
+		? Schema extends CompanionActionSchemaWithResult<infer Options, infer Result>
+			? CompanionActionDefinitionCallbackWithResult<Options, Result>
+			: Schema extends CompanionActionSchemaNoResult<infer Options>
+				? CompanionActionDefinitionCallbackNoResult<Options>
+				: never
 		: never
 }
 
