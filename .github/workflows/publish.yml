@@ -269,7 +269,7 @@ jobs:
           cp -R v1.x/docs packages/base/docs/v1
 
       - name: Upload docs artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: packages/base/docs/
 
