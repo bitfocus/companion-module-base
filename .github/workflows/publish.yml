@@ -14,6 +14,11 @@ on:
         options:
           - base
           - host
+      publish-docs:
+        description: 'Publish docs (only applies to base package)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -65,6 +70,7 @@ jobs:
       package-path: ${{ steps.determine.outputs.package-path }}
       tag: ${{ steps.determine.outputs.tag }}
       prerelease: ${{ steps.determine.outputs.prerelease }}
+      publish-docs: ${{ steps.determine.outputs.publish-docs }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -78,13 +84,13 @@ jobs:
             if [ "${{ github.event.inputs.package }}" = "base" ]; then
               PACKAGE_NAME="@companion-module/base"
               PACKAGE_SHORT_NAME="base"
-              PACKAGE_PATH="packages/companion-module-base"
+              PACKAGE_PATH="packages/base"
             else
               PACKAGE_NAME="@companion-module/host"
               PACKAGE_SHORT_NAME="host"
-              PACKAGE_PATH="packages/companion-module-host"
+              PACKAGE_PATH="packages/host"
             fi
-            
+
             # Determine tag based on branch
             if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
               echo "Publishing nightly"
@@ -93,31 +99,33 @@ jobs:
               echo "Publishing experimental"
               TAG="experimental"
             fi
-            
+
             # Generate prerelease version suffix
             HASH=$(git rev-parse --short HEAD)
             TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
             PRERELEASE_TAG=nightly-$(echo "${{ github.ref_name }}" | sed -r 's/[^a-z0-9]+/-/gi')
             PRERELEASE="${PRERELEASE_TAG}-${TIMESTAMP}-${HASH}"
-            
+
             echo "tag=${TAG}" >> $GITHUB_OUTPUT
             echo "prerelease=${PRERELEASE}" >> $GITHUB_OUTPUT
+            echo "publish-docs=${{ github.event.inputs.publish-docs }}" >> $GITHUB_OUTPUT
           else
             # Tag push - parse tag name
             TAG="${{ github.ref_name }}"
             if [[ "$TAG" == companion-module-base-v* ]]; then
               PACKAGE_NAME="@companion-module/base"
               PACKAGE_SHORT_NAME="base"
-              PACKAGE_PATH="packages/companion-module-base"
+              PACKAGE_PATH="packages/base"
             elif [[ "$TAG" == companion-module-host-v* ]]; then
               PACKAGE_NAME="@companion-module/host"
               PACKAGE_SHORT_NAME="host"
-              PACKAGE_PATH="packages/companion-module-host"
+              PACKAGE_PATH="packages/host"
             else
               echo "Unknown tag format: $TAG"
               exit 1
             fi
             echo "tag=latest" >> $GITHUB_OUTPUT
+            echo "publish-docs=true" >> $GITHUB_OUTPUT
           fi
 
           echo "package-name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
@@ -156,7 +164,7 @@ jobs:
         env:
           CI: true
       - name: Upload release artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: publish-dist-${{ needs.determine-package.outputs.package-short-name }}
           path: |
@@ -168,17 +176,6 @@ jobs:
             ${{ needs.determine-package.outputs.package-path }}/assets
           retention-days: 1
           if-no-files-found: error
-
-      - name: Prepare docs
-        if: ${{ steps.do-publish.outputs.tag == 'latest' }}
-        run: |
-          yarn docs:html
-
-      - name: Upload docs artifact
-        if: ${{ steps.do-publish.outputs.tag == 'latest' }}
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: docs/
 
   publish:
     name: Publish to NPM
@@ -202,7 +199,7 @@ jobs:
           node-version: 22.x
 
       - name: Download release artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: publish-dist-${{ needs.determine-package.outputs.package-short-name }}
           path: ${{ needs.determine-package.outputs.package-path }}
@@ -221,10 +218,65 @@ jobs:
         env:
           CI: true
 
+  prepare-docs:
+    name: Prepare docs for publishing
+    needs: determine-package
+    runs-on: ubuntu-latest
+
+    if: ${{ needs.determine-package.outputs.publish-docs == 'true' && needs.determine-package.outputs.package-short-name == 'base' }}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+      - name: Enable corepack
+        run: corepack enable
+      - name: Prepare build
+        run: |
+          yarn install
+          yarn build
+
+      - name: Prepare v2 docs
+        run: |
+          cd packages/base
+          yarn docs:html
+
+      - name: Clone v1.x branch for docs
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          path: v1.x
+          ref: v1.x
+      - name: Prepare v1.x build
+        run: |
+          cd v1.x
+          yarn install
+          yarn build
+
+      - name: Prepare v1 docs
+        run: |
+          cd v1.x
+          yarn docs:html
+
+      - name: Collect docs
+        run: |
+          cp -R v1.x/docs packages/base/docs/v1
+
+      - name: Upload docs artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: packages/base/docs/
+
   publish-docs:
     name: Publish docs
     needs:
-      - prepare
+      - prepare-docs
       - publish
       - determine-package
     runs-on: ubuntu-latest
@@ -232,7 +284,7 @@ jobs:
       pages: write # to deploy to Pages
       id-token: write # to verify the deployment originates from an appropriate source
 
-    if: ${{ needs.determine-package.outputs.tag == 'latest' }}
+    if: ${{ needs.determine-package.outputs.publish-docs == 'true' && needs.determine-package.outputs.package-short-name == 'base' }}
 
     # Deploy to the github-pages environment
     environment:
@@ -242,4 +294,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

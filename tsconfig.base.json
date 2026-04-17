@@ -1,8 +1,7 @@
 {
 	"extends": "@tsconfig/node22/tsconfig.json",
 	"compilerOptions": {
-        "composite": true,
-		// "importHelpers": false,
+		"composite": true,
 		"types": ["node"],
 		"declaration": true,
 		"declarationMap": true,
@@ -10,6 +9,9 @@
 		"sourceMap": true,
 		"importHelpers": true,
 		"pretty": true,
-		"esModuleInterop": true
+		"esModuleInterop": true,
+
+		"module": "node20",
+		"moduleResolution": "node16",
 	}
 }

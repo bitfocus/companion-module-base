@@ -1,0 +1,223 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"title": "ModuleManifest",
+	"properties": {
+		"$schema": {
+			"type": "string"
+		},
+		"type": {
+			"type": "string",
+			"enum": ["connection"],
+			"description": "Type of module. Must be: connection"
+		},
+		"id": {
+			"type": "string",
+			"description": "Unique identifier for the module"
+		},
+		"name": {
+			"type": "string",
+			"description": "Name of the module"
+		},
+		"shortname": {
+			"type": "string"
+		},
+		"description": {
+			"type": "string",
+			"description": "Description of the module "
+		},
+		"version": {
+			"type": "string",
+			"description": "Current version of the module"
+		},
+		"isPrerelease": {
+			"type": "boolean",
+			"description": "Is this a pre-release version"
+		},
+		"license": {
+			"type": "string",
+			"description": "SPDX identifier for license of the module"
+		},
+		"repository": {
+			"type": "string",
+			"description": "URL to the source repository"
+		},
+		"bugs": {
+			"type": "string",
+			"description": "URL to bug tracker"
+		},
+		"maintainers": {
+			"type": "array",
+			"description": "List of active maintainers",
+			"uniqueItems": true,
+			"items": {
+				"type": "object",
+				"title": "ModuleManifestMaintainer",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					},
+					"github": {
+						"type": "string"
+					},
+					"url": {
+						"type": "string"
+					}
+				},
+				"required": ["name"],
+				"additionalProperties": false
+			}
+		},
+		"legacyIds": {
+			"type": "array",
+			"description": "If the module had a different unique identifier previously, then specify it here",
+			"uniqueItems": true,
+			"items": {
+				"type": "string"
+			}
+		},
+		"runtime": {
+			"type": "object",
+			"title": "ModuleManifestRuntime",
+			"description": "Information on how to execute the module",
+			"properties": {
+				"type": {
+					"type": "string",
+					"description": "Type of the module. Must be: node22",
+					"enum": ["node22"]
+				},
+				"api": {
+					"type": "string",
+					"description": "Which host-api does it use. In the future alternate options will be allowed",
+					"enum": ["nodejs-ipc"]
+				},
+				"apiVersion": {
+					"type": "string",
+					"description": "The version of the host-api used"
+				},
+				"entrypoint": {
+					"type": "string",
+					"description": "Entrypoint to pass to the runtime. eg index.js"
+				},
+				"permissions": {
+					"type": "object",
+					"description": "Permissions required by the module. This is used to inform the user of the permissions required by the module.\nNote: this requires the node22 or newer runtime",
+					"properties": {
+						"worker-threads": {
+							"type": "boolean",
+							"description": "Enable if the module uses worker threads"
+						},
+						"child-process": {
+							"type": "boolean",
+							"description": "Enable if the module uses child processes"
+						},
+						"native-addons": {
+							"type": "boolean",
+							"description": "Enable if the module uses native addons"
+						},
+						"filesystem": {
+							"type": "boolean",
+							"description": "Enable if the module requires read/write access to the filesystem"
+						},
+						"insecure-algorithms": {
+							"type": "boolean",
+							"description": "Enable if the module requires legacy openssl algorithms"
+						}
+					},
+					"additionalProperties": false
+				}
+			},
+			"required": ["type", "api", "apiVersion", "entrypoint"]
+		},
+		"manufacturer": {
+			"type": "string"
+		},
+		"products": {
+			"type": "array",
+			"uniqueItems": true,
+			"items": {
+				"type": "string"
+			},
+			"minItems": 1
+		},
+		"keywords": {
+			"type": "array",
+			"uniqueItems": true,
+			"items": {
+				"type": "string"
+			}
+		},
+		"bonjourQueries": {
+			"type": "object",
+			"description": "If the device or software for your module supports bonjour announcements, Companion will offer an easy way to watch for these announcements.\nEach query you define must have a matching config field of type 'bonjour-device' with the same name",
+			"patternProperties": {
+				"": {
+					"oneOf": [
+						{
+							"$ref": "#/$defs/bonjourQuery"
+						},
+						{
+							"type": "array",
+							"items": {
+								"$ref": "#/$defs/bonjourQuery"
+							}
+						}
+					]
+				}
+			}
+		}
+	},
+	"required": [
+		"id",
+		"name",
+		"shortname",
+		"description",
+		"version",
+		"license",
+		"repository",
+		"bugs",
+		"maintainers",
+		"legacyIds",
+		"runtime",
+		"manufacturer",
+		"products",
+		"keywords"
+	],
+	"$defs": {
+		"bonjourQuery": {
+			"type": "object",
+			"title": "ModuleBonjourQuery",
+			"description": "",
+			"properties": {
+				"type": {
+					"type": "string"
+				},
+				"protocol": {
+					"type": "string",
+					"enum": ["tcp", "udp"]
+				},
+				"port": {
+					"type": "number"
+				},
+				"txt": {
+					"type": "object",
+					"description": "Match on any txt values returned in the query. This is useful to filter out devices of the same 'type' that are not supported",
+					"patternProperties": {
+						"": {
+							"type": "string"
+						}
+					}
+				},
+				"addressFamily": {
+					"type": "string",
+					"description": "The address family to use when connecting to the device. If not specified, it will default to ipv4. This is useful for devices or modules that do not support ipv4 and ipv6, but discovery will find them on both",
+					"enum": ["ipv4", "ipv6", "ipv4+6"]
+				}
+			},
+			"required": ["type", "protocol"]
+		}
+	}
+}
