@@ -12,11 +12,11 @@ import type {
 
 /**
  * The definition of a companion layered button preset
- * In many cases the `simple` preset type will be sufficient, but the `layered-button` preset allows for more complex buttons with multiple layers of graphics and feedbacks
+ * In many cases the `simple` preset type will be sufficient, but the `layered` preset allows for more complex buttons with multiple layers of graphics and feedbacks
  */
 export interface CompanionLayeredButtonPresetDefinition<
 	TManifest extends InstanceTypes = InstanceTypes,
-> extends CompanionPresetDefinitionBase<'layered-button'> {
+> extends CompanionPresetDefinitionBase<'layered'> {
 	/** The drawing elements for this preset, this will be copied to the button */
 	elements: SomeButtonGraphicsElement[]
 

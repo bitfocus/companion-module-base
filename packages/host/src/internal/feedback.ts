@@ -64,6 +64,11 @@ export class FeedbackManager {
 	public getDefinitionIds(): string[] {
 		return this.#feedbackDefinitions.keys().toArray()
 	}
+
+	public getDefinition(id: string): CompanionFeedbackDefinition | undefined {
+		return this.#feedbackDefinitions.get(id)
+	}
+
 	public getInstanceIds(): string[] {
 		return this.#feedbackInstances.keys().toArray()
 	}
