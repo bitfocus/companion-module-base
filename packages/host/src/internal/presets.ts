@@ -261,7 +261,8 @@ export function validatePresetDefinitions(
 
 	// Check for presets not referenced by structure
 	const presetsNotReferenced: string[] = []
-	for (const presetId of Object.keys(presets)) {
+	for (const [presetId, preset] of Object.entries(presets)) {
+		if (!preset) continue
 		if (!referencedPresetIds.has(presetId)) {
 			presetsNotReferenced.push(presetId)
 		}
@@ -270,7 +271,7 @@ export function validatePresetDefinitions(
 	// Check for missing presets referenced by structure
 	const referencedMissing: string[] = []
 	for (const presetId of referencedPresetIds) {
-		if (!(presetId in presets)) {
+		if (!presets[presetId]) {
 			referencedMissing.push(presetId)
 		}
 	}
