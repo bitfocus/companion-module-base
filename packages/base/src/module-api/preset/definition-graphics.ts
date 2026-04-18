@@ -7,10 +7,12 @@ import type {
 	CompanionButtonStepActions,
 	CompanionPresetDefinitionBase,
 	CompanionPresetOptionValues,
+	CompanionSimplePresetLocalVariable,
 } from './definition.js'
 
 /**
- * The definition of a press button preset
+ * The definition of a companion layered button preset
+ * In many cases the `simple` preset type will be sufficient, but the `layered-button` preset allows for more complex buttons with multiple layers of graphics and feedbacks
  */
 export interface CompanionLayeredButtonPresetDefinition<
 	TManifest extends InstanceTypes = InstanceTypes,
@@ -25,6 +27,9 @@ export interface CompanionLayeredButtonPresetDefinition<
 	/** The feedbacks on the button */
 	feedbacks: CompanionPresetLayeredFeedback<TManifest['feedbacks']>[]
 	steps: CompanionButtonStepActions<TManifest>[]
+
+	/** Local variables on this button */
+	localVariables?: CompanionSimplePresetLocalVariable[]
 }
 
 /**
