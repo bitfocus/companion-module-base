@@ -28,6 +28,7 @@ import type {
 import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/host-api'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
 import { validatePresetDefinitions } from './internal/presets.js'
+import { validateCompositeElementDefinitions } from './internal/composite-elements.js'
 
 export class InstanceWrapper<TManifest extends InstanceTypes> {
 	// readonly #logger = createModuleLogger('InstanceWrapper')
@@ -123,6 +124,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 				this.#host.setPresetDefinitions(structure, presets as CompanionPresetDefinitions<any>)
 			},
 			setCompositeElementDefinitions: (compositeElements) => {
+				validateCompositeElementDefinitions(compositeElements)
 				this.#host.setCompositeElementDefinitions(compositeElements)
 			},
 

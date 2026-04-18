@@ -3,11 +3,9 @@ import {
 	type CompanionPresetDefinitions,
 	type CompanionPresetSection,
 } from '@companion-module/base'
-import { BANNED_PROPS } from './util.js'
+import { BANNED_PROPS, hasInvalidElementType } from './util.js'
 import type { ActionManager } from './actions.js'
 import type { FeedbackManager } from './feedback.js'
-
-const VALID_ELEMENT_TYPES = new Set(['group', 'composite', 'text', 'image', 'box', 'line', 'circle'])
 
 const logger = createModuleLogger('PresetDefinitionsManager')
 
@@ -24,17 +22,6 @@ function collectElementIds(elements: unknown[]): Set<string> {
 		}
 	}
 	return ids
-}
-
-/** Returns true if any element (or nested child) has an unrecognised type */
-function hasInvalidElementType(elements: unknown[]): boolean {
-	for (const el of elements) {
-		if (!el || typeof el !== 'object') return true
-		const elem = el as Record<string, unknown>
-		if (typeof elem.type !== 'string' || !VALID_ELEMENT_TYPES.has(elem.type)) return true
-		if (Array.isArray(elem.children) && hasInvalidElementType(elem.children)) return true
-	}
-	return false
 }
 
 export function validatePresetDefinitions(

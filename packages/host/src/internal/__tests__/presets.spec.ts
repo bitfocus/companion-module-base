@@ -24,7 +24,7 @@ function makeActionDef(...optionIds: string[]): CompanionActionDefinition {
 	return {
 		name: 'Action',
 		options: optionIds.map((id) => ({ type: 'textinput' as const, id, label: id })),
-		callback: vi.fn() as unknown as CompanionActionDefinition['callback'],
+		callback: vi.fn(),
 	}
 }
 
@@ -35,7 +35,7 @@ function makeFeedbackDef(...optionIds: string[]): CompanionBooleanFeedbackDefini
 		name: 'Feedback',
 		defaultStyle: {},
 		options: optionIds.map((id) => ({ type: 'textinput' as const, id, label: id })),
-		callback: vi.fn() as unknown as CompanionBooleanFeedbackDefinition<CompanionOptionValues>['callback'],
+		callback: vi.fn(),
 	}
 }
 
@@ -197,31 +197,31 @@ describe('validatePresetDefinitions', () => {
 		})
 
 		it('fails when steps is missing', () => {
-			const bad = { ...validSimple(), steps: undefined } as unknown as CompanionPresetDefinition<InstanceTypes>
+			const bad = { ...validSimple(), steps: undefined as any }
 			const msgs = runCapture({ p1: bad })
 			expect(msgs.some((m) => m.includes('My Preset') && m.includes('errors'))).toBe(true)
 		})
 
 		it('fails when steps is not an array', () => {
-			const bad = { ...validSimple(), steps: 'bad' } as unknown as CompanionPresetDefinition<InstanceTypes>
+			const bad = { ...validSimple(), steps: 'bad' as any }
 			const msgs = runCapture({ p1: bad })
 			expect(msgs.some((m) => m.includes('errors'))).toBe(true)
 		})
 
 		it('fails when feedbacks is missing', () => {
-			const bad = { ...validSimple(), feedbacks: undefined } as unknown as CompanionPresetDefinition<InstanceTypes>
+			const bad = { ...validSimple(), feedbacks: undefined as any }
 			const msgs = runCapture({ p1: bad })
 			expect(msgs.some((m) => m.includes('errors'))).toBe(true)
 		})
 
 		it('fails when style is missing', () => {
-			const bad = { ...validSimple(), style: undefined } as unknown as CompanionPresetDefinition<InstanceTypes>
+			const bad = { ...validSimple(), style: undefined as any }
 			const msgs = runCapture({ p1: bad })
 			expect(msgs.some((m) => m.includes('errors'))).toBe(true)
 		})
 
 		it('fails when style is a non-object', () => {
-			const bad = { ...validSimple(), style: 'bad' } as unknown as CompanionPresetDefinition<InstanceTypes>
+			const bad = { ...validSimple(), style: 'bad' as any }
 			const msgs = runCapture({ p1: bad })
 			expect(msgs.some((m) => m.includes('errors'))).toBe(true)
 		})
@@ -380,25 +380,25 @@ describe('validatePresetDefinitions', () => {
 		})
 
 		it('fails when elements is missing', () => {
-			const bad = { ...validLayered(), elements: undefined } as unknown as CompanionPresetDefinition<InstanceTypes>
+			const bad = { ...validLayered(), elements: undefined as any }
 			const msgs = runCapture({ p1: bad })
 			expect(msgs.some((m) => m.includes('errors'))).toBe(true)
 		})
 
 		it('fails when elements is not an array', () => {
-			const bad = { ...validLayered(), elements: 'bad' } as unknown as CompanionPresetDefinition<InstanceTypes>
+			const bad = { ...validLayered(), elements: 'bad' as any }
 			const msgs = runCapture({ p1: bad })
 			expect(msgs.some((m) => m.includes('errors'))).toBe(true)
 		})
 
 		it('fails when steps is missing', () => {
-			const bad = { ...validLayered(), steps: undefined } as unknown as CompanionPresetDefinition<InstanceTypes>
+			const bad = { ...validLayered(), steps: undefined as any }
 			const msgs = runCapture({ p1: bad })
 			expect(msgs.some((m) => m.includes('errors'))).toBe(true)
 		})
 
 		it('fails when feedbacks is missing', () => {
-			const bad = { ...validLayered(), feedbacks: undefined } as unknown as CompanionPresetDefinition<InstanceTypes>
+			const bad = { ...validLayered(), feedbacks: undefined as any }
 			const msgs = runCapture({ p1: bad })
 			expect(msgs.some((m) => m.includes('errors'))).toBe(true)
 		})
@@ -408,29 +408,29 @@ describe('validatePresetDefinitions', () => {
 		it('does not warn for all valid element types at top level', () => {
 			// Cast required: ExpressionOrValue fields and composite.options can't be satisfied with bare literals;
 			// this test exercises the runtime type validator, not TypeScript completeness.
-			const elements = [
-				{ type: 'text', text: '' },
-				{ type: 'image', base64Image: null },
+			const elements: SomeButtonGraphicsElement[] = [
+				{ type: 'text', text: '' as any },
+				{ type: 'image', base64Image: null as any },
 				{ type: 'box' },
 				{ type: 'line' },
 				{ type: 'circle' },
 				{ type: 'composite', elementId: 'x', options: {} },
 				{ type: 'group', children: [] },
-			] as unknown as SomeButtonGraphicsElement[]
+			]
 			const msgs = runCapture({ p1: validLayered({ elements }) })
 			expect(msgs.some((m) => m.includes('unrecognised types'))).toBe(false)
 		})
 
 		it('warns when an element has an unrecognised type', () => {
 			// Deliberately invalid element type — cast required
-			const elements = [{ type: 'rectangle' }] as unknown as SomeButtonGraphicsElement[]
+			const elements: SomeButtonGraphicsElement[] = [{ type: 'rectangle' as any }]
 			const msgs = runCapture({ p1: validLayered({ elements }) })
 			expect(msgs.some((m) => m.includes('unrecognised types') && m.includes('My Layered Preset'))).toBe(true)
 		})
 
 		it('warns for an unrecognised type nested inside a group', () => {
 			// Deliberately invalid child type — cast required
-			const badChild = [{ type: 'bad_child' }] as unknown as SomeButtonGraphicsElement[]
+			const badChild: SomeButtonGraphicsElement[] = [{ type: 'bad_child' as any }]
 			const msgs = runCapture({
 				p1: validLayered({ elements: [{ type: 'group', children: badChild }] }),
 			})
@@ -439,7 +439,7 @@ describe('validatePresetDefinitions', () => {
 
 		it('does not warn for valid types nested inside a group', () => {
 			// Cast required: ExpressionOrValue fields can't be satisfied with bare literals
-			const children = [{ type: 'text', text: '' }, { type: 'box' }] as unknown as SomeButtonGraphicsElement[]
+			const children: SomeButtonGraphicsElement[] = [{ type: 'text', text: '' as any }, { type: 'box' }]
 			const msgs = runCapture({
 				p1: validLayered({
 					elements: [{ type: 'group', children }],
