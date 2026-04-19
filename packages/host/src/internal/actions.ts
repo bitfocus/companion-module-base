@@ -46,6 +46,10 @@ export class ActionManager {
 		return this.#actionDefinitions.keys().toArray()
 	}
 
+	public getDefinition(id: string): CompanionActionDefinition | undefined {
+		return this.#actionDefinitions.get(id)
+	}
+
 	public async handleExecuteAction(
 		action: ActionInstance,
 		surfaceId: string | undefined,

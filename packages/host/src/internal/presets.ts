@@ -3,11 +3,26 @@ import {
 	type CompanionPresetDefinitions,
 	type CompanionPresetSection,
 } from '@companion-module/base'
-import { BANNED_PROPS } from './util.js'
+import { BANNED_PROPS, hasInvalidElementType } from './util.js'
 import type { ActionManager } from './actions.js'
 import type { FeedbackManager } from './feedback.js'
 
 const logger = createModuleLogger('PresetDefinitionsManager')
+
+/** Collect all element IDs declared in a layered elements tree, recursing into group children */
+function collectElementIds(elements: unknown[]): Set<string> {
+	const ids = new Set<string>()
+	for (const el of elements) {
+		if (el && typeof el === 'object') {
+			const elem = el as Record<string, unknown>
+			if (typeof elem.id === 'string') ids.add(elem.id)
+			if (Array.isArray(elem.children)) {
+				for (const id of collectElementIds(elem.children)) ids.add(id)
+			}
+		}
+	}
+	return ids
+}
 
 export function validatePresetDefinitions(
 	actionsManager: ActionManager,
@@ -20,6 +35,10 @@ export function validatePresetDefinitions(
 
 	const presetsWithInvalidActionIds: string[] = []
 	const presetsWithInvalidFeedbackIds: string[] = []
+	const presetsWithInvalidActionOptionKeys: string[] = []
+	const presetsWithInvalidFeedbackOptionKeys: string[] = []
+	const presetsWithInvalidElements: string[] = []
+	const presetsWithInvalidStyleOverrideRefs: string[] = []
 	const presetsFailedValidation: string[] = []
 
 	for (const [_id, preset] of Object.entries(presets)) {
@@ -28,55 +47,115 @@ export function validatePresetDefinitions(
 			presetsFailedValidation.push(typeof preset.name === 'string' ? preset.name : _id)
 			continue
 		}
-		if (preset.type !== 'simple') continue
+		if (preset.type !== 'simple' && preset.type !== 'layered') continue
 
 		const presetName = typeof preset.name === 'string' ? preset.name : 'Unknown'
 
 		try {
-			// Validate feedback IDs
+			// --- Structural validation ---
+			if (!Array.isArray(preset.steps)) {
+				presetsFailedValidation.push(presetName)
+				continue
+			}
+			if (!Array.isArray(preset.feedbacks)) {
+				presetsFailedValidation.push(presetName)
+				continue
+			}
+			if (preset.type === 'simple' && (!preset.style || typeof preset.style !== 'object')) {
+				presetsFailedValidation.push(presetName)
+				continue
+			}
+
+			// --- layered-specific validation ---
+			if (preset.type === 'layered') {
+				if (!Array.isArray(preset.elements)) {
+					presetsFailedValidation.push(presetName)
+					continue
+				}
+				if (hasInvalidElementType(preset.elements)) {
+					presetsWithInvalidElements.push(presetName)
+				}
+				// Validate that style override element IDs reference declared elements
+				const elementIds = collectElementIds(preset.elements)
+				let hasInvalidRef = false
+				outerFeedback: for (const feedback of preset.feedbacks) {
+					if (!Array.isArray(feedback?.styleOverrides)) continue
+					for (const override of feedback.styleOverrides) {
+						if (typeof override?.elementId === 'string' && !elementIds.has(override.elementId)) {
+							hasInvalidRef = true
+							break outerFeedback
+						}
+					}
+				}
+				if (hasInvalidRef) presetsWithInvalidStyleOverrideRefs.push(presetName)
+			}
+
+			// --- Validate feedback IDs and option keys ---
 			let hasInvalidFeedback = false
-			if (Array.isArray(preset.feedbacks)) {
-				for (const feedback of preset.feedbacks) {
-					if (!validFeedbackIds.has(feedback.feedbackId)) {
-						hasInvalidFeedback = true
-						break
+			let hasInvalidFeedbackOptionKeys = false
+			for (const feedback of preset.feedbacks) {
+				const feedbackId = feedback?.feedbackId
+				if (!validFeedbackIds.has(feedbackId)) {
+					hasInvalidFeedback = true
+				} else {
+					const def = feedbacksManager.getDefinition(feedbackId)
+					if (def && feedback.options && typeof feedback.options === 'object') {
+						const validKeys = new Set(def.options.map((f) => f.id))
+						for (const key of Object.keys(feedback.options)) {
+							if (!validKeys.has(key)) {
+								hasInvalidFeedbackOptionKeys = true
+								break
+							}
+						}
 					}
 				}
 			}
 			if (hasInvalidFeedback) presetsWithInvalidFeedbackIds.push(presetName)
+			if (hasInvalidFeedbackOptionKeys) presetsWithInvalidFeedbackOptionKeys.push(presetName)
 
-			// Validate action IDs across all steps
+			// --- Validate action IDs and option keys across all steps ---
 			let hasInvalidAction = false
-			if (Array.isArray(preset.steps)) {
-				for (const step of preset.steps) {
-					if (hasInvalidAction) break
-
-					// Check named action arrays
-					const namedKeys = ['down', 'up', 'rotate_left', 'rotate_right'] as const
-					for (const key of namedKeys) {
-						const actions = step[key]
-						if (Array.isArray(actions)) {
-							for (const action of actions) {
-								if (!validActionIds.has(action.actionId)) {
-									hasInvalidAction = true
-									break
+			let hasInvalidActionOptionKeys = false
+			for (const step of preset.steps) {
+				// Check named action arrays
+				const namedKeys = ['down', 'up', 'rotate_left', 'rotate_right'] as const
+				for (const key of namedKeys) {
+					const actions = step[key]
+					if (!Array.isArray(actions)) continue
+					for (const action of actions) {
+						const actionId = action?.actionId
+						if (!validActionIds.has(actionId)) {
+							hasInvalidAction = true
+						} else {
+							const def = actionsManager.getDefinition(actionId)
+							if (def && action.options && typeof action.options === 'object') {
+								const validKeys = new Set(def.options.map((f) => f.id))
+								for (const optKey of Object.keys(action.options)) {
+									if (!validKeys.has(optKey)) {
+										hasInvalidActionOptionKeys = true
+										break
+									}
 								}
 							}
 						}
-						if (hasInvalidAction) break
 					}
-
-					if (hasInvalidAction) break
-
-					// Check numbered delay properties
-					for (const [key, value] of Object.entries(step)) {
-						if (hasInvalidAction) break
-						if (/^\d+$/.test(key)) {
-							const actions = Array.isArray(value) ? value : value?.actions
-							if (Array.isArray(actions)) {
-								for (const action of actions) {
-									if (!validActionIds.has(action.actionId)) {
-										hasInvalidAction = true
+				}
+				// Check numbered delay-group properties
+				for (const [key, value] of Object.entries(step)) {
+					if (!/^\d+$/.test(key)) continue
+					const actions = Array.isArray(value) ? value : value?.actions
+					if (!Array.isArray(actions)) continue
+					for (const action of actions) {
+						const actionId = action?.actionId
+						if (!validActionIds.has(actionId)) {
+							hasInvalidAction = true
+						} else {
+							const def = actionsManager.getDefinition(actionId)
+							if (def && action.options && typeof action.options === 'object') {
+								const validKeys = new Set(def.options.map((f) => f.id))
+								for (const optKey of Object.keys(action.options)) {
+									if (!validKeys.has(optKey)) {
+										hasInvalidActionOptionKeys = true
 										break
 									}
 								}
@@ -86,6 +165,7 @@ export function validatePresetDefinitions(
 				}
 			}
 			if (hasInvalidAction) presetsWithInvalidActionIds.push(presetName)
+			if (hasInvalidActionOptionKeys) presetsWithInvalidActionOptionKeys.push(presetName)
 		} catch (_e) {
 			presetsFailedValidation.push(presetName)
 		}
@@ -108,6 +188,34 @@ export function validatePresetDefinitions(
 	if (presetsWithInvalidActionIds.length > 0) {
 		logger.warn(
 			`The following preset definitions reference unknown action definitions: ${presetsWithInvalidActionIds
+				.sort()
+				.join(', ')}`,
+		)
+	}
+	if (presetsWithInvalidFeedbackOptionKeys.length > 0) {
+		logger.warn(
+			`The following preset definitions reference unknown feedback option keys: ${presetsWithInvalidFeedbackOptionKeys
+				.sort()
+				.join(', ')}`,
+		)
+	}
+	if (presetsWithInvalidActionOptionKeys.length > 0) {
+		logger.warn(
+			`The following preset definitions reference unknown action option keys: ${presetsWithInvalidActionOptionKeys
+				.sort()
+				.join(', ')}`,
+		)
+	}
+	if (presetsWithInvalidElements.length > 0) {
+		logger.warn(
+			`The following layered preset definitions contain elements with unrecognised types: ${presetsWithInvalidElements
+				.sort()
+				.join(', ')}`,
+		)
+	}
+	if (presetsWithInvalidStyleOverrideRefs.length > 0) {
+		logger.warn(
+			`The following layered preset definitions contain feedback style overrides referencing unknown element IDs: ${presetsWithInvalidStyleOverrideRefs
 				.sort()
 				.join(', ')}`,
 		)
@@ -140,7 +248,8 @@ export function validatePresetDefinitions(
 
 	// Check for presets not referenced by structure
 	const presetsNotReferenced: string[] = []
-	for (const presetId of Object.keys(presets)) {
+	for (const [presetId, preset] of Object.entries(presets)) {
+		if (!preset) continue
 		if (!referencedPresetIds.has(presetId)) {
 			presetsNotReferenced.push(presetId)
 		}
@@ -149,7 +258,7 @@ export function validatePresetDefinitions(
 	// Check for missing presets referenced by structure
 	const referencedMissing: string[] = []
 	for (const presetId of referencedPresetIds) {
-		if (!(presetId in presets)) {
+		if (!presets[presetId]) {
 			referencedMissing.push(presetId)
 		}
 	}

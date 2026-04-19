@@ -5,6 +5,7 @@ import type { JsonValue } from '../../common/json-value.js'
 import type { CompanionVariableValue } from '../variable.js'
 import type { InstanceTypes } from '../base.js'
 import type { CompanionActionSchema } from '../action.js'
+import type { CompanionLayeredButtonPresetDefinition } from './definition-graphics.js'
 
 /**
  * The definitions of a group of presets
@@ -15,7 +16,8 @@ export type CompanionPresetDefinitions<TManifest extends InstanceTypes = Instanc
 
 // Future: Additional types will be added, as part of the graphics overhaul
 export type CompanionPresetDefinition<TManifest extends InstanceTypes = InstanceTypes> =
-	CompanionSimplePresetDefinition<TManifest>
+	| CompanionSimplePresetDefinition<TManifest>
+	| CompanionLayeredButtonPresetDefinition<TManifest>
 
 export interface CompanionPresetDefinitionBase<TType extends string> {
 	/**

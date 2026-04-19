@@ -9,6 +9,7 @@ import type { RemoteInfo } from 'dgram'
 import type {
 	CompanionActionDefinitions,
 	CompanionFeedbackDefinitions,
+	CompanionGraphicsCompositeElementDefinition,
 	CompanionPresetDefinitions,
 	CompanionPresetSection,
 	CompanionRecordedAction,
@@ -53,6 +54,7 @@ export interface InstanceContext<TManifest extends InstanceTypes> extends Instan
 		structure: CompanionPresetSection<TManifest>[],
 		presets: CompanionPresetDefinitions<TManifest>,
 	) => void
+	setCompositeElementDefinitions: (compositeElements: CompanionGraphicsCompositeElementDefinition[]) => void
 
 	setVariableDefinitions: (variables: CompanionVariableDefinitions<TManifest['variables']>) => void
 	setVariableValues: (values: Partial<TManifest['variables']>) => void
