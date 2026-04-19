@@ -4,6 +4,7 @@ import type { ModuleManifest } from '../manifest.js'
 
 function validManifest(overrides: Partial<ModuleManifest> = {}): ModuleManifest {
 	return {
+		type: 'connection',
 		id: 'companion-module-test',
 		name: 'Test Module',
 		shortname: 'test',
