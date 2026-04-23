@@ -153,20 +153,31 @@ export class ActionManager {
 				signal,
 			}
 
-			const newOptions = await definition.learn(
-				{
-					id: action.id,
-					actionId: action.actionId,
-					controlId: action.controlId,
-					options: action.options,
+			try {
+				const newOptions = await definition.learn(
+					{
+						id: action.id,
+						actionId: action.actionId,
+						controlId: action.controlId,
+						options: action.options,
 
-					surfaceId: undefined,
-				},
-				context,
-			)
+						surfaceId: undefined,
+					},
+					context,
+				)
 
-			return {
-				options: newOptions,
+				return {
+					options: newOptions,
+				}
+			} catch (e) {
+				if (e === signal.reason) {
+					// The learn was aborted, return undefined options as a signal of this
+					return {
+						options: undefined,
+					}
+				} else {
+					throw e
+				}
 			}
 		} else {
 			// Not supported

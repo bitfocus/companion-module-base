@@ -123,20 +123,31 @@ export class FeedbackManager {
 				signal,
 			}
 
-			const newOptions = await definition.learn(
-				{
-					id: feedback.id,
-					feedbackId: feedback.feedbackId,
-					controlId: feedback.controlId,
-					options: feedback.options,
-					previousOptions: null,
-					type: definition.type,
-				},
-				context,
-			)
+			try {
+				const newOptions = await definition.learn(
+					{
+						id: feedback.id,
+						feedbackId: feedback.feedbackId,
+						controlId: feedback.controlId,
+						options: feedback.options,
+						previousOptions: null,
+						type: definition.type,
+					},
+					context,
+				)
 
-			return {
-				options: newOptions,
+				return {
+					options: newOptions,
+				}
+			} catch (e) {
+				if (e === signal.reason) {
+					// The learn was aborted, return undefined options as a signal of this
+					return {
+						options: undefined,
+					}
+				} else {
+					throw e
+				}
 			}
 		} else {
 			// Not supported
