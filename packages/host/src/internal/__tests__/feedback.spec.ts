@@ -632,8 +632,8 @@ describe('FeedbackManager', () => {
 		const controller = new AbortController()
 		controller.abort()
 
-		// learn is still called even when the signal is already aborted
-		await expect(manager.handleLearnFeedback(feedback, controller.signal)).resolves.toEqual({ options: { abc: 123 } })
+		// learn is still called even when the signal is already aborted, but result is discarded
+		await expect(manager.handleLearnFeedback(feedback, controller.signal)).resolves.toEqual({ options: undefined })
 		expect(mockDefinition.learn).toBeCalledTimes(1)
 		expect(capturedSignal).toBe(controller.signal)
 		expect(capturedSignal!.aborted).toBe(true)
@@ -670,7 +670,8 @@ describe('FeedbackManager', () => {
 		expect(resolveLearn).toBeDefined()
 		controller.abort()
 
-		await expect(learnPromise).resolves.toEqual({ options: { wasAborted: true } })
+		// the abort causes learn to resolve, but the result is discarded because the signal is aborted
+		await expect(learnPromise).resolves.toEqual({ options: undefined })
 		expect(mockDefinition.learn).toBeCalledTimes(1)
 	})
 

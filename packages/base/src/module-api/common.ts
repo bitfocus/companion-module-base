@@ -8,7 +8,7 @@ export interface CompanionCommonCallbackContext {
 
 export interface CompanionLearnCallbackContext extends CompanionCommonCallbackContext {
 	/**
-	 * A signal that will abort if the user cancels the learn process. 
+	 * A signal that will abort if the user cancels the learn process.
 	 * Once the signal is aborted, the learn process should be stopped as soon as possible, with the return value or any thrown error being ignored.
 	 */
 	readonly signal: AbortSignal
