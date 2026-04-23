@@ -4,6 +4,7 @@ import {
 	type CompanionFeedbackDefinition,
 	type CompanionFeedbackDefinitions,
 	type CompanionFeedbackInfo,
+	CompanionFeedbackLearnContext,
 	type CompanionOptionValues,
 	type JsonValue,
 	assertNever,
@@ -113,11 +114,13 @@ export class FeedbackManager {
 
 	public async handleLearnFeedback(
 		feedback: FeedbackInstance,
+		signal: AbortSignal,
 	): Promise<{ options: CompanionOptionValues | undefined }> {
 		const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 		if (definition && definition.learn) {
-			const context: CompanionFeedbackContext = {
+			const context: CompanionFeedbackLearnContext = {
 				type: 'feedback',
+				signal,
 			}
 
 			const newOptions = await definition.learn(
