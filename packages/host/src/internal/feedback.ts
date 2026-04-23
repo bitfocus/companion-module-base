@@ -136,11 +136,18 @@ export class FeedbackManager {
 					context,
 				)
 
+				if (signal.aborted) {
+					// The learn was aborted, return undefined options as a signal of this
+					return {
+						options: undefined,
+					}
+				}
+
 				return {
 					options: newOptions,
 				}
 			} catch (e) {
-				if (e === signal.reason) {
+				if (signal.aborted) {
 					// The learn was aborted, return undefined options as a signal of this
 					return {
 						options: undefined,
