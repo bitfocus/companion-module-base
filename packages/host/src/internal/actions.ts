@@ -3,6 +3,7 @@ import {
 	type CompanionActionDefinition,
 	type CompanionActionDefinitions,
 	type CompanionActionInfo,
+	CompanionActionLearnContext,
 	type CompanionOptionValues,
 	type CompanionVariableValue,
 	createModuleLogger,
@@ -141,14 +142,15 @@ export class ActionManager {
 		}
 	}
 
-	public async handleLearnAction(action: ActionInstance): Promise<{ options: CompanionOptionValues | undefined }> {
+	public async handleLearnAction(
+		action: ActionInstance,
+		signal: AbortSignal,
+	): Promise<{ options: CompanionOptionValues | undefined }> {
 		const definition = this.#actionDefinitions.get(action.actionId)
 		if (definition && definition.learn) {
-			const context: CompanionActionContext = {
+			const context: CompanionActionLearnContext = {
 				type: 'action',
-				setCustomVariableValue: () => {
-					throw new Error(`setCustomVariableValue is not available during learn`)
-				},
+				signal,
 			}
 
 			const newOptions = await definition.learn(

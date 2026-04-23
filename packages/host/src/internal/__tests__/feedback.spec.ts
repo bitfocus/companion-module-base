@@ -7,6 +7,7 @@ import type {
 	CompanionBooleanFeedbackDefinition,
 	CompanionFeedbackDefinition,
 	CompanionFeedbackDefinitionBase,
+	CompanionOptionValues,
 } from '@companion-module/base'
 
 const mockDefinitionId = 'definition0'
@@ -520,7 +521,7 @@ describe('FeedbackManager', () => {
 		})
 	})
 
-	it('learn values: no implementation', async () => {
+	it('learn values: no implementation', async (ctx) => {
 		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
 		const manager = new FeedbackManager(mockSetFeedbackDefinitions, unimplementedFunction)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
@@ -541,10 +542,10 @@ describe('FeedbackManager', () => {
 		expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
 
 		// make the call
-		await expect(manager.handleLearnFeedback(feedback)).resolves.toEqual({ options: undefined })
+		await expect(manager.handleLearnFeedback(feedback, ctx.signal)).resolves.toEqual({ options: undefined })
 	})
 
-	it('learn values: with implementation', async () => {
+	it('learn values: with implementation', async (ctx) => {
 		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
 		const manager = new FeedbackManager(mockSetFeedbackDefinitions, unimplementedFunction)
 		expect(manager.getDefinitionIds()).toHaveLength(0)
@@ -566,7 +567,7 @@ describe('FeedbackManager', () => {
 		expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
 
 		// make the call
-		await expect(manager.handleLearnFeedback(feedback)).resolves.toEqual({ options: { abc: 123 } })
+		await expect(manager.handleLearnFeedback(feedback, ctx.signal)).resolves.toEqual({ options: { abc: 123 } })
 		expect(mockDefinition.learn).toBeCalledTimes(1)
 		expect(mockDefinition.learn).lastCalledWith(
 			{
@@ -579,6 +580,98 @@ describe('FeedbackManager', () => {
 			},
 			expect.anything(),
 		)
+	})
+
+	it('learn values: signal is forwarded to learn callback context', async () => {
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const manager = new FeedbackManager(mockSetFeedbackDefinitions, unimplementedFunction)
+
+		const mockDefinitionId = 'definition0'
+		let capturedSignal: AbortSignal | undefined
+		const mockDefinition: CompanionFeedbackDefinition = {
+			type: 'boolean',
+			name: 'Definition0',
+			defaultStyle: {},
+			options: [],
+			callback: vi.fn<CompanionBooleanFeedbackDefinition['callback']>(() => false),
+			learn: vi.fn<Required<CompanionFeedbackDefinitionBase>['learn']>((_fb, ctx) => {
+				capturedSignal = ctx.signal
+				return { abc: 123 }
+			}),
+		}
+
+		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+
+		const controller = new AbortController()
+		await manager.handleLearnFeedback(feedback, controller.signal)
+
+		expect(capturedSignal).toBe(controller.signal)
+		expect(capturedSignal!.aborted).toBe(false)
+	})
+
+	it('learn values: pre-aborted signal is forwarded to learn callback', async () => {
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const manager = new FeedbackManager(mockSetFeedbackDefinitions, unimplementedFunction)
+
+		const mockDefinitionId = 'definition0'
+		let capturedSignal: AbortSignal | undefined
+		const mockDefinition: CompanionFeedbackDefinition = {
+			type: 'boolean',
+			name: 'Definition0',
+			defaultStyle: {},
+			options: [],
+			callback: vi.fn<CompanionBooleanFeedbackDefinition['callback']>(() => false),
+			learn: vi.fn<Required<CompanionFeedbackDefinitionBase>['learn']>((_fb, ctx) => {
+				capturedSignal = ctx.signal
+				return { abc: 123 }
+			}),
+		}
+
+		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+
+		const controller = new AbortController()
+		controller.abort()
+
+		// learn is still called even when the signal is already aborted
+		await expect(manager.handleLearnFeedback(feedback, controller.signal)).resolves.toEqual({ options: { abc: 123 } })
+		expect(mockDefinition.learn).toBeCalledTimes(1)
+		expect(capturedSignal).toBe(controller.signal)
+		expect(capturedSignal!.aborted).toBe(true)
+	})
+
+	it('learn values: signal aborted mid-execution is observable by learn callback', async () => {
+		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+		const manager = new FeedbackManager(mockSetFeedbackDefinitions, unimplementedFunction)
+
+		const mockDefinitionId = 'definition0'
+		const controller = new AbortController()
+
+		let resolveLearn: ((value: CompanionOptionValues) => void) | undefined
+		const mockDefinition: CompanionFeedbackDefinition = {
+			type: 'boolean',
+			name: 'Definition0',
+			defaultStyle: {},
+			options: [],
+			callback: vi.fn<CompanionBooleanFeedbackDefinition['callback']>(() => false),
+			learn: vi.fn<Required<CompanionFeedbackDefinitionBase>['learn']>(async (_fb, ctx) => {
+				return new Promise<CompanionOptionValues>((resolve) => {
+					resolveLearn = resolve
+					// abort mid-execution and resolve with the aborted state observable
+					ctx.signal.addEventListener('abort', () => resolve({ wasAborted: true }))
+				})
+			}),
+		}
+
+		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+
+		const learnPromise = manager.handleLearnFeedback(feedback, controller.signal)
+
+		// learn is in-flight, abort the signal
+		expect(resolveLearn).toBeDefined()
+		controller.abort()
+
+		await expect(learnPromise).resolves.toEqual({ options: { wasAborted: true } })
+		expect(mockDefinition.learn).toBeCalledTimes(1)
 	})
 
 	describe('unsubscribe', () => {
