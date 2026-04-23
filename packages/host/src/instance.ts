@@ -353,7 +353,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 	 * @deprecated use learnActionWithSignal instead, which allows passing an AbortSignal to the learn function, so that it can be cancelled if needed
 	 */
 	async learnAction(action: ActionInstance): Promise<{ options: CompanionOptionValues | undefined }> {
-		// Creat a constant signal that will never abort
+		// Create a constant signal that will never abort
 		const signal = new AbortController().signal
 
 		return this.#actionManager.handleLearnAction(action, signal)
@@ -368,7 +368,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 	 * @deprecated use learnFeedbackWithSignal instead, which allows passing an AbortSignal to the learn function, so that it can be cancelled if needed
 	 */
 	async learnFeedback(feedback: FeedbackInstance): Promise<{ options: CompanionOptionValues | undefined }> {
-		// Creat a constant signal that will never abort
+		// Create a constant signal that will never abort
 		const signal = new AbortController().signal
 
 		return this.#feedbackManager.handleLearnFeedback(feedback, signal)
