@@ -34,3 +34,16 @@ export function hasAnyOldRequiredProperties(
 
 	return false
 }
+
+export const VALID_ELEMENT_TYPES = new Set(['group', 'composite', 'text', 'image', 'box', 'line', 'circle'])
+
+/** Returns true if any element (or nested child) has an unrecognised type */
+export function hasInvalidElementType(elements: unknown[]): boolean {
+	for (const el of elements) {
+		if (!el || typeof el !== 'object') return true
+		const elem = el as Record<string, unknown>
+		if (typeof elem.type !== 'string' || !VALID_ELEMENT_TYPES.has(elem.type)) return true
+		if (Array.isArray(elem.children) && hasInvalidElementType(elem.children)) return true
+	}
+	return false
+}

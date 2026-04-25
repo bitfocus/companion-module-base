@@ -16,6 +16,7 @@ import {
 } from './shared-udp-socket.js'
 import { type InstanceContext, isInstanceContext } from '../host-api/context.js'
 import type { JsonObject } from '../common/json-value.js'
+import type { CompanionGraphicsCompositeElementDefinition } from './graphics-composite.js'
 import type { CompanionOptionValues } from './input.js'
 import type { StringKeys } from '../util.js'
 
@@ -174,6 +175,14 @@ export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTyp
 		presets: CompanionPresetDefinitions<TManifest>,
 	): void {
 		this.#context.setPresetDefinitions(structure, presets)
+	}
+
+	/**
+	 * Set the composite graphics elements for this instance
+	 * @param compositeElements The composite element definitions
+	 */
+	setCompositeElementDefinitions(compositeElements: CompanionGraphicsCompositeElementDefinition[]): void {
+		this.#context.setCompositeElementDefinitions(compositeElements)
 	}
 
 	/**
