@@ -206,7 +206,8 @@ export class ActionManager {
 			this.#actionDefinitions.set(actionId, action)
 
 			// Check for old removed properties
-			if (hasSubscriptionMethods && !action.optionsToMonitorForSubscribe) definitionsWithOptionsToIgnore.push(actionId)
+			if (hasSubscriptionMethods && !action.optionsToMonitorForSubscribe)
+				definitionsWantingOptionsToMonitor.push(actionId)
 			if ('optionsToIgnoreForSubscribe' in action) definitionsWithOptionsToIgnore.push(actionId)
 			if (hasAnyOldIsVisibleFunctions(action.options)) definitionsWithOldIsVisible.push(actionId)
 			if (hasAnyOldRequiredProperties(action.options)) definitionsWithOldRequiredProperties.push(actionId)
