@@ -1,0 +1,50 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "/assets/strict-refinements.schema.json",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "pattern": "^((?!companion-module-your-module-name).)*$"
+        },
+        "name": {
+            "type": "string",
+            "pattern": "^((?!companion-module-your-module-name).)*$"
+        },
+        "shortname": {
+            "type": "string",
+            "pattern": "^((?!module-shortname).)*$"
+        },
+        "description": {
+            "type": "string",
+            "pattern": "^((?!A short one line description of your module).)*$"
+        },
+        "maintainers": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "pattern": "^((?!Your name).)*$"
+                    },
+                    "email": {
+                        "type": "string",
+                        "pattern": "^((?!Your email).)*$"
+                    }
+                }
+            }
+        },
+        "manufacturer": {
+            "type": "string",
+            "pattern": "^((?!Your company).)*$"
+        },
+        "products": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "pattern": "^((?!Your product).)*$"
+            }
+        }
+    }
+}
