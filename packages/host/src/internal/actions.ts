@@ -3,7 +3,7 @@ import {
 	type CompanionActionDefinition,
 	type CompanionActionDefinitions,
 	type CompanionActionInfo,
-	CompanionActionLearnContext,
+	type CompanionActionLearnContext,
 	type CompanionOptionValues,
 	type CompanionVariableValue,
 	createModuleLogger,
