@@ -123,6 +123,13 @@ export class FeedbackManager {
 				signal,
 			}
 
+			if (signal.aborted) {
+				// The learn was aborted, return undefined options as a signal of this
+				return {
+					options: undefined,
+				}
+			}
+
 			try {
 				const newOptions = await definition.learn(
 					{
