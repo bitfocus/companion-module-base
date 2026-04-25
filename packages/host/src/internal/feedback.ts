@@ -4,7 +4,7 @@ import {
 	type CompanionFeedbackDefinition,
 	type CompanionFeedbackDefinitions,
 	type CompanionFeedbackInfo,
-	CompanionFeedbackLearnContext,
+	type CompanionFeedbackLearnContext,
 	type CompanionOptionValues,
 	type JsonValue,
 	assertNever,
