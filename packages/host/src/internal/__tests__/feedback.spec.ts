@@ -609,20 +609,18 @@ describe('FeedbackManager', () => {
 		expect(capturedSignal!.aborted).toBe(false)
 	})
 
-	it('learn values: pre-aborted signal is forwarded to learn callback', async () => {
+	it('learn values: pre-aborted signal skips learn callback', async () => {
 		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
 		const manager = new FeedbackManager(mockSetFeedbackDefinitions, unimplementedFunction)
 
 		const mockDefinitionId = 'definition0'
-		let capturedSignal: AbortSignal | undefined
 		const mockDefinition: CompanionFeedbackDefinition = {
 			type: 'boolean',
 			name: 'Definition0',
 			defaultStyle: {},
 			options: [],
 			callback: vi.fn<CompanionBooleanFeedbackDefinition['callback']>(() => false),
-			learn: vi.fn<Required<CompanionFeedbackDefinitionBase>['learn']>((_fb, ctx) => {
-				capturedSignal = ctx.signal
+			learn: vi.fn<Required<CompanionFeedbackDefinitionBase>['learn']>(() => {
 				return { abc: 123 }
 			}),
 		}
@@ -632,11 +630,9 @@ describe('FeedbackManager', () => {
 		const controller = new AbortController()
 		controller.abort()
 
-		// learn is still called even when the signal is already aborted, but result is discarded
+		// learn is NOT called when the signal is already aborted; result is undefined
 		await expect(manager.handleLearnFeedback(feedback, controller.signal)).resolves.toEqual({ options: undefined })
-		expect(mockDefinition.learn).toBeCalledTimes(1)
-		expect(capturedSignal).toBe(controller.signal)
-		expect(capturedSignal!.aborted).toBe(true)
+		expect(mockDefinition.learn).toBeCalledTimes(0)
 	})
 
 	it('learn values: signal aborted mid-execution is observable by learn callback', async () => {
