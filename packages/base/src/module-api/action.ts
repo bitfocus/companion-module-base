@@ -94,7 +94,7 @@ export type CompanionActionDefinitionWithoutSubscribeHooks<
  * Variant where at least one of subscribe/unsubscribe is present.
  * The inner union enforces that at least one must be provided,
  * while optionsToMonitorForSubscribe becomes required,
- * skipUnsubscribeOnOptionsChange remains options
+ * skipUnsubscribeOnOptionsChange remains optional
  */
 export type CompanionActionDefinitionWithSubscribeHooks<
 	TOptions extends CompanionOptionValues = CompanionOptionValues,
