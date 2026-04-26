@@ -3,6 +3,7 @@ import {
 	type CompanionActionDefinition,
 	type CompanionActionDefinitions,
 	type CompanionActionInfo,
+	type CompanionActionLearnContext,
 	type CompanionOptionValues,
 	type CompanionVariableValue,
 	createModuleLogger,
@@ -141,30 +142,56 @@ export class ActionManager {
 		}
 	}
 
-	public async handleLearnAction(action: ActionInstance): Promise<{ options: CompanionOptionValues | undefined }> {
+	public async handleLearnAction(
+		action: ActionInstance,
+		signal: AbortSignal,
+	): Promise<{ options: CompanionOptionValues | undefined }> {
 		const definition = this.#actionDefinitions.get(action.actionId)
 		if (definition && definition.learn) {
-			const context: CompanionActionContext = {
+			const context: CompanionActionLearnContext = {
 				type: 'action',
-				setCustomVariableValue: () => {
-					throw new Error(`setCustomVariableValue is not available during learn`)
-				},
+				signal,
 			}
 
-			const newOptions = await definition.learn(
-				{
-					id: action.id,
-					actionId: action.actionId,
-					controlId: action.controlId,
-					options: action.options,
+			if (signal.aborted) {
+				// The learn was aborted, return undefined options as a signal of this
+				return {
+					options: undefined,
+				}
+			}
 
-					surfaceId: undefined,
-				},
-				context,
-			)
+			try {
+				const newOptions = await definition.learn(
+					{
+						id: action.id,
+						actionId: action.actionId,
+						controlId: action.controlId,
+						options: action.options,
 
-			return {
-				options: newOptions,
+						surfaceId: undefined,
+					},
+					context,
+				)
+
+				if (signal.aborted) {
+					// The learn was aborted, return undefined options as a signal of this
+					return {
+						options: undefined,
+					}
+				}
+
+				return {
+					options: newOptions,
+				}
+			} catch (e) {
+				if (signal.aborted) {
+					// The learn was aborted, return undefined options as a signal of this
+					return {
+						options: undefined,
+					}
+				} else {
+					throw e
+				}
 			}
 		} else {
 			// Not supported

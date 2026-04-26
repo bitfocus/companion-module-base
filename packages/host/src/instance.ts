@@ -349,11 +349,35 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 
 		return res
 	}
+	/**
+	 * @deprecated use learnActionWithSignal instead, which allows passing an AbortSignal to the learn function, so that it can be cancelled if needed
+	 */
 	async learnAction(action: ActionInstance): Promise<{ options: CompanionOptionValues | undefined }> {
-		return this.#actionManager.handleLearnAction(action)
+		// Create a constant signal that will never abort
+		const signal = new AbortController().signal
+
+		return this.#actionManager.handleLearnAction(action, signal)
 	}
+	async learnActionWithSignal(
+		action: ActionInstance,
+		signal: AbortSignal,
+	): Promise<{ options: CompanionOptionValues | undefined }> {
+		return this.#actionManager.handleLearnAction(action, signal)
+	}
+	/**
+	 * @deprecated use learnFeedbackWithSignal instead, which allows passing an AbortSignal to the learn function, so that it can be cancelled if needed
+	 */
 	async learnFeedback(feedback: FeedbackInstance): Promise<{ options: CompanionOptionValues | undefined }> {
-		return this.#feedbackManager.handleLearnFeedback(feedback)
+		// Create a constant signal that will never abort
+		const signal = new AbortController().signal
+
+		return this.#feedbackManager.handleLearnFeedback(feedback, signal)
+	}
+	async learnFeedbackWithSignal(
+		feedback: FeedbackInstance,
+		signal: AbortSignal,
+	): Promise<{ options: CompanionOptionValues | undefined }> {
+		return this.#feedbackManager.handleLearnFeedback(feedback, signal)
 	}
 	async startStopRecordActions(recording: boolean): Promise<void> {
 		if (!recording) {

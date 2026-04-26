@@ -4,6 +4,7 @@ import {
 	type CompanionFeedbackDefinition,
 	type CompanionFeedbackDefinitions,
 	type CompanionFeedbackInfo,
+	type CompanionFeedbackLearnContext,
 	type CompanionOptionValues,
 	type JsonValue,
 	assertNever,
@@ -113,27 +114,54 @@ export class FeedbackManager {
 
 	public async handleLearnFeedback(
 		feedback: FeedbackInstance,
+		signal: AbortSignal,
 	): Promise<{ options: CompanionOptionValues | undefined }> {
 		const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 		if (definition && definition.learn) {
-			const context: CompanionFeedbackContext = {
+			const context: CompanionFeedbackLearnContext = {
 				type: 'feedback',
+				signal,
 			}
 
-			const newOptions = await definition.learn(
-				{
-					id: feedback.id,
-					feedbackId: feedback.feedbackId,
-					controlId: feedback.controlId,
-					options: feedback.options,
-					previousOptions: null,
-					type: definition.type,
-				},
-				context,
-			)
+			if (signal.aborted) {
+				// The learn was aborted, return undefined options as a signal of this
+				return {
+					options: undefined,
+				}
+			}
 
-			return {
-				options: newOptions,
+			try {
+				const newOptions = await definition.learn(
+					{
+						id: feedback.id,
+						feedbackId: feedback.feedbackId,
+						controlId: feedback.controlId,
+						options: feedback.options,
+						previousOptions: null,
+						type: definition.type,
+					},
+					context,
+				)
+
+				if (signal.aborted) {
+					// The learn was aborted, return undefined options as a signal of this
+					return {
+						options: undefined,
+					}
+				}
+
+				return {
+					options: newOptions,
+				}
+			} catch (e) {
+				if (signal.aborted) {
+					// The learn was aborted, return undefined options as a signal of this
+					return {
+						options: undefined,
+					}
+				} else {
+					throw e
+				}
 			}
 		} else {
 			// Not supported
