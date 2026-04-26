@@ -42,9 +42,9 @@ export interface CompanionActionContext extends CompanionCommonCallbackContext {
 }
 
 /**
- * The definition of an action
+ * The base definition of an action, which is extended by the WithSubscribeHooks and WithoutSubscribeHooks definitions
  */
-export interface CompanionActionDefinition<TOptions extends CompanionOptionValues = CompanionOptionValues> {
+export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionValues = CompanionOptionValues> {
 	/** Name to show in the actions list */
 	name: string
 	/**
@@ -57,30 +57,8 @@ export interface CompanionActionDefinition<TOptions extends CompanionOptionValue
 	/** The input fields for the action */
 	options: SomeCompanionActionInputField<StringKeys<TOptions>>[]
 
-	/**
-	 * Only monitor the specified options for re-running the subscribe/unsubscribe callbacks
-	 * It is recommended to set this for all actions using subscribe, to reduce unnecessary calls when the user has the values driven by expressions.
-	 * If not set, all options changes will trigger unsubscribe/subscribe
-	 */
-	optionsToMonitorForSubscribe?: StringKeys<TOptions>[]
-
-	/**
-	 * If true, the unsubscribe callback will not be called when the options change, only when the action is removed or disabled
-	 */
-	skipUnsubscribeOnOptionsChange?: boolean
-
 	/** Called to execute the action */
 	callback: (action: CompanionActionEvent<TOptions>, context: CompanionActionContext) => Promise<void> | void
-	/**
-	 * Called to report the existence of an action
-	 * Useful to ensure necessary data is loaded
-	 */
-	subscribe?: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
-	/**
-	 * Called to report an action has been edited/removed
-	 * Useful to cleanup subscriptions setup in subscribe
-	 */
-	unsubscribe?: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
 
 	/**
 	 * The user requested to 'learn' the values for this action.
@@ -98,6 +76,73 @@ export interface CompanionActionDefinition<TOptions extends CompanionOptionValue
 	 */
 	learnTimeout?: number
 }
+
+/**
+ * Variant where neither subscribe nor unsubscribe is present.
+ * optionsToMonitorForSubscribe and skipUnsubscribeOnOptionsChange must also be absent.
+ */
+export type CompanionActionDefinitionWithoutSubscribeHooks<
+	TOptions extends CompanionOptionValues = CompanionOptionValues,
+> = CompanionActionDefinitionBase<TOptions> & {
+	subscribe?: never
+	unsubscribe?: never
+	optionsToMonitorForSubscribe?: never
+	skipUnsubscribeOnOptionsChange?: never
+}
+
+/**
+ * Variant where at least one of subscribe/unsubscribe is present.
+ * The inner union enforces that at least one must be provided,
+ * while optionsToMonitorForSubscribe becomes required,
+ * skipUnsubscribeOnOptionsChange remains optional
+ */
+export type CompanionActionDefinitionWithSubscribeHooks<
+	TOptions extends CompanionOptionValues = CompanionOptionValues,
+> = CompanionActionDefinitionBase<TOptions> & {
+	/**
+	 * Only monitor the specified options for re-running the subscribe/unsubscribe callbacks
+	 * It is recommended to set this for all actions using subscribe, to reduce unnecessary calls when the user has the values driven by expressions.
+	 * If not set, all options changes will trigger unsubscribe/subscribe
+	 */
+	optionsToMonitorForSubscribe: StringKeys<TOptions>[]
+
+	/**
+	 * If true, the unsubscribe callback will not be called when the options change, only when the action is removed or disabled
+	 */
+	skipUnsubscribeOnOptionsChange?: boolean
+} & (
+		| {
+				/**
+				 * Called to report the existence of an action
+				 * Useful to ensure necessary data is loaded
+				 */
+				subscribe: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
+				/**
+				 * Called to report an action has been edited/removed
+				 * Useful to cleanup subscriptions setup in subscribe
+				 */
+				unsubscribe?: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
+		  }
+		| {
+				/**
+				 * Called to report the existence of an action
+				 * Useful to ensure necessary data is loaded
+				 */
+				subscribe?: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
+				/**
+				 * Called to report an action has been edited/removed
+				 * Useful to cleanup subscriptions setup in subscribe
+				 */
+				unsubscribe: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
+		  }
+	)
+
+/**
+ * The definition of an action
+ */
+export type CompanionActionDefinition<TOptions extends CompanionOptionValues = CompanionOptionValues> =
+	| CompanionActionDefinitionWithSubscribeHooks<TOptions>
+	| CompanionActionDefinitionWithoutSubscribeHooks<TOptions>
 
 /**
  * The definitions of a group of actions
