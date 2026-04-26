@@ -81,13 +81,14 @@ export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionV
  * Variant where neither subscribe nor unsubscribe is present.
  * optionsToMonitorForSubscribe and skipUnsubscribeOnOptionsChange must also be absent.
  */
-export type CompanionActionDefinitionWithoutHooks<TOptions extends CompanionOptionValues = CompanionOptionValues> =
-	CompanionActionDefinitionBase<TOptions> & {
-		subscribe?: never
-		unsubscribe?: never
-		optionsToMonitorForSubscribe?: never
-		skipUnsubscribeOnOptionsChange?: never
-	}
+export type CompanionActionDefinitionWithoutSubscribeHooks<
+	TOptions extends CompanionOptionValues = CompanionOptionValues,
+> = CompanionActionDefinitionBase<TOptions> & {
+	subscribe?: never
+	unsubscribe?: never
+	optionsToMonitorForSubscribe?: never
+	skipUnsubscribeOnOptionsChange?: never
+}
 
 /**
  * Variant where at least one of subscribe/unsubscribe is present.
@@ -95,7 +96,7 @@ export type CompanionActionDefinitionWithoutHooks<TOptions extends CompanionOpti
  * while optionsToMonitorForSubscribe becomes required,
  * skipUnsubscribeOnOptionsChange remains options
  */
-type CompanionActionDefinitionWithHooks<TOptions extends CompanionOptionValues = CompanionOptionValues> =
+type CompanionActionDefinitionWithSubscribeHooks<TOptions extends CompanionOptionValues = CompanionOptionValues> =
 	CompanionActionDefinitionBase<TOptions> & {
 		/**
 		 * Only monitor the specified options for re-running the subscribe/unsubscribe callbacks
@@ -139,8 +140,8 @@ type CompanionActionDefinitionWithHooks<TOptions extends CompanionOptionValues =
  * The definition of an action
  */
 export type CompanionActionDefinition<TOptions extends CompanionOptionValues = CompanionOptionValues> =
-	| CompanionActionDefinitionWithHooks<TOptions>
-	| CompanionActionDefinitionWithoutHooks<TOptions>
+	| CompanionActionDefinitionWithSubscribeHooks<TOptions>
+	| CompanionActionDefinitionWithoutSubscribeHooks<TOptions>
 
 /**
  * The definitions of a group of actions
