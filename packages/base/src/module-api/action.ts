@@ -42,7 +42,7 @@ export interface CompanionActionContext extends CompanionCommonCallbackContext {
 }
 
 /**
- * The base definition of an action, which is extended by the WithHooks and WithoutHooks definitions
+ * The base definition of an action, which is extended by the WithSubscribeHooks and WithoutSubscribeHooks definitions
  */
 export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionValues = CompanionOptionValues> {
 	/** Name to show in the actions list */
