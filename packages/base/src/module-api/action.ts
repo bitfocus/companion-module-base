@@ -42,7 +42,7 @@ export interface CompanionActionContext extends CompanionCommonCallbackContext {
 }
 
 /**
- * The base defintion of an action, which is extended by the WithHooks and WithoutHooks definitions
+ * The base definition of an action, which is extended by the WithHooks and WithoutHooks definitions
  */
 export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionValues = CompanionOptionValues> {
 	/** Name to show in the actions list */
@@ -96,45 +96,46 @@ export type CompanionActionDefinitionWithoutSubscribeHooks<
  * while optionsToMonitorForSubscribe becomes required,
  * skipUnsubscribeOnOptionsChange remains options
  */
-type CompanionActionDefinitionWithSubscribeHooks<TOptions extends CompanionOptionValues = CompanionOptionValues> =
-	CompanionActionDefinitionBase<TOptions> & {
-		/**
-		 * Only monitor the specified options for re-running the subscribe/unsubscribe callbacks
-		 * It is recommended to set this for all actions using subscribe, to reduce unnecessary calls when the user has the values driven by expressions.
-		 * If not set, all options changes will trigger unsubscribe/subscribe
-		 */
-		optionsToMonitorForSubscribe: StringKeys<TOptions>[]
+export type CompanionActionDefinitionWithSubscribeHooks<
+	TOptions extends CompanionOptionValues = CompanionOptionValues,
+> = CompanionActionDefinitionBase<TOptions> & {
+	/**
+	 * Only monitor the specified options for re-running the subscribe/unsubscribe callbacks
+	 * It is recommended to set this for all actions using subscribe, to reduce unnecessary calls when the user has the values driven by expressions.
+	 * If not set, all options changes will trigger unsubscribe/subscribe
+	 */
+	optionsToMonitorForSubscribe: StringKeys<TOptions>[]
 
-		/**
-		 * If true, the unsubscribe callback will not be called when the options change, only when the action is removed or disabled
-		 */
-		skipUnsubscribeOnOptionsChange?: boolean
-	} & (
-			| {
-					/**
-					 * Called to report the existence of an action
-					 * Useful to ensure necessary data is loaded
-					 */
-					subscribe: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
-					/**
-					 * Called to report an action has been edited/removed
-					 * Useful to cleanup subscriptions setup in subscribe
-					 */
-					unsubscribe?: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
-			  }
-			| {
-					/**
-					 * Called to report the existence of an action
-					 * Useful to ensure necessary data is loaded
-					 */
-					subscribe?: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
-					/**
-					 * Called to report an action has been edited/removed
-					 * Useful to cleanup subscriptions setup in subscribe
-					 */
-					unsubscribe: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
-			  }
-		)
+	/**
+	 * If true, the unsubscribe callback will not be called when the options change, only when the action is removed or disabled
+	 */
+	skipUnsubscribeOnOptionsChange?: boolean
+} & (
+		| {
+				/**
+				 * Called to report the existence of an action
+				 * Useful to ensure necessary data is loaded
+				 */
+				subscribe: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
+				/**
+				 * Called to report an action has been edited/removed
+				 * Useful to cleanup subscriptions setup in subscribe
+				 */
+				unsubscribe?: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
+		  }
+		| {
+				/**
+				 * Called to report the existence of an action
+				 * Useful to ensure necessary data is loaded
+				 */
+				subscribe?: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
+				/**
+				 * Called to report an action has been edited/removed
+				 * Useful to cleanup subscriptions setup in subscribe
+				 */
+				unsubscribe: (action: CompanionActionInfo<TOptions>, context: CompanionActionContext) => Promise<void> | void
+		  }
+	)
 
 /**
  * The definition of an action
