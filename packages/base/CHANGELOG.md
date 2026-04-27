@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.4](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.0.3...companion-module-base-v2.0.4) (2026-04-19)
+
+
+### Bug Fixes
+
+* type field should be required in manifest ([d452454](https://github.com/bitfocus/companion-module-base/commit/d452454c5ddce1ec1c8ccf61339ff8959dd0b9ef))
+
 ## [2.0.3](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.0.2...companion-module-base-v2.0.3) (2026-03-18)
 
 

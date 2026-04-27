@@ -1,6 +1,6 @@
 {
 	"name": "@companion-module/base",
-	"version": "2.0.3",
+	"version": "2.0.4",
 	"type": "module",
 	"sideEffects": false,
 	"license": "MIT",
@@ -24,7 +24,7 @@
 		}
 	},
 	"scripts": {
-		"docs:html": "run -BT typedoc --tsconfig tsconfig.json --readme README-typedoc.md --entryPoints src/main.ts --excludePrivate --theme default --out docs"
+		"docs:html": "run -BT typedoc --tsconfig tsconfig.json --readme README-typedoc.md --entryPoints src/docs.ts --excludePrivate --theme default --out docs"
 	},
 	"engines": {
 		"node": "^22.20"

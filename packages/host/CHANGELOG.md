@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.0.2...companion-module-host-v1.0.3) (2026-04-25)
+
+
+### Bug Fixes
+
+* incorrect logging for optionsToMonitorForSubscribe ([03809e0](https://github.com/bitfocus/companion-module-base/commit/03809e023716d47acdde480bd63da88500b047fa))
+
 ## [1.0.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.0.1...companion-module-host-v1.0.2) (2026-03-18)
 
 
