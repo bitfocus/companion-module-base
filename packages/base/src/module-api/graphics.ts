@@ -71,7 +71,7 @@ export type VerticalAlignment = 'top' | 'center' | 'bottom'
 
 export type LineOrientation = 'inside' | 'center' | 'outside'
 
-export type ImageFillMode = 'crop' | 'fill' | 'fit' | 'fit_or_shrink'
+export type ImageFillMode = 'crop' | 'fill' | 'fit'
 
 export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
 	type: 'text'
