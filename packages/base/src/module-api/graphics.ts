@@ -89,7 +89,7 @@ export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, Bu
 
 	text: ExpressionOrValue<string>
 
-	fontsize?: ExpressionOrValue<'auto' | number> // TODO - other values?
+	fontsize?: ExpressionOrValue<'auto' | number>
 
 	color?: ExpressionOrValue<number>
 
