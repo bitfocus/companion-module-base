@@ -11,7 +11,7 @@ import type {
 } from './definition.js'
 
 /**
- * The definition of a companion layered button preset
+ * The definition of a companion element based (layered) button preset
  * In many cases the `simple` preset type will be sufficient, but the `layered` preset allows for more complex buttons with multiple layers of graphics and feedbacks
  */
 export interface CompanionLayeredButtonPresetDefinition<
@@ -20,6 +20,7 @@ export interface CompanionLayeredButtonPresetDefinition<
 	/** The drawing elements for this preset, this will be copied to the button */
 	elements: SomeButtonGraphicsElement<TManifest['compositeElements']>[]
 
+	/** Drawing properties for the base canvas */
 	canvas?: ButtonGraphicsCanvasElement
 
 	/** Options for this preset */

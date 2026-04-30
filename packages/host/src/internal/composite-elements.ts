@@ -9,8 +9,6 @@ export function validateCompositeElementDefinitions(
 	const invalidEntries: string[] = []
 	const bannedIds: string[] = []
 	const invalidIds: string[] = []
-	const invalidOptions: string[] = []
-	const invalidElements: string[] = []
 	const invalidElementTypes: string[] = []
 
 	for (const [id, defn] of Object.entries(definitions)) {
@@ -24,13 +22,7 @@ export function validateCompositeElementDefinitions(
 			continue
 		}
 
-		if (!Array.isArray(defn.options)) {
-			invalidOptions.push(id)
-		}
-
-		if (!Array.isArray(defn.elements)) {
-			invalidElements.push(id)
-		} else if (hasInvalidElementType(defn.elements)) {
+		if (hasInvalidElementType(defn.elements)) {
 			invalidElementTypes.push(id)
 		}
 	}
@@ -43,16 +35,6 @@ export function validateCompositeElementDefinitions(
 	}
 	if (invalidIds.length > 0) {
 		logger.warn(`The following composite element definitions have an invalid id: ${invalidIds.join(', ')}`)
-	}
-	if (invalidOptions.length > 0) {
-		logger.warn(
-			`The following composite element definitions have invalid options (expected an array): ${invalidOptions.sort().join(', ')}`,
-		)
-	}
-	if (invalidElements.length > 0) {
-		logger.warn(
-			`The following composite element definitions have invalid elements (expected an array): ${invalidElements.sort().join(', ')}`,
-		)
 	}
 	if (invalidElementTypes.length > 0) {
 		logger.warn(
