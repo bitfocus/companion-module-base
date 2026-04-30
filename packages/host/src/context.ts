@@ -1,20 +1,20 @@
 import type {
 	CompanionFeedbackButtonStyleResult,
+	CompanionGraphicsCompositeElementDefinition,
+	CompanionOptionValues,
 	CompanionPresetDefinitions,
 	CompanionPresetSection,
 	CompanionRecordedAction,
 	CompanionVariableValue,
+	ExpressionOptionsObject,
+	ExpressionOrValue,
 	InstanceStatus,
 	JsonValue,
-	ExpressionOptionsObject,
-	CompanionOptionValues,
 	OSCSomeArguments,
 	SomeCompanionActionInputField,
 	SomeCompanionFeedbackInputField,
-	ExpressionOrValue,
-	CompanionGraphicsCompositeElementDefinition,
 } from '@companion-module/base'
-import {
+import type {
 	SharedUdpSocketMessageJoin,
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,

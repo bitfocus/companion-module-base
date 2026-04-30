@@ -1,10 +1,10 @@
+import type { JsonValue } from '../../common/json-value.js'
+import type { CompanionActionSchema } from '../action.js'
+import type { InstanceTypes } from '../base.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionFeedbackSchema } from '../feedback.js'
 import type { CompanionOptionValues, ExpressionOrValue } from '../input.js'
 import type { CompanionButtonStyleProps } from '../style.js'
-import type { JsonValue } from '../../common/json-value.js'
 import type { CompanionVariableValue } from '../variable.js'
-import type { InstanceTypes } from '../base.js'
-import type { CompanionActionSchema } from '../action.js'
 import type { CompanionLayeredButtonPresetDefinition } from './definition-graphics.js'
 
 /**

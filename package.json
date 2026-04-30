@@ -19,19 +19,20 @@
 		"node": "^22.20"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^3.0.0",
+		"@companion-module/tools": "^3.0.1",
+		"@ianvs/prettier-plugin-sort-imports": "^4.7.1",
 		"@tsconfig/node22": "^22.0.5",
-		"@types/node": "^22.19.13",
-		"esbuild": "^0.27.3",
-		"eslint": "^9.39.3",
+		"@types/node": "^22.19.17",
+		"esbuild": "^0.27.7",
+		"eslint": "^9.39.4",
 		"json-schema-to-typescript": "^15.0.4",
-		"prettier": "^3.8.1",
-		"typedoc": "^0.28.17",
-		"typescript": "~5.9.3",
-		"typescript-eslint": "^8.56.1",
-		"vitest": "^4.0.18",
-		"vitest-mock-extended": "^3.1.0",
+		"prettier": "^3.8.3",
+		"typedoc": "^0.28.19",
+		"typescript": "~6.0.3",
+		"typescript-eslint": "^8.59.1",
+		"vitest": "^4.1.5",
+		"vitest-mock-extended": "^3.1.1",
 		"zx": "^8.8.5"
 	},
-	"packageManager": "yarn@4.12.0"
+	"packageManager": "yarn@4.14.1"
 }

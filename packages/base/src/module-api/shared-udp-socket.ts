@@ -1,7 +1,7 @@
 import type { RemoteInfo } from 'dgram'
 import { EventEmitter } from 'events'
-import { assertNever } from '../util.js'
 import type { InstanceSharedUdpSocketContext, SharedUdpSocketMessage } from '../host-api/context.js'
+import { assertNever } from '../util.js'
 
 export interface SharedUdpSocketEvents {
 	// when an error occurs

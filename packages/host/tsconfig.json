@@ -5,10 +5,6 @@
 	"compilerOptions": {
 		"outDir": "./dist",
 		"rootDir": "./src",
-		"baseUrl": "../../",
-		"paths": {
-			"*": ["./node_modules/*"],
-		},
 	},
 	"references": [
 		{ "path": "../base/" }

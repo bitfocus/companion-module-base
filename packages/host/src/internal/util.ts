@@ -1,4 +1,4 @@
-import { SomeCompanionActionInputField, SomeCompanionFeedbackInputField } from '../main.js'
+import type { SomeCompanionActionInputField, SomeCompanionFeedbackInputField } from '../main.js'
 
 /** Properties that must never be used as action/feedback/preset/variable IDs to prevent prototype pollution */
 export const BANNED_PROPS = new Set([

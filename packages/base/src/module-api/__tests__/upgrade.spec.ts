@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { FixupNumericOrVariablesValueToExpressions, FixupBooleanOrVariablesValueToExpressions } from '../upgrade.js'
+import { describe, expect, it } from 'vitest'
+import { FixupBooleanOrVariablesValueToExpressions, FixupNumericOrVariablesValueToExpressions } from '../upgrade.js'
 
 describe('FixupNumericOrVariablesValueToExpressions', () => {
 	it('returns undefined when given undefined', () => {

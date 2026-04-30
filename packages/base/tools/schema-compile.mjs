@@ -1,10 +1,10 @@
-// eslint-disable-next-line n/no-extraneous-import
-import { $ } from 'zx'
+/* eslint-disable n/no-extraneous-import */
 import fs from 'fs'
+import { fileURLToPath } from 'url'
 import Ajv2020 from 'ajv/dist/2020.js'
 import standaloneCode from 'ajv/dist/standalone/index.js'
+import { $ } from 'zx'
 import manifestSchema from '../assets/manifest.schema.json' with { type: 'json' }
-import { fileURLToPath } from 'url'
 
 // Compile Typescript definitions from the JSON schema
 await $`json2ts --input assets/manifest.schema.json --output generated/manifest.d.ts --additionalProperties=false`

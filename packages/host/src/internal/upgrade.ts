@@ -1,14 +1,14 @@
 import {
+	literal,
 	type CompanionMigrationAction,
 	type CompanionMigrationFeedback,
 	type CompanionStaticUpgradeScript,
 	type Complete,
-	literal,
 } from '@companion-module/base'
 import type {
+	UpgradeActionAndFeedbackInstancesResponse,
 	UpgradeActionInstance,
 	UpgradeFeedbackInstance,
-	UpgradeActionAndFeedbackInstancesResponse,
 } from '../context.js'
 
 /**

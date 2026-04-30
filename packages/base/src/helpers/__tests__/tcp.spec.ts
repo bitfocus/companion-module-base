@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from 'vitest'
-import { TCPHelper } from '../tcp.js'
-import type { Socket as TMockSocket } from '../../__mocks__/net.js'
 import { Socket } from 'net'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+import type { Socket as TMockSocket } from '../../__mocks__/net.js'
 import { InstanceStatus } from '../../module-api/enums.js'
+import { TCPHelper } from '../tcp.js'
 
 const MockSocket = Socket as unknown as typeof TMockSocket
 

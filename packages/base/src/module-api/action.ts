@@ -1,17 +1,17 @@
-import type { CompanionCommonCallbackContext } from './common.js'
+import type { StringKeys } from '../util.js'
+import type { CompanionCommonCallbackContext, CompanionLearnCallbackContext } from './common.js'
 import type {
-	CompanionOptionValues,
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldColor,
+	CompanionInputFieldCustomVariable,
 	CompanionInputFieldDropdown,
 	CompanionInputFieldMultiDropdown,
 	CompanionInputFieldNumber,
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
-	CompanionInputFieldCustomVariable,
+	CompanionOptionValues,
 } from './input.js'
 import type { CompanionVariableValue } from './variable.js'
-import type { StringKeys } from '../util.js'
 
 export type SomeCompanionActionInputField<TKey extends string = string> =
 	| CompanionInputFieldStaticText<TKey>
@@ -40,6 +40,8 @@ export interface CompanionActionContext extends CompanionCommonCallbackContext {
 	 */
 	setCustomVariableValue(variableName: string, value: CompanionVariableValue): void
 }
+
+export type CompanionActionLearnContext = CompanionLearnCallbackContext
 
 /**
  * The definition of an action
@@ -88,7 +90,7 @@ export interface CompanionActionDefinition<TOptions extends CompanionOptionValue
 	 */
 	learn?: (
 		action: CompanionActionEvent<TOptions>,
-		context: CompanionActionContext,
+		context: CompanionActionLearnContext,
 	) => Partial<TOptions> | undefined | Promise<Partial<TOptions> | undefined>
 
 	/**

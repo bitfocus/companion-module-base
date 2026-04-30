@@ -1,4 +1,4 @@
-import { HslaColor, HsvaColor, colord } from 'colord'
+import { colord, type HslaColor, type HsvaColor } from 'colord'
 
 /**
  * Assert a certain type for a literal.

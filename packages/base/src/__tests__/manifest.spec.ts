@@ -1,6 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { validateManifest } from '../manifest.js'
-import type { ModuleManifest } from '../manifest.js'
+import { describe, expect, it } from 'vitest'
+import { validateManifest, type ModuleManifest } from '../manifest.js'
 
 function validManifest(overrides: Partial<ModuleManifest> = {}): ModuleManifest {
 	return {

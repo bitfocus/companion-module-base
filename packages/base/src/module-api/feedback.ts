@@ -1,17 +1,17 @@
 import type { JsonValue } from '../common/json-value.js'
-import type { CompanionCommonCallbackContext } from './common.js'
+import type { StringKeys } from '../util.js'
+import type { CompanionCommonCallbackContext, CompanionLearnCallbackContext } from './common.js'
 import type {
-	CompanionOptionValues,
-	CompanionInputFieldStaticText,
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldColor,
 	CompanionInputFieldDropdown,
 	CompanionInputFieldMultiDropdown,
 	CompanionInputFieldNumber,
+	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
+	CompanionOptionValues,
 } from './input.js'
 import type { CompanionButtonStyleProps } from './style.js'
-import type { StringKeys } from '../util.js'
 
 export type SomeCompanionFeedbackInputField<TKey extends string = string> =
 	| CompanionInputFieldStaticText<TKey>
@@ -139,7 +139,7 @@ export interface CompanionFeedbackDefinitionBase<TOptions extends CompanionOptio
 	 */
 	learn?: (
 		feedback: CompanionFeedbackInfo<TOptions>,
-		context: CompanionFeedbackContext,
+		context: CompanionFeedbackLearnContext,
 	) => Partial<TOptions> | undefined | Promise<Partial<TOptions> | undefined>
 
 	/**
@@ -207,6 +207,7 @@ export interface CompanionAdvancedFeedbackDefinition<
  * Utility functions available in the context of the current feedback
  */
 export type CompanionFeedbackContext = CompanionCommonCallbackContext
+export type CompanionFeedbackLearnContext = CompanionLearnCallbackContext
 
 /**
  * The definition of some feedback

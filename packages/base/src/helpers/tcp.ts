@@ -15,8 +15,8 @@
  *
  */
 
-import net from 'net'
 import { EventEmitter } from 'events'
+import net from 'net'
 import { InstanceStatus } from '../module-api/enums.js'
 
 export type TCPStatuses =
