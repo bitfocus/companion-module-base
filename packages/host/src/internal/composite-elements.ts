@@ -1,41 +1,27 @@
-import { createModuleLogger, type CompanionGraphicsCompositeElementDefinition } from '@companion-module/base'
+import { createModuleLogger, type CompanionGraphicsCompositeElementDefinitions } from '@companion-module/base'
 import { BANNED_PROPS, hasInvalidElementType } from './util.js'
 
 const logger = createModuleLogger('CompositeElementDefinitionsManager')
 
-export function validateCompositeElementDefinitions(definitions: CompanionGraphicsCompositeElementDefinition[]): void {
-	const seenIds = new Set<string>()
-	const invalidEntries: number[] = []
+export function validateCompositeElementDefinitions(
+	definitions: CompanionGraphicsCompositeElementDefinitions<any>,
+): void {
+	const invalidEntries: string[] = []
 	const bannedIds: string[] = []
 	const invalidIds: string[] = []
-	const duplicateIds: string[] = []
 	const invalidOptions: string[] = []
 	const invalidElements: string[] = []
 	const invalidElementTypes: string[] = []
 
-	for (let i = 0; i < definitions.length; i++) {
-		const defn = definitions[i]
-
+	for (const [id, defn] of Object.entries(definitions)) {
 		if (!defn || typeof defn !== 'object') {
-			invalidEntries.push(i)
+			invalidEntries.push(id)
 			continue
 		}
-
-		const { id } = defn
 
 		if (BANNED_PROPS.has(id)) {
 			bannedIds.push(id)
 			continue
-		}
-		if (typeof id !== 'string' || id.length === 0) {
-			invalidIds.push(`index ${i}`)
-			continue
-		}
-
-		if (seenIds.has(id)) {
-			duplicateIds.push(id)
-		} else {
-			seenIds.add(id)
 		}
 
 		if (!Array.isArray(defn.options)) {
@@ -57,9 +43,6 @@ export function validateCompositeElementDefinitions(definitions: CompanionGraphi
 	}
 	if (invalidIds.length > 0) {
 		logger.warn(`The following composite element definitions have an invalid id: ${invalidIds.join(', ')}`)
-	}
-	if (duplicateIds.length > 0) {
-		logger.warn(`The following composite element ids are duplicated: ${duplicateIds.sort().join(', ')}`)
 	}
 	if (invalidOptions.length > 0) {
 		logger.warn(

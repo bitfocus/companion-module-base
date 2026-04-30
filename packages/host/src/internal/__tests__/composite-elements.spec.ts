@@ -1,6 +1,10 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
+import type {
+	CompanionGraphicsCompositeElementDefinition,
+	CompanionGraphicsCompositeElementDefinitions,
+	SomeButtonGraphicsElement,
+} from '@companion-module/base'
 import { validateCompositeElementDefinitions } from '../composite-elements.js'
-import type { CompanionGraphicsCompositeElementDefinition, SomeButtonGraphicsElement } from '@companion-module/base'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -10,11 +14,10 @@ function validDef(
 	overrides: Partial<CompanionGraphicsCompositeElementDefinition> = {},
 ): CompanionGraphicsCompositeElementDefinition {
 	return {
-		id: overrides.id ?? 'el1',
 		type: 'composite',
-		name: overrides.name ?? 'My Element',
-		options: overrides.options ?? [],
-		elements: overrides.elements ?? [{ type: 'box' }],
+		name: 'My Element',
+		options: [],
+		elements: [{ type: 'box' }],
 		...overrides,
 	}
 }
@@ -27,7 +30,7 @@ afterEach(() => {
 	global.COMPANION_LOGGER = undefined
 })
 
-function runCapture(definitions: CompanionGraphicsCompositeElementDefinition[]): string[] {
+function runCapture(definitions: CompanionGraphicsCompositeElementDefinitions<any>): string[] {
 	const messages: string[] = []
 	const prev = global.COMPANION_LOGGER
 	global.COMPANION_LOGGER = (_source, level, message) => {
@@ -47,67 +50,40 @@ function runCapture(definitions: CompanionGraphicsCompositeElementDefinition[]):
 
 describe('validateCompositeElementDefinitions', () => {
 	describe('skipping', () => {
-		it('does not warn for an empty array', () => {
-			const msgs = runCapture([])
+		it('does not warn for an empty record', () => {
+			const msgs = runCapture({})
 			expect(msgs).toHaveLength(0)
 		})
 
 		it('warns and skips a null entry', () => {
-			const msgs = runCapture([null as unknown as CompanionGraphicsCompositeElementDefinition])
+			const msgs = runCapture({ myEl: null as unknown as CompanionGraphicsCompositeElementDefinition })
+			expect(msgs.some((m) => m.includes('not valid objects'))).toBe(true)
+		})
+
+		it('warns and skips a false entry', () => {
+			const msgs = runCapture({ myEl: false })
 			expect(msgs.some((m) => m.includes('not valid objects'))).toBe(true)
 		})
 
 		it('warns and skips a string entry', () => {
-			const msgs = runCapture(['bad' as unknown as CompanionGraphicsCompositeElementDefinition])
-			expect(msgs.some((m) => m.includes('not valid objects'))).toBe(true)
-		})
-
-		it('warns and skips a numeric entry', () => {
-			const msgs = runCapture([42 as unknown as CompanionGraphicsCompositeElementDefinition])
+			const msgs = runCapture({ myEl: 'bad' as unknown as CompanionGraphicsCompositeElementDefinition })
 			expect(msgs.some((m) => m.includes('not valid objects'))).toBe(true)
 		})
 	})
 
 	describe('banned prop IDs', () => {
-		it('flags a definition with id __proto__ (constructed via defineProperty)', () => {
+		it('flags a definition with key __proto__ (constructed via defineProperty)', () => {
 			// Object literal syntax { __proto__: x } sets the prototype, not an own property,
 			// so we must use defineProperty to create an enumerable own key named '__proto__'.
-			const def = validDef({ id: 'placeholder' })
-			Object.defineProperty(def, 'id', { value: '__proto__', enumerable: true, configurable: true })
-			const msgs = runCapture([def])
+			const defs = Object.create(null) as CompanionGraphicsCompositeElementDefinitions<any>
+			Object.defineProperty(defs, '__proto__', { value: validDef(), enumerable: true, configurable: true })
+			const msgs = runCapture(defs)
 			expect(msgs.some((m) => m.includes('reserved') || m.includes('__proto__'))).toBe(true)
 		})
 
-		it('flags a definition with id constructor', () => {
-			const msgs = runCapture([validDef({ id: 'constructor' })])
+		it('flags a definition with key constructor', () => {
+			const msgs = runCapture({ constructor: validDef() } as unknown as CompanionGraphicsCompositeElementDefinitions<any>)
 			expect(msgs.some((m) => m.includes('reserved') || m.includes('constructor'))).toBe(true)
-		})
-	})
-
-	describe('id validation', () => {
-		it('does not warn for a valid string id', () => {
-			const msgs = runCapture([validDef({ id: 'my-element' })])
-			expect(msgs).toHaveLength(0)
-		})
-
-		it('flags an empty string id', () => {
-			const msgs = runCapture([validDef({ id: '' })])
-			expect(msgs.some((m) => m.includes('invalid id'))).toBe(true)
-		})
-
-		it('flags a numeric id', () => {
-			const msgs = runCapture([validDef({ id: 123 as unknown as string })])
-			expect(msgs.some((m) => m.includes('invalid id'))).toBe(true)
-		})
-
-		it('flags duplicate ids — warns on second occurrence, not first', () => {
-			const msgs = runCapture([validDef({ id: 'dup' }), validDef({ id: 'dup' })])
-			expect(msgs.some((m) => m.includes('duplicated') && m.includes('dup'))).toBe(true)
-		})
-
-		it('does not warn when ids are all unique', () => {
-			const msgs = runCapture([validDef({ id: 'a' }), validDef({ id: 'b' })])
-			expect(msgs).toHaveLength(0)
 		})
 	})
 
@@ -115,17 +91,17 @@ describe('validateCompositeElementDefinitions', () => {
 		it('flags when options is missing', () => {
 			const def = validDef()
 			delete (def as any).options
-			const msgs = runCapture([def])
+			const msgs = runCapture({ myEl: def })
 			expect(msgs.some((m) => m.includes('invalid options'))).toBe(true)
 		})
 
 		it('flags when options is an object instead of array', () => {
-			const msgs = runCapture([validDef({ options: {} as any })])
+			const msgs = runCapture({ myEl: validDef({ options: {} as any }) })
 			expect(msgs.some((m) => m.includes('invalid options'))).toBe(true)
 		})
 
 		it('does not warn when options is an empty array', () => {
-			const msgs = runCapture([validDef({ options: [] })])
+			const msgs = runCapture({ myEl: validDef({ options: [] }) })
 			expect(msgs).toHaveLength(0)
 		})
 	})
@@ -134,17 +110,17 @@ describe('validateCompositeElementDefinitions', () => {
 		it('flags when elements is missing', () => {
 			const def = validDef()
 			delete (def as any).elements
-			const msgs = runCapture([def])
+			const msgs = runCapture({ myEl: def })
 			expect(msgs.some((m) => m.includes('invalid elements'))).toBe(true)
 		})
 
 		it('flags when elements is an object instead of array', () => {
-			const msgs = runCapture([validDef({ elements: {} as any })])
+			const msgs = runCapture({ myEl: validDef({ elements: {} as any }) })
 			expect(msgs.some((m) => m.includes('invalid elements'))).toBe(true)
 		})
 
 		it('flags an element with an unrecognised type', () => {
-			const msgs = runCapture([validDef({ elements: [{ type: 'unknown' as any }] })])
+			const msgs = runCapture({ myEl: validDef({ elements: [{ type: 'unknown' as any }] }) })
 			expect(msgs.some((m) => m.includes('unrecognised types'))).toBe(true)
 		})
 
@@ -158,7 +134,7 @@ describe('validateCompositeElementDefinitions', () => {
 				{ type: 'line' },
 				{ type: 'circle' },
 			]
-			const msgs = runCapture([validDef({ elements: validTypes })])
+			const msgs = runCapture({ myEl: validDef({ elements: validTypes }) })
 			expect(msgs).toHaveLength(0)
 		})
 
@@ -167,7 +143,7 @@ describe('validateCompositeElementDefinitions', () => {
 				type: 'group',
 				children: [{ type: 'bad' } as any],
 			}
-			const msgs = runCapture([validDef({ elements: [nested] })])
+			const msgs = runCapture({ myEl: validDef({ elements: [nested] }) })
 			expect(msgs.some((m) => m.includes('unrecognised types'))).toBe(true)
 		})
 
@@ -176,19 +152,19 @@ describe('validateCompositeElementDefinitions', () => {
 				type: 'group',
 				children: [{ type: 'box' }],
 			}
-			const msgs = runCapture([validDef({ elements: [nested] })])
+			const msgs = runCapture({ myEl: validDef({ elements: [nested] }) })
 			expect(msgs).toHaveLength(0)
 		})
 	})
 
 	describe('fully valid definition', () => {
 		it('does not warn for a complete valid definition', () => {
-			const msgs = runCapture([validDef()])
+			const msgs = runCapture({ myEl: validDef() })
 			expect(msgs).toHaveLength(0)
 		})
 
 		it('does not warn for multiple valid definitions', () => {
-			const msgs = runCapture([validDef({ id: 'a' }), validDef({ id: 'b' }), validDef({ id: 'c' })])
+			const msgs = runCapture({ a: validDef(), b: validDef(), c: validDef() })
 			expect(msgs).toHaveLength(0)
 		})
 	})

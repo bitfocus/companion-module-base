@@ -7,7 +7,10 @@ import type { CompanionActionDefinitions, CompanionActionSchema, CompanionRecord
 import type { SomeCompanionConfigField } from './config.js'
 import type { InstanceStatus } from './enums.js'
 import type { CompanionFeedbackDefinitions, CompanionFeedbackSchema } from './feedback.js'
-import type { CompanionGraphicsCompositeElementDefinition } from './graphics-composite.js'
+import type {
+	CompanionCompositeElementSchema,
+	CompanionGraphicsCompositeElementDefinitions,
+} from './graphics-composite.js'
 import type { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 import type { CompanionOptionValues } from './input.js'
 import type { CompanionPresetDefinitions, CompanionPresetSection } from './preset/main.js'
@@ -47,6 +50,7 @@ export interface InstanceTypes {
 	actions: Record<string, CompanionActionSchema<CompanionOptionValues>>
 	feedbacks: Record<string, CompanionFeedbackSchema<CompanionOptionValues>>
 	variables: CompanionVariableValues
+	compositeElements: Record<string, CompanionCompositeElementSchema<CompanionOptionValues>>
 }
 
 export type InstanceConstructor<TManifest extends InstanceTypes = InstanceTypes> = new (
@@ -180,7 +184,9 @@ export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTyp
 	 * Set the composite graphics elements for this instance
 	 * @param compositeElements The composite element definitions
 	 */
-	setCompositeElementDefinitions(compositeElements: CompanionGraphicsCompositeElementDefinition[]): void {
+	setCompositeElementDefinitions(
+		compositeElements: CompanionGraphicsCompositeElementDefinitions<TManifest['compositeElements']>,
+	): void {
 		this.#context.setCompositeElementDefinitions(compositeElements)
 	}
 

@@ -1,4 +1,8 @@
-import type { SomeCompanionActionInputField, SomeCompanionFeedbackInputField } from '../main.js'
+import type {
+	SomeButtonGraphicsElement,
+	SomeCompanionActionInputField,
+	SomeCompanionFeedbackInputField,
+} from '../main.js'
 
 /** Properties that must never be used as action/feedback/preset/variable IDs to prevent prototype pollution */
 export const BANNED_PROPS = new Set([
@@ -35,7 +39,23 @@ export function hasAnyOldRequiredProperties(
 	return false
 }
 
-export const VALID_ELEMENT_TYPES = new Set(['group', 'composite', 'text', 'image', 'box', 'line', 'circle'])
+const ELEMENT_TYPES_LIST = [
+	'group',
+	'composite',
+	'text',
+	'image',
+	'box',
+	'line',
+	'circle',
+] as const satisfies SomeButtonGraphicsElement['type'][]
+
+// Compile-time check: errors if a new type is added to SomeButtonGraphicsElement but omitted from ELEMENT_TYPES_LIST
+type _AssertAllElementTypesCovered = [SomeButtonGraphicsElement['type']] extends [(typeof ELEMENT_TYPES_LIST)[number]]
+	? true
+	: never
+true satisfies _AssertAllElementTypesCovered
+
+export const VALID_ELEMENT_TYPES: ReadonlySet<string> = new Set(ELEMENT_TYPES_LIST)
 
 /** Returns true if any element (or nested child) has an unrecognised type */
 export function hasInvalidElementType(elements: unknown[]): boolean {

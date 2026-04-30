@@ -10,7 +10,7 @@ import type { OSCSomeArguments } from '../common/osc.js'
 import type {
 	CompanionActionDefinitions,
 	CompanionFeedbackDefinitions,
-	CompanionGraphicsCompositeElementDefinition,
+	CompanionGraphicsCompositeElementDefinitions,
 	CompanionPresetDefinitions,
 	CompanionPresetSection,
 	CompanionRecordedAction,
@@ -54,7 +54,9 @@ export interface InstanceContext<TManifest extends InstanceTypes> extends Instan
 		structure: CompanionPresetSection<TManifest>[],
 		presets: CompanionPresetDefinitions<TManifest>,
 	) => void
-	setCompositeElementDefinitions: (compositeElements: CompanionGraphicsCompositeElementDefinition[]) => void
+	setCompositeElementDefinitions: (
+		compositeElements: CompanionGraphicsCompositeElementDefinitions<TManifest['compositeElements']>,
+	) => void
 
 	setVariableDefinitions: (variables: CompanionVariableDefinitions<TManifest['variables']>) => void
 	setVariableValues: (values: Partial<TManifest['variables']>) => void

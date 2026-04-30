@@ -1,11 +1,18 @@
-import type { ExpressionOrValue } from './input.js'
+import type { CompanionPresetOptionValues } from '../main.js'
+import type { CompanionCompositeElementSchema } from './graphics-composite.js'
+import type { CompanionOptionValues, ExpressionOrValue } from './input.js'
 
 /**
  * The type of a button graphics element as stored in places where it can be edited
  */
-export type SomeButtonGraphicsElement =
+export type SomeButtonGraphicsElement<
+	TCompositeElements extends Record<string, CompanionCompositeElementSchema<CompanionOptionValues>> = Record<
+		string,
+		CompanionCompositeElementSchema<CompanionOptionValues>
+	>,
+> =
 	| ButtonGraphicsGroupElement
-	| ButtonGraphicsCompositeElement
+	| ButtonGraphicsCompositeElement<TCompositeElements>
 	| ButtonGraphicsTextElement
 	| ButtonGraphicsImageElement
 	| ButtonGraphicsBoxElement
@@ -54,17 +61,25 @@ export interface ButtonGraphicsGroupElement extends ButtonGraphicsElementBase, B
 	children: SomeButtonGraphicsElement[]
 }
 
-export interface ButtonGraphicsCompositeElement<TOptions = Record<string, any>>
-	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
-	type: 'composite'
+export type ButtonGraphicsCompositeElement<
+	TCompositeElements extends Record<string, CompanionCompositeElementSchema<CompanionOptionValues>> = Record<
+		string,
+		CompanionCompositeElementSchema<CompanionOptionValues>
+	>,
+> = ButtonGraphicsElementBase &
+	ButtonGraphicsDrawBounds &
+	{
+		[K in keyof TCompositeElements]: {
+			type: 'composite'
 
-	elementId: string
+			elementId: K
 
-	/**
-	 * Custom elements have options defined by their composite definition
-	 */
-	options: { [key in keyof TOptions]?: ExpressionOrValue<TOptions[key]> }
-}
+			/**
+			 * Custom elements have options defined by their composite definition
+			 */
+			options: CompanionPresetOptionValues<TCompositeElements[K]['options']>
+		}
+	}[keyof TCompositeElements]
 
 export type HorizontalAlignment = 'left' | 'center' | 'right'
 export type VerticalAlignment = 'top' | 'center' | 'bottom'

@@ -1,6 +1,6 @@
 import type {
 	CompanionFeedbackButtonStyleResult,
-	CompanionGraphicsCompositeElementDefinition,
+	CompanionGraphicsCompositeElementDefinitions,
 	CompanionOptionValues,
 	CompanionPresetDefinitions,
 	CompanionPresetSection,
@@ -32,7 +32,7 @@ export interface ModuleHostContext<TConfig, TSecrets> {
 	/** The presets provided by the connection have changed */
 	setPresetDefinitions: (structure: CompanionPresetSection[], presets: CompanionPresetDefinitions) => void
 	/** The composite graphics elements provided by the connection have changed */
-	setCompositeElementDefinitions: (compositeElements: CompanionGraphicsCompositeElementDefinition[]) => void
+	setCompositeElementDefinitions: (compositeElements: CompanionGraphicsCompositeElementDefinitions) => void
 	/** The connection has some new values for variables */
 	setVariableValues: (values: HostVariableValue[]) => void
 	/** The connection has some new values for feedbacks it is running */

@@ -1,8 +1,15 @@
+import type { StringKeys } from '../util.js'
 import type { SomeCompanionFeedbackInputField } from './feedback.js'
 import type { SomeButtonGraphicsElement } from './graphics.js'
+import type { CompanionOptionValues } from './index.js'
 
-export interface CompanionGraphicsCompositeElementDefinition {
-	id: string
+export interface CompanionCompositeElementSchema<TOptions extends CompanionOptionValues> {
+	options: TOptions
+}
+
+export interface CompanionGraphicsCompositeElementDefinition<
+	TSchema extends CompanionCompositeElementSchema<any> = CompanionCompositeElementSchema<any>,
+> {
 	type: 'composite'
 
 	/** Name to show in the elements list */
@@ -15,10 +22,22 @@ export interface CompanionGraphicsCompositeElementDefinition {
 	/** Additional description of the element */
 	description?: string
 	/** The input fields for the element */
-	options: SomeCompanionFeedbackInputField[]
+	options: SomeCompanionFeedbackInputField<StringKeys<TSchema['options']>>[]
 
 	/**
 	 * The elements that make up this composite element
 	 */
 	elements: SomeButtonGraphicsElement[]
+}
+
+/**
+ * The definitions of a group of feedbacks
+ */
+export type CompanionGraphicsCompositeElementDefinitions<
+	TSchemas extends Record<string, CompanionCompositeElementSchema<CompanionOptionValues>> = Record<
+		string,
+		CompanionCompositeElementSchema<CompanionOptionValues>
+	>,
+> = {
+	[K in keyof TSchemas]: CompanionGraphicsCompositeElementDefinition<TSchemas[K]> | false | undefined
 }

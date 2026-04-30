@@ -18,7 +18,7 @@ export interface CompanionLayeredButtonPresetDefinition<
 	TManifest extends InstanceTypes = InstanceTypes,
 > extends CompanionPresetDefinitionBase<'layered'> {
 	/** The drawing elements for this preset, this will be copied to the button */
-	elements: SomeButtonGraphicsElement[]
+	elements: SomeButtonGraphicsElement<TManifest['compositeElements']>[]
 
 	canvas?: ButtonGraphicsCanvasElement
 
