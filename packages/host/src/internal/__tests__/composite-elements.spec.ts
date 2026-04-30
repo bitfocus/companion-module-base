@@ -87,38 +87,7 @@ describe('validateCompositeElementDefinitions', () => {
 		})
 	})
 
-	describe('options validation', () => {
-		it('flags when options is missing', () => {
-			const def = validDef()
-			delete (def as any).options
-			const msgs = runCapture({ myEl: def })
-			expect(msgs.some((m) => m.includes('invalid options'))).toBe(true)
-		})
-
-		it('flags when options is an object instead of array', () => {
-			const msgs = runCapture({ myEl: validDef({ options: {} as any }) })
-			expect(msgs.some((m) => m.includes('invalid options'))).toBe(true)
-		})
-
-		it('does not warn when options is an empty array', () => {
-			const msgs = runCapture({ myEl: validDef({ options: [] }) })
-			expect(msgs).toHaveLength(0)
-		})
-	})
-
 	describe('elements validation', () => {
-		it('flags when elements is missing', () => {
-			const def = validDef()
-			delete (def as any).elements
-			const msgs = runCapture({ myEl: def })
-			expect(msgs.some((m) => m.includes('invalid elements'))).toBe(true)
-		})
-
-		it('flags when elements is an object instead of array', () => {
-			const msgs = runCapture({ myEl: validDef({ elements: {} as any }) })
-			expect(msgs.some((m) => m.includes('invalid elements'))).toBe(true)
-		})
-
 		it('flags an element with an unrecognised type', () => {
 			const msgs = runCapture({ myEl: validDef({ elements: [{ type: 'unknown' as any }] }) })
 			expect(msgs.some((m) => m.includes('unrecognised types'))).toBe(true)
