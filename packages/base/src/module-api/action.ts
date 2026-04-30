@@ -78,26 +78,11 @@ export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionV
 }
 
 /**
- * Variant where neither subscribe nor unsubscribe is present.
- * optionsToMonitorForSubscribe and skipUnsubscribeOnOptionsChange must also be absent.
- */
-export type CompanionActionDefinitionWithoutSubscribeHooks<
-	TOptions extends CompanionOptionValues = CompanionOptionValues,
-> = CompanionActionDefinitionBase<TOptions> & {
-	subscribe?: never
-	unsubscribe?: never
-	optionsToMonitorForSubscribe?: never
-	skipUnsubscribeOnOptionsChange?: never
-}
-
-/**
  * Variant where at least subscribe is present,
  * while optionsToMonitorForSubscribe becomes required and
  * skipUnsubscribeOnOptionsChange remains optional.
  */
-export type CompanionActionDefinitionWithSubscribeHooks<
-	TOptions extends CompanionOptionValues = CompanionOptionValues,
-> = CompanionActionDefinitionBase<TOptions> & {
+export type CompanionActionDefinitionSubscribeHooks<TOptions extends CompanionOptionValues = CompanionOptionValues> = {
 	/**
 	 * Only monitor the specified options for re-running the subscribe/unsubscribe callbacks
 	 * It is recommended to set this for all actions using subscribe, to reduce unnecessary calls when the user has the values driven by expressions.
@@ -123,11 +108,19 @@ export type CompanionActionDefinitionWithSubscribeHooks<
 }
 
 /**
+ * Variant where neither subscribe nor unsubscribe is present.
+ * optionsToMonitorForSubscribe and skipUnsubscribeOnOptionsChange must also be absent.
+ */
+export type CompanionActionDefinitionNoSubscribeHooks = {
+	[K in keyof CompanionActionDefinitionSubscribeHooks<CompanionOptionValues>]?: never
+}
+
+/**
  * The definition of an action
  */
 export type CompanionActionDefinition<TOptions extends CompanionOptionValues = CompanionOptionValues> =
-	| CompanionActionDefinitionWithSubscribeHooks<TOptions>
-	| CompanionActionDefinitionWithoutSubscribeHooks<TOptions>
+	CompanionActionDefinitionBase<TOptions> &
+		(CompanionActionDefinitionSubscribeHooks<TOptions> | CompanionActionDefinitionNoSubscribeHooks)
 
 /**
  * The definitions of a group of actions
