@@ -1,15 +1,12 @@
 import type { CompanionPresetOptionValues } from '../main.js'
-import type { CompanionCompositeElementSchema } from './graphics-composite.js'
-import type { CompanionOptionValues, ExpressionOrValue } from './input.js'
+import type { CompanionCompositeElementSchemas } from './graphics-composite.js'
+import type { ExpressionOrValue } from './input.js'
 
 /**
  * The type of a button graphics element as stored in places where it can be edited
  */
 export type SomeButtonGraphicsElement<
-	TCompositeElements extends Record<string, CompanionCompositeElementSchema<CompanionOptionValues>> = Record<
-		string,
-		CompanionCompositeElementSchema<CompanionOptionValues>
-	>,
+	TCompositeElements extends CompanionCompositeElementSchemas | undefined = CompanionCompositeElementSchemas,
 > =
 	| ButtonGraphicsGroupElement
 	| ButtonGraphicsCompositeElement<TCompositeElements>
@@ -62,14 +59,11 @@ export interface ButtonGraphicsGroupElement extends ButtonGraphicsElementBase, B
 }
 
 export type ButtonGraphicsCompositeElement<
-	TCompositeElements extends Record<string, CompanionCompositeElementSchema<CompanionOptionValues>> = Record<
-		string,
-		CompanionCompositeElementSchema<CompanionOptionValues>
-	>,
+	TCompositeElements extends CompanionCompositeElementSchemas | undefined = CompanionCompositeElementSchemas,
 > = ButtonGraphicsElementBase &
 	ButtonGraphicsDrawBounds &
 	{
-		[K in keyof TCompositeElements]: {
+		[K in keyof Extract<TCompositeElements, CompanionCompositeElementSchemas>]: {
 			type: 'composite'
 
 			elementId: K
@@ -77,9 +71,9 @@ export type ButtonGraphicsCompositeElement<
 			/**
 			 * Custom elements have options defined by their composite definition
 			 */
-			options: CompanionPresetOptionValues<TCompositeElements[K]['options']>
+			options: CompanionPresetOptionValues<Extract<TCompositeElements, CompanionCompositeElementSchemas>[K]['options']>
 		}
-	}[keyof TCompositeElements]
+	}[keyof Extract<TCompositeElements, CompanionCompositeElementSchemas>]
 
 export type HorizontalAlignment = 'left' | 'center' | 'right'
 export type VerticalAlignment = 'top' | 'center' | 'bottom'

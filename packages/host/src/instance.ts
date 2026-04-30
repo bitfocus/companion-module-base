@@ -1,5 +1,6 @@
 import PQueue from 'p-queue'
 import type {
+	CompanionGraphicsCompositeElementDefinitions,
 	CompanionHTTPRequest,
 	CompanionHTTPResponse,
 	CompanionOptionValues,
@@ -125,7 +126,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 			},
 			setCompositeElementDefinitions: (compositeElements) => {
 				validateCompositeElementDefinitions(compositeElements)
-				this.#host.setCompositeElementDefinitions(compositeElements)
+				this.#host.setCompositeElementDefinitions(compositeElements as CompanionGraphicsCompositeElementDefinitions)
 			},
 
 			setVariableDefinitions: (variables) => {

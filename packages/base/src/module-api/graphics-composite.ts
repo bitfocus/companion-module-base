@@ -3,6 +3,8 @@ import type { SomeCompanionFeedbackInputField } from './feedback.js'
 import type { SomeButtonGraphicsElement } from './graphics.js'
 import type { CompanionOptionValues } from './index.js'
 
+export type CompanionCompositeElementSchemas = Record<string, CompanionCompositeElementSchema<CompanionOptionValues>>
+
 export interface CompanionCompositeElementSchema<TOptions extends CompanionOptionValues> {
 	options: TOptions
 }
@@ -34,10 +36,13 @@ export interface CompanionGraphicsCompositeElementDefinition<
  * The definitions of a group of feedbacks
  */
 export type CompanionGraphicsCompositeElementDefinitions<
-	TSchemas extends Record<string, CompanionCompositeElementSchema<CompanionOptionValues>> = Record<
+	TSchemas extends CompanionCompositeElementSchemas | undefined = Record<
 		string,
 		CompanionCompositeElementSchema<CompanionOptionValues>
 	>,
 > = {
-	[K in keyof TSchemas]: CompanionGraphicsCompositeElementDefinition<TSchemas[K]> | false | undefined
+	[K in keyof Extract<TSchemas, CompanionCompositeElementSchemas>]:
+		| CompanionGraphicsCompositeElementDefinition<Extract<TSchemas, CompanionCompositeElementSchemas>[K]>
+		| false
+		| undefined
 }

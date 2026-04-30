@@ -50,7 +50,7 @@ export interface InstanceTypes {
 	actions: Record<string, CompanionActionSchema<CompanionOptionValues>>
 	feedbacks: Record<string, CompanionFeedbackSchema<CompanionOptionValues>>
 	variables: CompanionVariableValues
-	compositeElements: Record<string, CompanionCompositeElementSchema<CompanionOptionValues>>
+	compositeElements?: Record<string, CompanionCompositeElementSchema<CompanionOptionValues>>
 }
 
 export type InstanceConstructor<TManifest extends InstanceTypes = InstanceTypes> = new (
