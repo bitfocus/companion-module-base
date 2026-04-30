@@ -82,7 +82,7 @@ describe('validateCompositeElementDefinitions', () => {
 		})
 
 		it('flags a definition with key constructor', () => {
-			const msgs = runCapture({ constructor: validDef() } as unknown as CompanionGraphicsCompositeElementDefinitions<any>)
+			const msgs = runCapture({ constructor: validDef() })
 			expect(msgs.some((m) => m.includes('reserved') || m.includes('constructor'))).toBe(true)
 		})
 	})

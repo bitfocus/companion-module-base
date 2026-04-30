@@ -1,7 +1,4 @@
-import { describe, it, expect, afterEach, vi } from 'vitest'
-import { validatePresetDefinitions } from '../presets.js'
-import type { ActionManager } from '../actions.js'
-import type { FeedbackManager } from '../feedback.js'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type {
 	CompanionActionDefinition,
 	CompanionBooleanFeedbackDefinition,
@@ -14,6 +11,9 @@ import type {
 	InstanceTypes,
 	SomeButtonGraphicsElement,
 } from '@companion-module/base'
+import type { ActionManager } from '../actions.js'
+import type { FeedbackManager } from '../feedback.js'
+import { validatePresetDefinitions } from '../presets.js'
 
 // ---------------------------------------------------------------------------
 // Helpers
