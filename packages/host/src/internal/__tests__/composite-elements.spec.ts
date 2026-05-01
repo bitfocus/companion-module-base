@@ -97,8 +97,8 @@ describe('validateCompositeElementDefinitions', () => {
 			const validTypes: SomeButtonGraphicsElement[] = [
 				{ type: 'group', children: [] },
 				{ type: 'composite', elementId: 'x', options: {} },
-				{ type: 'text', text: 'hello' as any },
-				{ type: 'image', base64Image: null as any },
+				{ type: 'text', text: { isExpression: false, value: 'hello' } },
+				{ type: 'image', base64Image: { isExpression: false, value: 'data:image/png;base64,...' } },
 				{ type: 'box' },
 				{ type: 'line' },
 				{ type: 'circle' },
