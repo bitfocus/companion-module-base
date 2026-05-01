@@ -191,7 +191,7 @@ export interface CompanionValueFeedbackDefinition<
 /**
  * The definition of an advanced feedback
  * It is discouraged to use this type of feedback, as it does not fit into our graphics model,
- * or user flexbility goals as well as the other types of feedback.
+ * or user flexibility goals as well as the other types of feedback.
  * This type will likely be removed in a future major version of the module API.
  */
 export interface CompanionAdvancedFeedbackDefinition<

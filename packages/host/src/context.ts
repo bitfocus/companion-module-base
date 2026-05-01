@@ -76,6 +76,7 @@ export interface HostFeedbackDefinition {
 	options: SomeCompanionFeedbackInputField[] // TODO module-lib - versioned types?
 	type: HostFeedbackType
 	defaultStyle?: CompanionFeedbackButtonStyleResult
+	affectedProperties: string[] | undefined
 	hasLearn: boolean
 	showInvert: boolean | undefined
 	learnTimeout: number | undefined

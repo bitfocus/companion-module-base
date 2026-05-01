@@ -321,6 +321,7 @@ export class FeedbackManager {
 				options: feedback.options,
 				type: feedback.type,
 				defaultStyle: feedback.type === 'boolean' ? feedback.defaultStyle : undefined,
+				affectedProperties: feedback.type === 'advanced' ? feedback.affectedProperties : undefined,
 				hasLearn: !!feedback.learn,
 				learnTimeout: feedback.learnTimeout,
 				showInvert: feedback.type === 'boolean' ? feedback.showInvert : false,
