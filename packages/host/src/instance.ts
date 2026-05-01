@@ -55,6 +55,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 		host: ModuleHostContext<TManifest['config'], TManifest['secrets']>,
 		instanceFactory: InstanceConstructor<TManifest>,
 		upgradeScripts: CompanionStaticUpgradeScript<TManifest['config'], TManifest['secrets']>[],
+		moduleApiVersion: string,
 	) {
 		this.#host = host
 		// this.#plugin = plugin
@@ -66,6 +67,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 		this.#feedbackManager = new FeedbackManager(
 			(feedbacks) => this.#host.setFeedbackDefinitions(feedbacks),
 			(values) => this.#host.updateFeedbackValues(values),
+			moduleApiVersion,
 		)
 
 		this.#instanceContext = {

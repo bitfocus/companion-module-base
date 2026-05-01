@@ -1,4 +1,5 @@
 import debounceFn from 'debounce-fn'
+import semver from 'semver'
 import {
 	assertNever,
 	createModuleLogger,
@@ -44,6 +45,7 @@ export class FeedbackManager {
 
 	readonly #setFeedbackDefinitions: (feedbacks: HostFeedbackDefinition[]) => void
 	readonly #updateFeedbackValues: (values: HostFeedbackValue[]) => void
+	readonly #moduleApiVersion: string
 
 	readonly #feedbackDefinitions = new Map<string, CompanionFeedbackDefinition>()
 	readonly #feedbackInstances = new Map<string, FeedbackCheckInstance>()
@@ -56,9 +58,11 @@ export class FeedbackManager {
 	constructor(
 		setFeedbackDefinitions: (feedbacks: HostFeedbackDefinition[]) => void,
 		updateFeedbackValues: (values: HostFeedbackValue[]) => void,
+		moduleApiVersion: string,
 	) {
 		this.#setFeedbackDefinitions = setFeedbackDefinitions
 		this.#updateFeedbackValues = updateFeedbackValues
+		this.#moduleApiVersion = moduleApiVersion
 	}
 
 	public getDefinitionIds(): string[] {
@@ -294,6 +298,9 @@ export class FeedbackManager {
 		const definitionsWithOldIsVisible: string[] = []
 		const definitionsWithOldRequiredProperties: string[] = []
 		const definitionSubscriptionMentionsChangeStyle: string[] = []
+		const definitionsMissingAffectedProperties: string[] = []
+
+		const checkAffectedProperties = semver.gte(this.#moduleApiVersion, '2.1.0', { loose: true })
 
 		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
 			if (!feedback) continue
@@ -322,6 +329,8 @@ export class FeedbackManager {
 			if (hasAnyOldRequiredProperties(feedback.options)) definitionsWithOldRequiredProperties.push(feedbackId)
 			if (typeof feedback.description === 'string' && feedback.description.match(/change style/))
 				definitionSubscriptionMentionsChangeStyle.push(feedbackId)
+			if (checkAffectedProperties && feedback.type === 'advanced' && !Array.isArray(feedback.affectedProperties))
+				definitionsMissingAffectedProperties.push(feedbackId)
 		}
 
 		this.#setFeedbackDefinitions(hostFeedbacks)
@@ -350,6 +359,13 @@ export class FeedbackManager {
 		if (definitionSubscriptionMentionsChangeStyle.length > 0) {
 			this.#logger.warn(
 				`The following feedback definitions have a description that mentions 'change style'. Feedbacks no longer only affect style, making this misleading. The definitions: ${definitionSubscriptionMentionsChangeStyle
+					.sort()
+					.join(', ')}`,
+			)
+		}
+		if (definitionsMissingAffectedProperties.length > 0) {
+			this.#logger.warn(
+				`The following advanced feedback definitions are missing an array for affectedProperties. This should be set to the list of style properties the feedback will affect: ${definitionsMissingAffectedProperties
 					.sort()
 					.join(', ')}`,
 			)

@@ -190,12 +190,23 @@ export interface CompanionValueFeedbackDefinition<
 
 /**
  * The definition of an advanced feedback
+ * It is discouraged to use this type of feedback, as it does not fit into our graphics model,
+ * or user flexbility goals as well as the other types of feedback.
+ * This type will likely be removed in a future major version of the module API.
  */
 export interface CompanionAdvancedFeedbackDefinition<
 	TOptions extends CompanionOptionValues = CompanionOptionValues,
 > extends CompanionFeedbackDefinitionBase<TOptions> {
 	/** The type of the feedback */
 	type: 'advanced'
+
+	/**
+	 * The suggested style properties this feedback will affect
+	 * Companion will use this to setup a more accurate list of style overrides,
+	 * which will help users by avoiding a wall of unnecessary overrides
+	 */
+	affectedProperties: Array<keyof CompanionButtonStyleProps> | undefined
+
 	/** Called to get the feedback value */
 	callback: (
 		feedback: CompanionFeedbackAdvancedEvent<TOptions>,
