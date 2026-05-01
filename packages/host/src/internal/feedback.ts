@@ -305,7 +305,9 @@ export class FeedbackManager {
 		const definitionSubscriptionMentionsChangeStyle: string[] = []
 		const definitionsMissingAffectedProperties: string[] = []
 
-		const checkAffectedProperties = semver.gte(this.#moduleApiVersion, '2.1.0', { loose: true })
+		const validModuleApiVersion = semver.valid(this.#moduleApiVersion, { loose: true })
+		const checkAffectedProperties =
+			validModuleApiVersion !== null && semver.gte(validModuleApiVersion, '2.1.0-0', { loose: true })
 
 		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
 			if (!feedback) continue
