@@ -4,7 +4,7 @@ import type {
 	CompanionGraphicsCompositeElementDefinitions,
 	SomeButtonGraphicsElement,
 } from '@companion-module/base'
-import { validateCompositeElementDefinitions } from '../composite-elements.js'
+import { sanitiseCompositeElementDefinitions } from '../composite-elements.js'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -23,7 +23,7 @@ function validDef(
 }
 
 // ---------------------------------------------------------------------------
-// Logger capture
+// Logger capture + result
 // ---------------------------------------------------------------------------
 
 afterEach(() => {
@@ -37,18 +37,36 @@ function runCapture(definitions: CompanionGraphicsCompositeElementDefinitions<an
 		if (level === 'warn') messages.push(message)
 	}
 	try {
-		validateCompositeElementDefinitions(definitions)
+		sanitiseCompositeElementDefinitions(definitions)
 	} finally {
 		global.COMPANION_LOGGER = prev
 	}
 	return messages
 }
 
+function runSanitise(definitions: CompanionGraphicsCompositeElementDefinitions<any>): {
+	result: CompanionGraphicsCompositeElementDefinitions<any>
+	msgs: string[]
+} {
+	const msgs: string[] = []
+	const prev = global.COMPANION_LOGGER
+	global.COMPANION_LOGGER = (_source, level, message) => {
+		if (level === 'warn') msgs.push(message)
+	}
+	let result: CompanionGraphicsCompositeElementDefinitions<any>
+	try {
+		result = sanitiseCompositeElementDefinitions(definitions)
+	} finally {
+		global.COMPANION_LOGGER = prev
+	}
+	return { result, msgs }
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('validateCompositeElementDefinitions', () => {
+describe('sanitiseCompositeElementDefinitions', () => {
 	describe('skipping', () => {
 		it('does not warn for an empty record', () => {
 			const msgs = runCapture({})
@@ -135,6 +153,44 @@ describe('validateCompositeElementDefinitions', () => {
 		it('does not warn for multiple valid definitions', () => {
 			const msgs = runCapture({ a: validDef(), b: validDef(), c: validDef() })
 			expect(msgs).toHaveLength(0)
+		})
+	})
+
+	describe('return value', () => {
+		it('returns an empty object for an empty input', () => {
+			const { result } = runSanitise({})
+			expect(result).toEqual({})
+		})
+
+		it('includes valid entries in the result', () => {
+			const def = validDef()
+			const { result } = runSanitise({ myEl: def })
+			expect(result).toHaveProperty('myEl')
+		})
+
+		it('excludes invalid entries from the result', () => {
+			const { result } = runSanitise({ myEl: null as unknown as CompanionGraphicsCompositeElementDefinition })
+			expect(result).not.toHaveProperty('myEl')
+		})
+
+		it('excludes banned-id entries from the result', () => {
+			const { result } = runSanitise({ constructor: validDef() })
+			expect(result).not.toHaveProperty('constructor')
+		})
+
+		it('returns only valid entries when mixed with invalid ones', () => {
+			const { result } = runSanitise({
+				good: validDef(),
+				bad: { type: 'composite', name: '' } as unknown as CompanionGraphicsCompositeElementDefinition,
+			})
+			expect(result).toHaveProperty('good')
+			expect(result).not.toHaveProperty('bad')
+		})
+
+		it('strips unknown properties from returned data', () => {
+			const def = { ...validDef(), unknownProp: 'should be stripped' }
+			const { result } = runSanitise({ myEl: def })
+			expect(result.myEl).not.toHaveProperty('unknownProp')
 		})
 	})
 })

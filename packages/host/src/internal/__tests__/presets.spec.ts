@@ -13,7 +13,7 @@ import type {
 } from '@companion-module/base'
 import type { ActionManager } from '../actions.js'
 import type { FeedbackManager } from '../feedback.js'
-import { validatePresetDefinitions } from '../presets.js'
+import { sanitisePresetDefinitions } from '../presets.js'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -62,9 +62,9 @@ function run(
 	actions: Record<string, CompanionActionDefinition> = {},
 	feedbacks: Record<string, CompanionBooleanFeedbackDefinition<CompanionOptionValues>> = {},
 	structure: CompanionPresetSection<InstanceTypes>[] = NO_STRUCTURE,
-): void {
+): ReturnType<typeof sanitisePresetDefinitions> {
 	const { actionsManager, feedbacksManager } = makeManagers(actions, feedbacks)
-	validatePresetDefinitions(actionsManager, feedbacksManager, structure, presets)
+	return sanitisePresetDefinitions(actionsManager, feedbacksManager, structure, presets)
 }
 
 function validSimple(
@@ -132,6 +132,27 @@ function runCapture(
 		global.COMPANION_LOGGER = prev
 	}
 	return messages
+}
+
+/** Returns both warn messages and the sanitised result */
+function runSanitise(
+	presets: CompanionPresetDefinitions<InstanceTypes>,
+	actions: Record<string, CompanionActionDefinition> = {},
+	feedbacks: Record<string, CompanionBooleanFeedbackDefinition<CompanionOptionValues>> = {},
+	structure: CompanionPresetSection<InstanceTypes>[] = NO_STRUCTURE,
+): { result: ReturnType<typeof sanitisePresetDefinitions>; msgs: string[] } {
+	const msgs: string[] = []
+	const prev = global.COMPANION_LOGGER
+	global.COMPANION_LOGGER = (_source, level, message) => {
+		if (level === 'warn') msgs.push(message)
+	}
+	let result: ReturnType<typeof sanitisePresetDefinitions>
+	try {
+		result = run(presets, actions, feedbacks, structure)
+	} finally {
+		global.COMPANION_LOGGER = prev
+	}
+	return { result, msgs }
 }
 
 // ---------------------------------------------------------------------------
@@ -611,6 +632,55 @@ describe('validatePresetDefinitions', () => {
 			expect(warn).toBeDefined()
 			expect(warn).toContain('Alpha')
 			expect(warn).toContain('Beta')
+		})
+	})
+
+	describe('return value', () => {
+		it('returns empty presets and given structure for empty input', () => {
+			const { result } = runSanitise({})
+			expect(result.presets).toEqual({})
+			expect(result.structure).toStrictEqual([])
+		})
+
+		it('includes valid simple presets in result', () => {
+			const { result } = runSanitise({ p1: validSimple() }, {}, {}, structureFor('p1'))
+			expect(result.presets).toHaveProperty('p1')
+		})
+
+		it('includes valid layered presets in result', () => {
+			const { result } = runSanitise({ p1: validLayered() }, {}, {}, structureFor('p1'))
+			expect(result.presets).toHaveProperty('p1')
+		})
+
+		it('excludes presets that fail structural validation', () => {
+			const bad = { ...validSimple(), steps: undefined as any }
+			const { result } = runSanitise({ p1: bad })
+			expect(result.presets).not.toHaveProperty('p1')
+		})
+
+		it('excludes presets with invalid elements', () => {
+			const { result } = runSanitise({
+				p1: validLayered({ elements: [{ type: 'rectangle' as any }] }),
+			})
+			expect(result.presets).not.toHaveProperty('p1')
+		})
+
+		it('excludes banned-id presets from result', () => {
+			const { result } = runSanitise({ constructor: validSimple() })
+			expect(result.presets).not.toHaveProperty('constructor')
+		})
+
+		it('uses Zod-parsed elements in returned layered preset', () => {
+			const elements: SomeButtonGraphicsElement[] = [{ type: 'box', id: 'el1' }]
+			const { result } = runSanitise({ p1: validLayered({ elements }) }, {}, {}, structureFor('p1'))
+			const returned = result.presets['p1'] as CompanionLayeredButtonPresetDefinition<InstanceTypes>
+			expect(returned.elements).toEqual(elements)
+		})
+
+		it('passes structure through to result', () => {
+			const structure = structureFor('p1')
+			const { result } = runSanitise({ p1: validSimple() }, {}, {}, structure)
+			expect(result.structure).toStrictEqual(structure)
 		})
 	})
 })

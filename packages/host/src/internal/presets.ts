@@ -26,12 +26,23 @@ function collectElementIds(elements: unknown[]): Set<string> {
 	return ids
 }
 
-export function validatePresetDefinitions(
+export function sanitisePresetDefinitions(
 	actionsManager: ActionManager,
 	feedbacksManager: FeedbackManager,
 	structure: CompanionPresetSection<any>[],
 	presets: CompanionPresetDefinitions<any>,
-): void {
+): {
+	structure: CompanionPresetSection<any>[]
+	presets: CompanionPresetDefinitions<any>
+} {
+	const result: {
+		structure: CompanionPresetSection<any>[]
+		presets: CompanionPresetDefinitions<any>
+	} = {
+		structure: [],
+		presets: {},
+	}
+
 	const validActionIds = new Set(actionsManager.getDefinitionIds())
 	const validFeedbackIds = new Set(feedbacksManager.getDefinitionIds())
 
@@ -68,17 +79,22 @@ export function validatePresetDefinitions(
 				continue
 			}
 
+			let sanitisedPreset = preset
+
 			// --- layered-specific validation ---
 			if (preset.type === 'layered') {
 				if (!Array.isArray(preset.elements)) {
 					presetsFailedValidation.push(presetName)
 					continue
 				}
-				if (!z.array(elementSchema).safeParse(preset.elements).success) {
+				const elemParsed = z.array(elementSchema).safeParse(preset.elements)
+				if (!elemParsed.success) {
 					presetsWithInvalidElements.push(presetName)
+					continue
 				}
+				sanitisedPreset = { ...preset, elements: elemParsed.data }
 				// Validate that style override element IDs reference declared elements
-				const elementIds = collectElementIds(preset.elements)
+				const elementIds = collectElementIds(elemParsed.data)
 				let hasInvalidRef = false
 				outerFeedback: for (const feedback of preset.feedbacks) {
 					if (!Array.isArray(feedback?.styleOverrides)) continue
@@ -168,6 +184,8 @@ export function validatePresetDefinitions(
 			}
 			if (hasInvalidAction) presetsWithInvalidActionIds.push(presetName)
 			if (hasInvalidActionOptionKeys) presetsWithInvalidActionOptionKeys.push(presetName)
+
+			result.presets[_id] = sanitisedPreset
 		} catch (_e) {
 			presetsFailedValidation.push(presetName)
 		}
@@ -246,6 +264,8 @@ export function validatePresetDefinitions(
 				}
 			}
 		}
+
+		result.structure.push(section)
 	}
 
 	// Check for presets not referenced by structure
@@ -280,4 +300,6 @@ export function validatePresetDefinitions(
 				.join(', ')}`,
 		)
 	}
+
+	return result
 }

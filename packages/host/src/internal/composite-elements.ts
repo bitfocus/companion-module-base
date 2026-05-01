@@ -21,9 +21,11 @@ const definitionSchema = z.object({
 }) satisfies z.ZodType<CompanionGraphicsCompositeElementDefinition>
 true satisfies AssertCoversKeys<typeof definitionSchema, CompanionGraphicsCompositeElementDefinition>
 
-export function validateCompositeElementDefinitions(
+export function sanitiseCompositeElementDefinitions(
 	definitions: CompanionGraphicsCompositeElementDefinitions<any>,
-): void {
+): CompanionGraphicsCompositeElementDefinitions<any> {
+	const result: CompanionGraphicsCompositeElementDefinitions<any> = {}
+
 	const bannedIds: string[] = []
 	const invalidSchema: string[] = []
 
@@ -33,9 +35,18 @@ export function validateCompositeElementDefinitions(
 			continue
 		}
 
-		if (!defn || typeof defn !== 'object' || !definitionSchema.safeParse(defn).success) {
+		if (!defn || typeof defn !== 'object') {
 			invalidSchema.push(id)
+			continue
 		}
+
+		const parsed = definitionSchema.safeParse(defn)
+		if (!parsed.success) {
+			invalidSchema.push(id)
+			continue
+		}
+
+		result[id] = parsed.data
 	}
 
 	if (bannedIds.length > 0) {
@@ -46,4 +57,6 @@ export function validateCompositeElementDefinitions(
 			`The following composite element definitions failed to validate against the schema: ${invalidSchema.sort().join(', ')}`,
 		)
 	}
+
+	return result
 }
