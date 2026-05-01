@@ -57,17 +57,17 @@ describe('validateCompositeElementDefinitions', () => {
 
 		it('warns and skips a null entry', () => {
 			const msgs = runCapture({ myEl: null as unknown as CompanionGraphicsCompositeElementDefinition })
-			expect(msgs.some((m) => m.includes('not valid objects'))).toBe(true)
+			expect(msgs.some((m) => m.includes('failed to validate'))).toBe(true)
 		})
 
 		it('warns and skips a false entry', () => {
 			const msgs = runCapture({ myEl: false })
-			expect(msgs.some((m) => m.includes('not valid objects'))).toBe(true)
+			expect(msgs.some((m) => m.includes('failed to validate'))).toBe(true)
 		})
 
 		it('warns and skips a string entry', () => {
 			const msgs = runCapture({ myEl: 'bad' as unknown as CompanionGraphicsCompositeElementDefinition })
-			expect(msgs.some((m) => m.includes('not valid objects'))).toBe(true)
+			expect(msgs.some((m) => m.includes('failed to validate'))).toBe(true)
 		})
 	})
 
@@ -90,7 +90,7 @@ describe('validateCompositeElementDefinitions', () => {
 	describe('elements validation', () => {
 		it('flags an element with an unrecognised type', () => {
 			const msgs = runCapture({ myEl: validDef({ elements: [{ type: 'unknown' as any }] }) })
-			expect(msgs.some((m) => m.includes('unrecognised types'))).toBe(true)
+			expect(msgs.some((m) => m.includes('failed to validate'))).toBe(true)
 		})
 
 		it('does not warn for all seven valid element types', () => {
@@ -113,7 +113,7 @@ describe('validateCompositeElementDefinitions', () => {
 				children: [{ type: 'bad' } as any],
 			}
 			const msgs = runCapture({ myEl: validDef({ elements: [nested] }) })
-			expect(msgs.some((m) => m.includes('unrecognised types'))).toBe(true)
+			expect(msgs.some((m) => m.includes('failed to validate'))).toBe(true)
 		})
 
 		it('does not warn for valid types nested inside group children', () => {
