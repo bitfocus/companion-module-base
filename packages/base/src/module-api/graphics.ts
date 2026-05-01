@@ -8,7 +8,7 @@ import type { ExpressionOrValue } from './input.js'
 export type SomeButtonGraphicsElement<
 	TCompositeElements extends CompanionCompositeElementSchemas | undefined = CompanionCompositeElementSchemas,
 > =
-	| ButtonGraphicsGroupElement
+	| ButtonGraphicsGroupElement<TCompositeElements>
 	| ButtonGraphicsCompositeElement<TCompositeElements>
 	| ButtonGraphicsTextElement
 	| ButtonGraphicsImageElement
@@ -50,12 +50,15 @@ export enum ButtonGraphicsDecorationType {
 	None = 'none',
 }
 
-export interface ButtonGraphicsGroupElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
+export interface ButtonGraphicsGroupElement<
+	TCompositeElements extends CompanionCompositeElementSchemas | undefined = CompanionCompositeElementSchemas,
+>
+	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
 	type: 'group'
 
 	rotation?: ExpressionOrValue<number> // degrees 0-359
 
-	children: SomeButtonGraphicsElement[]
+	children: SomeButtonGraphicsElement<TCompositeElements>[]
 }
 
 export type ButtonGraphicsCompositeElement<

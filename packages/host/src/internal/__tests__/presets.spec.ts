@@ -414,7 +414,7 @@ describe('validatePresetDefinitions', () => {
 				{ type: 'box' },
 				{ type: 'line' },
 				{ type: 'circle' },
-				{ type: 'composite', elementId: 'x', options: {} as any },
+				{ type: 'composite', elementId: 'x', options: {} },
 				{ type: 'group', children: [] },
 			]
 			const msgs = runCapture({ p1: validLayered({ elements }) })

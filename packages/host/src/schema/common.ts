@@ -5,7 +5,7 @@ export function eov<T extends JsonValue | undefined>(schema: z.ZodType<T>): z.Zo
 	return z.union([
 		z.object({ value: schema, isExpression: z.literal(false) }),
 		z.object({ value: z.string(), isExpression: z.literal(true) }),
-	]) as z.ZodType<ExpressionOrValue<T>>
+	]) satisfies z.ZodType<ExpressionOrValue<T>>
 }
 
 // ── Compile-time schema coverage guards ───────────────────────────────────────
