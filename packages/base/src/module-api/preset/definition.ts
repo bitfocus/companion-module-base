@@ -5,6 +5,7 @@ import type { CompanionFeedbackButtonStyleResult, CompanionFeedbackSchema } from
 import type { CompanionOptionValues, ExpressionOrValue } from '../input.js'
 import type { CompanionButtonStyleProps } from '../style.js'
 import type { CompanionVariableValue } from '../variable.js'
+import type { CompanionLayeredButtonPresetDefinition } from './definition-graphics.js'
 
 /**
  * The definitions of a group of presets
@@ -15,7 +16,8 @@ export type CompanionPresetDefinitions<TManifest extends InstanceTypes = Instanc
 
 // Future: Additional types will be added, as part of the graphics overhaul
 export type CompanionPresetDefinition<TManifest extends InstanceTypes = InstanceTypes> =
-	CompanionSimplePresetDefinition<TManifest>
+	| CompanionSimplePresetDefinition<TManifest>
+	| CompanionLayeredButtonPresetDefinition<TManifest>
 
 export interface CompanionPresetDefinitionBase<TType extends string> {
 	/**

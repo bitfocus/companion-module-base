@@ -3,7 +3,6 @@ import type {
 	CompanionHTTPRequest,
 	CompanionHTTPResponse,
 	CompanionOptionValues,
-	CompanionPresetDefinitions,
 	CompanionStaticUpgradeScript,
 	CompanionVariableDefinition,
 	CompanionVariableValue,
@@ -24,8 +23,9 @@ import type {
 	UpgradeFeedbackInstance,
 } from './context.js'
 import { ActionManager } from './internal/actions.js'
+import { sanitiseCompositeElementDefinitions } from './internal/composite-elements.js'
 import { FeedbackManager } from './internal/feedback.js'
-import { validatePresetDefinitions } from './internal/presets.js'
+import { sanitisePresetDefinitions } from './internal/presets.js'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
 import { BANNED_PROPS } from './internal/util.js'
 
@@ -121,8 +121,12 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 			},
 
 			setPresetDefinitions: (structure, presets) => {
-				validatePresetDefinitions(this.#actionManager, this.#feedbackManager, structure, presets)
-				this.#host.setPresetDefinitions(structure, presets as CompanionPresetDefinitions<any>)
+				const sanitised = sanitisePresetDefinitions(this.#actionManager, this.#feedbackManager, structure, presets)
+				this.#host.setPresetDefinitions(sanitised.structure, sanitised.presets)
+			},
+			setCompositeElementDefinitions: (compositeElements) => {
+				const sanitisedElements = sanitiseCompositeElementDefinitions(compositeElements)
+				this.#host.setCompositeElementDefinitions(sanitisedElements)
 			},
 
 			setVariableDefinitions: (variables) => {
