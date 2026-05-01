@@ -1,11 +1,13 @@
+import { z } from 'zod'
 import {
 	createModuleLogger,
 	type CompanionPresetDefinitions,
 	type CompanionPresetSection,
 } from '@companion-module/base'
+import { elementSchema } from '../schema/elements.js'
 import type { ActionManager } from './actions.js'
 import type { FeedbackManager } from './feedback.js'
-import { BANNED_PROPS, hasInvalidElementType } from './util.js'
+import { BANNED_PROPS } from './util.js'
 
 const logger = createModuleLogger('PresetDefinitionsManager')
 
@@ -72,7 +74,7 @@ export function validatePresetDefinitions(
 					presetsFailedValidation.push(presetName)
 					continue
 				}
-				if (hasInvalidElementType(preset.elements)) {
+				if (!z.array(elementSchema).safeParse(preset.elements).success) {
 					presetsWithInvalidElements.push(presetName)
 				}
 				// Validate that style override element IDs reference declared elements
@@ -208,7 +210,7 @@ export function validatePresetDefinitions(
 	}
 	if (presetsWithInvalidElements.length > 0) {
 		logger.warn(
-			`The following layered preset definitions contain elements with unrecognised types: ${presetsWithInvalidElements
+			`The following layered preset definitions contain invalid elements: ${presetsWithInvalidElements
 				.sort()
 				.join(', ')}`,
 		)

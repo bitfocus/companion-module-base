@@ -406,15 +406,15 @@ describe('validatePresetDefinitions', () => {
 
 	describe('layered preset — element type validation', () => {
 		it('does not warn for all valid element types at top level', () => {
-			// Cast required: ExpressionOrValue fields and composite.options can't be satisfied with bare literals;
+			// Cast required: composite.options can't be satisfied with bare literals;
 			// this test exercises the runtime type validator, not TypeScript completeness.
 			const elements: SomeButtonGraphicsElement[] = [
-				{ type: 'text', text: '' as any },
-				{ type: 'image', base64Image: null as any },
+				{ type: 'text', text: { value: '', isExpression: false } },
+				{ type: 'image', base64Image: { value: null, isExpression: false } },
 				{ type: 'box' },
 				{ type: 'line' },
 				{ type: 'circle' },
-				{ type: 'composite', elementId: 'x', options: {} },
+				{ type: 'composite', elementId: 'x', options: {} as any },
 				{ type: 'group', children: [] },
 			]
 			const msgs = runCapture({ p1: validLayered({ elements }) })
@@ -425,7 +425,7 @@ describe('validatePresetDefinitions', () => {
 			// Deliberately invalid element type — cast required
 			const elements: SomeButtonGraphicsElement[] = [{ type: 'rectangle' as any }]
 			const msgs = runCapture({ p1: validLayered({ elements }) })
-			expect(msgs.some((m) => m.includes('unrecognised types') && m.includes('My Layered Preset'))).toBe(true)
+			expect(msgs.some((m) => m.includes('invalid elements') && m.includes('My Layered Preset'))).toBe(true)
 		})
 
 		it('warns for an unrecognised type nested inside a group', () => {
@@ -434,12 +434,14 @@ describe('validatePresetDefinitions', () => {
 			const msgs = runCapture({
 				p1: validLayered({ elements: [{ type: 'group', children: badChild }] }),
 			})
-			expect(msgs.some((m) => m.includes('unrecognised types'))).toBe(true)
+			expect(msgs.some((m) => m.includes('invalid elements'))).toBe(true)
 		})
 
 		it('does not warn for valid types nested inside a group', () => {
-			// Cast required: ExpressionOrValue fields can't be satisfied with bare literals
-			const children: SomeButtonGraphicsElement[] = [{ type: 'text', text: '' as any }, { type: 'box' }]
+			const children: SomeButtonGraphicsElement[] = [
+				{ type: 'text', text: { value: '', isExpression: false } },
+				{ type: 'box' },
+			]
 			const msgs = runCapture({
 				p1: validLayered({
 					elements: [{ type: 'group', children }],
