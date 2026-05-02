@@ -1,18 +1,19 @@
+import debounceFn from 'debounce-fn'
+import semver from 'semver'
 import {
+	assertNever,
+	createModuleLogger,
 	type CompanionAdvancedFeedbackResult,
 	type CompanionFeedbackContext,
 	type CompanionFeedbackDefinition,
 	type CompanionFeedbackDefinitions,
 	type CompanionFeedbackInfo,
+	type CompanionFeedbackLearnContext,
 	type CompanionOptionValues,
 	type JsonValue,
-	assertNever,
-	createModuleLogger,
 } from '@companion-module/base'
-import { BANNED_PROPS } from './util.js'
-import debounceFn from 'debounce-fn'
 import type { FeedbackInstance, HostFeedbackDefinition, HostFeedbackValue } from '../context.js'
-import { hasAnyOldIsVisibleFunctions, hasAnyOldRequiredProperties } from './util.js'
+import { BANNED_PROPS, hasAnyOldIsVisibleFunctions, hasAnyOldRequiredProperties } from './util.js'
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'value' | 'advanced',
@@ -44,6 +45,7 @@ export class FeedbackManager {
 
 	readonly #setFeedbackDefinitions: (feedbacks: HostFeedbackDefinition[]) => void
 	readonly #updateFeedbackValues: (values: HostFeedbackValue[]) => void
+	readonly #moduleApiVersion: string
 
 	readonly #feedbackDefinitions = new Map<string, CompanionFeedbackDefinition>()
 	readonly #feedbackInstances = new Map<string, FeedbackCheckInstance>()
@@ -56,14 +58,21 @@ export class FeedbackManager {
 	constructor(
 		setFeedbackDefinitions: (feedbacks: HostFeedbackDefinition[]) => void,
 		updateFeedbackValues: (values: HostFeedbackValue[]) => void,
+		moduleApiVersion: string,
 	) {
 		this.#setFeedbackDefinitions = setFeedbackDefinitions
 		this.#updateFeedbackValues = updateFeedbackValues
+		this.#moduleApiVersion = moduleApiVersion
 	}
 
 	public getDefinitionIds(): string[] {
 		return this.#feedbackDefinitions.keys().toArray()
 	}
+
+	public getDefinition(id: string): CompanionFeedbackDefinition | undefined {
+		return this.#feedbackDefinitions.get(id)
+	}
+
 	public getInstanceIds(): string[] {
 		return this.#feedbackInstances.keys().toArray()
 	}
@@ -113,27 +122,54 @@ export class FeedbackManager {
 
 	public async handleLearnFeedback(
 		feedback: FeedbackInstance,
+		signal: AbortSignal,
 	): Promise<{ options: CompanionOptionValues | undefined }> {
 		const definition = this.#feedbackDefinitions.get(feedback.feedbackId)
 		if (definition && definition.learn) {
-			const context: CompanionFeedbackContext = {
+			const context: CompanionFeedbackLearnContext = {
 				type: 'feedback',
+				signal,
 			}
 
-			const newOptions = await definition.learn(
-				{
-					id: feedback.id,
-					feedbackId: feedback.feedbackId,
-					controlId: feedback.controlId,
-					options: feedback.options,
-					previousOptions: null,
-					type: definition.type,
-				},
-				context,
-			)
+			if (signal.aborted) {
+				// The learn was aborted, return undefined options as a signal of this
+				return {
+					options: undefined,
+				}
+			}
 
-			return {
-				options: newOptions,
+			try {
+				const newOptions = await definition.learn(
+					{
+						id: feedback.id,
+						feedbackId: feedback.feedbackId,
+						controlId: feedback.controlId,
+						options: feedback.options,
+						previousOptions: null,
+						type: definition.type,
+					},
+					context,
+				)
+
+				if (signal.aborted) {
+					// The learn was aborted, return undefined options as a signal of this
+					return {
+						options: undefined,
+					}
+				}
+
+				return {
+					options: newOptions,
+				}
+			} catch (e) {
+				if (signal.aborted) {
+					// The learn was aborted, return undefined options as a signal of this
+					return {
+						options: undefined,
+					}
+				} else {
+					throw e
+				}
 			}
 		} else {
 			// Not supported
@@ -267,6 +303,11 @@ export class FeedbackManager {
 		const definitionsWithOldIsVisible: string[] = []
 		const definitionsWithOldRequiredProperties: string[] = []
 		const definitionSubscriptionMentionsChangeStyle: string[] = []
+		const definitionsMissingAffectedProperties: string[] = []
+
+		const validModuleApiVersion = semver.valid(this.#moduleApiVersion, { loose: true })
+		const checkAffectedProperties =
+			validModuleApiVersion !== null && semver.gte(validModuleApiVersion, '2.1.0-0', { loose: true })
 
 		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
 			if (!feedback) continue
@@ -280,6 +321,7 @@ export class FeedbackManager {
 				options: feedback.options,
 				type: feedback.type,
 				defaultStyle: feedback.type === 'boolean' ? feedback.defaultStyle : undefined,
+				affectedProperties: feedback.type === 'advanced' ? feedback.affectedProperties : undefined,
 				hasLearn: !!feedback.learn,
 				learnTimeout: feedback.learnTimeout,
 				showInvert: feedback.type === 'boolean' ? feedback.showInvert : false,
@@ -295,6 +337,8 @@ export class FeedbackManager {
 			if (hasAnyOldRequiredProperties(feedback.options)) definitionsWithOldRequiredProperties.push(feedbackId)
 			if (typeof feedback.description === 'string' && feedback.description.match(/change style/))
 				definitionSubscriptionMentionsChangeStyle.push(feedbackId)
+			if (checkAffectedProperties && feedback.type === 'advanced' && !Array.isArray(feedback.affectedProperties))
+				definitionsMissingAffectedProperties.push(feedbackId)
 		}
 
 		this.#setFeedbackDefinitions(hostFeedbacks)
@@ -323,6 +367,13 @@ export class FeedbackManager {
 		if (definitionSubscriptionMentionsChangeStyle.length > 0) {
 			this.#logger.warn(
 				`The following feedback definitions have a description that mentions 'change style'. Feedbacks no longer only affect style, making this misleading. The definitions: ${definitionSubscriptionMentionsChangeStyle
+					.sort()
+					.join(', ')}`,
+			)
+		}
+		if (definitionsMissingAffectedProperties.length > 0) {
+			this.#logger.warn(
+				`The following advanced feedback definitions are missing an array for affectedProperties. This should be set to the list of style properties the feedback will affect: ${definitionsMissingAffectedProperties
 					.sort()
 					.join(', ')}`,
 			)

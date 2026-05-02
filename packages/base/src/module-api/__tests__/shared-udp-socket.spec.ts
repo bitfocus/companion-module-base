@@ -1,12 +1,12 @@
-import { describe, it, expect, vi } from 'vitest'
 import { nanoid } from 'nanoid'
-import { SharedUdpSocketImpl } from '../shared-udp-socket.js'
+import { describe, expect, it, vi } from 'vitest'
 import type {
 	InstanceSharedUdpSocketContext,
 	SharedUdpSocketMessageJoin,
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
 } from '../../host-api/context.js'
+import { SharedUdpSocketImpl } from '../shared-udp-socket.js'
 
 async function sleepImmediate() {
 	return new Promise((resolve) => setImmediate(resolve))

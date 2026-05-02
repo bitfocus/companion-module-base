@@ -2,7 +2,9 @@ import type { JsonValue } from '../common/json-value.js'
 
 export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
 
-export type ExpressionOptionsObject = { [key: string]: ExpressionOrValue<JsonValue | undefined> | undefined }
+export type ExpressionOptionsObject<T extends CompanionOptionValues = CompanionOptionValues> = {
+	[K in keyof T]: ExpressionOrValue<T[K]> | undefined
+}
 
 export type CompanionOptionValues = { [key: string]: JsonValue | undefined }
 

@@ -1,5 +1,5 @@
-import { InstanceTypes } from '../base.js'
-import { CompanionVariableValue, CompanionVariableValues } from '../variable.js'
+import type { InstanceTypes } from '../base.js'
+import type { CompanionVariableValue, CompanionVariableValues } from '../variable.js'
 
 export type CompanionPresetGroup<TManifest extends InstanceTypes = InstanceTypes> =
 	| CompanionPresetGroupSimple<TManifest>

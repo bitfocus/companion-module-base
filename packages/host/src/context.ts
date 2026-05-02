@@ -1,19 +1,20 @@
 import type {
 	CompanionFeedbackButtonStyleResult,
+	CompanionGraphicsCompositeElementDefinitions,
+	CompanionOptionValues,
 	CompanionPresetDefinitions,
 	CompanionPresetSection,
 	CompanionRecordedAction,
 	CompanionVariableValue,
+	ExpressionOptionsObject,
+	ExpressionOrValue,
 	InstanceStatus,
 	JsonValue,
-	ExpressionOptionsObject,
-	CompanionOptionValues,
 	OSCSomeArguments,
 	SomeCompanionActionInputField,
 	SomeCompanionFeedbackInputField,
-	ExpressionOrValue,
 } from '@companion-module/base'
-import {
+import type {
 	SharedUdpSocketMessageJoin,
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
@@ -30,6 +31,8 @@ export interface ModuleHostContext<TConfig, TSecrets> {
 	setVariableDefinitions: (definitions: HostVariableDefinition[], values: HostVariableValue[]) => void
 	/** The presets provided by the connection have changed */
 	setPresetDefinitions: (structure: CompanionPresetSection[], presets: CompanionPresetDefinitions) => void
+	/** The composite graphics elements provided by the connection have changed */
+	setCompositeElementDefinitions: (compositeElements: CompanionGraphicsCompositeElementDefinitions) => void
 	/** The connection has some new values for variables */
 	setVariableValues: (values: HostVariableValue[]) => void
 	/** The connection has some new values for feedbacks it is running */
@@ -73,6 +76,7 @@ export interface HostFeedbackDefinition {
 	options: SomeCompanionFeedbackInputField[] // TODO module-lib - versioned types?
 	type: HostFeedbackType
 	defaultStyle?: CompanionFeedbackButtonStyleResult
+	affectedProperties: string[] | undefined
 	hasLearn: boolean
 	showInvert: boolean | undefined
 	learnTimeout: number | undefined

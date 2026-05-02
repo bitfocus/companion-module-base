@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events'
+
 const sockets: Array<Socket> = []
 const onNextSocket: Array<(s: Socket) => void> = []
 

@@ -1,3 +1,4 @@
+import PQueue from 'p-queue'
 import type {
 	CompanionHTTPRequest,
 	CompanionHTTPResponse,
@@ -5,16 +6,12 @@ import type {
 	CompanionStaticUpgradeScript,
 	CompanionVariableDefinition,
 	CompanionVariableValue,
-	SomeCompanionConfigField,
 	InstanceBase,
 	InstanceConstructor,
 	InstanceTypes,
-	CompanionPresetDefinitions,
+	SomeCompanionConfigField,
 } from '@companion-module/base'
-import { BANNED_PROPS } from './internal/util.js'
-import PQueue from 'p-queue'
-import { ActionManager } from './internal/actions.js'
-import { FeedbackManager } from './internal/feedback.js'
+import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/host-api'
 import type {
 	ActionInstance,
 	FeedbackInstance,
@@ -25,9 +22,12 @@ import type {
 	UpgradeActionInstance,
 	UpgradeFeedbackInstance,
 } from './context.js'
-import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/host-api'
+import { ActionManager } from './internal/actions.js'
+import { sanitiseCompositeElementDefinitions } from './internal/composite-elements.js'
+import { FeedbackManager } from './internal/feedback.js'
+import { sanitisePresetDefinitions } from './internal/presets.js'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
-import { validatePresetDefinitions } from './internal/presets.js'
+import { BANNED_PROPS } from './internal/util.js'
 
 export class InstanceWrapper<TManifest extends InstanceTypes> {
 	// readonly #logger = createModuleLogger('InstanceWrapper')
@@ -36,8 +36,8 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 	#initialized = false
 	#recordingActions = false
 
-	#lastConfig: TManifest['config'] = {} as any
-	#lastSecrets: TManifest['secrets'] = {} as any
+	#lastConfig: TManifest['config'] = {}
+	#lastSecrets: TManifest['secrets'] = {}
 
 	readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
 
@@ -55,6 +55,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 		host: ModuleHostContext<TManifest['config'], TManifest['secrets']>,
 		instanceFactory: InstanceConstructor<TManifest>,
 		upgradeScripts: CompanionStaticUpgradeScript<TManifest['config'], TManifest['secrets']>[],
+		moduleApiVersion: string,
 	) {
 		this.#host = host
 		// this.#plugin = plugin
@@ -66,6 +67,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 		this.#feedbackManager = new FeedbackManager(
 			(feedbacks) => this.#host.setFeedbackDefinitions(feedbacks),
 			(values) => this.#host.updateFeedbackValues(values),
+			moduleApiVersion,
 		)
 
 		this.#instanceContext = {
@@ -119,8 +121,12 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 			},
 
 			setPresetDefinitions: (structure, presets) => {
-				validatePresetDefinitions(this.#actionManager, this.#feedbackManager, structure, presets)
-				this.#host.setPresetDefinitions(structure, presets as CompanionPresetDefinitions<any>)
+				const sanitised = sanitisePresetDefinitions(this.#actionManager, this.#feedbackManager, structure, presets)
+				this.#host.setPresetDefinitions(sanitised.structure, sanitised.presets)
+			},
+			setCompositeElementDefinitions: (compositeElements) => {
+				const sanitisedElements = sanitiseCompositeElementDefinitions(compositeElements)
+				this.#host.setCompositeElementDefinitions(sanitisedElements)
 			},
 
 			setVariableDefinitions: (variables) => {
@@ -349,11 +355,35 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 
 		return res
 	}
+	/**
+	 * @deprecated use learnActionWithSignal instead, which allows passing an AbortSignal to the learn function, so that it can be cancelled if needed
+	 */
 	async learnAction(action: ActionInstance): Promise<{ options: CompanionOptionValues | undefined }> {
-		return this.#actionManager.handleLearnAction(action)
+		// Create a constant signal that will never abort
+		const signal = new AbortController().signal
+
+		return this.#actionManager.handleLearnAction(action, signal)
 	}
+	async learnActionWithSignal(
+		action: ActionInstance,
+		signal: AbortSignal,
+	): Promise<{ options: CompanionOptionValues | undefined }> {
+		return this.#actionManager.handleLearnAction(action, signal)
+	}
+	/**
+	 * @deprecated use learnFeedbackWithSignal instead, which allows passing an AbortSignal to the learn function, so that it can be cancelled if needed
+	 */
 	async learnFeedback(feedback: FeedbackInstance): Promise<{ options: CompanionOptionValues | undefined }> {
-		return this.#feedbackManager.handleLearnFeedback(feedback)
+		// Create a constant signal that will never abort
+		const signal = new AbortController().signal
+
+		return this.#feedbackManager.handleLearnFeedback(feedback, signal)
+	}
+	async learnFeedbackWithSignal(
+		feedback: FeedbackInstance,
+		signal: AbortSignal,
+	): Promise<{ options: CompanionOptionValues | undefined }> {
+		return this.#feedbackManager.handleLearnFeedback(feedback, signal)
 	}
 	async startStopRecordActions(recording: boolean): Promise<void> {
 		if (!recording) {

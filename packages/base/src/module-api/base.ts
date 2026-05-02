@@ -1,23 +1,26 @@
-import type { CompanionActionDefinitions, CompanionActionSchema, CompanionRecordedAction } from './action.js'
-import type { CompanionFeedbackDefinitions, CompanionFeedbackSchema } from './feedback.js'
-import type { CompanionPresetSection, CompanionPresetDefinitions } from './preset/main.js'
-import type { InstanceStatus } from './enums.js'
-import { createModuleLogger, type LogLevel, type ModuleLogger } from '../logging.js'
-import { assertNever } from '../util.js'
-import type { CompanionVariableDefinitions, CompanionVariableValues } from './variable.js'
-import type { OSCSomeArguments } from '../common/osc.js'
-import type { SomeCompanionConfigField } from './config.js'
-import type { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
-import {
-	SharedUdpSocket,
-	SharedUdpSocketImpl,
-	SharedUdpSocketMessageCallback,
-	SharedUdpSocketOptions,
-} from './shared-udp-socket.js'
-import { type InstanceContext, isInstanceContext } from '../host-api/context.js'
 import type { JsonObject } from '../common/json-value.js'
+import type { OSCSomeArguments } from '../common/osc.js'
+import { isInstanceContext, type InstanceContext } from '../host-api/context.js'
+import { createModuleLogger, type LogLevel, type ModuleLogger } from '../logging.js'
+import { assertNever, type StringKeys } from '../util.js'
+import type { CompanionActionDefinitions, CompanionActionSchema, CompanionRecordedAction } from './action.js'
+import type { SomeCompanionConfigField } from './config.js'
+import type { InstanceStatus } from './enums.js'
+import type { CompanionFeedbackDefinitions, CompanionFeedbackSchema } from './feedback.js'
+import type {
+	CompanionCompositeElementSchema,
+	CompanionGraphicsCompositeElementDefinitions,
+} from './graphics-composite.js'
+import type { CompanionHTTPRequest, CompanionHTTPResponse } from './http.js'
 import type { CompanionOptionValues } from './input.js'
-import type { StringKeys } from '../util.js'
+import type { CompanionPresetDefinitions, CompanionPresetSection } from './preset/main.js'
+import {
+	SharedUdpSocketImpl,
+	type SharedUdpSocket,
+	type SharedUdpSocketMessageCallback,
+	type SharedUdpSocketOptions,
+} from './shared-udp-socket.js'
+import type { CompanionVariableDefinitions, CompanionVariableValues } from './variable.js'
 
 export interface InstanceBaseOptions {
 	/**
@@ -47,6 +50,7 @@ export interface InstanceTypes {
 	actions: Record<string, CompanionActionSchema<CompanionOptionValues>>
 	feedbacks: Record<string, CompanionFeedbackSchema<CompanionOptionValues>>
 	variables: CompanionVariableValues
+	compositeElements?: Record<string, CompanionCompositeElementSchema<CompanionOptionValues>>
 }
 
 export type InstanceConstructor<TManifest extends InstanceTypes = InstanceTypes> = new (
@@ -174,6 +178,16 @@ export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTyp
 		presets: CompanionPresetDefinitions<TManifest>,
 	): void {
 		this.#context.setPresetDefinitions(structure, presets)
+	}
+
+	/**
+	 * Set the composite graphics elements for this instance
+	 * @param compositeElements The composite element definitions
+	 */
+	setCompositeElementDefinitions(
+		compositeElements: CompanionGraphicsCompositeElementDefinitions<TManifest['compositeElements']>,
+	): void {
+		this.#context.setCompositeElementDefinitions(compositeElements)
 	}
 
 	/**

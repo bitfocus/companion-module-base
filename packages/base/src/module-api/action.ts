@@ -1,17 +1,17 @@
-import type { CompanionCommonCallbackContext } from './common.js'
+import type { StringKeys } from '../util.js'
+import type { CompanionCommonCallbackContext, CompanionLearnCallbackContext } from './common.js'
 import type {
-	CompanionOptionValues,
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldColor,
+	CompanionInputFieldCustomVariable,
 	CompanionInputFieldDropdown,
 	CompanionInputFieldMultiDropdown,
 	CompanionInputFieldNumber,
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
-	CompanionInputFieldCustomVariable,
+	CompanionOptionValues,
 } from './input.js'
 import type { CompanionVariableValue } from './variable.js'
-import type { StringKeys } from '../util.js'
 
 export type SomeCompanionActionInputField<TKey extends string = string> =
 	| CompanionInputFieldStaticText<TKey>
@@ -41,6 +41,8 @@ export interface CompanionActionContext extends CompanionCommonCallbackContext {
 	setCustomVariableValue(variableName: string, value: CompanionVariableValue): void
 }
 
+export type CompanionActionLearnContext = CompanionLearnCallbackContext
+
 /**
  * The base definition of an action, which is extended by the WithSubscribeHooks and WithoutSubscribeHooks definitions
  */
@@ -66,7 +68,7 @@ export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionV
 	 */
 	learn?: (
 		action: CompanionActionEvent<TOptions>,
-		context: CompanionActionContext,
+		context: CompanionActionLearnContext,
 	) => Partial<TOptions> | undefined | Promise<Partial<TOptions> | undefined>
 
 	/**

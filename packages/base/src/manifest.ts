@@ -1,14 +1,14 @@
 import type {
+	ModuleBonjourQuery,
 	ModuleManifest,
 	ModuleManifestMaintainer,
 	ModuleManifestRuntime,
-	ModuleBonjourQuery,
 } from '../generated/manifest.d.ts'
 // @ts-expect-error no typings
 // eslint-disable-next-line n/no-missing-import
 import validateManifestSchema from '../generated/validate_manifest.js'
 
-export { ModuleManifest, ModuleManifestMaintainer, ModuleManifestRuntime, ModuleBonjourQuery }
+export type { ModuleManifest, ModuleManifestMaintainer, ModuleManifestRuntime, ModuleBonjourQuery }
 
 /** Validate that a manifest looks correctly populated */
 export function validateManifest(manifest: ModuleManifest, looseChecks: boolean): void {

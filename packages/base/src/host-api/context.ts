@@ -6,9 +6,11 @@
  */
 
 import type { RemoteInfo } from 'dgram'
+import type { OSCSomeArguments } from '../common/osc.js'
 import type {
 	CompanionActionDefinitions,
 	CompanionFeedbackDefinitions,
+	CompanionGraphicsCompositeElementDefinitions,
 	CompanionPresetDefinitions,
 	CompanionPresetSection,
 	CompanionRecordedAction,
@@ -17,7 +19,6 @@ import type {
 	InstanceStatus,
 	InstanceTypes,
 } from '../module-api/index.js'
-import type { OSCSomeArguments } from '../common/osc.js'
 import type { SharedUdpSocketImpl } from '../module-api/shared-udp-socket.js'
 import type { StringKeys } from '../util.js'
 
@@ -52,6 +53,9 @@ export interface InstanceContext<TManifest extends InstanceTypes> extends Instan
 	setPresetDefinitions: (
 		structure: CompanionPresetSection<TManifest>[],
 		presets: CompanionPresetDefinitions<TManifest>,
+	) => void
+	setCompositeElementDefinitions: (
+		compositeElements: CompanionGraphicsCompositeElementDefinitions<TManifest['compositeElements']>,
 	) => void
 
 	setVariableDefinitions: (variables: CompanionVariableDefinitions<TManifest['variables']>) => void

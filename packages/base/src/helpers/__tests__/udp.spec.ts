@@ -1,9 +1,8 @@
-import { describe, it, expect, beforeEach, vi, beforeAll, afterAll } from 'vitest'
-
-import { UDPHelper } from '../udp.js'
+import type { createSocket, RemoteInfo, Socket } from 'dgram'
 import EventEmitter from 'events'
-import type { RemoteInfo, Socket, createSocket } from 'dgram'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { InstanceStatus } from '../../module-api/enums.js'
+import { UDPHelper } from '../udp.js'
 
 const createSocketMock = vi.fn<typeof createSocket>(() => {
 	throw new Error('Not implemented')

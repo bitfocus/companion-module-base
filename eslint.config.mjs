@@ -1,6 +1,6 @@
-import { generateEslintConfig } from '@companion-module/tools/eslint/config.mjs'
-import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { generateEslintConfig } from '@companion-module/tools/eslint/config.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
