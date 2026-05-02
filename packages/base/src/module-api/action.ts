@@ -44,7 +44,7 @@ export interface CompanionActionContext extends CompanionCommonCallbackContext {
 export type CompanionActionLearnContext = CompanionLearnCallbackContext
 
 /**
- * The base definition of an action, which is extended by the WithSubscribeHooks and WithoutSubscribeHooks definitions
+ * The base definition of an action, which is augmented by the WithSubscribeHooks and WithoutSubscribeHooks definitions
  */
 export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionValues = CompanionOptionValues> {
 	/** Name to show in the actions list */
@@ -118,7 +118,7 @@ export type CompanionActionDefinitionNoSubscribeHooks = {
 }
 
 /**
- * The definition of an action
+ * The complete definition of an action
  */
 export type CompanionActionDefinition<TOptions extends CompanionOptionValues = CompanionOptionValues> =
 	CompanionActionDefinitionBase<TOptions> &
