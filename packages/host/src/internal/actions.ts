@@ -5,8 +5,6 @@ import {
 	type CompanionActionDefinitions,
 	type CompanionActionInfo,
 	type CompanionActionLearnContext,
-	type CompanionActionSchemaWithoutResult,
-	type CompanionActionSchemaWithResult,
 	type CompanionOptionValues,
 	type CompanionVariableValue,
 	type JsonValue,
@@ -36,10 +34,7 @@ export class ActionManager {
 
 	readonly #actionDefinitions = new Map<
 		string,
-		CompanionActionDefinition<
-			| CompanionActionSchemaWithoutResult<CompanionOptionValues>
-			| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>
-		>
+		CompanionActionDefinition<CompanionOptionValues, JsonValue> | CompanionActionDefinition<CompanionOptionValues, void>
 	>()
 	readonly #actionInstances = new Map<string, ActionInstance>()
 
@@ -55,7 +50,12 @@ export class ActionManager {
 		return this.#actionDefinitions.keys().toArray()
 	}
 
-	public getDefinition(id: string): CompanionActionDefinition | undefined {
+	public getDefinition(
+		id: string,
+	):
+		| CompanionActionDefinition<CompanionOptionValues, JsonValue>
+		| CompanionActionDefinition<CompanionOptionValues, void>
+		| undefined {
 		return this.#actionDefinitions.get(id)
 	}
 
