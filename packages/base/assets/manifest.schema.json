@@ -86,8 +86,8 @@
 			"properties": {
 				"type": {
 					"type": "string",
-					"description": "Type of the module. Must be: node22",
-					"enum": ["node22"]
+					"description": "Type of the module. Must be: node22 or node26",
+					"enum": ["node22", "node26"]
 				},
 				"api": {
 					"type": "string",
@@ -104,7 +104,7 @@
 				},
 				"permissions": {
 					"type": "object",
-					"description": "Permissions required by the module. This is used to inform the user of the permissions required by the module.\nNote: this requires the node22 or newer runtime",
+					"description": "Permissions required by the module. This is used to inform the user of the permissions required by the module.",
 					"properties": {
 						"worker-threads": {
 							"type": "boolean",
