@@ -286,4 +286,98 @@ describe('TCP', () => {
 			}
 		})
 	})
+
+	describe('reconnection', () => {
+		it('reconnect triggered via close when end fired while connecting', async () => {
+			vi.useFakeTimers()
+
+			const socket = new TCPHelper('1.2.3.4', 852, { reconnect_interval: 2000 })
+			socket.on('error', () => {}) // suppress missing-error-handler warning
+
+			try {
+				// Flush constructor's setImmediate → connect() called → #connecting = true
+				await vi.advanceTimersByTimeAsync(0)
+				const rawSocket = MockSocket.mockSockets()[0]
+				expect(socket.isConnecting).toBe(true)
+
+				// 'end' fires while #connecting is true → reconnect is NOT queued there
+				rawSocket.emit('end')
+
+				// 'close' fires → safety-net handler clears #connecting and queues reconnect
+				rawSocket.emit('close')
+
+				let connectCalled = 0
+				rawSocket.onConnect = () => {
+					connectCalled++
+				}
+
+				// Advance past reconnect_interval → reconnect timer fires → connect() called
+				await vi.advanceTimersByTimeAsync(2000)
+
+				expect(socket.isConnecting).toBe(true)
+				expect(connectCalled).toBe(1)
+			} finally {
+				socket.destroy()
+				vi.useRealTimers()
+			}
+		})
+
+		it('does not double-reconnect when close follows error normally', async () => {
+			vi.useFakeTimers()
+
+			const socket = new TCPHelper('1.2.3.4', 852, { reconnect_interval: 2000 })
+			socket.on('error', () => {})
+
+			try {
+				await vi.advanceTimersByTimeAsync(0)
+				const rawSocket = MockSocket.mockSockets()[0]
+
+				let connectCalled = 0
+				rawSocket.onConnect = () => {
+					connectCalled++
+				}
+
+				// 'error' fires → 'error' handler sets #connecting = false and queues reconnect
+				rawSocket.emit('error', new Error('connection refused'))
+
+				// 'close' fires → #reconnectTimer is already set → safety-net handler skips
+				rawSocket.emit('close')
+
+				// Advance past reconnect_interval → exactly one reconnect fires
+				await vi.advanceTimersByTimeAsync(2000)
+
+				expect(connectCalled).toBe(1)
+			} finally {
+				socket.destroy()
+				vi.useRealTimers()
+			}
+		})
+
+		it('does not reconnect after TCPHelper.destroy()', async () => {
+			vi.useFakeTimers()
+
+			const socket = new TCPHelper('1.2.3.4', 852)
+			socket.on('error', () => {})
+
+			try {
+				await vi.advanceTimersByTimeAsync(0)
+				const rawSocket = MockSocket.mockSockets()[0]
+
+				let connectCalled = 0
+				rawSocket.onConnect = () => {
+					connectCalled++
+				}
+
+				// destroy() removes all socket listeners then calls _socket.destroy()
+				// The mock now emits 'close' from destroy(), but the handler is already gone
+				socket.destroy()
+
+				await vi.advanceTimersByTimeAsync(5000)
+
+				expect(connectCalled).toBe(0)
+			} finally {
+				vi.useRealTimers()
+			}
+		})
+	})
 })

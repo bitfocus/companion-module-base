@@ -94,6 +94,7 @@ export class Socket extends EventEmitter {
 
 	public destroy(): void {
 		this.destroyed = true
+		this.emit('close')
 	}
 
 	private setConnected() {

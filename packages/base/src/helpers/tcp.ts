@@ -172,6 +172,17 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 		this._socket.on('data', (data) => this.emit('data', data))
 		this._socket.on('drain', () => this.emit('drain'))
 
+		// Safety net: if 'end' fired while #connecting was true, reconnect was skipped there.
+		// 'close' is the last event emitted by the socket, so queue reconnect here if needed.
+		this._socket.on('close', () => {
+			if (this.#destroyed) return
+			if (this.#reconnectTimer !== undefined) return
+			if (this.#options.reconnect) {
+				this.#connecting = false
+				this.#queueReconnect()
+			}
+		})
+
 		// Let caller install event handlers first
 		setImmediate(() => {
 			if (!this.#destroyed) this.connect()
