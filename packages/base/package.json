@@ -42,6 +42,7 @@
 		"tslib": "^2.8.1"
 	},
 	"devDependencies": {
-		"ajv": "^8.20.0"
+		"ajv": "^8.20.0",
+		"type-testing": "^0.2.0"
 	}
 }

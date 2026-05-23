@@ -9,6 +9,7 @@ import type {
 	InstanceBase,
 	InstanceConstructor,
 	InstanceTypes,
+	JsonValue,
 	SomeCompanionConfigField,
 } from '@companion-module/base'
 import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/host-api'
@@ -444,11 +445,20 @@ export interface InitResponseMessage {
 	updatedSecrets: unknown | undefined
 }
 
-export interface ExecuteActionResult {
-	success: boolean
-	/** If success=false, a reason for the failure */
-	errorMessage: string | undefined
+export interface ExecuteActionSuccess {
+	success: true
+	/**
+	 * The result returned by the callback, or `undefined` if the callback
+	 * doesn't return a result.
+	 */
+	result: JsonValue | undefined
 }
+export interface ExecuteActionFailure {
+	success: false
+	/** A reason for the failure */
+	errorMessage: string
+}
+export type ExecuteActionResult = ExecuteActionSuccess | ExecuteActionFailure
 
 export interface SharedUdpSocketError {
 	handleId: string

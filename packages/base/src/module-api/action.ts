@@ -1,3 +1,11 @@
+import type {
+	Equal,
+	Expect,
+	ExpectFalse,
+	IsUnion,
+	// eslint-disable-next-line n/no-missing-import
+} from 'type-testing'
+import type { JsonValue } from '../common/json-value.js'
 import type { StringKeys } from '../util.js'
 import type { CompanionCommonCallbackContext, CompanionLearnCallbackContext } from './common.js'
 import type {
@@ -23,9 +31,66 @@ export type SomeCompanionActionInputField<TKey extends string = string> =
 	| CompanionInputFieldCheckbox<TKey>
 	| CompanionInputFieldCustomVariable<TKey>
 
-export interface CompanionActionSchema<TOptions extends CompanionOptionValues> {
+/** An action's options type must always be specified. */
+export interface CompanionActionSchemaOptions<TOptions extends CompanionOptionValues> {
+	/** The types of the action's options. */
 	options: TOptions
 }
+
+/**
+ * An action whose callback returns a result must specify the result type.
+ */
+export interface CompanionActionSchemaWithResult<
+	TOptions extends CompanionOptionValues,
+	TResult extends JsonValue,
+> extends CompanionActionSchemaOptions<TOptions> {
+	/**
+	 * The action callback returns a value of this type (possibly behind a
+	 * promise).
+	 */
+	result: TResult
+}
+
+/**
+ * An action whose callback doesn't return a result must not specify the result
+ * type.
+ */
+export interface CompanionActionSchemaWithoutResult<
+	TOptions extends CompanionOptionValues,
+> extends CompanionActionSchemaOptions<TOptions> {
+	/**
+	 * When no result type is specified, the action callback returns `void`
+	 * (possibly behind a promise).
+	 */
+	result?: never
+}
+
+/**
+ * Two kinds of action can be described:
+ *
+ *   * {@link CompanionActionSchemaWithResult}: an action with indicated options
+ *     that produces a result
+ *   * {@link CompanionActionSchemaWithoutResult}: an action with indicated
+ *     options that produces no result
+ */
+export type CompanionActionSchema<TOptions extends CompanionOptionValues, TResult extends JsonValue | void> =
+	// Don't distribute a union `TResult` across its constituent members.  The
+	// reason is subtle: action callbacks that return a result, return
+	// `TResult | Promise<TResult>`.  When `TResult` is a union, for example
+	// `TResult = M1 | ... | MN`, the callback therefore should return
+	// `M1 | ... | MN | Promise<M1 | ... | MN>`.  But if `TResult` is broken
+	// up, the distributed schema types will contain callbacks that return
+	// `M1 | Promise<M1>`, ..., `MN | Promise<MN>` -- which is not the same
+	// thing.
+	[TResult] extends [JsonValue]
+		? CompanionActionSchemaWithResult<TOptions, TResult>
+		: [TResult] extends [void]
+			? CompanionActionSchemaWithoutResult<TOptions>
+			: never
+
+type _CompanionActionSchemaDoesntDistributeUnionResult = ExpectFalse<
+	IsUnion<CompanionActionSchema<{ x: number }, number | string>>
+>
 
 /**
  * Utility functions available in the context of the current action
@@ -44,9 +109,12 @@ export interface CompanionActionContext extends CompanionCommonCallbackContext {
 export type CompanionActionLearnContext = CompanionLearnCallbackContext
 
 /**
- * The base definition of an action, which is augmented by the WithSubscribeHooks and WithoutSubscribeHooks definitions
+ * The base definition of an action, further augmented by:
+ *
+ *   * WithSubscribeHooks or WithoutSubscribeHooks definitions, and
+ *   * CallbackWithResult or CallbackWithoutResult definitions
  */
-export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionValues = CompanionOptionValues> {
+export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionValues> {
 	/** Name to show in the actions list */
 	name: string
 	/**
@@ -58,9 +126,6 @@ export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionV
 	description?: string
 	/** The input fields for the action */
 	options: SomeCompanionActionInputField<StringKeys<TOptions>>[]
-
-	/** Called to execute the action */
-	callback: (action: CompanionActionEvent<TOptions>, context: CompanionActionContext) => Promise<void> | void
 
 	/**
 	 * The user requested to 'learn' the values for this action.
@@ -77,6 +142,39 @@ export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionV
 	 * You can change this if this number does not work for you, but you should keep it to a sensible value
 	 */
 	learnTimeout?: number
+}
+
+/**
+ * The definition of an action that returns a result must opt into returning a
+ * result by specifying `hasResult: true`.
+ */
+export type CompanionActionDefinitionCallbackWithResult<
+	TOptions extends CompanionOptionValues,
+	TResult extends JsonValue,
+> = {
+	/**
+	 * A function called when the callback executes, potentially returning a
+	 * result value.
+	 */
+	callback: (action: CompanionActionEvent<TOptions>, context: CompanionActionContext) => Promise<TResult> | TResult
+
+	/* The callback returns a result. */
+	hasResult: true
+}
+
+/**
+ * The definition of an action that doesn't return a result omits `hasResult` or
+ * explicitly specifies `hasResult: false`.
+ */
+export type CompanionActionDefinitionCallbackWithoutResult<TOptions extends CompanionOptionValues> = {
+	/**
+	 * A function called when the callback executes, potentially returning a
+	 * result value.
+	 */
+	callback: (action: CompanionActionEvent<TOptions>, context: CompanionActionContext) => Promise<void> | void
+
+	/* The callback doesn't return a result. */
+	hasResult?: false
 }
 
 /**
@@ -118,22 +216,75 @@ export type CompanionActionDefinitionNoSubscribeHooks = {
 }
 
 /**
- * The complete definition of an action
+ * The definition of an action consists of the intersection of these fields:
+ *
+ *   * {@link CompanionActionDefinitionBase}: fields common to all actions
+ *   * {@link CompanionActionDefinitionCallbackWithResult} or
+ *     {@link CompanionActionDefinitionCallbackNoResult}: fields defining the
+ *     function to implement the action (and optionally return a result)
+ *   * {@link CompanionActionDefinitionSubscribeHooks} or
+ *     {@link CompanionActionDefinitionNoSubscribeHooks}: fields to optionally
+ *     define subscribe/unsubscribe functionality
  */
-export type CompanionActionDefinition<TOptions extends CompanionOptionValues = CompanionOptionValues> =
-	CompanionActionDefinitionBase<TOptions> &
-		(CompanionActionDefinitionSubscribeHooks<TOptions> | CompanionActionDefinitionNoSubscribeHooks)
+export type CompanionActionDefinition<
+	TSchema extends
+		| CompanionActionSchemaWithoutResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue> =
+		| CompanionActionSchemaWithoutResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>,
+> =
+	TSchema extends CompanionActionSchemaWithResult<infer Options, infer Result>
+		? CompanionActionDefinitionBase<Options> &
+				(CompanionActionDefinitionSubscribeHooks<Options> | CompanionActionDefinitionNoSubscribeHooks) &
+				CompanionActionDefinitionCallbackWithResult<Options, Result>
+		: TSchema extends CompanionActionSchemaWithoutResult<infer Options>
+			? CompanionActionDefinitionBase<Options> &
+					(CompanionActionDefinitionSubscribeHooks<Options> | CompanionActionDefinitionNoSubscribeHooks) &
+					CompanionActionDefinitionCallbackWithoutResult<Options>
+			: never
+
+// Verify that for `TResult = M1 | ... | MN`, the callback function returns
+// `M1 | ... | MN | Promise<M1 | ... | MN>`, not
+// `M1 | ... | MN | Promise<M1> | ... | Promise<MN>`.
+type _CallbackReturnTypePreservesUnionResult = Expect<
+	Equal<
+		ReturnType<CompanionActionDefinition<CompanionActionSchema<{ x: number }, number | string>>['callback']>,
+		number | string | Promise<number | string>
+	>
+>
 
 /**
- * The definitions of a group of actions
+ * The definition of a set of actions, as a record of
+ * {@link CompanionActionDefinition}s.
  */
 export type CompanionActionDefinitions<
-	Tschemas extends Record<string, CompanionActionSchema<CompanionOptionValues>> = Record<
+	Tschemas extends Record<
 		string,
-		CompanionActionSchema<CompanionOptionValues>
+		| CompanionActionSchemaWithoutResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>
+	> = Record<
+		string,
+		| CompanionActionSchemaWithoutResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>
 	>,
 > = {
-	[K in keyof Tschemas]: CompanionActionDefinition<Tschemas[K]['options']> | false | undefined
+	[K in keyof Tschemas]: Tschemas[K] extends infer Schema // just to abbreviate
+		? Schema extends CompanionActionSchemaWithResult<infer Options, infer Result>
+			?
+					| (CompanionActionDefinitionBase<Options> &
+							(CompanionActionDefinitionSubscribeHooks<Options> | CompanionActionDefinitionNoSubscribeHooks) &
+							CompanionActionDefinitionCallbackWithResult<Options, Result>)
+					| false
+					| undefined
+			: Schema extends CompanionActionSchemaWithoutResult<infer Options>
+				?
+						| (CompanionActionDefinitionBase<Options> &
+								(CompanionActionDefinitionSubscribeHooks<Options> | CompanionActionDefinitionNoSubscribeHooks) &
+								CompanionActionDefinitionCallbackWithoutResult<Options>)
+						| false
+						| undefined
+				: never
+		: never
 }
 
 /**

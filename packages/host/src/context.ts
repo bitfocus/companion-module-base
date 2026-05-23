@@ -60,6 +60,7 @@ export interface HostActionDefinition {
 	sortName: string | undefined
 	description: string | undefined
 	options: SomeCompanionActionInputField[] // TODO module-lib - versioned types?
+	hasResult?: boolean
 	optionsToMonitorForSubscribe: string[] | undefined
 	hasLearn: boolean
 	learnTimeout: number | undefined
