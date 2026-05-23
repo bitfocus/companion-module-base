@@ -114,7 +114,7 @@ export type CompanionActionLearnContext = CompanionLearnCallbackContext
  *   * WithSubscribeHooks or WithoutSubscribeHooks definitions, and
  *   * CallbackWithResult or CallbackWithoutResult definitions
  */
-export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionValues = CompanionOptionValues> {
+export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionValues> {
 	/** Name to show in the actions list */
 	name: string
 	/**
@@ -227,24 +227,28 @@ export type CompanionActionDefinitionNoSubscribeHooks = {
  *     define subscribe/unsubscribe functionality
  */
 export type CompanionActionDefinition<
-	TOptions extends CompanionOptionValues = CompanionOptionValues,
-	TResult extends JsonValue | void = void,
-> = [TResult] extends [void]
-	? CompanionActionDefinitionBase<TOptions> &
-			(CompanionActionDefinitionSubscribeHooks<TOptions> | CompanionActionDefinitionNoSubscribeHooks) &
-			CompanionActionDefinitionCallbackWithoutResult<TOptions>
-	: [TResult] extends [JsonValue]
-		? CompanionActionDefinitionBase<TOptions> &
-				(CompanionActionDefinitionSubscribeHooks<TOptions> | CompanionActionDefinitionNoSubscribeHooks) &
-				CompanionActionDefinitionCallbackWithResult<TOptions, TResult>
-		: never
+	TSchema extends
+		| CompanionActionSchemaWithoutResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue> =
+		| CompanionActionSchemaWithoutResult<CompanionOptionValues>
+		| CompanionActionSchemaWithResult<CompanionOptionValues, JsonValue>,
+> =
+	TSchema extends CompanionActionSchemaWithResult<infer Options, infer Result>
+		? CompanionActionDefinitionBase<Options> &
+				(CompanionActionDefinitionSubscribeHooks<Options> | CompanionActionDefinitionNoSubscribeHooks) &
+				CompanionActionDefinitionCallbackWithResult<Options, Result>
+		: TSchema extends CompanionActionSchemaWithoutResult<infer Options>
+			? CompanionActionDefinitionBase<Options> &
+					(CompanionActionDefinitionSubscribeHooks<Options> | CompanionActionDefinitionNoSubscribeHooks) &
+					CompanionActionDefinitionCallbackWithoutResult<Options>
+			: never
 
 // Verify that for `TResult = M1 | ... | MN`, the callback function returns
 // `M1 | ... | MN | Promise<M1 | ... | MN>`, not
 // `M1 | ... | MN | Promise<M1> | ... | Promise<MN>`.
 type _CallbackReturnTypePreservesUnionResult = Expect<
 	Equal<
-		ReturnType<CompanionActionDefinition<{ x: number }, number | string>['callback']>,
+		ReturnType<CompanionActionDefinition<CompanionActionSchema<{ x: number }, number | string>>['callback']>,
 		number | string | Promise<number | string>
 	>
 >
