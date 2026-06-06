@@ -6,8 +6,8 @@ import type { CompanionOptionValues, ExpressionOrValue } from '../input.js'
 import type {
 	CompanionButtonStepActions,
 	CompanionPresetDefinitionBase,
+	CompanionPresetLocalVariable,
 	CompanionPresetOptionValues,
-	CompanionSimplePresetLocalVariable,
 } from './definition.js'
 
 /**
@@ -30,7 +30,7 @@ export interface CompanionLayeredButtonPresetDefinition<
 	steps: CompanionButtonStepActions<TManifest>[]
 
 	/** Local variables on this button */
-	localVariables?: CompanionSimplePresetLocalVariable[]
+	localVariables?: CompanionPresetLocalVariable<TManifest['feedbacks']>[]
 }
 
 /**

@@ -183,10 +183,7 @@ export type CompanionPresetFeedback<
 				})
 }[keyof TFeedbackManifest]
 
-/**
- * The configuration of a simple local variable in a preset
- */
-export interface CompanionSimplePresetLocalVariable {
+export interface CompanionPresetLocalVariableBase {
 	/** The name of the local variable */
 	variableName: string
 	/**
@@ -194,7 +191,11 @@ export interface CompanionSimplePresetLocalVariable {
 	 * Intended to describe the purpose/intent of the local variable.
 	 */
 	headline?: string
-
+}
+/**
+ * The configuration of a simple local variable in a preset
+ */
+export interface CompanionSimplePresetLocalVariable extends CompanionPresetLocalVariableBase {
 	/**
 	 * The type of variable this is
 	 * Currently only 'simple' is supported
@@ -206,6 +207,28 @@ export interface CompanionSimplePresetLocalVariable {
 	 */
 	startupValue: CompanionVariableValue
 }
+
+export type CompanionFeedbackLocalVariable<
+	TFeedbackManifest extends Record<string, CompanionFeedbackSchema<CompanionOptionValues>> = Record<
+		string,
+		CompanionFeedbackSchema<CompanionOptionValues>
+	>,
+> = {
+	[K in keyof TFeedbackManifest]: CompanionPresetLocalVariableBase & {
+		variableType: 'feedback'
+		/** The id of the feedback definition whose evaluated value drives this variable */
+		feedbackId: K
+		/** The option values for the feedback */
+		options: CompanionPresetOptionValues<TFeedbackManifest[K]['options']>
+	}
+}[keyof TFeedbackManifest]
+
+export type CompanionPresetLocalVariable<
+	TFeedbackManifest extends Record<string, CompanionFeedbackSchema<CompanionOptionValues>> = Record<
+		string,
+		CompanionFeedbackSchema<CompanionOptionValues>
+	>,
+> = CompanionSimplePresetLocalVariable | CompanionFeedbackLocalVariable<TFeedbackManifest>
 
 export type CompanionPresetValue<T extends JsonValue | undefined> = T | ExpressionOrValue<T>
 export type CompanionPresetOptionValues<T extends Record<string, JsonValue | undefined>> = {
