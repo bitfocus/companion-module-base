@@ -4,6 +4,7 @@ import {
 	assertNever,
 	createModuleLogger,
 	type CompanionAdvancedFeedbackResult,
+	type CompanionFeedbackCallbackContext,
 	type CompanionFeedbackContext,
 	type CompanionFeedbackDefinition,
 	type CompanionFeedbackDefinitions,
@@ -33,6 +34,10 @@ function convertFeedbackInstanceToEvent(
 interface FeedbackCheckStatus {
 	/** whether a recheck has been requested while it was being checked */
 	needsRecheck: boolean
+	/** AbortController for the in-flight run; aborted when a recheck is queued, to let the callback bail early */
+	abortController: AbortController
+	/** When false, recheck requests will not abort this run, to guarantee forward progress (starvation guard) */
+	abortable: boolean
 }
 
 interface FeedbackCheckInstance extends FeedbackInstance {
@@ -85,6 +90,9 @@ export class FeedbackManager {
 			}
 			const existing = this.#feedbackInstances.get(id)
 			if (existing && !feedback) {
+				// The feedback is being removed; abort any in-progress check as its result is no longer wanted
+				this.#abortFeedbackCheck(id)
+
 				// Call unsubscribe
 				const definition = this.#feedbackDefinitions.get(existing.feedbackId)
 				if (definition?.unsubscribe) {
@@ -179,11 +187,23 @@ export class FeedbackManager {
 		}
 	}
 
-	#triggerCheckFeedback(id: string) {
+	/**
+	 * Abort any in-progress check for a feedback, because its result is no longer wanted
+	 * (e.g. the feedback is being removed or unsubscribed). We don't wait for the run to settle.
+	 * This ignores the `abortable` starvation guard, which only concerns rechecks.
+	 */
+	#abortFeedbackCheck(id: string): void {
+		this.#feedbacksBeingChecked.get(id)?.abortController.abort()
+	}
+
+	#triggerCheckFeedback(id: string, abortable = true) {
 		const existingRecheck = this.#feedbacksBeingChecked.get(id)
 		if (existingRecheck) {
 			// Already being checked
 			existingRecheck.needsRecheck = true
+			// Ask the in-flight run to abort, so a cooperative callback can bail early.
+			// If the run is not abortable (starvation guard, see below), leave it to complete.
+			if (existingRecheck.abortable) existingRecheck.abortController.abort()
 			return
 		}
 
@@ -192,8 +212,11 @@ export class FeedbackManager {
 
 		const feedback = feedback0
 
+		const abortController = new AbortController()
 		const feedbackCheckStatus: FeedbackCheckStatus = {
 			needsRecheck: false,
+			abortController,
+			abortable,
 		}
 		// mark it as being checked
 		this.#feedbacksBeingChecked.set(id, feedbackCheckStatus)
@@ -211,8 +234,9 @@ export class FeedbackManager {
 
 				// Calculate the new value for the feedback
 				if (definition) {
-					const context: CompanionFeedbackContext = {
+					const context: CompanionFeedbackCallbackContext = {
 						type: 'feedback',
+						signal: abortController.signal,
 					}
 
 					switch (definition.type) {
@@ -260,6 +284,10 @@ export class FeedbackManager {
 				this.#sendFeedbackValues()
 			})
 			.catch((e) => {
+				// If the run was aborted, a recheck is already queued; swallow the error as the callback
+				// bailing on abort is expected and its result is being discarded anyway.
+				if (abortController.signal.aborted) return
+
 				this.#logger.error(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
 			})
 			.finally(() => {
@@ -268,8 +296,13 @@ export class FeedbackManager {
 
 				// If queued, trigger a check
 				if (feedbackCheckStatus.needsRecheck) {
+					// Starvation guard: if this run was aborted, force the next run to run to completion
+					// (non-abortable). Without this, a slow feedback rechecked faster than it completes
+					// (e.g. a cooperative 2s callback aborted every 1s) would be aborted forever and never
+					// emit a value. Forcing the next run to finish bounds the worst case to ~2 durations.
+					const nextAbortable = !abortController.signal.aborted
 					setImmediate(() => {
-						this.#triggerCheckFeedback(id)
+						this.#triggerCheckFeedback(id, nextAbortable)
 					})
 				}
 			})
@@ -417,6 +450,9 @@ export class FeedbackManager {
 		if (feedbackIdSet.size) feedbacks = feedbacks.filter((fb) => feedbackIdSet.has(fb.feedbackId))
 
 		for (const fb of feedbacks) {
+			// Abort any in-progress check as its result is no longer wanted
+			this.#abortFeedbackCheck(fb.id)
+
 			const def = this.#feedbackDefinitions.get(fb.feedbackId)
 			if (def && def.unsubscribe) {
 				const context: CompanionFeedbackContext = {

@@ -526,6 +526,199 @@ describe('FeedbackManager', () => {
 		})
 	})
 
+	describe('abort signal on recheck', () => {
+		interface AbortTestRig {
+			manager: FeedbackManager
+			callback: ReturnType<typeof vi.fn<CompanionBooleanFeedbackDefinition['callback']>>
+			mockUpdateFeedbackValues: ReturnType<typeof vi.fn<(values: HostFeedbackValue[]) => null>>
+			/** The signal passed to each call of the callback, in order */
+			signals: AbortSignal[]
+			/** Resolver for the currently frozen callback run */
+			resolveCurrent: () => void
+		}
+
+		// Setup a manager with a callback that freezes (awaiting a manual resolve) on each run,
+		// recording the signal it was given. `throwOnAbort` makes a frozen run throw if its signal
+		// has aborted by the time it resumes (a cooperative callback bailing out).
+		async function setupRig(throwOnAbort: boolean): Promise<AbortTestRig> {
+			const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+			const mockUpdateFeedbackValues = vi.fn((_values: HostFeedbackValue[]) => null)
+			const manager = new FeedbackManager(mockSetFeedbackDefinitions, mockUpdateFeedbackValues, latestModuleApiVersion)
+
+			const signals: AbortSignal[] = []
+			let nextResolve: (() => void) | undefined
+
+			const callback = vi.fn<CompanionBooleanFeedbackDefinition['callback']>(async (_feedback, context) => {
+				signals.push(context.signal)
+				await new Promise<void>((resolve) => {
+					nextResolve = resolve
+				})
+				nextResolve = undefined
+
+				if (throwOnAbort && context.signal.aborted) throw new Error('aborted')
+
+				return false
+			})
+
+			const mockDefinition: CompanionFeedbackDefinition = {
+				type: 'boolean',
+				name: 'Definition0',
+				defaultStyle: {},
+				options: [],
+				callback,
+			}
+
+			manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+			manager.handleUpdateFeedbacks({ [feedbackId]: feedback })
+
+			// The first run starts and freezes
+			await runAllTimers()
+			expect(callback).toHaveBeenCalledTimes(1)
+			expect(nextResolve).toBeTruthy()
+
+			return {
+				manager,
+				callback,
+				mockUpdateFeedbackValues,
+				signals,
+				get resolveCurrent() {
+					const resolve = nextResolve
+					if (!resolve) throw new Error('No frozen run to resolve')
+					return resolve
+				},
+			}
+		}
+
+		it('aborts the in-flight run when a recheck is queued', async () => {
+			const rig = await setupRig(false)
+
+			// The running callback has not been aborted yet
+			expect(rig.signals[0].aborted).toBe(false)
+
+			// Queue a recheck while the run is still frozen
+			rig.manager.checkFeedbacks(null)
+			await runAllTimers()
+
+			// The in-flight run's signal is now aborted, but no second run has started yet (serial)
+			expect(rig.signals[0].aborted).toBe(true)
+			expect(rig.callback).toHaveBeenCalledTimes(1)
+		})
+
+		it('uses the returned value when an aborted callback ignores the signal', async () => {
+			const rig = await setupRig(false)
+
+			// Abort the first run, then let it complete by returning normally
+			rig.manager.checkFeedbacks(null)
+			await runAllTimers()
+			expect(rig.signals[0].aborted).toBe(true)
+
+			rig.resolveCurrent()
+			await runAllTimers()
+
+			// The recheck runs as a second, non-abortable run...
+			expect(rig.callback).toHaveBeenCalledTimes(2)
+			expect(rig.signals[1].aborted).toBe(false)
+			rig.resolveCurrent()
+			await runAllTimers()
+
+			// ...and a value is produced (the aborted run's value is not discarded)
+			expect(rig.mockUpdateFeedbackValues).toHaveBeenCalled()
+			expect(rig.mockUpdateFeedbackValues).toHaveBeenLastCalledWith([
+				{
+					id: feedbackId,
+					controlId: 'control0',
+					feedbackType: 'boolean',
+					value: false,
+				},
+			] satisfies HostFeedbackValue[])
+		})
+
+		it('swallows the error when an aborted callback throws, and still rechecks', async () => {
+			const rig = await setupRig(true)
+
+			// Abort the first run; it will throw when it resumes
+			rig.manager.checkFeedbacks(null)
+			await runAllTimers()
+			expect(rig.signals[0].aborted).toBe(true)
+
+			rig.resolveCurrent()
+			await runAllTimers()
+
+			// The recheck still runs (non-abortable) and produces a value despite the first run throwing
+			expect(rig.callback).toHaveBeenCalledTimes(2)
+			expect(rig.signals[1].aborted).toBe(false)
+			rig.resolveCurrent()
+			await runAllTimers()
+
+			expect(rig.mockUpdateFeedbackValues).toHaveBeenLastCalledWith([
+				{
+					id: feedbackId,
+					controlId: 'control0',
+					feedbackType: 'boolean',
+					value: false,
+				},
+			] satisfies HostFeedbackValue[])
+		})
+
+		it('aborts the in-flight run when the feedback is removed', async () => {
+			const rig = await setupRig(false)
+			expect(rig.signals[0].aborted).toBe(false)
+
+			// Remove the feedback while its check is still running
+			rig.manager.handleUpdateFeedbacks({ [feedbackId]: null })
+			await runAllTimers()
+
+			expect(rig.signals[0].aborted).toBe(true)
+			// No new run is started for the removed feedback
+			rig.resolveCurrent()
+			await runAllTimers()
+			expect(rig.callback).toHaveBeenCalledTimes(1)
+		})
+
+		it('aborts the in-flight run when the feedback is unsubscribed', async () => {
+			const rig = await setupRig(false)
+			expect(rig.signals[0].aborted).toBe(false)
+
+			// Unsubscribe the feedback while its check is still running
+			rig.manager.unsubscribeFeedbacks([mockDefinitionId])
+			await runAllTimers()
+
+			expect(rig.signals[0].aborted).toBe(true)
+		})
+
+		it('does not abort the run following an aborted run (starvation guard)', async () => {
+			const rig = await setupRig(false)
+
+			// Abort run 1
+			rig.manager.checkFeedbacks(null)
+			await runAllTimers()
+			expect(rig.signals[0].aborted).toBe(true)
+
+			// Let run 1 settle; the non-abortable run 2 begins
+			rig.resolveCurrent()
+			await runAllTimers()
+			expect(rig.callback).toHaveBeenCalledTimes(2)
+			expect(rig.signals[1].aborted).toBe(false)
+
+			// Queue another recheck while run 2 is frozen - it must NOT abort run 2
+			rig.manager.checkFeedbacks(null)
+			await runAllTimers()
+			expect(rig.signals[1].aborted).toBe(false)
+
+			// Run 2 completes and emits a value, guaranteeing forward progress
+			rig.resolveCurrent()
+			await runAllTimers()
+			expect(rig.mockUpdateFeedbackValues).toHaveBeenLastCalledWith([
+				{
+					id: feedbackId,
+					controlId: 'control0',
+					feedbackType: 'boolean',
+					value: false,
+				},
+			] satisfies HostFeedbackValue[])
+		})
+	})
+
 	it('learn values: no implementation', async (ctx) => {
 		const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
 		const manager = new FeedbackManager(mockSetFeedbackDefinitions, unimplementedFunction, latestModuleApiVersion)

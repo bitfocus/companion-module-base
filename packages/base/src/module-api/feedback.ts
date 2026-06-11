@@ -163,7 +163,7 @@ export interface CompanionBooleanFeedbackDefinition<
 	/** Called to get the feedback value */
 	callback: (
 		feedback: CompanionFeedbackBooleanEvent<TOptions>,
-		context: CompanionFeedbackContext,
+		context: CompanionFeedbackCallbackContext,
 	) => boolean | Promise<boolean>
 
 	/**
@@ -184,7 +184,7 @@ export interface CompanionValueFeedbackDefinition<
 	/** Called to get the feedback value */
 	callback: (
 		feedback: CompanionFeedbackValueEvent<TOptions>,
-		context: CompanionFeedbackContext,
+		context: CompanionFeedbackCallbackContext,
 	) => JsonValue | Promise<JsonValue>
 }
 
@@ -212,7 +212,7 @@ export interface CompanionAdvancedFeedbackDefinition<
 	/** Called to get the feedback value */
 	callback: (
 		feedback: CompanionFeedbackAdvancedEvent<TOptions>,
-		context: CompanionFeedbackContext,
+		context: CompanionFeedbackCallbackContext,
 	) => CompanionAdvancedFeedbackResult | Promise<CompanionAdvancedFeedbackResult>
 }
 
@@ -221,6 +221,17 @@ export interface CompanionAdvancedFeedbackDefinition<
  */
 export type CompanionFeedbackContext = CompanionCommonCallbackContext
 export type CompanionFeedbackLearnContext = CompanionLearnCallbackContext
+
+/**
+ * Utility functions available while a feedback's value is being computed
+ */
+export interface CompanionFeedbackCallbackContext extends CompanionCommonCallbackContext {
+	/**
+	 * A signal that aborts when a recheck of this feedback is queued while it is still executing.
+	 * Respecting it is optional; if you do, stop work and throw - the thrown error will be ignored and a fresh check performed.
+	 */
+	readonly signal: AbortSignal
+}
 
 /**
  * The definition of some feedback
