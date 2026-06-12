@@ -58,7 +58,7 @@ export interface RgbComponents {
  */
 export function combineRgb(r: number, g: number, b: number, a?: number): number {
 	let colorNumber: number = ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff)
-	if (a && a >= 0 && a < 1) {
+	if (a !== undefined && a >= 0 && a < 1) {
 		colorNumber += 0x1000000 * Math.round(255 * (1 - a)) // add possible transparency to number
 	}
 	return colorNumber

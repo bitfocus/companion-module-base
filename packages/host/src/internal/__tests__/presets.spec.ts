@@ -168,8 +168,9 @@ describe('validatePresetDefinitions', () => {
 
 		it('skips null/undefined preset entries silently (no errors/feedback/action warnings)', () => {
 			// undefined entries are skipped but their key still appears in cross-ref; use matching structure
-			const msgs = runCapture({ p1: undefined }, {}, {}, structureFor('p1'))
+			const { result, msgs } = runSanitise({ p1: undefined }, {}, {}, structureFor('p1'))
 			expect(msgs.some((m) => m.includes('errors') || m.includes('feedback') || m.includes('action'))).toBe(false)
+			expect(result.presets).not.toHaveProperty('p1')
 		})
 
 		it('skips presets with an unrecognised type silently (no errors/feedback/action warnings)', () => {
@@ -179,8 +180,9 @@ describe('validatePresetDefinitions', () => {
 				feedbacks: [],
 				steps: [],
 			} as unknown as CompanionPresetDefinition<InstanceTypes>
-			const msgs = runCapture({ p1: unknown }, {}, {}, structureFor('p1'))
+			const { result, msgs } = runSanitise({ p1: unknown }, {}, {}, structureFor('p1'))
 			expect(msgs.some((m) => m.includes('errors') || m.includes('feedback') || m.includes('action'))).toBe(false)
+			expect(result.presets).not.toHaveProperty('p1')
 		})
 	})
 

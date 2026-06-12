@@ -74,18 +74,21 @@ describe('sanitiseCompositeElementDefinitions', () => {
 		})
 
 		it('warns and skips a null entry', () => {
-			const msgs = runCapture({ myEl: null as unknown as CompanionGraphicsCompositeElementDefinition })
+			const { result, msgs } = runSanitise({ myEl: null as unknown as CompanionGraphicsCompositeElementDefinition })
 			expect(msgs.some((m) => m.includes('failed to validate'))).toBe(true)
+			expect(result).not.toHaveProperty('myEl')
 		})
 
 		it('warns and skips a false entry', () => {
-			const msgs = runCapture({ myEl: false })
+			const { result, msgs } = runSanitise({ myEl: false })
 			expect(msgs.some((m) => m.includes('failed to validate'))).toBe(true)
+			expect(result).not.toHaveProperty('myEl')
 		})
 
 		it('warns and skips a string entry', () => {
-			const msgs = runCapture({ myEl: 'bad' as unknown as CompanionGraphicsCompositeElementDefinition })
+			const { result, msgs } = runSanitise({ myEl: 'bad' as unknown as CompanionGraphicsCompositeElementDefinition })
 			expect(msgs.some((m) => m.includes('failed to validate'))).toBe(true)
+			expect(result).not.toHaveProperty('myEl')
 		})
 	})
 

@@ -431,7 +431,8 @@ describe('runThroughUpgradeScripts', () => {
 		// check scripts
 		expect(scripts).toHaveLength(2)
 		expect(scripts[0]).toHaveBeenCalledTimes(1)
-		expect(scripts[0].mock.calls[0][1].actions).toHaveLength(1)
+		// Only the action from before version 0 is run through the first script
+		expect(scripts[0].mock.calls[0][1].actions).toEqual([stripActionInstance(action1Before)])
 		expect(scripts[1]).toHaveBeenCalledTimes(1)
 
 		// Check input was mutated in place

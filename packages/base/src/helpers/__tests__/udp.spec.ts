@@ -273,7 +273,7 @@ describe('UDP', () => {
 		})
 
 		it('ok: string', () => {
-			rawSocket.send.mockImplementation((msg, offset, length, cb) => {
+			rawSocket.send.mockImplementationOnce((msg, offset, length, cb) => {
 				if (!cb) return
 
 				cb(null, length)
@@ -286,7 +286,7 @@ describe('UDP', () => {
 		})
 
 		it('ok: buffer', () => {
-			rawSocket.send.mockImplementation((msg, offset, length, cb) => {
+			rawSocket.send.mockImplementationOnce((msg, offset, length, cb) => {
 				if (!cb) return
 
 				cb(null, length)
@@ -302,24 +302,25 @@ describe('UDP', () => {
 		it('send error emits error event', () => {
 			const errorHandler = vi.fn()
 			socket.on('error', errorHandler)
+			try {
+				rawSocket.send.mockImplementationOnce((msg, offset, length, cb) => {
+					if (!cb) return
 
-			rawSocket.send.mockImplementation((msg, offset, length, cb) => {
-				if (!cb) return
+					// Call the callback synchronously to emit error
+					cb(new Error('buffer overflow'), 0)
+				})
 
-				// Call the callback synchronously to emit error
-				cb(new Error('buffer overflow'), 0)
-			})
+				const msg = Buffer.from('test 123')
+				socket.send(msg)
 
-			const msg = Buffer.from('test 123')
-			socket.send(msg)
+				expect(rawSocket.send).toHaveBeenCalledTimes(1)
+				expect(rawSocket.send).toHaveBeenCalledWith(msg, 852, '1.2.3.4', expect.any(Function))
 
-			expect(rawSocket.send).toHaveBeenCalledTimes(1)
-			expect(rawSocket.send).toHaveBeenCalledWith(msg, 852, '1.2.3.4', expect.any(Function))
-
-			expect(errorHandler).toHaveBeenCalledTimes(1)
-			expect(errorHandler).toHaveBeenCalledWith(new Error('buffer overflow'))
-
-			socket.off('error', errorHandler)
+				expect(errorHandler).toHaveBeenCalledTimes(1)
+				expect(errorHandler).toHaveBeenCalledWith(new Error('buffer overflow'))
+			} finally {
+				socket.off('error', errorHandler)
+			}
 		})
 	})
 
@@ -363,7 +364,7 @@ describe('UDP', () => {
 		})
 
 		it('ok: string', async () => {
-			rawSocket.send.mockImplementation((msg, offset, length, cb) => {
+			rawSocket.send.mockImplementationOnce((msg, offset, length, cb) => {
 				if (!cb) return
 
 				cb(null, length)
@@ -376,7 +377,7 @@ describe('UDP', () => {
 		})
 
 		it('ok: buffer', async () => {
-			rawSocket.send.mockImplementation((msg, offset, length, cb) => {
+			rawSocket.send.mockImplementationOnce((msg, offset, length, cb) => {
 				if (!cb) return
 
 				cb(null, length)
@@ -390,7 +391,7 @@ describe('UDP', () => {
 		})
 
 		it('send error', async () => {
-			rawSocket.send.mockImplementation((msg, offset, length, cb) => {
+			rawSocket.send.mockImplementationOnce((msg, offset, length, cb) => {
 				if (!cb) return
 
 				cb(new Error('buffer overflow'), 0)

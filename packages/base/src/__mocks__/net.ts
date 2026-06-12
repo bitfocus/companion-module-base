@@ -70,6 +70,11 @@ export class Socket extends EventEmitter {
 		this.setClosed()
 	}
 
+	public pipe<T extends { write(chunk: any): unknown }>(destination: T): T {
+		this.on('data', (chunk) => destination.write(chunk))
+		return destination
+	}
+
 	public mockClose(): void {
 		this.setClosed()
 	}
