@@ -8,6 +8,7 @@ import type {
 	CompanionPresetDefinitionBase,
 	CompanionPresetLocalVariable,
 	CompanionPresetOptionValues,
+	WithInternalFeedbacks,
 } from './definition.js'
 
 /**
@@ -26,7 +27,7 @@ export interface CompanionLayeredButtonPresetDefinition<
 	/** Options for this preset */
 	options?: CompanionLayeredButtonPresetDefinitionOptions
 	/** The feedbacks on the button */
-	feedbacks: CompanionPresetLayeredFeedback<TManifest['feedbacks']>[]
+	feedbacks: CompanionPresetLayeredFeedback<WithInternalFeedbacks<TManifest['feedbacks']>>[]
 	steps: CompanionButtonStepActions<TManifest>[]
 
 	/** Local variables on this button */

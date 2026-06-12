@@ -6,6 +6,16 @@ import type { CompanionOptionValues, ExpressionOrValue } from '../input.js'
 import type { CompanionButtonStyleProps } from '../style.js'
 import type { CompanionVariableValue } from '../variable.js'
 import type { CompanionLayeredButtonPresetDefinition } from './definition-graphics.js'
+import type { CompanionInternalActionSchemas, CompanionInternalFeedbackSchemas } from './internal-catalog.js'
+
+/**
+ * Merge the reserved `internal:*` action schemas into a module's action manifest, so that presets may
+ * reference Companion's built-in internal actions alongside the module's own.
+ * The intersection merges the records: `keyof (A & B) = keyof A | keyof B`.
+ */
+export type WithInternalActions<TActionManifest> = TActionManifest & CompanionInternalActionSchemas
+/** As {@link WithInternalActions}, but for the internal feedback schemas. */
+export type WithInternalFeedbacks<TFeedbackManifest> = TFeedbackManifest & CompanionInternalFeedbackSchemas
 
 /**
  * The definitions of a group of presets
@@ -55,7 +65,7 @@ export interface CompanionSimplePresetDefinition<
 	steps: CompanionButtonStepActions<TManifest>[]
 
 	/** The feedbacks on the button */
-	feedbacks: CompanionPresetFeedback<TManifest['feedbacks']>[]
+	feedbacks: CompanionPresetFeedback<WithInternalFeedbacks<TManifest['feedbacks']>>[]
 
 	/** Local variables on this button */
 	localVariables?: CompanionSimplePresetLocalVariable[]
@@ -71,7 +81,7 @@ export interface CompanionSimplePresetOptions {
 
 export interface CompanionPresetActionsWithOptions<TManifest extends InstanceTypes = InstanceTypes> {
 	options?: CompanionActionSetOptions
-	actions: CompanionPresetAction<TManifest['actions']>[]
+	actions: CompanionPresetAction<WithInternalActions<TManifest['actions']>>[]
 }
 export interface CompanionActionSetOptions {
 	/**
@@ -85,23 +95,25 @@ export interface CompanionButtonStepActions<TManifest extends InstanceTypes = In
 	name?: string
 
 	/** The button down actions */
-	down: CompanionPresetAction<TManifest['actions']>[]
+	down: CompanionPresetAction<WithInternalActions<TManifest['actions']>>[]
 	/**
 	 * The button up actions
 	 * If any delay groups are defined, this becomes the short-press actions
 	 */
-	up: CompanionPresetAction<TManifest['actions']>[]
+	up: CompanionPresetAction<WithInternalActions<TManifest['actions']>>[]
 
 	/** The button rotate left actions */
-	rotate_left?: CompanionPresetAction<TManifest['actions']>[]
+	rotate_left?: CompanionPresetAction<WithInternalActions<TManifest['actions']>>[]
 	/** The button rotate right actions */
-	rotate_right?: CompanionPresetAction<TManifest['actions']>[]
+	rotate_right?: CompanionPresetAction<WithInternalActions<TManifest['actions']>>[]
 
 	/**
 	 * Long-press action groups
 	 * Keyed by the duration (in milliseconds) after which the long-press actions should be executed
 	 */
-	[duration: number]: CompanionPresetActionsWithOptions<TManifest> | CompanionPresetAction<TManifest['actions']>[]
+	[duration: number]:
+		| CompanionPresetActionsWithOptions<TManifest>
+		| CompanionPresetAction<WithInternalActions<TManifest['actions']>>[]
 }
 
 /**

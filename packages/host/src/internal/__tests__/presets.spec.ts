@@ -62,9 +62,10 @@ function run(
 	actions: Record<string, CompanionActionDefinition> = {},
 	feedbacks: Record<string, CompanionBooleanFeedbackDefinition<CompanionOptionValues>> = {},
 	structure: CompanionPresetSection<InstanceTypes>[] = NO_STRUCTURE,
+	moduleApiVersion = '2.1.0',
 ): ReturnType<typeof sanitisePresetDefinitions> {
 	const { actionsManager, feedbacksManager } = makeManagers(actions, feedbacks)
-	return sanitisePresetDefinitions(actionsManager, feedbacksManager, structure, presets)
+	return sanitisePresetDefinitions(actionsManager, feedbacksManager, structure, presets, moduleApiVersion)
 }
 
 function validSimple(
@@ -120,6 +121,7 @@ function runCapture(
 	actions: Record<string, CompanionActionDefinition> = {},
 	feedbacks: Record<string, CompanionBooleanFeedbackDefinition<CompanionOptionValues>> = {},
 	structure: CompanionPresetSection<InstanceTypes>[] = NO_STRUCTURE,
+	moduleApiVersion = '2.1.0',
 ): string[] {
 	const messages: string[] = []
 	const prev = global.COMPANION_LOGGER
@@ -127,7 +129,7 @@ function runCapture(
 		if (level === 'warn') messages.push(message)
 	}
 	try {
-		run(presets, actions, feedbacks, structure)
+		run(presets, actions, feedbacks, structure, moduleApiVersion)
 	} finally {
 		global.COMPANION_LOGGER = prev
 	}
@@ -140,6 +142,7 @@ function runSanitise(
 	actions: Record<string, CompanionActionDefinition> = {},
 	feedbacks: Record<string, CompanionBooleanFeedbackDefinition<CompanionOptionValues>> = {},
 	structure: CompanionPresetSection<InstanceTypes>[] = NO_STRUCTURE,
+	moduleApiVersion = '2.1.0',
 ): { result: ReturnType<typeof sanitisePresetDefinitions>; msgs: string[] } {
 	const msgs: string[] = []
 	const prev = global.COMPANION_LOGGER
@@ -148,7 +151,7 @@ function runSanitise(
 	}
 	let result: ReturnType<typeof sanitisePresetDefinitions>
 	try {
-		result = run(presets, actions, feedbacks, structure)
+		result = run(presets, actions, feedbacks, structure, moduleApiVersion)
 	} finally {
 		global.COMPANION_LOGGER = prev
 	}
@@ -683,6 +686,68 @@ describe('validatePresetDefinitions', () => {
 			const structure = structureFor('p1')
 			const { result } = runSanitise({ p1: validSimple() }, {}, {}, structure)
 			expect(result.structure).toStrictEqual(structure)
+		})
+	})
+
+	describe('internal action/feedback references', () => {
+		it('forwards an allowed internal action without flagging it as unknown', () => {
+			const presets = {
+				p1: validSimple({
+					steps: [{ down: [{ actionId: 'internal:wait', options: { time: 500 } }], up: [] }],
+				}),
+			} as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(msgs.some((m) => m.includes('unknown action definitions'))).toBe(false)
+			expect(msgs.some((m) => m.includes('have been removed'))).toBe(false)
+			const returned = result.presets['p1'] as CompanionSimplePresetDefinition<InstanceTypes>
+			expect(returned.steps[0].down).toHaveLength(1)
+		})
+
+		it('forwards an allowed internal feedback without flagging it as unknown', () => {
+			const presets = {
+				p1: validSimple({
+					feedbacks: [{ feedbackId: 'internal:checkExpression', options: { expression: '1 > 0' }, style: {} }],
+				}),
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(msgs.some((m) => m.includes('unknown feedback definitions'))).toBe(false)
+			const returned = result.presets['p1'] as CompanionSimplePresetDefinition<InstanceTypes>
+			expect(returned.feedbacks).toHaveLength(1)
+		})
+
+		it('drops an internal action the module is too old to use, and warns', () => {
+			const presets = {
+				p1: validSimple({
+					steps: [{ down: [{ actionId: 'internal:wait', options: { time: 500 } }], up: [] }],
+				}),
+			} as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'), '2.0.0')
+			expect(msgs.some((m) => m.includes('have been removed') && m.includes('My Preset'))).toBe(true)
+			const returned = result.presets['p1'] as CompanionSimplePresetDefinition<InstanceTypes>
+			expect(returned.steps[0].down).toHaveLength(0)
+		})
+
+		it('drops an unknown internal id regardless of version, and warns', () => {
+			const presets = {
+				p1: validSimple({
+					feedbacks: [{ feedbackId: 'internal:nonexistent', options: {}, style: {} }],
+				}),
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(msgs.some((m) => m.includes('have been removed'))).toBe(true)
+			const returned = result.presets['p1'] as CompanionSimplePresetDefinition<InstanceTypes>
+			expect(returned.feedbacks).toHaveLength(0)
+		})
+
+		it('drops disallowed internal actions in numbered delay groups too', () => {
+			const presets = {
+				p1: validSimple({
+					steps: [{ down: [], up: [], 1000: [{ actionId: 'internal:nope', options: {} }] }],
+				}),
+			} as CompanionPresetDefinitions<InstanceTypes>
+			const { result } = runSanitise(presets, {}, {}, structureFor('p1'))
+			const returned = result.presets['p1'] as CompanionSimplePresetDefinition<InstanceTypes>
+			expect((returned.steps[0] as any)[1000]).toHaveLength(0)
 		})
 	})
 })

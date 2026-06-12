@@ -226,6 +226,8 @@ export class ActionManager {
 		for (const [actionId, action] of Object.entries(actions)) {
 			if (!action) continue
 			if (BANNED_PROPS.has(actionId)) throw new Error(`Action id "${actionId}" is a reserved word`)
+			if (actionId.startsWith('internal:'))
+				throw new Error(`Action id "${actionId}" uses the reserved "internal:" prefix`)
 
 			const hasSubscriptionMethods = !!action.subscribe || !!action.unsubscribe
 

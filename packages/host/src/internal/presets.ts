@@ -1,6 +1,8 @@
+import semver from 'semver'
 import { z } from 'zod'
 import {
 	createModuleLogger,
+	INTERNAL_PRESET_MIN_API_VERSION,
 	type CompanionPresetDefinitions,
 	type CompanionPresetSection,
 } from '@companion-module/base'
@@ -10,6 +12,11 @@ import type { FeedbackManager } from './feedback.js'
 import { BANNED_PROPS } from './util.js'
 
 const logger = createModuleLogger('PresetDefinitionsManager')
+
+/** Whether an action/feedback id references one of Companion's built-in internal definitions */
+function isInternalId(id: unknown): id is string {
+	return typeof id === 'string' && id.startsWith('internal:')
+}
 
 /** Collect all element IDs declared in a layered elements tree, recursing into group children */
 function collectElementIds(elements: unknown[]): Set<string> {
@@ -31,6 +38,7 @@ export function sanitisePresetDefinitions(
 	feedbacksManager: FeedbackManager,
 	structure: CompanionPresetSection<any>[],
 	presets: CompanionPresetDefinitions<any>,
+	moduleApiVersion: string,
 ): {
 	structure: CompanionPresetSection<any>[]
 	presets: CompanionPresetDefinitions<any>
@@ -46,12 +54,70 @@ export function sanitisePresetDefinitions(
 	const validActionIds = new Set(actionsManager.getDefinitionIds())
 	const validFeedbackIds = new Set(feedbacksManager.getDefinitionIds())
 
+	const validModuleApiVersion = semver.valid(moduleApiVersion, { loose: true })
+
+	/**
+	 * Whether the module is allowed to reference the given internal action/feedback id.
+	 * Unknown internal ids, or ids the module is too old to use, are not allowed and will be dropped.
+	 */
+	function isInternalIdAllowed(id: string): boolean {
+		const minApiVersion = (INTERNAL_PRESET_MIN_API_VERSION as Record<string, string | undefined>)[id]
+		if (!minApiVersion) return false
+		if (!validModuleApiVersion) return false
+		return semver.gte(validModuleApiVersion, minApiVersion, { loose: true })
+	}
+
+	/**
+	 * Drop any `internal:*` action/feedback entries the module is not allowed to use (unknown ids, or
+	 * ids the module is too old for). Allowed internal entries and all module-own entries are kept as-is.
+	 * Returns new feedbacks/steps arrays, and whether anything was dropped.
+	 */
+	function dropDisallowedInternalEntries(preset: any): { feedbacks: any; steps: any; dropped: boolean } {
+		let dropped = false
+		const keep = (id: unknown): boolean => {
+			if (!isInternalId(id)) return true
+			if (isInternalIdAllowed(id)) return true
+			dropped = true
+			return false
+		}
+		const filterActions = (arr: unknown): unknown => (Array.isArray(arr) ? arr.filter((a) => keep(a?.actionId)) : arr)
+
+		const feedbacks = Array.isArray(preset.feedbacks)
+			? preset.feedbacks.filter((fb: any) => keep(fb?.feedbackId))
+			: preset.feedbacks
+
+		const steps = Array.isArray(preset.steps)
+			? preset.steps.map((step: any) => {
+					const out: Record<string, unknown> = {}
+					for (const [key, value] of Object.entries(step)) {
+						if (key === 'down' || key === 'up' || key === 'rotate_left' || key === 'rotate_right') {
+							out[key] = filterActions(value)
+						} else if (/^\d+$/.test(key)) {
+							if (Array.isArray(value)) {
+								out[key] = filterActions(value)
+							} else if (value && typeof value === 'object' && Array.isArray((value as any).actions)) {
+								out[key] = { ...(value as any), actions: filterActions((value as any).actions) }
+							} else {
+								out[key] = value
+							}
+						} else {
+							out[key] = value
+						}
+					}
+					return out
+				})
+			: preset.steps
+
+		return { feedbacks, steps, dropped }
+	}
+
 	const presetsWithInvalidActionIds: string[] = []
 	const presetsWithInvalidFeedbackIds: string[] = []
 	const presetsWithInvalidActionOptionKeys: string[] = []
 	const presetsWithInvalidFeedbackOptionKeys: string[] = []
 	const presetsWithInvalidElements: string[] = []
 	const presetsWithInvalidStyleOverrideRefs: string[] = []
+	const presetsWithDisallowedInternalIds: string[] = []
 	const presetsFailedValidation: string[] = []
 
 	for (const [_id, preset] of Object.entries(presets)) {
@@ -108,11 +174,21 @@ export function sanitisePresetDefinitions(
 				if (hasInvalidRef) presetsWithInvalidStyleOverrideRefs.push(presetName)
 			}
 
+			// --- Drop internal:* entries the module is not allowed to reference ---
+			const internalFiltered = dropDisallowedInternalEntries(sanitisedPreset)
+			sanitisedPreset = {
+				...sanitisedPreset,
+				feedbacks: internalFiltered.feedbacks,
+				steps: internalFiltered.steps,
+			}
+			if (internalFiltered.dropped) presetsWithDisallowedInternalIds.push(presetName)
+
 			// --- Validate feedback IDs and option keys ---
 			let hasInvalidFeedback = false
 			let hasInvalidFeedbackOptionKeys = false
 			for (const feedback of preset.feedbacks) {
 				const feedbackId = feedback?.feedbackId
+				if (isInternalId(feedbackId)) continue // internal references are handled above, not validated here
 				if (!validFeedbackIds.has(feedbackId)) {
 					hasInvalidFeedback = true
 				} else {
@@ -142,6 +218,7 @@ export function sanitisePresetDefinitions(
 					if (!Array.isArray(actions)) continue
 					for (const action of actions) {
 						const actionId = action?.actionId
+						if (isInternalId(actionId)) continue // internal references are handled above, not validated here
 						if (!validActionIds.has(actionId)) {
 							hasInvalidAction = true
 						} else {
@@ -165,6 +242,7 @@ export function sanitisePresetDefinitions(
 					if (!Array.isArray(actions)) continue
 					for (const action of actions) {
 						const actionId = action?.actionId
+						if (isInternalId(actionId)) continue // internal references are handled above, not validated here
 						if (!validActionIds.has(actionId)) {
 							hasInvalidAction = true
 						} else {
@@ -222,6 +300,13 @@ export function sanitisePresetDefinitions(
 	if (presetsWithInvalidActionOptionKeys.length > 0) {
 		logger.warn(
 			`The following preset definitions reference unknown action option keys: ${presetsWithInvalidActionOptionKeys
+				.sort()
+				.join(', ')}`,
+		)
+	}
+	if (presetsWithDisallowedInternalIds.length > 0) {
+		logger.warn(
+			`The following preset definitions reference internal actions/feedbacks which are not available to this module (unknown id, or the module's api version is too old) and have been removed: ${presetsWithDisallowedInternalIds
 				.sort()
 				.join(', ')}`,
 		)
