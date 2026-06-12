@@ -122,7 +122,13 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 			},
 
 			setPresetDefinitions: (structure, presets) => {
-				const sanitised = sanitisePresetDefinitions(this.#actionManager, this.#feedbackManager, structure, presets)
+				const sanitised = sanitisePresetDefinitions(
+					this.#actionManager,
+					this.#feedbackManager,
+					structure,
+					presets,
+					moduleApiVersion,
+				)
 				this.#host.setPresetDefinitions(sanitised.structure, sanitised.presets)
 			},
 			setCompositeElementDefinitions: (compositeElements) => {

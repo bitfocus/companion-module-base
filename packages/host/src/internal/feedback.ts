@@ -345,6 +345,8 @@ export class FeedbackManager {
 		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
 			if (!feedback) continue
 			if (BANNED_PROPS.has(feedbackId)) throw new Error(`Feedback id "${feedbackId}" is a reserved word`)
+			if (feedbackId.startsWith('internal:'))
+				throw new Error(`Feedback id "${feedbackId}" uses the reserved "internal:" prefix`)
 
 			hostFeedbacks.push({
 				id: feedbackId,
