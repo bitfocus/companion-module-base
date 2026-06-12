@@ -325,8 +325,21 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 			await this.#instance.configUpdated(this.#lastConfig, this.#lastSecrets)
 		})
 	}
+	/**
+	 * @deprecated use executeActionWithSignal instead, which allows passing an AbortSignal to the action callback, so that it can be cancelled if needed
+	 */
 	async executeAction(action: ActionInstance, surfaceId: string | undefined): Promise<ExecuteActionResult> {
-		return this.#actionManager.handleExecuteAction(action, surfaceId)
+		// Create a constant signal that will never abort
+		const signal = new AbortController().signal
+
+		return this.#actionManager.handleExecuteAction(action, surfaceId, signal)
+	}
+	async executeActionWithSignal(
+		action: ActionInstance,
+		surfaceId: string | undefined,
+		signal: AbortSignal,
+	): Promise<ExecuteActionResult> {
+		return this.#actionManager.handleExecuteAction(action, surfaceId, signal)
 	}
 
 	async updateFeedbacks(feedbacks: Record<string, FeedbackInstance | null | undefined>): Promise<void> {

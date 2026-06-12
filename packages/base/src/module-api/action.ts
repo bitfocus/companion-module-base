@@ -109,6 +109,17 @@ export interface CompanionActionContext extends CompanionCommonCallbackContext {
 export type CompanionActionLearnContext = CompanionLearnCallbackContext
 
 /**
+ * Utility functions available while an action is being executed
+ */
+export interface CompanionActionCallbackContext extends CompanionActionContext {
+	/**
+	 * A signal that aborts when the result of this execution is no longer needed (eg the user aborted the running actions).
+	 * Respecting it is optional; if you do, stop work and throw - the thrown error will be ignored.
+	 */
+	readonly signal: AbortSignal
+}
+
+/**
  * The base definition of an action, further augmented by:
  *
  *   * WithSubscribeHooks or WithoutSubscribeHooks definitions, and
@@ -156,7 +167,10 @@ export type CompanionActionDefinitionCallbackWithResult<
 	 * A function called when the callback executes, potentially returning a
 	 * result value.
 	 */
-	callback: (action: CompanionActionEvent<TOptions>, context: CompanionActionContext) => Promise<TResult> | TResult
+	callback: (
+		action: CompanionActionEvent<TOptions>,
+		context: CompanionActionCallbackContext,
+	) => Promise<TResult> | TResult
 
 	/* The callback returns a result. */
 	hasResult: true
@@ -171,7 +185,7 @@ export type CompanionActionDefinitionCallbackWithoutResult<TOptions extends Comp
 	 * A function called when the callback executes, potentially returning a
 	 * result value.
 	 */
-	callback: (action: CompanionActionEvent<TOptions>, context: CompanionActionContext) => Promise<void> | void
+	callback: (action: CompanionActionEvent<TOptions>, context: CompanionActionCallbackContext) => Promise<void> | void
 
 	/* The callback doesn't return a result. */
 	hasResult?: false

@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import type {
+	CompanionActionCallbackContext,
 	CompanionActionContext,
 	CompanionActionDefinition,
 	CompanionActionDefinitions,
 	CompanionVariableValue,
+	JsonValue,
 	LoggingSink,
 } from '@companion-module/base'
 import type { ActionInstance, HostActionDefinition } from '../../context.js'
@@ -284,10 +286,13 @@ describe('ActionManager', () => {
 	})
 
 	describe('execute action', () => {
+		// A constant signal that will never abort
+		const neverAbortSignal = new AbortController().signal
+
 		it('definition not found', async () => {
 			const { manager } = createManager()
 
-			await expect(manager.handleExecuteAction(action, undefined)).resolves.toEqual({
+			await expect(manager.handleExecuteAction(action, undefined, neverAbortSignal)).resolves.toEqual({
 				success: false,
 				errorMessage: `Action definition not found for: ${mockDefinitionId}`,
 			})
@@ -305,7 +310,7 @@ describe('ActionManager', () => {
 				} as unknown as CompanionActionDefinition,
 			})
 
-			await expect(manager.handleExecuteAction(action, 'surface0')).resolves.toEqual({
+			await expect(manager.handleExecuteAction(action, 'surface0', neverAbortSignal)).resolves.toEqual({
 				success: true,
 				result: undefined,
 			})
@@ -335,7 +340,7 @@ describe('ActionManager', () => {
 				},
 			})
 
-			await expect(manager.handleExecuteAction(action, undefined)).resolves.toEqual({
+			await expect(manager.handleExecuteAction(action, undefined, neverAbortSignal)).resolves.toEqual({
 				success: true,
 				result: { abc: 123 },
 			})
@@ -354,7 +359,7 @@ describe('ActionManager', () => {
 				},
 			})
 
-			await expect(manager.handleExecuteAction(action, undefined)).resolves.toEqual({
+			await expect(manager.handleExecuteAction(action, undefined, neverAbortSignal)).resolves.toEqual({
 				success: false,
 				errorMessage: 'something failed',
 			})
@@ -374,7 +379,7 @@ describe('ActionManager', () => {
 				},
 			})
 
-			await expect(manager.handleExecuteAction(action, undefined)).resolves.toEqual({
+			await expect(manager.handleExecuteAction(action, undefined, neverAbortSignal)).resolves.toEqual({
 				success: false,
 				errorMessage: 'a string error',
 			})
@@ -393,13 +398,119 @@ describe('ActionManager', () => {
 				},
 			})
 
-			await expect(manager.handleExecuteAction(action, undefined)).resolves.toEqual({
+			await expect(manager.handleExecuteAction(action, undefined, neverAbortSignal)).resolves.toEqual({
 				success: true,
 				result: undefined,
 			})
 
 			expect(setCustomVariableValue).toHaveBeenCalledTimes(1)
 			expect(setCustomVariableValue).lastCalledWith(action.controlId, 'my-var', 'value1')
+		})
+
+		it('signal is passed through to the callback context', async () => {
+			const { manager } = createManager()
+
+			const callback = vi.fn((_event, context: CompanionActionCallbackContext) => {
+				expect(context.signal).toBe(neverAbortSignal)
+			})
+			manager.setActionDefinitions({
+				[mockDefinitionId]: {
+					name: 'Definition0',
+					options: [],
+					callback,
+				},
+			})
+
+			await expect(manager.handleExecuteAction(action, undefined, neverAbortSignal)).resolves.toEqual({
+				success: true,
+				result: undefined,
+			})
+
+			expect(callback).toHaveBeenCalledTimes(1)
+		})
+
+		it('aborted before execution skips the callback', async () => {
+			const { manager } = createManager()
+
+			const callback = vi.fn()
+			manager.setActionDefinitions({
+				[mockDefinitionId]: {
+					name: 'Definition0',
+					options: [],
+					callback,
+				},
+			})
+
+			const abortController = new AbortController()
+			abortController.abort()
+
+			await expect(manager.handleExecuteAction(action, undefined, abortController.signal)).resolves.toEqual({
+				success: false,
+				errorMessage: 'Action execution was aborted',
+			})
+
+			expect(callback).toHaveBeenCalledTimes(0)
+		})
+
+		it('callback error is ignored when aborted mid-execution', async () => {
+			const { manager } = createManager()
+
+			let rejectCurrent: ((error: Error) => void) | undefined
+			const callback = vi.fn(async () => {
+				return new Promise<void>((_resolve, reject) => {
+					rejectCurrent = reject
+				})
+			})
+			manager.setActionDefinitions({
+				[mockDefinitionId]: {
+					name: 'Definition0',
+					options: [],
+					callback,
+				},
+			})
+
+			const abortController = new AbortController()
+			const execution = manager.handleExecuteAction(action, undefined, abortController.signal)
+
+			expect(callback).toHaveBeenCalledTimes(1)
+			abortController.abort()
+			rejectCurrent!(new Error('something failed'))
+
+			await expect(execution).resolves.toEqual({
+				success: false,
+				errorMessage: 'Action execution was aborted',
+			})
+		})
+
+		it('callback success is reported when aborted mid-execution', async () => {
+			const { manager } = createManager()
+
+			let resolveCurrent: ((value: JsonValue) => void) | undefined
+			const callback = vi.fn(async () => {
+				return new Promise<JsonValue>((resolve) => {
+					resolveCurrent = resolve
+				})
+			})
+			manager.setActionDefinitions({
+				[mockDefinitionId]: {
+					name: 'Definition0',
+					options: [],
+					callback,
+					hasResult: true,
+				},
+			})
+
+			const abortController = new AbortController()
+			const execution = manager.handleExecuteAction(action, undefined, abortController.signal)
+
+			expect(callback).toHaveBeenCalledTimes(1)
+			abortController.abort()
+			resolveCurrent!({ abc: 123 })
+
+			await expect(execution).resolves.toEqual({
+				success: true,
+				result: { abc: 123 },
+			})
 		})
 	})
 

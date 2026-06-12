@@ -1,5 +1,6 @@
 import {
 	createModuleLogger,
+	type CompanionActionCallbackContext,
 	type CompanionActionContext,
 	type CompanionActionDefinition,
 	type CompanionActionDefinitions,
@@ -62,6 +63,7 @@ export class ActionManager {
 	public async handleExecuteAction(
 		action: ActionInstance,
 		surfaceId: string | undefined,
+		signal: AbortSignal,
 	): Promise<ExecuteActionResult> {
 		const actionDefinition = this.#actionDefinitions.get(action.actionId)
 		if (!actionDefinition) {
@@ -71,11 +73,19 @@ export class ActionManager {
 			}
 		}
 
-		const context: CompanionActionContext = {
+		const context: CompanionActionCallbackContext = {
 			type: 'action',
+			signal,
 			setCustomVariableValue: (variableName: string, value: CompanionVariableValue) => {
 				this.#setCustomVariableValue(action.controlId, variableName, value)
 			},
+		}
+
+		if (signal.aborted) {
+			return {
+				success: false,
+				errorMessage: 'Action execution was aborted',
+			}
 		}
 
 		try {
@@ -96,6 +106,14 @@ export class ActionManager {
 				result: actionDefinition.hasResult ? (result as JsonValue) : undefined,
 			}
 		} catch (e: any) {
+			if (signal.aborted) {
+				// The execution was aborted, ignore the error
+				return {
+					success: false,
+					errorMessage: 'Action execution was aborted',
+				}
+			}
+
 			return {
 				success: false,
 				errorMessage: e?.message ?? String(e),
