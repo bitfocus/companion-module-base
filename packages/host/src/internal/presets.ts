@@ -207,83 +207,91 @@ export function sanitisePresetDefinitions(
 			}
 			if (internalFiltered.dropped) presetsWithDisallowedInternalIds.push(presetName)
 
-			// --- Validate feedback IDs and option keys ---
+			// --- Validate feedback/action IDs and option keys, recursing into building-block children ---
 			let hasInvalidFeedback = false
 			let hasInvalidFeedbackOptionKeys = false
-			for (const feedback of preset.feedbacks) {
-				const feedbackId = feedback?.feedbackId
-				if (isInternalId(feedbackId)) continue // internal references are handled above, not validated here
-				if (!validFeedbackIds.has(feedbackId)) {
-					hasInvalidFeedback = true
-				} else {
-					const def = feedbacksManager.getDefinition(feedbackId)
-					if (def && feedback.options && typeof feedback.options === 'object') {
-						const validKeys = new Set(def.options.map((f) => f.id))
-						for (const key of Object.keys(feedback.options)) {
-							if (!validKeys.has(key)) {
-								hasInvalidFeedbackOptionKeys = true
-								break
-							}
-						}
-					}
-				}
-			}
-			if (hasInvalidFeedback) presetsWithInvalidFeedbackIds.push(presetName)
-			if (hasInvalidFeedbackOptionKeys) presetsWithInvalidFeedbackOptionKeys.push(presetName)
-
-			// --- Validate action IDs and option keys across all steps ---
 			let hasInvalidAction = false
 			let hasInvalidActionOptionKeys = false
-			for (const step of preset.steps) {
-				// Check named action arrays
-				const namedKeys = ['down', 'up', 'rotate_left', 'rotate_right'] as const
-				for (const key of namedKeys) {
-					const actions = step[key]
-					if (!Array.isArray(actions)) continue
-					for (const action of actions) {
-						const actionId = action?.actionId
-						if (isInternalId(actionId)) continue // internal references are handled above, not validated here
-						if (!validActionIds.has(actionId)) {
-							hasInvalidAction = true
-						} else {
-							const def = actionsManager.getDefinition(actionId)
-							if (def && action.options && typeof action.options === 'object') {
-								const validKeys = new Set(def.options.map((f) => f.id))
-								for (const optKey of Object.keys(action.options)) {
-									if (!validKeys.has(optKey)) {
-										hasInvalidActionOptionKeys = true
-										break
-									}
-								}
-							}
-						}
+
+			const hasUnknownOptionKeys = (def: { options: Array<{ id: string }> } | undefined, options: unknown): boolean => {
+				if (!def || !options || typeof options !== 'object') return false
+				const validKeys = new Set(def.options.map((f) => f.id))
+				for (const key of Object.keys(options)) {
+					if (!validKeys.has(key)) return true
+				}
+				return false
+			}
+
+			const validateFeedbackEntry = (feedback: any, depth: number): void => {
+				const feedbackId = feedback?.feedbackId
+				// internal references are handled by the filtering above, not validated here
+				if (!isInternalId(feedbackId)) {
+					if (!validFeedbackIds.has(feedbackId)) {
+						hasInvalidFeedback = true
+					} else if (hasUnknownOptionKeys(feedbacksManager.getDefinition(feedbackId), feedback?.options)) {
+						hasInvalidFeedbackOptionKeys = true
 					}
 				}
-				// Check numbered delay-group properties
-				for (const [key, value] of Object.entries(step)) {
-					if (!/^\d+$/.test(key)) continue
-					const actions = Array.isArray(value) ? value : value?.actions
-					if (!Array.isArray(actions)) continue
-					for (const action of actions) {
-						const actionId = action?.actionId
-						if (isInternalId(actionId)) continue // internal references are handled above, not validated here
-						if (!validActionIds.has(actionId)) {
-							hasInvalidAction = true
+				validateChildren(feedback, depth)
+			}
+
+			const validateActionEntry = (action: any, depth: number): void => {
+				const actionId = action?.actionId
+				// internal references are handled by the filtering above, not validated here
+				if (!isInternalId(actionId)) {
+					if (!validActionIds.has(actionId)) {
+						hasInvalidAction = true
+					} else if (hasUnknownOptionKeys(actionsManager.getDefinition(actionId), action?.options)) {
+						hasInvalidActionOptionKeys = true
+					}
+				}
+				validateChildren(action, depth)
+			}
+
+			/** Validate the child groups of a building-block entry, dispatching each child by its shape */
+			const validateChildren = (entry: any, depth: number): void => {
+				if (depth > MAX_PRESET_NESTING_DEPTH) return
+				if (!entry || typeof entry !== 'object') return
+				if (!entry.children || typeof entry.children !== 'object') return
+				for (const childEntries of Object.values(entry.children)) {
+					if (!Array.isArray(childEntries)) continue
+					for (const child of childEntries) {
+						// Child groups hold feedbacks (eg condition groups) or actions; dispatch by shape
+						if (child && typeof child === 'object' && 'feedbackId' in child) {
+							validateFeedbackEntry(child, depth + 1)
 						} else {
-							const def = actionsManager.getDefinition(actionId)
-							if (def && action.options && typeof action.options === 'object') {
-								const validKeys = new Set(def.options.map((f) => f.id))
-								for (const optKey of Object.keys(action.options)) {
-									if (!validKeys.has(optKey)) {
-										hasInvalidActionOptionKeys = true
-										break
-									}
-								}
-							}
+							validateActionEntry(child, depth + 1)
 						}
 					}
 				}
 			}
+
+			// Validate the sanitised preset, so the children of dropped internal entries are not validated
+			for (const feedback of sanitisedPreset.feedbacks) {
+				validateFeedbackEntry(feedback, 0)
+			}
+
+			for (const step of sanitisedPreset.steps) {
+				if (!step || typeof step !== 'object') continue
+				for (const [key, value] of Object.entries(step)) {
+					let actions: unknown
+					if (key === 'down' || key === 'up' || key === 'rotate_left' || key === 'rotate_right') {
+						actions = value
+					} else if (/^\d+$/.test(key)) {
+						// Numbered delay-group properties
+						actions = Array.isArray(value) ? value : value?.actions
+					} else {
+						continue
+					}
+					if (!Array.isArray(actions)) continue
+					for (const action of actions) {
+						validateActionEntry(action, 0)
+					}
+				}
+			}
+
+			if (hasInvalidFeedback) presetsWithInvalidFeedbackIds.push(presetName)
+			if (hasInvalidFeedbackOptionKeys) presetsWithInvalidFeedbackOptionKeys.push(presetName)
 			if (hasInvalidAction) presetsWithInvalidActionIds.push(presetName)
 			if (hasInvalidActionOptionKeys) presetsWithInvalidActionOptionKeys.push(presetName)
 
