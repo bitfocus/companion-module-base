@@ -693,14 +693,22 @@ describe('validatePresetDefinitions', () => {
 		it('forwards an allowed internal action without flagging it as unknown', () => {
 			const presets = {
 				p1: validSimple({
-					steps: [{ down: [{ actionId: 'internal:wait', options: { time: 500 } }], up: [] }],
+					steps: [
+						{
+							down: [
+								{ actionId: 'internal:wait', options: { time: 500 } },
+								{ actionId: 'my-action', options: { opt1: 'val' } },
+							],
+							up: [],
+						},
+					],
 				}),
 			} as CompanionPresetDefinitions<InstanceTypes>
-			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			const { result, msgs } = runSanitise(presets, { 'my-action': makeActionDef('opt1') }, {}, structureFor('p1'))
 			expect(msgs.some((m) => m.includes('unknown action definitions'))).toBe(false)
 			expect(msgs.some((m) => m.includes('have been removed'))).toBe(false)
 			const returned = result.presets['p1'] as CompanionSimplePresetDefinition<InstanceTypes>
-			expect(returned.steps[0].down).toHaveLength(1)
+			expect(returned.steps[0].down.map((a) => a.actionId)).toEqual(['internal:wait', 'my-action'])
 		})
 
 		it('forwards an allowed internal feedback without flagging it as unknown', () => {
@@ -712,7 +720,7 @@ describe('validatePresetDefinitions', () => {
 			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
 			expect(msgs.some((m) => m.includes('unknown feedback definitions'))).toBe(false)
 			const returned = result.presets['p1'] as CompanionSimplePresetDefinition<InstanceTypes>
-			expect(returned.feedbacks).toHaveLength(1)
+			expect(returned.feedbacks.map((f) => f.feedbackId)).toEqual(['internal:checkExpression'])
 		})
 
 		it('drops an internal action the module is too old to use, and warns', () => {
@@ -777,8 +785,8 @@ describe('validatePresetDefinitions', () => {
 			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
 			expect(msgs.some((m) => m.includes('have been removed'))).toBe(false)
 			const block = (result.presets['p1'] as any).steps[0].down[0]
-			expect(block.children.actions).toHaveLength(1)
-			expect(block.children.condition).toHaveLength(1)
+			expect(block.children.actions.map((a: any) => a.actionId)).toEqual(['internal:wait'])
+			expect(block.children.condition.map((f: any) => f.feedbackId)).toEqual(['internal:checkExpression'])
 		})
 
 		it('drops a disallowed internal entry nested inside a building block child group, and warns', () => {

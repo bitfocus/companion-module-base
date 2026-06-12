@@ -164,6 +164,20 @@ describe('ActionManager', () => {
 				'Action id "__proto__" is a reserved word',
 			)
 		})
+
+		it('throws for ids with the internal prefix', () => {
+			const { manager } = createManager()
+
+			const mockDefinition: CompanionActionDefinition = {
+				name: 'Definition0',
+				options: [],
+				callback: vi.fn(),
+			}
+
+			expect(() => manager.setActionDefinitions({ 'internal:foo': mockDefinition })).toThrow(
+				'Action id "internal:foo" uses the reserved "internal:" prefix',
+			)
+		})
 	})
 
 	describe('set definitions: deprecation warnings', () => {
