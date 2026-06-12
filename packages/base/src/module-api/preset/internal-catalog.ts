@@ -49,6 +49,19 @@ export type CompanionInternalFeedbackSchemas = {
 }
 
 /**
+ * The reserved ids for the internal "building block" (logic/flow) actions and feedbacks. These nest
+ * other entries via child groups, so unlike the flat catalog above they are not expressed as schema
+ * records here; their full types live in the preset definition files. This union exists so the version
+ * map below stays exhaustive, and is cross-checked against those types (see the drift-guard type-test in
+ * definition.ts).
+ */
+export type InternalPresetBuildingBlockId =
+	| 'internal:actionGroup'
+	| 'internal:logicIf'
+	| 'internal:logicWhile'
+	| 'internal:logicOperator'
+
+/**
  * The minimum module api version required to use each internal preset action/feedback id.
  *
  * The host uses this to drop (with a warning) any internal preset entry that a module is too old to be
@@ -56,7 +69,7 @@ export type CompanionInternalFeedbackSchemas = {
  * older module emit an id it predates.
  */
 export const INTERNAL_PRESET_MIN_API_VERSION: Record<
-	keyof CompanionInternalActionSchemas | keyof CompanionInternalFeedbackSchemas,
+	keyof CompanionInternalActionSchemas | keyof CompanionInternalFeedbackSchemas | InternalPresetBuildingBlockId,
 	string
 > = {
 	'internal:wait': '2.1.0-0',
@@ -66,6 +79,10 @@ export const INTERNAL_PRESET_MIN_API_VERSION: Record<
 	'internal:checkExpression': '2.1.0-0',
 	'internal:buttonPushed': '2.1.0-0',
 	'internal:buttonCurrentStep': '2.1.0-0',
+	'internal:actionGroup': '2.1.0-0',
+	'internal:logicIf': '2.1.0-0',
+	'internal:logicWhile': '2.1.0-0',
+	'internal:logicOperator': '2.1.0-0',
 }
 
 // --- Type-level assertions ---------------------------------------------------------------------
@@ -99,6 +116,6 @@ type _AssertFeedbackSchemas = Expect<
 type _AssertVersionMapKeys = Expect<
 	Equal<
 		keyof typeof INTERNAL_PRESET_MIN_API_VERSION,
-		keyof CompanionInternalActionSchemas | keyof CompanionInternalFeedbackSchemas
+		keyof CompanionInternalActionSchemas | keyof CompanionInternalFeedbackSchemas | InternalPresetBuildingBlockId
 	>
 >

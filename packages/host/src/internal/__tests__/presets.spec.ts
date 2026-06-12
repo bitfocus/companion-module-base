@@ -749,5 +749,112 @@ describe('validatePresetDefinitions', () => {
 			const returned = result.presets['p1'] as CompanionSimplePresetDefinition<InstanceTypes>
 			expect((returned.steps[0] as any)[1000]).toHaveLength(0)
 		})
+
+		it('forwards an allowed building block and keeps its allowed internal children', () => {
+			const presets = {
+				p1: {
+					type: 'simple',
+					name: 'My Preset',
+					style: { text: '', size: 'auto', color: 0xffffff, bgcolor: 0 },
+					feedbacks: [],
+					steps: [
+						{
+							down: [
+								{
+									actionId: 'internal:logicIf',
+									options: {},
+									children: {
+										condition: [{ feedbackId: 'internal:checkExpression', options: { expression: '1 > 0' } }],
+										actions: [{ actionId: 'internal:wait', options: { time: 1 } }],
+									},
+								},
+							],
+							up: [],
+						},
+					],
+				},
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(msgs.some((m) => m.includes('have been removed'))).toBe(false)
+			const block = (result.presets['p1'] as any).steps[0].down[0]
+			expect(block.children.actions).toHaveLength(1)
+			expect(block.children.condition).toHaveLength(1)
+		})
+
+		it('drops a disallowed internal entry nested inside a building block child group, and warns', () => {
+			const presets = {
+				p1: {
+					type: 'simple',
+					name: 'My Preset',
+					style: { text: '', size: 'auto', color: 0xffffff, bgcolor: 0 },
+					feedbacks: [],
+					steps: [
+						{
+							down: [
+								{
+									actionId: 'internal:logicIf',
+									options: {},
+									children: {
+										condition: [{ feedbackId: 'internal:checkExpression', options: { expression: '1 > 0' } }],
+										actions: [
+											{ actionId: 'internal:wait', options: { time: 1 } },
+											{ actionId: 'internal:nope', options: {} },
+										],
+									},
+								},
+							],
+							up: [],
+						},
+					],
+				},
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(msgs.some((m) => m.includes('have been removed') && m.includes('My Preset'))).toBe(true)
+			const block = (result.presets['p1'] as any).steps[0].down[0]
+			expect(block.children.actions).toHaveLength(1)
+			expect(block.children.actions[0].actionId).toBe('internal:wait')
+		})
+
+		it('drops a disallowed internal entry nested two levels deep', () => {
+			const presets = {
+				p1: {
+					type: 'simple',
+					name: 'My Preset',
+					style: { text: '', size: 'auto', color: 0xffffff, bgcolor: 0 },
+					feedbacks: [],
+					steps: [
+						{
+							down: [
+								{
+									actionId: 'internal:logicIf',
+									options: {},
+									children: {
+										condition: [],
+										actions: [
+											{
+												actionId: 'internal:actionGroup',
+												options: {},
+												children: {
+													default: [
+														{ actionId: 'internal:nope', options: {} },
+														{ actionId: 'internal:wait', options: { time: 1 } },
+													],
+												},
+											},
+										],
+									},
+								},
+							],
+							up: [],
+						},
+					],
+				},
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(msgs.some((m) => m.includes('have been removed'))).toBe(true)
+			const group = (result.presets['p1'] as any).steps[0].down[0].children.actions[0]
+			expect(group.children.default).toHaveLength(1)
+			expect(group.children.default[0].actionId).toBe('internal:wait')
+		})
 	})
 })

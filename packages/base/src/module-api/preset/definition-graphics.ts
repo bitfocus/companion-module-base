@@ -5,9 +5,11 @@ import type { ButtonGraphicsCanvasElement, SomeButtonGraphicsElement } from '../
 import type { CompanionOptionValues, ExpressionOrValue } from '../input.js'
 import type {
 	CompanionButtonStepActions,
+	CompanionInternalLogicFeedbackSchemas,
 	CompanionPresetDefinitionBase,
 	CompanionPresetLocalVariable,
 	CompanionPresetOptionValues,
+	MapChildren,
 	WithInternalFeedbacks,
 } from './definition.js'
 
@@ -27,7 +29,7 @@ export interface CompanionLayeredButtonPresetDefinition<
 	/** Options for this preset */
 	options?: CompanionLayeredButtonPresetDefinitionOptions
 	/** The feedbacks on the button */
-	feedbacks: CompanionPresetLayeredFeedback<WithInternalFeedbacks<TManifest['feedbacks']>>[]
+	feedbacks: SomePresetLayeredFeedbackEntry<TManifest>[]
 	steps: CompanionButtonStepActions<TManifest>[]
 
 	/** Local variables on this button */
@@ -80,3 +82,23 @@ export interface CompanionPresetFeedbackStyleOverride {
 	// Note: When overriding advanced feedbacks, this should be set to `{ isExpression: false, value: 'color' }` or similar to indicate which property it is using
 	override: ExpressionOrValue<JsonValue | undefined>
 }
+
+/**
+ * A building-block feedback used at the top level of a layered preset (carries element style overrides).
+ * The layered counterpart of `CompanionInternalSimpleLogicFeedback`.
+ */
+export type CompanionInternalLayeredLogicFeedback<TManifest extends InstanceTypes> = {
+	[K in keyof CompanionInternalLogicFeedbackSchemas]: {
+		feedbackId: K
+		options: CompanionPresetOptionValues<CompanionInternalLogicFeedbackSchemas[K]['options']>
+		children: MapChildren<CompanionInternalLogicFeedbackSchemas[K]['children'], TManifest>
+		styleOverrides: CompanionPresetFeedbackStyleOverride[]
+		isInverted?: boolean
+		headline?: string
+	}
+}[keyof CompanionInternalLogicFeedbackSchemas]
+
+/** A feedback entry on a layered preset: the module's own or internal feedbacks, plus internal building blocks. */
+export type SomePresetLayeredFeedbackEntry<TManifest extends InstanceTypes = InstanceTypes> =
+	| CompanionPresetLayeredFeedback<WithInternalFeedbacks<TManifest['feedbacks']>>
+	| CompanionInternalLayeredLogicFeedback<TManifest>

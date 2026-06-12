@@ -13,6 +13,9 @@ import { BANNED_PROPS } from './util.js'
 
 const logger = createModuleLogger('PresetDefinitionsManager')
 
+/** Guard against pathological nesting when recursing into building-block child groups */
+const MAX_PRESET_NESTING_DEPTH = 10
+
 /** Whether an action/feedback id references one of Companion's built-in internal definitions */
 function isInternalId(id: unknown): id is string {
 	return typeof id === 'string' && id.startsWith('internal:')
@@ -69,8 +72,9 @@ export function sanitisePresetDefinitions(
 
 	/**
 	 * Drop any `internal:*` action/feedback entries the module is not allowed to use (unknown ids, or
-	 * ids the module is too old for). Allowed internal entries and all module-own entries are kept as-is.
-	 * Returns new feedbacks/steps arrays, and whether anything was dropped.
+	 * ids the module is too old for). Allowed internal entries and all module-own entries are kept as-is,
+	 * recursing into the child groups of building-block entries. Returns new feedbacks/steps arrays, and
+	 * whether anything was dropped.
 	 */
 	function dropDisallowedInternalEntries(preset: any): { feedbacks: any; steps: any; dropped: boolean } {
 		let dropped = false
@@ -80,23 +84,43 @@ export function sanitisePresetDefinitions(
 			dropped = true
 			return false
 		}
-		const filterActions = (arr: unknown): unknown => (Array.isArray(arr) ? arr.filter((a) => keep(a?.actionId)) : arr)
 
-		const feedbacks = Array.isArray(preset.feedbacks)
-			? preset.feedbacks.filter((fb: any) => keep(fb?.feedbackId))
-			: preset.feedbacks
+		/**
+		 * Recursively filter an array of action/feedback/condition entries: drop disallowed internal
+		 * entries, and filter the child groups of any building-block entry that remains.
+		 */
+		const filterEntries = (entries: unknown, depth: number): unknown => {
+			if (!Array.isArray(entries)) return entries
+			if (depth > MAX_PRESET_NESTING_DEPTH) return entries
+			const out: unknown[] = []
+			for (const entry of entries) {
+				if (!keep(entry?.actionId ?? entry?.feedbackId)) continue
+				if (entry && typeof entry === 'object' && entry.children && typeof entry.children === 'object') {
+					const children: Record<string, unknown> = {}
+					for (const [groupId, childEntries] of Object.entries(entry.children)) {
+						children[groupId] = filterEntries(childEntries, depth + 1)
+					}
+					out.push({ ...entry, children })
+				} else {
+					out.push(entry)
+				}
+			}
+			return out
+		}
+
+		const feedbacks = filterEntries(preset.feedbacks, 0)
 
 		const steps = Array.isArray(preset.steps)
 			? preset.steps.map((step: any) => {
 					const out: Record<string, unknown> = {}
 					for (const [key, value] of Object.entries(step)) {
 						if (key === 'down' || key === 'up' || key === 'rotate_left' || key === 'rotate_right') {
-							out[key] = filterActions(value)
+							out[key] = filterEntries(value, 0)
 						} else if (/^\d+$/.test(key)) {
 							if (Array.isArray(value)) {
-								out[key] = filterActions(value)
+								out[key] = filterEntries(value, 0)
 							} else if (value && typeof value === 'object' && Array.isArray((value as any).actions)) {
-								out[key] = { ...(value as any), actions: filterActions((value as any).actions) }
+								out[key] = { ...(value as any), actions: filterEntries((value as any).actions, 0) }
 							} else {
 								out[key] = value
 							}

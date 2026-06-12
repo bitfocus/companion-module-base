@@ -1,3 +1,8 @@
+import type {
+	Equal,
+	Expect,
+	// eslint-disable-next-line n/no-missing-import
+} from 'type-testing'
 import type { JsonValue } from '../../common/json-value.js'
 import type { CompanionActionSchemaWithoutResult, CompanionActionSchemaWithResult } from '../action.js'
 import type { InstanceTypes } from '../base.js'
@@ -6,7 +11,11 @@ import type { CompanionOptionValues, ExpressionOrValue } from '../input.js'
 import type { CompanionButtonStyleProps } from '../style.js'
 import type { CompanionVariableValue } from '../variable.js'
 import type { CompanionLayeredButtonPresetDefinition } from './definition-graphics.js'
-import type { CompanionInternalActionSchemas, CompanionInternalFeedbackSchemas } from './internal-catalog.js'
+import type {
+	CompanionInternalActionSchemas,
+	CompanionInternalFeedbackSchemas,
+	InternalPresetBuildingBlockId,
+} from './internal-catalog.js'
 
 /**
  * Merge the reserved `internal:*` action schemas into a module's action manifest, so that presets may
@@ -16,6 +25,133 @@ import type { CompanionInternalActionSchemas, CompanionInternalFeedbackSchemas }
 export type WithInternalActions<TActionManifest> = TActionManifest & CompanionInternalActionSchemas
 /** As {@link WithInternalActions}, but for the internal feedback schemas. */
 export type WithInternalFeedbacks<TFeedbackManifest> = TFeedbackManifest & CompanionInternalFeedbackSchemas
+
+// ─── Internal building-block (logic/flow) preset entries ───────────────────────────────────────
+// Building blocks nest other actions/feedbacks via child groups, so they carry a `children` field and
+// are kept separate from the flat internal schemas (CompanionInternal{Action,Feedback}Schemas). Each
+// block is described once in a schema record (id -> options + named child-group kinds); the mapped
+// types below generate the entries, adding the common props (delay/headline/style/...) a single time.
+
+/** The kind of entries a building block's child group holds */
+export type ChildGroupKind = 'actions' | 'conditions'
+
+/** Expand a single child-group kind to its entry-array type */
+type ChildArray<TKind, TManifest extends InstanceTypes> =
+	NonNullable<TKind> extends 'conditions' ? SomePresetConditionEntry<TManifest>[] : SomePresetActionEntry<TManifest>[]
+
+/**
+ * Expand a record of named child groups to the concrete `children` shape.
+ * Homomorphic over `TGroups`, so optional groups (e.g. `elseActions?`) keep their optional modifier.
+ */
+export type MapChildren<TGroups extends Record<string, ChildGroupKind | undefined>, TManifest extends InstanceTypes> = {
+	[G in keyof TGroups]: ChildArray<TGroups[G], TManifest>
+}
+
+/** Describes each building-block action: its options and named child groups (by kind). */
+export interface CompanionInternalLogicActionSchemas {
+	/** Execute a group of actions */
+	'internal:actionGroup': {
+		options: { executionMode?: 'inherit' | 'concurrent' | 'sequential' }
+		children: { default: 'actions' }
+	}
+	/** Execute actions when all conditions are true, otherwise the (optional) else actions */
+	'internal:logicIf': {
+		options: Record<string, never>
+		children: { condition: 'conditions'; actions: 'actions'; elseActions?: 'actions' }
+	}
+	/** Repeat actions while all conditions are true */
+	'internal:logicWhile': {
+		options: Record<string, never>
+		children: { condition: 'conditions'; actions: 'actions' }
+	}
+}
+
+/** A building-block action entry (one per id in {@link CompanionInternalLogicActionSchemas}). */
+export type CompanionInternalLogicAction<TManifest extends InstanceTypes> = {
+	[K in keyof CompanionInternalLogicActionSchemas]: {
+		actionId: K
+		options: CompanionPresetOptionValues<CompanionInternalLogicActionSchemas[K]['options']>
+		children: MapChildren<CompanionInternalLogicActionSchemas[K]['children'], TManifest>
+		delay?: number
+		headline?: string
+	}
+}[keyof CompanionInternalLogicActionSchemas]
+
+/** Describes each building-block feedback: its options and named child groups (by kind). */
+export interface CompanionInternalLogicFeedbackSchemas {
+	/** Combine multiple conditions with a boolean operator */
+	'internal:logicOperator': {
+		options: { operation: 'and' | 'or' | 'xor' }
+		children: { default: 'conditions' }
+	}
+}
+
+/** A building-block feedback used as a condition (no style). */
+export type CompanionInternalConditionFeedback<TManifest extends InstanceTypes> = {
+	[K in keyof CompanionInternalLogicFeedbackSchemas]: {
+		feedbackId: K
+		options: CompanionPresetOptionValues<CompanionInternalLogicFeedbackSchemas[K]['options']>
+		children: MapChildren<CompanionInternalLogicFeedbackSchemas[K]['children'], TManifest>
+		isInverted?: boolean
+		headline?: string
+	}
+}[keyof CompanionInternalLogicFeedbackSchemas]
+
+/** A building-block feedback used at the top level of a simple preset (carries a boolean style). */
+export type CompanionInternalSimpleLogicFeedback<TManifest extends InstanceTypes> = {
+	[K in keyof CompanionInternalLogicFeedbackSchemas]: {
+		feedbackId: K
+		options: CompanionPresetOptionValues<CompanionInternalLogicFeedbackSchemas[K]['options']>
+		children: MapChildren<CompanionInternalLogicFeedbackSchemas[K]['children'], TManifest>
+		style: CompanionFeedbackButtonStyleResult
+		isInverted?: boolean
+		headline?: string
+	}
+}[keyof CompanionInternalLogicFeedbackSchemas]
+
+/**
+ * A boolean feedback used as a condition: no style, and (for concrete manifests) strictly boolean ids
+ * only — non-boolean ids resolve to `never` and drop out. Loosely-typed manifests (string index) get a
+ * permissive shape instead of collapsing to `never`.
+ */
+export type CompanionPresetConditionFeedback<
+	TFeedbackManifest extends Record<string, CompanionFeedbackSchema<CompanionOptionValues>>,
+> = string extends keyof TFeedbackManifest
+	? { feedbackId: string; options: CompanionOptionValues; isInverted?: boolean; headline?: string }
+	: {
+			[K in keyof TFeedbackManifest]: TFeedbackManifest[K]['type'] extends 'boolean'
+				? {
+						feedbackId: K
+						options: CompanionPresetOptionValues<TFeedbackManifest[K]['options']>
+						isInverted?: boolean
+						headline?: string
+					}
+				: never
+		}[keyof TFeedbackManifest]
+
+/** An action entry in a preset: the module's own or internal flat actions, plus internal building blocks. */
+export type SomePresetActionEntry<TManifest extends InstanceTypes = InstanceTypes> =
+	| CompanionPresetAction<WithInternalActions<TManifest['actions']>>
+	| CompanionInternalLogicAction<TManifest>
+
+/** A condition entry (boolean feedback or nested logic operator) used inside a building block. */
+export type SomePresetConditionEntry<TManifest extends InstanceTypes = InstanceTypes> =
+	| CompanionPresetConditionFeedback<WithInternalFeedbacks<TManifest['feedbacks']>>
+	| CompanionInternalConditionFeedback<TManifest>
+
+/** A feedback entry on a simple preset: the module's own or internal feedbacks, plus internal building blocks. */
+export type SomePresetSimpleFeedbackEntry<TManifest extends InstanceTypes = InstanceTypes> =
+	| CompanionPresetFeedback<WithInternalFeedbacks<TManifest['feedbacks']>>
+	| CompanionInternalSimpleLogicFeedback<TManifest>
+
+// Drift guard: the building-block schema records here must cover exactly the ids that the version map
+// in internal-catalog.ts gates (InternalPresetBuildingBlockId). If they fall out of sync, this fails.
+type _AssertBuildingBlockIds = Expect<
+	Equal<
+		keyof CompanionInternalLogicActionSchemas | keyof CompanionInternalLogicFeedbackSchemas,
+		InternalPresetBuildingBlockId
+	>
+>
 
 /**
  * The definitions of a group of presets
@@ -65,7 +201,7 @@ export interface CompanionSimplePresetDefinition<
 	steps: CompanionButtonStepActions<TManifest>[]
 
 	/** The feedbacks on the button */
-	feedbacks: CompanionPresetFeedback<WithInternalFeedbacks<TManifest['feedbacks']>>[]
+	feedbacks: SomePresetSimpleFeedbackEntry<TManifest>[]
 
 	/** Local variables on this button */
 	localVariables?: CompanionSimplePresetLocalVariable[]
@@ -81,7 +217,7 @@ export interface CompanionSimplePresetOptions {
 
 export interface CompanionPresetActionsWithOptions<TManifest extends InstanceTypes = InstanceTypes> {
 	options?: CompanionActionSetOptions
-	actions: CompanionPresetAction<WithInternalActions<TManifest['actions']>>[]
+	actions: SomePresetActionEntry<TManifest>[]
 }
 export interface CompanionActionSetOptions {
 	/**
@@ -95,25 +231,23 @@ export interface CompanionButtonStepActions<TManifest extends InstanceTypes = In
 	name?: string
 
 	/** The button down actions */
-	down: CompanionPresetAction<WithInternalActions<TManifest['actions']>>[]
+	down: SomePresetActionEntry<TManifest>[]
 	/**
 	 * The button up actions
 	 * If any delay groups are defined, this becomes the short-press actions
 	 */
-	up: CompanionPresetAction<WithInternalActions<TManifest['actions']>>[]
+	up: SomePresetActionEntry<TManifest>[]
 
 	/** The button rotate left actions */
-	rotate_left?: CompanionPresetAction<WithInternalActions<TManifest['actions']>>[]
+	rotate_left?: SomePresetActionEntry<TManifest>[]
 	/** The button rotate right actions */
-	rotate_right?: CompanionPresetAction<WithInternalActions<TManifest['actions']>>[]
+	rotate_right?: SomePresetActionEntry<TManifest>[]
 
 	/**
 	 * Long-press action groups
 	 * Keyed by the duration (in milliseconds) after which the long-press actions should be executed
 	 */
-	[duration: number]:
-		| CompanionPresetActionsWithOptions<TManifest>
-		| CompanionPresetAction<WithInternalActions<TManifest['actions']>>[]
+	[duration: number]: CompanionPresetActionsWithOptions<TManifest> | SomePresetActionEntry<TManifest>[]
 }
 
 /**
