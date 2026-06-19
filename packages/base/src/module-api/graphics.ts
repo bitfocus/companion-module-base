@@ -63,6 +63,9 @@ export interface ButtonGraphicsCanvasElement {
 	// previewColor: number
 
 	decoration?: CompanionGraphicsElementValue<ButtonGraphicsDecorationType> // replaces show_topbar
+
+	/* Whether to show status icons in the top right corner of the button */
+	showStatusIcons?: CompanionGraphicsElementValue<ButtonGraphicsShowStatusIcons>
 }
 
 export enum ButtonGraphicsDecorationType {
@@ -73,6 +76,12 @@ export enum ButtonGraphicsDecorationType {
 	None = 'none',
 }
 
+export enum ButtonGraphicsShowStatusIcons {
+	FollowDefault = 'default',
+	ShowAll = 'all',
+	None = 'none',
+}
+
 export interface ButtonGraphicsGroupElement<
 	TCompositeElements extends CompanionCompositeElementSchemas | undefined = CompanionCompositeElementSchemas,
 >
@@ -80,6 +89,9 @@ export interface ButtonGraphicsGroupElement<
 	type: 'group'
 
 	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
+
+	/* When enabled, the coordinate space for child elements is constrained to a centred square (the shorter side) */
+	squareCoords?: CompanionGraphicsElementValue<boolean>
 
 	children: SomeButtonGraphicsElement<TCompositeElements>[]
 }
@@ -110,6 +122,8 @@ export type LineOrientation = 'inside' | 'center' | 'outside'
 
 export type ImageFillMode = 'crop' | 'fill' | 'fit'
 
+export type ButtonGraphicsFontFamily = 'companion-sans' | 'companion-mono'
+
 export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
 	type: 'text'
 
@@ -117,7 +131,12 @@ export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, Bu
 
 	text: CompanionGraphicsElementValue<string>
 
-	fontsize?: CompanionGraphicsElementValue<'auto' | number>
+	/* 3-200, percentage of element height */
+	fontsize?: CompanionGraphicsElementValue<number>
+	/* Allow the text to shrink below the configured size when it is too long to fit */
+	fontsizeAllowShrink?: CompanionGraphicsElementValue<boolean>
+
+	font?: CompanionGraphicsElementValue<ButtonGraphicsFontFamily>
 
 	color?: CompanionGraphicsElementValue<number>
 
