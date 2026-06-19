@@ -1,8 +1,32 @@
 import type { CompanionCompositeElementSchemas } from './graphics-composite.js'
-import type { ExpressionOptionsObject, ExpressionOrValue } from './input.js'
+import type { CompanionOptionValues, ExpressionOrValue } from './input.js'
 
 /**
- * The type of a button graphics element as stored in places where it can be edited
+ * A value for a button graphics element property.
+ *
+ * Modules may provide either a plain value (e.g. `5`, `'hello'`, `true`) or an {@link ExpressionOrValue} wrapper.
+ * A plain value is equivalent to `{ isExpression: false, value }`, which lets modules skip the wrapper
+ * boilerplate when defining presets and composite elements.
+ *
+ * This is a duplicate of `CompanionPresetValue` from the preset definitions, kept here to avoid a dependency
+ * on that module.
+ */
+export type CompanionGraphicsElementValue<T> = T | ExpressionOrValue<T>
+
+/**
+ * An options object for a button graphics element (e.g. a composite element).
+ *
+ * Each value may be a plain value or an {@link ExpressionOrValue} wrapper, see {@link CompanionGraphicsElementValue}.
+ */
+export type CompanionGraphicsElementOptionsObject<T extends CompanionOptionValues = CompanionOptionValues> = {
+	[K in keyof T]: CompanionGraphicsElementValue<T[K]> | undefined
+}
+
+/**
+ * A button graphics element, as used when defining presets and composite elements.
+ *
+ * Property values may be given as plain values or {@link ExpressionOrValue} wrappers, see
+ * {@link CompanionGraphicsElementValue}.
  */
 export type SomeButtonGraphicsElement<
 	TCompositeElements extends CompanionCompositeElementSchemas | undefined = CompanionCompositeElementSchemas,
@@ -19,26 +43,26 @@ export interface ButtonGraphicsElementBase {
 	id?: string
 	name?: string
 
-	enabled?: ExpressionOrValue<boolean>
+	enabled?: CompanionGraphicsElementValue<boolean>
 	/* 0-100 */
-	opacity?: ExpressionOrValue<number>
+	opacity?: CompanionGraphicsElementValue<number>
 }
 
 export interface ButtonGraphicsDrawBounds {
 	/* 0-100 */
-	x?: ExpressionOrValue<number>
+	x?: CompanionGraphicsElementValue<number>
 	/* 0-100 */
-	y?: ExpressionOrValue<number>
+	y?: CompanionGraphicsElementValue<number>
 	/* 0-100 */
-	width?: ExpressionOrValue<number>
+	width?: CompanionGraphicsElementValue<number>
 	/* 0-100 */
-	height?: ExpressionOrValue<number>
+	height?: CompanionGraphicsElementValue<number>
 }
 
 export interface ButtonGraphicsCanvasElement {
 	// previewColor: number
 
-	decoration?: ExpressionOrValue<ButtonGraphicsDecorationType> // replaces show_topbar
+	decoration?: CompanionGraphicsElementValue<ButtonGraphicsDecorationType> // replaces show_topbar
 }
 
 export enum ButtonGraphicsDecorationType {
@@ -55,7 +79,7 @@ export interface ButtonGraphicsGroupElement<
 	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
 	type: 'group'
 
-	rotation?: ExpressionOrValue<number> // degrees 0-359
+	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
 
 	children: SomeButtonGraphicsElement<TCompositeElements>[]
 }
@@ -73,7 +97,9 @@ export type ButtonGraphicsCompositeElement<
 			/**
 			 * Custom elements have options defined by their composite definition
 			 */
-			options: ExpressionOptionsObject<Extract<TCompositeElements, CompanionCompositeElementSchemas>[K]['options']>
+			options: CompanionGraphicsElementOptionsObject<
+				Extract<TCompositeElements, CompanionCompositeElementSchemas>[K]['options']
+			>
 		}
 	}[keyof Extract<TCompositeElements, CompanionCompositeElementSchemas>]
 
@@ -87,70 +113,70 @@ export type ImageFillMode = 'crop' | 'fill' | 'fit'
 export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
 	type: 'text'
 
-	rotation?: ExpressionOrValue<number> // degrees 0-359
+	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
 
-	text: ExpressionOrValue<string>
+	text: CompanionGraphicsElementValue<string>
 
-	fontsize?: ExpressionOrValue<'auto' | number>
+	fontsize?: CompanionGraphicsElementValue<'auto' | number>
 
-	color?: ExpressionOrValue<number>
+	color?: CompanionGraphicsElementValue<number>
 
-	halign?: ExpressionOrValue<HorizontalAlignment>
-	valign?: ExpressionOrValue<VerticalAlignment>
+	halign?: CompanionGraphicsElementValue<HorizontalAlignment>
+	valign?: CompanionGraphicsElementValue<VerticalAlignment>
 
-	outlineColor?: ExpressionOrValue<number>
+	outlineColor?: CompanionGraphicsElementValue<number>
 }
 
 export interface ButtonGraphicsImageElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
 	type: 'image'
 
-	rotation?: ExpressionOrValue<number> // degrees 0-359
+	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
 
-	base64Image: ExpressionOrValue<string | null>
+	base64Image: CompanionGraphicsElementValue<string | null>
 
-	halign?: ExpressionOrValue<HorizontalAlignment>
-	valign?: ExpressionOrValue<VerticalAlignment>
+	halign?: CompanionGraphicsElementValue<HorizontalAlignment>
+	valign?: CompanionGraphicsElementValue<VerticalAlignment>
 
-	fillMode?: ExpressionOrValue<ImageFillMode>
+	fillMode?: CompanionGraphicsElementValue<ImageFillMode>
 }
 
 export interface ButtonGraphicsBorderProperties {
-	borderWidth?: ExpressionOrValue<number> // 0 to disable
-	borderColor?: ExpressionOrValue<number>
-	borderPosition?: ExpressionOrValue<LineOrientation>
+	borderWidth?: CompanionGraphicsElementValue<number> // 0 to disable
+	borderColor?: CompanionGraphicsElementValue<number>
+	borderPosition?: CompanionGraphicsElementValue<LineOrientation>
 }
 
 export interface ButtonGraphicsBoxElement
 	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds, ButtonGraphicsBorderProperties {
 	type: 'box'
 
-	rotation?: ExpressionOrValue<number> // degrees 0-359
+	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
 
-	color?: ExpressionOrValue<number>
+	color?: CompanionGraphicsElementValue<number>
 }
 
 export interface ButtonGraphicsLineElement extends ButtonGraphicsElementBase, ButtonGraphicsBorderProperties {
 	type: 'line'
 
 	/* 0-100 */
-	fromX?: ExpressionOrValue<number>
+	fromX?: CompanionGraphicsElementValue<number>
 	/* 0-100 */
-	fromY?: ExpressionOrValue<number>
+	fromY?: CompanionGraphicsElementValue<number>
 	/* 0-100 */
-	toX?: ExpressionOrValue<number>
+	toX?: CompanionGraphicsElementValue<number>
 	/* 0-100 */
-	toY?: ExpressionOrValue<number>
+	toY?: CompanionGraphicsElementValue<number>
 }
 
 export interface ButtonGraphicsCircleElement
 	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds, ButtonGraphicsBorderProperties {
 	type: 'circle'
 
-	color?: ExpressionOrValue<number>
+	color?: CompanionGraphicsElementValue<number>
 
-	startAngle?: ExpressionOrValue<number> // degrees 0-359
-	endAngle?: ExpressionOrValue<number> // degrees 0-359
+	startAngle?: CompanionGraphicsElementValue<number> // degrees 0-359
+	endAngle?: CompanionGraphicsElementValue<number> // degrees 0-359
 
-	drawSlice?: ExpressionOrValue<boolean>
-	borderOnlyArc?: ExpressionOrValue<boolean>
+	drawSlice?: CompanionGraphicsElementValue<boolean>
+	borderOnlyArc?: CompanionGraphicsElementValue<boolean>
 }
