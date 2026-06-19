@@ -116,9 +116,10 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 
 		try {
 			this.#socket.bind(this.#options.bind_port || 0, this.#options.bind_ip)
-		} catch (_e) {
+		} catch (e) {
 			throw new Error(
 				`Unable to bind to ip/port: ${this.#options.bind_ip || '0.0.0.0'}:${this.#options.bind_port || 0}`,
+				{ cause: e },
 			)
 		}
 

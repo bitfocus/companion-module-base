@@ -1,11 +1,18 @@
 import z from 'zod'
-import type { ExpressionOrValue, JsonValue } from '@companion-module/base'
+import type { CompanionGraphicsElementValue, JsonValue } from '@companion-module/base'
 
-export function eov<T extends JsonValue | undefined>(schema: z.ZodType<T>): z.ZodType<ExpressionOrValue<T>> {
+/**
+ * Schema for a graphics element value: either a plain value, or an `ExpressionOrValue` wrapper.
+ * Modules may provide either form (see `CompanionGraphicsElementValue`), so accept both here.
+ */
+export function eov<T extends JsonValue | undefined>(
+	schema: z.ZodType<T>,
+): z.ZodType<CompanionGraphicsElementValue<T>> {
 	return z.union([
+		schema,
 		z.object({ value: schema, isExpression: z.literal(false) }),
 		z.object({ value: z.string(), isExpression: z.literal(true) }),
-	]) satisfies z.ZodType<ExpressionOrValue<T>>
+	]) satisfies z.ZodType<CompanionGraphicsElementValue<T>>
 }
 
 // ── Compile-time schema coverage guards ───────────────────────────────────────

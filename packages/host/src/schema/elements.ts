@@ -17,6 +17,7 @@ const hAlignType = z.enum(['left', 'center', 'right'])
 const vAlignType = z.enum(['top', 'center', 'bottom'])
 const lineOrientationType = z.enum(['inside', 'center', 'outside'])
 const imageFillModeType = z.enum(['crop', 'fill', 'fit'])
+const fontFamilyType = z.enum(['companion-sans', 'companion-mono'])
 
 // ── Shared element shape fragments ────────────────────────────────────────────
 // Plain shape objects (not ZodObject instances) so they can be spread into z.object()
@@ -91,7 +92,9 @@ const textElementSchema = z.object({
 	type: z.literal('text'),
 	rotation: eov(z.number().min(0).max(359)).optional(),
 	text: eov(z.string()),
-	fontsize: eov(z.union([z.literal('auto'), z.number()])).optional(),
+	fontsize: eov(z.number()).optional(),
+	fontsizeAllowShrink: eov(z.boolean()).optional(),
+	font: eov(fontFamilyType).optional(),
 	color: eov(colorType).optional(),
 	halign: eov(hAlignType).optional(),
 	valign: eov(vAlignType).optional(),
@@ -151,6 +154,7 @@ type _GroupSchemaKeys =
 	| keyof typeof elementBoundsShape
 	| 'type'
 	| 'rotation'
+	| 'squareCoords'
 	| 'children'
 true satisfies [keyof ButtonGraphicsGroupElement] extends [_GroupSchemaKeys] ? true : never
 
@@ -164,6 +168,7 @@ export const elementSchema: z.ZodType<SomeButtonGraphicsElement> = z.lazy(() =>
 			...elementBoundsShape,
 			type: z.literal('group'),
 			rotation: eov(z.number().min(0).max(359)).optional(),
+			squareCoords: eov(z.boolean()).optional(),
 			children: z.array(elementSchema),
 		}),
 		compositeRefSchema,

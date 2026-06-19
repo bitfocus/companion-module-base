@@ -239,7 +239,7 @@ class TelnetStream extends Transform {
 					break
 			}
 		} else if (this.#state >= WILL && this.#state <= DONT) {
-			let iac: string | undefined = undefined
+			let iac: string | undefined
 			switch (this.#state) {
 				case WILL:
 					iac = 'WILL'
