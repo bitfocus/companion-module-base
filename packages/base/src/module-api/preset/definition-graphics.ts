@@ -2,13 +2,14 @@ import type { JsonValue } from '../../common/json-value.js'
 import type { InstanceTypes } from '../base.js'
 import type { CompanionFeedbackSchema } from '../feedback.js'
 import type { ButtonGraphicsCanvasElement, SomeButtonGraphicsElement } from '../graphics.js'
-import type { CompanionOptionValues, ExpressionOrValue } from '../input.js'
+import type { CompanionOptionValues } from '../input.js'
 import type {
 	CompanionButtonStepActions,
 	CompanionInternalLogicFeedbackSchemas,
 	CompanionPresetDefinitionBase,
 	CompanionPresetLocalVariable,
 	CompanionPresetOptionValues,
+	CompanionPresetValue,
 	MapChildren,
 	WithInternalFeedbacks,
 } from './definition.js'
@@ -80,7 +81,7 @@ export interface CompanionPresetFeedbackStyleOverride {
 	elementId: string
 	elementProperty: string
 	// Note: When overriding advanced feedbacks, this should be set to `{ isExpression: false, value: 'color' }` or similar to indicate which property it is using
-	override: ExpressionOrValue<JsonValue | undefined>
+	override: CompanionPresetValue<JsonValue | undefined>
 }
 
 /**
