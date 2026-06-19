@@ -204,7 +204,7 @@ export interface CompanionSimplePresetDefinition<
 	feedbacks: SomePresetSimpleFeedbackEntry<TManifest>[]
 
 	/** Local variables on this button */
-	localVariables?: CompanionSimplePresetLocalVariable[]
+	localVariables?: CompanionPresetLocalVariable[]
 }
 
 /**
