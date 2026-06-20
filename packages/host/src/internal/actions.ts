@@ -14,7 +14,12 @@ import {
 } from '@companion-module/base'
 import type { ActionInstance, HostActionDefinition } from '../context.js'
 import type { ExecuteActionResult } from '../instance.js'
-import { BANNED_PROPS, hasAnyOldIsVisibleFunctions, hasAnyOldRequiredProperties } from './util.js'
+import {
+	BANNED_PROPS,
+	filterDuplicateOptionIds,
+	hasAnyOldIsVisibleFunctions,
+	hasAnyOldRequiredProperties,
+} from './util.js'
 
 function convertActionInstanceToEvent(action: ActionInstance): CompanionActionInfo {
 	return {
@@ -240,6 +245,7 @@ export class ActionManager {
 		const definitionsWithOptionsToIgnore: string[] = []
 		const definitionsWithOldIsVisible: string[] = []
 		const definitionsWithOldRequiredProperties: string[] = []
+		const definitionsWithDuplicateOptionIds: string[] = []
 
 		for (const [actionId, action] of Object.entries(actions)) {
 			if (!action) continue
@@ -249,12 +255,17 @@ export class ActionManager {
 
 			const hasSubscriptionMethods = !!action.subscribe || !!action.unsubscribe
 
+			// Remove any options which reuse the same id, keeping only the first usage of each
+			const { options: filteredOptions, duplicateIds } = filterDuplicateOptionIds(action.options ?? [])
+			if (duplicateIds.length > 0)
+				definitionsWithDuplicateOptionIds.push(`${actionId} (${duplicateIds.sort().join(', ')})`)
+
 			hostActions.push({
 				id: actionId,
 				name: action.name,
 				sortName: action.sortName,
 				description: action.description,
-				options: action.options,
+				options: filteredOptions,
 				hasResult: !!action.hasResult,
 				optionsToMonitorForSubscribe: action.optionsToMonitorForSubscribe,
 				hasLearn: !!action.learn,
@@ -299,6 +310,13 @@ export class ActionManager {
 		if (definitionsWithOldRequiredProperties.length > 0) {
 			this.#logger.warn(
 				`The following action definitions have options with the old required properties. These should be replaced with requiredExpression to continue to operate. The definitions: ${definitionsWithOldRequiredProperties
+					.sort()
+					.join(', ')}`,
+			)
+		}
+		if (definitionsWithDuplicateOptionIds.length > 0) {
+			this.#logger.warn(
+				`The following action definitions have options which reuse the same id. Each option id must be unique within a definition, or they will overwrite each other. The definitions: ${definitionsWithDuplicateOptionIds
 					.sort()
 					.join(', ')}`,
 			)

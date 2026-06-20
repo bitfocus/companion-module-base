@@ -1,16 +1,17 @@
 import PQueue from 'p-queue'
-import type {
-	CompanionHTTPRequest,
-	CompanionHTTPResponse,
-	CompanionOptionValues,
-	CompanionStaticUpgradeScript,
-	CompanionVariableDefinition,
-	CompanionVariableValue,
-	InstanceBase,
-	InstanceConstructor,
-	InstanceTypes,
-	JsonValue,
-	SomeCompanionConfigField,
+import {
+	createModuleLogger,
+	type CompanionHTTPRequest,
+	type CompanionHTTPResponse,
+	type CompanionOptionValues,
+	type CompanionStaticUpgradeScript,
+	type CompanionVariableDefinition,
+	type CompanionVariableValue,
+	type InstanceBase,
+	type InstanceConstructor,
+	type InstanceTypes,
+	type JsonValue,
+	type SomeCompanionConfigField,
 } from '@companion-module/base'
 import type { InstanceContext, SharedUdpSocketMessage } from '@companion-module/base/host-api'
 import type {
@@ -28,10 +29,10 @@ import { sanitiseCompositeElementDefinitions } from './internal/composite-elemen
 import { FeedbackManager } from './internal/feedback.js'
 import { sanitisePresetDefinitions } from './internal/presets.js'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
-import { BANNED_PROPS } from './internal/util.js'
+import { BANNED_PROPS, filterDuplicateOptionIds } from './internal/util.js'
 
 export class InstanceWrapper<TManifest extends InstanceTypes> {
-	// readonly #logger = createModuleLogger('InstanceWrapper')
+	readonly #logger = createModuleLogger('InstanceWrapper')
 
 	readonly #lifecycleQueue: PQueue = new PQueue({ concurrency: 1 })
 	#initialized = false
@@ -245,7 +246,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 			if (msg.isFirstInit) {
 				const newConfig: any = {}
 				const newSecrets: any = {}
-				const fields = this.#instance.getConfigFields()
+				const fields = this.#getConfigFields()
 				for (const field of fields) {
 					if ('default' in field) {
 						if (field.type.startsWith('secret')) {
@@ -365,7 +366,23 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 	}
 
 	async getConfigFields(): Promise<SomeCompanionConfigField[]> {
-		return this.#instance.getConfigFields()
+		return this.#getConfigFields()
+	}
+
+	#getConfigFields(): SomeCompanionConfigField[] {
+		const rawFields = this.#instance.getConfigFields()
+
+		// Remove any fields which reuse the same id, keeping only the first usage of each
+		const { options: fields, duplicateIds } = filterDuplicateOptionIds(rawFields ?? [])
+		if (duplicateIds.length > 0) {
+			this.#logger.warn(
+				`The config fields reuse the same id. Each field id must be unique, or they will overwrite each other. The ids: ${duplicateIds
+					.sort()
+					.join(', ')}`,
+			)
+		}
+
+		return fields
 	}
 
 	async httpRequest(request: CompanionHTTPRequest): Promise<CompanionHTTPResponse> {

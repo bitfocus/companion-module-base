@@ -14,7 +14,12 @@ import {
 	type JsonValue,
 } from '@companion-module/base'
 import type { FeedbackInstance, HostFeedbackDefinition, HostFeedbackValue } from '../context.js'
-import { BANNED_PROPS, hasAnyOldIsVisibleFunctions, hasAnyOldRequiredProperties } from './util.js'
+import {
+	BANNED_PROPS,
+	filterDuplicateOptionIds,
+	hasAnyOldIsVisibleFunctions,
+	hasAnyOldRequiredProperties,
+} from './util.js'
 
 function convertFeedbackInstanceToEvent(
 	type: 'boolean' | 'value' | 'advanced',
@@ -337,6 +342,7 @@ export class FeedbackManager {
 		const definitionsWithOldRequiredProperties: string[] = []
 		const definitionSubscriptionMentionsChangeStyle: string[] = []
 		const definitionsMissingAffectedProperties: string[] = []
+		const definitionsWithDuplicateOptionIds: string[] = []
 
 		const validModuleApiVersion = semver.valid(this.#moduleApiVersion, { loose: true })
 		const checkAffectedProperties =
@@ -348,12 +354,17 @@ export class FeedbackManager {
 			if (feedbackId.startsWith('internal:'))
 				throw new Error(`Feedback id "${feedbackId}" uses the reserved "internal:" prefix`)
 
+			// Remove any options which reuse the same id, keeping only the first usage of each
+			const { options: filteredOptions, duplicateIds } = filterDuplicateOptionIds(feedback.options ?? [])
+			if (duplicateIds.length > 0)
+				definitionsWithDuplicateOptionIds.push(`${feedbackId} (${duplicateIds.sort().join(', ')})`)
+
 			hostFeedbacks.push({
 				id: feedbackId,
 				name: feedback.name,
 				sortName: feedback.sortName,
 				description: feedback.description,
-				options: feedback.options,
+				options: filteredOptions,
 				type: feedback.type,
 				defaultStyle: feedback.type === 'boolean' ? feedback.defaultStyle : undefined,
 				affectedProperties: feedback.type === 'advanced' ? feedback.affectedProperties : undefined,
@@ -409,6 +420,13 @@ export class FeedbackManager {
 		if (definitionsMissingAffectedProperties.length > 0) {
 			this.#logger.warn(
 				`The following advanced feedback definitions are missing an array for affectedProperties. This should be set to the list of style properties the feedback will affect: ${definitionsMissingAffectedProperties
+					.sort()
+					.join(', ')}`,
+			)
+		}
+		if (definitionsWithDuplicateOptionIds.length > 0) {
+			this.#logger.warn(
+				`The following feedback definitions have options which reuse the same id. Each option id must be unique within a definition, or they will overwrite each other. The definitions: ${definitionsWithDuplicateOptionIds
 					.sort()
 					.join(', ')}`,
 			)

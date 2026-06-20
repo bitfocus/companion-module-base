@@ -283,6 +283,51 @@ describe('ActionManager', () => {
 			expect(warns[0]).toContain('required')
 			expect(warns[0]).toContain(mockDefinitionId)
 		})
+
+		it('warns for options which reuse the same id and filters out the duplicates', () => {
+			const { manager, setActionDefinitions } = createManager()
+
+			manager.setActionDefinitions({
+				[mockDefinitionId]: {
+					name: 'Definition0',
+					options: [
+						{ type: 'textinput', id: 'a', label: 'A' },
+						{ type: 'textinput', id: 'a', label: 'A again' },
+						{ type: 'textinput', id: 'b', label: 'B' },
+					],
+					callback: vi.fn(),
+				},
+			} as unknown as CompanionActionDefinitions)
+
+			const warns = warnMessages()
+			expect(warns).toHaveLength(1)
+			expect(warns[0]).toContain('reuse the same id')
+			expect(warns[0]).toContain(`${mockDefinitionId} (a)`)
+
+			// Only the first usage of each id should be passed to the host
+			expect(setActionDefinitions).toHaveBeenCalledTimes(1)
+			expect(setActionDefinitions.mock.calls[0][0][0].options).toEqual([
+				{ type: 'textinput', id: 'a', label: 'A' },
+				{ type: 'textinput', id: 'b', label: 'B' },
+			])
+		})
+
+		it('no warning for unique option ids', () => {
+			const { manager } = createManager()
+
+			manager.setActionDefinitions({
+				[mockDefinitionId]: {
+					name: 'Definition0',
+					options: [
+						{ type: 'textinput', id: 'a', label: 'A' },
+						{ type: 'textinput', id: 'b', label: 'B' },
+					],
+					callback: vi.fn(),
+				},
+			} as unknown as CompanionActionDefinitions)
+
+			expect(warnMessages()).toHaveLength(0)
+		})
 	})
 
 	describe('execute action', () => {

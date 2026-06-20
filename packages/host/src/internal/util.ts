@@ -34,3 +34,31 @@ export function hasAnyOldRequiredProperties(
 
 	return false
 }
+
+/**
+ * Find any option ids which are used by more than one input field in the same group, and remove the
+ * duplicates so that only the first usage of each id is preserved.
+ *
+ * Duplicate ids cause unpredictable behaviour, as the fields would otherwise overwrite each other's values.
+ */
+export function filterDuplicateOptionIds<T extends { id: string }>(
+	options: T[],
+): { options: T[]; duplicateIds: string[] } {
+	const seen = new Set<string>()
+	const duplicates = new Set<string>()
+	const filtered: T[] = []
+
+	for (const option of options) {
+		if (seen.has(option.id)) {
+			duplicates.add(option.id)
+		} else {
+			seen.add(option.id)
+			filtered.push(option)
+		}
+	}
+
+	// Preserve the original array when there is nothing to remove
+	if (duplicates.size === 0) return { options, duplicateIds: [] }
+
+	return { options: filtered, duplicateIds: Array.from(duplicates) }
+}

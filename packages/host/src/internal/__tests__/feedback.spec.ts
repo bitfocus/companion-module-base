@@ -4,6 +4,7 @@ import type {
 	CompanionBooleanFeedbackDefinition,
 	CompanionFeedbackDefinition,
 	CompanionFeedbackDefinitionBase,
+	CompanionFeedbackDefinitions,
 	CompanionOptionValues,
 	CompanionValueFeedbackDefinition,
 } from '@companion-module/base'
@@ -1088,6 +1089,63 @@ describe('FeedbackManager', () => {
 
 			const manager = new FeedbackManager(vi.fn(), vi.fn(), '2.1.0')
 			manager.setFeedbackDefinitions({ valueFeedback })
+
+			const warnCalls = mockLogger.mock.calls.filter(([, level]) => level === 'warn')
+			expect(warnCalls).toHaveLength(0)
+		})
+	})
+
+	describe('duplicate option id validation', () => {
+		it('warns for options which reuse the same id and filters out the duplicates', () => {
+			const mockLogger = vi.fn()
+			global.COMPANION_LOGGER = mockLogger
+
+			const setFeedbackDefinitions = vi.fn()
+			const manager = new FeedbackManager(setFeedbackDefinitions, vi.fn(), '2.1.0')
+			manager.setFeedbackDefinitions({
+				duplicated: {
+					type: 'boolean',
+					name: 'Boolean feedback',
+					defaultStyle: {},
+					options: [
+						{ type: 'textinput', id: 'a', label: 'A' },
+						{ type: 'textinput', id: 'a', label: 'A again' },
+						{ type: 'textinput', id: 'b', label: 'B' },
+					],
+					callback: vi.fn(() => false),
+				},
+			} as unknown as CompanionFeedbackDefinitions)
+
+			const warnCalls = mockLogger.mock.calls.filter(([, level]) => level === 'warn')
+			expect(warnCalls).toHaveLength(1)
+			expect(warnCalls[0][2]).toContain('reuse the same id')
+			expect(warnCalls[0][2]).toContain('duplicated (a)')
+
+			// Only the first usage of each id should be passed to the host
+			expect(setFeedbackDefinitions).toHaveBeenCalledTimes(1)
+			expect(setFeedbackDefinitions.mock.calls[0][0][0].options).toEqual([
+				{ type: 'textinput', id: 'a', label: 'A' },
+				{ type: 'textinput', id: 'b', label: 'B' },
+			])
+		})
+
+		it('does not warn for unique option ids', () => {
+			const mockLogger = vi.fn()
+			global.COMPANION_LOGGER = mockLogger
+
+			const manager = new FeedbackManager(vi.fn(), vi.fn(), '2.1.0')
+			manager.setFeedbackDefinitions({
+				unique: {
+					type: 'boolean',
+					name: 'Boolean feedback',
+					defaultStyle: {},
+					options: [
+						{ type: 'textinput', id: 'a', label: 'A' },
+						{ type: 'textinput', id: 'b', label: 'B' },
+					],
+					callback: vi.fn(() => false),
+				},
+			} as unknown as CompanionFeedbackDefinitions)
 
 			const warnCalls = mockLogger.mock.calls.filter(([, level]) => level === 'warn')
 			expect(warnCalls).toHaveLength(0)
