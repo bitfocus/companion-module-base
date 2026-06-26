@@ -1004,7 +1004,7 @@ describe('validatePresetDefinitions', () => {
 			const presets = {
 				p1: {
 					type: 'alternatives',
-					variants: [validSimple({ name: 'V1', feedbacks: [{ feedbackId: 'nope', options: {}, style: {} } as any] })],
+					variants: [validSimple({ name: 'V1', feedbacks: [{ feedbackId: 'nope', options: {}, style: {} }] })],
 				},
 			} as unknown as CompanionPresetDefinitions<InstanceTypes>
 			const msgs = runCapture(presets, {}, {}, structureFor('p1'))
