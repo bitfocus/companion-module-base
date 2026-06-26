@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.1.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.0.4...companion-module-base-v2.1.0) (2026-06-26)
+
+
+### Features
+
+* Allow action callbacks to return a result value ([#217](https://github.com/bitfocus/companion-module-base/issues/217)) ([95c00ff](https://github.com/bitfocus/companion-module-base/commit/95c00ffc362c9bc405eef653e210ff35b8a0f7c3))
+* allow internal actions and feedbacks in presets ([#232](https://github.com/bitfocus/companion-module-base/issues/232)) ([a5e55f1](https://github.com/bitfocus/companion-module-base/commit/a5e55f121c1fb9658c0ed9bfad33b1a9f38101f9))
+* allow modules to use node26 ([a79c8c0](https://github.com/bitfocus/companion-module-base/commit/a79c8c086e2274a915049f4110a9a255790cf63f))
+* encourage modules to declare the properties produced by advanced feedbacks ([#229](https://github.com/bitfocus/companion-module-base/issues/229)) ([9ffd88e](https://github.com/bitfocus/companion-module-base/commit/9ffd88e5cc2b9f4c522e75079c59c962ed57efff))
+* fill out newer graphics properties ([a24b68f](https://github.com/bitfocus/companion-module-base/commit/a24b68f89c40acf302bef55e41e9cb2db6ac321e))
+* graphics overhaul ([#171](https://github.com/bitfocus/companion-module-base/issues/171)) ([1341cbe](https://github.com/bitfocus/companion-module-base/commit/1341cbe3c78862f7c3ae3157edff5399dc3354ef))
+* improve `CompanionActionDefinition` type safety with subscribe methods/props ([#225](https://github.com/bitfocus/companion-module-base/issues/225)) ([6f78abf](https://github.com/bitfocus/companion-module-base/commit/6f78abf0a85f3d7481963df509693d1e155b21c1))
+* make learn callbacks abortable ([#222](https://github.com/bitfocus/companion-module-base/issues/222)) ([6950513](https://github.com/bitfocus/companion-module-base/commit/6950513d60472ac886636a523cd9f7ce14a5a4db))
+* pass abort signal to action execution ([37741b4](https://github.com/bitfocus/companion-module-base/commit/37741b45d573219b63af88e25f8d9b133e957439))
+* pass abort signal to feedbacks ([661ee14](https://github.com/bitfocus/companion-module-base/commit/661ee14c1e695f3df99d845be7643d5d383cb25a))
+* preset alternatives ([#240](https://github.com/bitfocus/companion-module-base/issues/240)) ([c45332b](https://github.com/bitfocus/companion-module-base/commit/c45332be507c49381f6c29694c50e5630b884a3f))
+* support feedback based local-variables ([187a8f4](https://github.com/bitfocus/companion-module-base/commit/187a8f4417edfa73b979db52702a6db44276641f))
+* support gauges in presets ([8370e66](https://github.com/bitfocus/companion-module-base/commit/8370e66204c096321cae379822df58614e05b9eb))
+
+
+### Bug Fixes
+
+* allow full local varibales type on presets ([9fec278](https://github.com/bitfocus/companion-module-base/commit/9fec2780e0290460b40ba441781eb5269416d87e))
+* allow skipping isExpression value for feedback overrides ([da3e017](https://github.com/bitfocus/companion-module-base/commit/da3e0170f38fa76e99ea74963742db219369a23a))
+* allow skipping isExpression wrapper in graphics elements ([359327d](https://github.com/bitfocus/companion-module-base/commit/359327d1ea0765763a7309f17bc781b57577a1ba))
+* clarify `affectedProperties` typings ([d746e1b](https://github.com/bitfocus/companion-module-base/commit/d746e1b24687fcbab31c242b673d379d1caae060))
+* ensure TCPHelper reconnects upon connection close ([54622f2](https://github.com/bitfocus/companion-module-base/commit/54622f2b4b2ca9bcf9965881f3aff26b292df463))
+* update schema validation ([528508a](https://github.com/bitfocus/companion-module-base/commit/528508aab7cbf2e684750c2bf8962182770548aa))
+
 ## [2.0.4](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.0.3...companion-module-base-v2.0.4) (2026-04-19)
 
 

@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.1.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.0.3...companion-module-host-v1.1.0) (2026-06-26)
+
+
+### Features
+
+* Allow action callbacks to return a result value ([#217](https://github.com/bitfocus/companion-module-base/issues/217)) ([95c00ff](https://github.com/bitfocus/companion-module-base/commit/95c00ffc362c9bc405eef653e210ff35b8a0f7c3))
+* allow internal actions and feedbacks in presets ([#232](https://github.com/bitfocus/companion-module-base/issues/232)) ([a5e55f1](https://github.com/bitfocus/companion-module-base/commit/a5e55f121c1fb9658c0ed9bfad33b1a9f38101f9))
+* encourage modules to declare the properties produced by advanced feedbacks ([#229](https://github.com/bitfocus/companion-module-base/issues/229)) ([9ffd88e](https://github.com/bitfocus/companion-module-base/commit/9ffd88e5cc2b9f4c522e75079c59c962ed57efff))
+* filter out options/config with duplicate ids and produce warnings ([2fd11f6](https://github.com/bitfocus/companion-module-base/commit/2fd11f6b86f39388a0e648e51827d9c4296bf68e))
+* graphics overhaul ([#171](https://github.com/bitfocus/companion-module-base/issues/171)) ([1341cbe](https://github.com/bitfocus/companion-module-base/commit/1341cbe3c78862f7c3ae3157edff5399dc3354ef))
+* make learn callbacks abortable ([#222](https://github.com/bitfocus/companion-module-base/issues/222)) ([6950513](https://github.com/bitfocus/companion-module-base/commit/6950513d60472ac886636a523cd9f7ce14a5a4db))
+* pass abort signal to action execution ([37741b4](https://github.com/bitfocus/companion-module-base/commit/37741b45d573219b63af88e25f8d9b133e957439))
+* pass abort signal to feedbacks ([661ee14](https://github.com/bitfocus/companion-module-base/commit/661ee14c1e695f3df99d845be7643d5d383cb25a))
+* preset alternatives ([#240](https://github.com/bitfocus/companion-module-base/issues/240)) ([c45332b](https://github.com/bitfocus/companion-module-base/commit/c45332be507c49381f6c29694c50e5630b884a3f))
+* support gauges in presets ([8370e66](https://github.com/bitfocus/companion-module-base/commit/8370e66204c096321cae379822df58614e05b9eb))
+
+
+### Bug Fixes
+
+* expose runThroughUpgradeScripts for offline upgrade script execution ([5c49de0](https://github.com/bitfocus/companion-module-base/commit/5c49de0c7650debbe409d24006918f70e7a05f9f))
+* update schema validation ([528508a](https://github.com/bitfocus/companion-module-base/commit/528508aab7cbf2e684750c2bf8962182770548aa))
+
 ## [1.0.3](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.0.2...companion-module-host-v1.0.3) (2026-04-25)
 
 
