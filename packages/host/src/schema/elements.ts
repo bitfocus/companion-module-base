@@ -4,6 +4,7 @@ import z from 'zod'
 import type {
 	ButtonGraphicsBoxElement,
 	ButtonGraphicsCircleElement,
+	ButtonGraphicsGaugeElement,
 	ButtonGraphicsGroupElement,
 	ButtonGraphicsImageElement,
 	ButtonGraphicsLineElement,
@@ -18,6 +19,9 @@ const vAlignType = z.enum(['top', 'center', 'bottom'])
 const lineOrientationType = z.enum(['inside', 'center', 'outside'])
 const imageFillModeType = z.enum(['crop', 'fill', 'fit'])
 const fontFamilyType = z.enum(['companion-sans', 'companion-mono'])
+const gaugeOrientationType = z.enum(['horizontal', 'vertical', 'ring'])
+const gaugeTrackStyleType = z.enum(['transparent', 'dimmed'])
+const gaugeValueType = z.number().min(-1000000).max(1000000)
 
 // ── Shared element shape fragments ────────────────────────────────────────────
 // Plain shape objects (not ZodObject instances) so they can be spread into z.object()
@@ -148,6 +152,46 @@ const circleElementSchema = z.object({
 }) satisfies z.ZodType<ButtonGraphicsCircleElement>
 true satisfies AssertCoversKeys<typeof circleElementSchema, ButtonGraphicsCircleElement>
 
+const gaugeStopSchema = z.object({
+	value: eov(gaugeValueType),
+	color: eov(colorType),
+	gradient: eov(z.boolean()),
+})
+
+const gaugeElementSchema = z.object({
+	...elementBaseShape,
+	...elementBoundsShape,
+	type: z.literal('gauge'),
+	rotation: eov(z.number().min(0).max(359)).optional(),
+	// Value
+	value: eov(gaugeValueType).optional(),
+	min: eov(gaugeValueType).optional(),
+	max: eov(gaugeValueType).optional(),
+	origin: eov(gaugeValueType).optional(),
+	symmetric: eov(z.boolean()).optional(),
+	// Appearance
+	orientation: eov(gaugeOrientationType).optional(),
+	reverse: eov(z.boolean()).optional(),
+	// Circular styling
+	startAngle: eov(z.number().min(0).max(360)).optional(),
+	endAngle: eov(z.number().min(0).max(360)).optional(),
+	ringWidth: eov(z.number().min(1).max(50)).optional(),
+	roundedEnds: eov(z.boolean()).optional(),
+	// Fill
+	fillEnabled: eov(z.boolean()).optional(),
+	multiColour: eov(z.boolean()).optional(),
+	stops: z.array(gaugeStopSchema).optional(),
+	// Marker
+	markerEnabled: eov(z.boolean()).optional(),
+	markerColor: eov(colorType).optional(),
+	markerWidth: eov(z.number().min(1).max(100)).optional(),
+	// Track
+	trackStyle: eov(gaugeTrackStyleType).optional(),
+	trackAmount: eov(z.number().min(0).max(100)).optional(),
+	trackWidth: eov(z.number().min(0).max(100)).optional(),
+}) satisfies z.ZodType<ButtonGraphicsGaugeElement>
+true satisfies AssertCoversKeys<typeof gaugeElementSchema, ButtonGraphicsGaugeElement>
+
 // Key-coverage assertion for the group schema (defined inline inside z.lazy below)
 type _GroupSchemaKeys =
 	| keyof typeof elementBaseShape
@@ -177,5 +221,6 @@ export const elementSchema: z.ZodType<SomeButtonGraphicsElement> = z.lazy(() =>
 		boxElementSchema,
 		lineElementSchema,
 		circleElementSchema,
+		gaugeElementSchema,
 	]),
 ) as unknown as z.ZodType<SomeButtonGraphicsElement>

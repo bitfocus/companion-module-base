@@ -38,6 +38,7 @@ export type SomeButtonGraphicsElement<
 	| ButtonGraphicsBoxElement
 	| ButtonGraphicsLineElement
 	| ButtonGraphicsCircleElement
+	| ButtonGraphicsGaugeElement
 
 export interface ButtonGraphicsElementBase {
 	id?: string
@@ -198,4 +199,70 @@ export interface ButtonGraphicsCircleElement
 
 	drawSlice?: CompanionGraphicsElementValue<boolean>
 	borderOnlyArc?: CompanionGraphicsElementValue<boolean>
+}
+
+export type GaugeOrientation = 'horizontal' | 'vertical' | 'ring'
+export type GaugeTrackStyle = 'transparent' | 'dimmed'
+
+/** A single colour stop on a gauge. */
+export interface ButtonGraphicsGaugeStop {
+	/* The value at which this stop applies, in the Min..Max range */
+	value: CompanionGraphicsElementValue<number>
+	color: CompanionGraphicsElementValue<number>
+	/* Gradient to the next stop */
+	gradient: CompanionGraphicsElementValue<boolean>
+}
+
+export interface ButtonGraphicsGaugeElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
+	type: 'gauge'
+
+	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
+
+	// Value
+	/* The current value of the gauge, in the Min..Max range */
+	value?: CompanionGraphicsElementValue<number>
+	/* The value mapped to the start */
+	min?: CompanionGraphicsElementValue<number>
+	/* The value mapped to the end */
+	max?: CompanionGraphicsElementValue<number>
+	/* The value the fill grows from */
+	origin?: CompanionGraphicsElementValue<number>
+	/* Grows outward in both directions from the origin */
+	symmetric?: CompanionGraphicsElementValue<boolean>
+
+	// Appearance
+	orientation?: CompanionGraphicsElementValue<GaugeOrientation>
+	/* Gauge fills from the opposite end */
+	reverse?: CompanionGraphicsElementValue<boolean>
+
+	// Circular styling
+	/* Angle of the start of the arc, degrees 0-360 */
+	startAngle?: CompanionGraphicsElementValue<number>
+	/* Angle of the end of the arc, degrees 0-360 */
+	endAngle?: CompanionGraphicsElementValue<number>
+	/* Width of the ring, as a percentage 1-50 */
+	ringWidth?: CompanionGraphicsElementValue<number>
+	roundedEnds?: CompanionGraphicsElementValue<boolean>
+
+	// Fill
+	/* Draw the filled portion of the gauge */
+	fillEnabled?: CompanionGraphicsElementValue<boolean>
+	/* When enabled, each colour stop is visible in the filled portion. When disabled, only the active stop colour is used for the entire filled area. */
+	multiColour?: CompanionGraphicsElementValue<boolean>
+	stops?: ButtonGraphicsGaugeStop[]
+
+	// Marker
+	/* Draw a marker line at the current value, across the full width of the fill */
+	markerEnabled?: CompanionGraphicsElementValue<boolean>
+	markerColor?: CompanionGraphicsElementValue<number>
+	/* Thickness of the marker line as a percentage of the fill width, 1-100 */
+	markerWidth?: CompanionGraphicsElementValue<number>
+
+	// Track
+	/* How to render the unfilled track behind the fill */
+	trackStyle?: CompanionGraphicsElementValue<GaugeTrackStyle>
+	/* How much of the original colour remains in the unfilled track. 0 = invisible / black, 100 = same as the active colour. */
+	trackAmount?: CompanionGraphicsElementValue<number>
+	/* Width of the track relative to the available space, centred. 0-100 */
+	trackWidth?: CompanionGraphicsElementValue<number>
 }
