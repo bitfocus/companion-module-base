@@ -962,4 +962,82 @@ describe('validatePresetDefinitions', () => {
 			expect(msgs.some((m) => m.includes('unknown action definitions'))).toBe(false)
 		})
 	})
+
+	describe('alternatives entries', () => {
+		it('keeps all valid variants of an alternatives entry, in order', () => {
+			const presets = {
+				p1: {
+					type: 'alternatives',
+					variants: [validLayered({ name: 'Layered' }), validSimple({ name: 'Simple' })],
+				},
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(msgs).toHaveLength(0)
+			const group = result.presets['p1'] as any
+			expect(group.type).toBe('alternatives')
+			expect(group.variants.map((v: any) => v.type)).toEqual(['layered', 'simple'])
+		})
+
+		it('drops only the individually-invalid variant, keeping valid siblings, and warns', () => {
+			const presets = {
+				p1: {
+					type: 'alternatives',
+					// The second variant is missing steps/feedbacks/style, so it is invalid
+					variants: [validSimple({ name: 'Good' }), { type: 'simple', name: 'Bad' }],
+				},
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(msgs.some((m) => m.includes('could not be validated') && m.includes('Bad'))).toBe(true)
+			const group = result.presets['p1'] as any
+			expect(group.variants.map((v: any) => v.name)).toEqual(['Good'])
+		})
+
+		it('drops the whole group when no variant survives validation', () => {
+			const presets = {
+				p1: { type: 'alternatives', variants: [{ type: 'simple', name: 'Bad' }] },
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(result.presets).not.toHaveProperty('p1')
+			// The group vanishing should be surfaced, not silent
+			expect(msgs.some((m) => m.includes('could not be validated'))).toBe(true)
+		})
+
+		it('flags an alternatives entry whose variants array is empty', () => {
+			const presets = {
+				p1: { type: 'alternatives', name: 'Group', variants: [] },
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(msgs.some((m) => m.includes('could not be validated'))).toBe(true)
+			expect(result.presets).not.toHaveProperty('p1')
+		})
+
+		it('validates the content of each variant, warning about unknown ids inside a variant', () => {
+			const presets = {
+				p1: {
+					type: 'alternatives',
+					variants: [validSimple({ name: 'V1', feedbacks: [{ feedbackId: 'nope', options: {}, style: {} }] })],
+				},
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const msgs = runCapture(presets, {}, {}, structureFor('p1'))
+			expect(msgs.some((m) => m.includes('unknown feedback definitions') && m.includes('V1'))).toBe(true)
+		})
+
+		it('does not flag an alternatives group referenced by structure as missing or unreferenced', () => {
+			const presets = {
+				p1: { type: 'alternatives', variants: [validSimple({ name: 'Simple' })] },
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const msgs = runCapture(presets, {}, {}, structureFor('p1'))
+			expect(msgs.some((m) => m.includes('do not exist in presets'))).toBe(false)
+			expect(msgs.some((m) => m.includes('not referenced by structure'))).toBe(false)
+		})
+
+		it('flags an alternatives entry whose variants field is not an array', () => {
+			const presets = {
+				p1: { type: 'alternatives', name: 'Group', variants: 'nope' },
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(msgs.some((m) => m.includes('could not be validated'))).toBe(true)
+			expect(result.presets).not.toHaveProperty('p1')
+		})
+	})
 })

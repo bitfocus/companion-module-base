@@ -3,6 +3,7 @@ import { z } from 'zod'
 import {
 	createModuleLogger,
 	INTERNAL_PRESET_MIN_API_VERSION,
+	type CompanionPresetDefinition,
 	type CompanionPresetDefinitions,
 	type CompanionPresetSection,
 } from '@companion-module/base'
@@ -19,6 +20,21 @@ const MAX_PRESET_NESTING_DEPTH = 10
 /** Whether an action/feedback id references one of Companion's built-in internal definitions */
 function isInternalId(id: unknown): id is string {
 	return typeof id === 'string' && id.startsWith('internal:')
+}
+
+/**
+ * The shape of a preset entry (an action/feedback/condition, or a numbered delay-group) as the sanitiser
+ * inspects it. Preset data is untrusted at runtime so the values stay loose and are checked, but naming
+ * the fields here means a typo in a property we read (eg `feedbckId`) is a compile error, mirroring the
+ * real preset entry types in `@companion-module/base`.
+ */
+interface PresetEntryView {
+	actionId?: unknown
+	feedbackId?: unknown
+	options?: unknown
+	children?: unknown
+	/** Present on the object form of a numbered delay-group (`CompanionPresetActionsWithOptions`) */
+	actions?: unknown
 }
 
 /** Collect all element IDs declared in a layered elements tree, recursing into group children */
@@ -76,7 +92,11 @@ export function sanitisePresetDefinitions(
 	 * recursing into the child groups of building-block entries. Returns new feedbacks/steps arrays, and
 	 * whether anything was dropped.
 	 */
-	function dropDisallowedInternalEntries(preset: any): { feedbacks: any; steps: any; dropped: boolean } {
+	function dropDisallowedInternalEntries(preset: CompanionPresetDefinition<any>): {
+		feedbacks: typeof preset.feedbacks
+		steps: typeof preset.steps
+		dropped: boolean
+	} {
 		let dropped = false
 		const keep = (id: unknown): boolean => {
 			if (!isInternalId(id)) return true
@@ -89,13 +109,13 @@ export function sanitisePresetDefinitions(
 		 * Recursively filter an array of action/feedback/condition entries: drop disallowed internal
 		 * entries, and filter the child groups of any building-block entry that remains.
 		 */
-		const filterEntries = (entries: unknown, depth: number): unknown => {
+		const filterEntries = <T extends PresetEntryView>(entries: T[], depth: number): T[] => {
 			if (!Array.isArray(entries)) return entries
 			if (depth > MAX_PRESET_NESTING_DEPTH) return entries
-			const out: unknown[] = []
+			const out: T[] = []
 			for (const entry of entries) {
 				if (!keep(entry?.actionId ?? entry?.feedbackId)) continue
-				if (entry && typeof entry === 'object' && entry.children && typeof entry.children === 'object') {
+				if (entry && entry.children && typeof entry.children === 'object') {
 					const children: Record<string, unknown> = {}
 					for (const [groupId, childEntries] of Object.entries(entry.children)) {
 						children[groupId] = filterEntries(childEntries, depth + 1)
@@ -108,19 +128,27 @@ export function sanitisePresetDefinitions(
 			return out
 		}
 
+		// `feedbacks` is `preset.feedbacks` with disallowed internal entries dropped. `filterEntries` is
+		// generic over the entry type and only removes or recurses into entries — never changing an entry's
+		// kind — so it returns `preset.feedbacks`'s own type directly, no cast needed.
 		const feedbacks = filterEntries(preset.feedbacks, 0)
 
-		const steps = Array.isArray(preset.steps)
-			? preset.steps.map((step: any) => {
+		// `steps` is `preset.steps` rebuilt with each action-set (`down`/`up`/...) and numbered delay-group
+		// filtered the same way. Unlike `feedbacks`, the step object is rebuilt as a loose record rather than
+		// threaded through `filterEntries`, so the cast back to the source type is needed here — tied to the
+		// `preset.steps` it reconstructs.
+		const steps = (Array.isArray(preset.steps)
+			? preset.steps.map((step) => {
 					const out: Record<string, unknown> = {}
 					for (const [key, value] of Object.entries(step)) {
 						if (key === 'down' || key === 'up' || key === 'rotate_left' || key === 'rotate_right') {
 							out[key] = filterEntries(value, 0)
 						} else if (/^\d+$/.test(key)) {
+							const group = value as PresetEntryView | undefined
 							if (Array.isArray(value)) {
 								out[key] = filterEntries(value, 0)
-							} else if (value && typeof value === 'object' && Array.isArray((value as any).actions)) {
-								out[key] = { ...(value as any), actions: filterEntries((value as any).actions, 0) }
+							} else if (group && Array.isArray(group.actions)) {
+								out[key] = { ...group, actions: filterEntries(group.actions, 0) }
 							} else {
 								out[key] = value
 							}
@@ -130,7 +158,7 @@ export function sanitisePresetDefinitions(
 					}
 					return out
 				})
-			: preset.steps
+			: preset.steps) as unknown as typeof preset.steps
 
 		return { feedbacks, steps, dropped }
 	}
@@ -144,13 +172,13 @@ export function sanitisePresetDefinitions(
 	const presetsWithDisallowedInternalIds: string[] = []
 	const presetsFailedValidation: string[] = []
 
-	for (const [_id, preset] of Object.entries(presets)) {
-		if (!preset) continue
-		if (BANNED_PROPS.has(_id)) {
-			presetsFailedValidation.push(typeof preset.name === 'string' ? preset.name : _id)
-			continue
-		}
-		if (preset.type !== 'simple' && preset.type !== 'layered') continue
+	/**
+	 * Validate and sanitise a single `simple`/`layered` preset definition. Returns the sanitised preset,
+	 * or `null` if it could not be validated (any failure is recorded in the warning collections above).
+	 * Entries with an unrecognised `type` (the data is untrusted at runtime) are silently skipped (`null`).
+	 */
+	function sanitiseOnePreset(preset: CompanionPresetDefinition<any>): CompanionPresetDefinition<any> | null {
+		if (preset.type !== 'simple' && preset.type !== 'layered') return null
 
 		const presetName = typeof preset.name === 'string' ? preset.name : 'Unknown'
 
@@ -158,15 +186,15 @@ export function sanitisePresetDefinitions(
 			// --- Structural validation ---
 			if (!Array.isArray(preset.steps)) {
 				presetsFailedValidation.push(presetName)
-				continue
+				return null
 			}
 			if (!Array.isArray(preset.feedbacks)) {
 				presetsFailedValidation.push(presetName)
-				continue
+				return null
 			}
 			if (preset.type === 'simple' && (!preset.style || typeof preset.style !== 'object')) {
 				presetsFailedValidation.push(presetName)
-				continue
+				return null
 			}
 
 			let sanitisedPreset = preset
@@ -175,13 +203,16 @@ export function sanitisePresetDefinitions(
 			if (preset.type === 'layered') {
 				if (!Array.isArray(preset.elements)) {
 					presetsFailedValidation.push(presetName)
-					continue
+					return null
 				}
 				const elemParsed = z.array(elementSchema).safeParse(preset.elements)
 				if (!elemParsed.success) {
 					presetsWithInvalidElements.push(presetName)
-					continue
+					return null
 				}
+				// `elemParsed.data` is the zod-validated element tree; the schema's inferred type does not line
+				// up with the manifest-driven element type, so cast just that property back to the preset's
+				// element shape (the rest of the object keeps its precise type).
 				sanitisedPreset = { ...preset, elements: elemParsed.data }
 				// Validate that style override element IDs reference declared elements
 				const elementIds = collectElementIds(elemParsed.data)
@@ -204,7 +235,7 @@ export function sanitisePresetDefinitions(
 				...sanitisedPreset,
 				feedbacks: internalFiltered.feedbacks,
 				steps: internalFiltered.steps,
-			}
+			} as CompanionPresetDefinition<any>
 			if (internalFiltered.dropped) presetsWithDisallowedInternalIds.push(presetName)
 
 			// --- Validate feedback/action IDs and option keys, recursing into building-block children ---
@@ -222,11 +253,11 @@ export function sanitisePresetDefinitions(
 				return false
 			}
 
-			const validateFeedbackEntry = (feedback: any, depth: number): void => {
+			const validateFeedbackEntry = (feedback: PresetEntryView | undefined, depth: number): void => {
 				const feedbackId = feedback?.feedbackId
 				// internal references are handled by the filtering above, not validated here
 				if (!isInternalId(feedbackId)) {
-					if (!validFeedbackIds.has(feedbackId)) {
+					if (typeof feedbackId !== 'string' || !validFeedbackIds.has(feedbackId)) {
 						hasInvalidFeedback = true
 					} else if (hasUnknownOptionKeys(feedbacksManager.getDefinition(feedbackId), feedback?.options)) {
 						hasInvalidFeedbackOptionKeys = true
@@ -235,11 +266,11 @@ export function sanitisePresetDefinitions(
 				validateChildren(feedback, depth)
 			}
 
-			const validateActionEntry = (action: any, depth: number): void => {
+			const validateActionEntry = (action: PresetEntryView | undefined, depth: number): void => {
 				const actionId = action?.actionId
 				// internal references are handled by the filtering above, not validated here
 				if (!isInternalId(actionId)) {
-					if (!validActionIds.has(actionId)) {
+					if (typeof actionId !== 'string' || !validActionIds.has(actionId)) {
 						hasInvalidAction = true
 					} else if (hasUnknownOptionKeys(actionsManager.getDefinition(actionId), action?.options)) {
 						hasInvalidActionOptionKeys = true
@@ -249,18 +280,18 @@ export function sanitisePresetDefinitions(
 			}
 
 			/** Validate the child groups of a building-block entry, dispatching each child by its shape */
-			const validateChildren = (entry: any, depth: number): void => {
+			const validateChildren = (entry: PresetEntryView | undefined, depth: number): void => {
 				if (depth > MAX_PRESET_NESTING_DEPTH) return
-				if (!entry || typeof entry !== 'object') return
-				if (!entry.children || typeof entry.children !== 'object') return
+				if (!entry || !entry.children || typeof entry.children !== 'object') return
 				for (const childEntries of Object.values(entry.children)) {
 					if (!Array.isArray(childEntries)) continue
 					for (const child of childEntries) {
 						// Child groups hold feedbacks (eg condition groups) or actions; dispatch by shape
-						if (child && typeof child === 'object' && 'feedbackId' in child) {
-							validateFeedbackEntry(child, depth + 1)
+						const childView = child as PresetEntryView | undefined
+						if (childView && typeof childView === 'object' && 'feedbackId' in childView) {
+							validateFeedbackEntry(childView, depth + 1)
 						} else {
-							validateActionEntry(child, depth + 1)
+							validateActionEntry(childView, depth + 1)
 						}
 					}
 				}
@@ -279,7 +310,7 @@ export function sanitisePresetDefinitions(
 						actions = value
 					} else if (/^\d+$/.test(key)) {
 						// Numbered delay-group properties
-						actions = Array.isArray(value) ? value : value?.actions
+						actions = Array.isArray(value) ? value : (value as PresetEntryView | undefined)?.actions
 					} else {
 						continue
 					}
@@ -295,10 +326,46 @@ export function sanitisePresetDefinitions(
 			if (hasInvalidAction) presetsWithInvalidActionIds.push(presetName)
 			if (hasInvalidActionOptionKeys) presetsWithInvalidActionOptionKeys.push(presetName)
 
-			result.presets[_id] = sanitisedPreset
+			return sanitisedPreset
 		} catch (_e) {
 			presetsFailedValidation.push(presetName)
+			return null
 		}
+	}
+
+	for (const [_id, preset] of Object.entries(presets)) {
+		if (!preset) continue
+		if (BANNED_PROPS.has(_id)) {
+			presetsFailedValidation.push('name' in preset && typeof preset.name === 'string' ? preset.name : _id)
+			continue
+		}
+
+		// An `alternatives` entry groups several variants of the same logical preset. Validate each
+		// variant independently, dropping only the individually-invalid ones (the host application
+		// decides which surviving variant to surface). The group is dropped only if none survive.
+		if (preset.type === 'alternatives') {
+			if (!Array.isArray(preset.variants)) {
+				presetsFailedValidation.push(_id)
+				continue
+			}
+			const sanitisedVariants: CompanionPresetDefinition<any>[] = []
+			for (const variant of preset.variants) {
+				if (!variant) continue
+				const sanitisedVariant = sanitiseOnePreset(variant)
+				if (sanitisedVariant) sanitisedVariants.push(sanitisedVariant)
+			}
+			if (sanitisedVariants.length > 0) {
+				result.presets[_id] = { ...preset, variants: sanitisedVariants }
+			} else {
+				// An empty (or entirely-dropped) group would otherwise vanish with no feedback; surface it the
+				// same as a malformed non-array group so the author knows why the preset disappeared.
+				presetsFailedValidation.push(_id)
+			}
+			continue
+		}
+
+		const sanitisedPreset = sanitiseOnePreset(preset)
+		if (sanitisedPreset) result.presets[_id] = sanitisedPreset
 	}
 
 	if (presetsFailedValidation.length > 0) {

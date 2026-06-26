@@ -157,13 +157,44 @@ type _AssertBuildingBlockIds = Expect<
  * The definitions of a group of presets
  */
 export type CompanionPresetDefinitions<TManifest extends InstanceTypes = InstanceTypes> = {
-	[id: string]: CompanionPresetDefinition<TManifest> | undefined
+	[id: string]: CompanionSomePresetDefinition<TManifest> | undefined
 }
+
+/**
+ * The value stored against a preset id: either a single preset definition, or a group of alternative
+ * variants of the same logical preset (see {@link CompanionPresetAlternatives}).
+ */
+export type CompanionSomePresetDefinition<TManifest extends InstanceTypes = InstanceTypes> =
+	| CompanionPresetDefinition<TManifest>
+	| CompanionPresetAlternatives<TManifest>
 
 // Future: Additional types will be added, as part of the graphics overhaul
 export type CompanionPresetDefinition<TManifest extends InstanceTypes = InstanceTypes> =
 	| CompanionSimplePresetDefinition<TManifest>
 	| CompanionLayeredButtonPresetDefinition<TManifest>
+
+/**
+ * A group of alternative variants of a single logical preset.
+ *
+ * A module can offer several variants of "the same" preset (for example a rich `layered` variant and a
+ * `simple` fallback) so that hosts with differing capabilities can each surface the best one they
+ * support. This library does not decide or perform that selection: it simply forwards the group, and the
+ * host application picks which variant to show based on its own capabilities.
+ *
+ * The whole group is referenced by a single id in the preset structure, exactly like a plain preset.
+ */
+export interface CompanionPresetAlternatives<TManifest extends InstanceTypes = InstanceTypes> {
+	/**
+	 * The type of the entry
+	 */
+	type: 'alternatives'
+
+	/**
+	 * The variants of this preset, ordered most-preferred first.
+	 * The host application surfaces the first variant it is able to render.
+	 */
+	variants: CompanionPresetDefinition<TManifest>[]
+}
 
 export interface CompanionPresetDefinitionBase<TType extends string> {
 	/**
