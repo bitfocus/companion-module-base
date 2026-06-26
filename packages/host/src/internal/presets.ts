@@ -3,6 +3,7 @@ import { z } from 'zod'
 import {
 	createModuleLogger,
 	INTERNAL_PRESET_MIN_API_VERSION,
+	type CompanionPresetDefinition,
 	type CompanionPresetDefinitions,
 	type CompanionPresetSection,
 } from '@companion-module/base'
@@ -76,7 +77,7 @@ export function sanitisePresetDefinitions(
 	 * recursing into the child groups of building-block entries. Returns new feedbacks/steps arrays, and
 	 * whether anything was dropped.
 	 */
-	function dropDisallowedInternalEntries(preset: any): { feedbacks: any; steps: any; dropped: boolean } {
+	function dropDisallowedInternalEntries(preset: CompanionPresetDefinition<any>): { feedbacks: any; steps: any; dropped: boolean } {
 		let dropped = false
 		const keep = (id: unknown): boolean => {
 			if (!isInternalId(id)) return true
@@ -144,13 +145,13 @@ export function sanitisePresetDefinitions(
 	const presetsWithDisallowedInternalIds: string[] = []
 	const presetsFailedValidation: string[] = []
 
-	for (const [_id, preset] of Object.entries(presets)) {
-		if (!preset) continue
-		if (BANNED_PROPS.has(_id)) {
-			presetsFailedValidation.push(typeof preset.name === 'string' ? preset.name : _id)
-			continue
-		}
-		if (preset.type !== 'simple' && preset.type !== 'layered') continue
+	/**
+	 * Validate and sanitise a single `simple`/`layered` preset definition. Returns the sanitised preset,
+	 * or `null` if it could not be validated (any failure is recorded in the warning collections above).
+	 * Entries with an unrecognised `type` (the data is untrusted at runtime) are silently skipped (`null`).
+	 */
+	function sanitiseOnePreset(preset: CompanionPresetDefinition<any>): CompanionPresetDefinition<any> | null {
+		if (preset.type !== 'simple' && preset.type !== 'layered') return null
 
 		const presetName = typeof preset.name === 'string' ? preset.name : 'Unknown'
 
@@ -158,15 +159,15 @@ export function sanitisePresetDefinitions(
 			// --- Structural validation ---
 			if (!Array.isArray(preset.steps)) {
 				presetsFailedValidation.push(presetName)
-				continue
+				return null
 			}
 			if (!Array.isArray(preset.feedbacks)) {
 				presetsFailedValidation.push(presetName)
-				continue
+				return null
 			}
 			if (preset.type === 'simple' && (!preset.style || typeof preset.style !== 'object')) {
 				presetsFailedValidation.push(presetName)
-				continue
+				return null
 			}
 
 			let sanitisedPreset = preset
@@ -175,12 +176,12 @@ export function sanitisePresetDefinitions(
 			if (preset.type === 'layered') {
 				if (!Array.isArray(preset.elements)) {
 					presetsFailedValidation.push(presetName)
-					continue
+					return null
 				}
 				const elemParsed = z.array(elementSchema).safeParse(preset.elements)
 				if (!elemParsed.success) {
 					presetsWithInvalidElements.push(presetName)
-					continue
+					return null
 				}
 				sanitisedPreset = { ...preset, elements: elemParsed.data }
 				// Validate that style override element IDs reference declared elements
@@ -295,10 +296,42 @@ export function sanitisePresetDefinitions(
 			if (hasInvalidAction) presetsWithInvalidActionIds.push(presetName)
 			if (hasInvalidActionOptionKeys) presetsWithInvalidActionOptionKeys.push(presetName)
 
-			result.presets[_id] = sanitisedPreset
+			return sanitisedPreset
 		} catch (_e) {
 			presetsFailedValidation.push(presetName)
+			return null
 		}
+	}
+
+	for (const [_id, preset] of Object.entries(presets)) {
+		if (!preset) continue
+		if (BANNED_PROPS.has(_id)) {
+			presetsFailedValidation.push('name' in preset && typeof preset.name === 'string' ? preset.name : _id)
+			continue
+		}
+
+		// An `alternatives` entry groups several variants of the same logical preset. Validate each
+		// variant independently, dropping only the individually-invalid ones (the host application
+		// decides which surviving variant to surface). The group is dropped only if none survive.
+		if (preset.type === 'alternatives') {
+			if (!Array.isArray(preset.variants)) {
+				presetsFailedValidation.push(_id)
+				continue
+			}
+			const sanitisedVariants: CompanionPresetDefinition<any>[] = []
+			for (const variant of preset.variants) {
+				if (!variant) continue
+				const sanitisedVariant = sanitiseOnePreset(variant)
+				if (sanitisedVariant) sanitisedVariants.push(sanitisedVariant)
+			}
+			if (sanitisedVariants.length > 0) {
+				result.presets[_id] = { ...preset, variants: sanitisedVariants }
+			}
+			continue
+		}
+
+		const sanitisedPreset = sanitiseOnePreset(preset)
+		if (sanitisedPreset) result.presets[_id] = sanitisedPreset
 	}
 
 	if (presetsFailedValidation.length > 0) {
