@@ -356,6 +356,10 @@ export function sanitisePresetDefinitions(
 			}
 			if (sanitisedVariants.length > 0) {
 				result.presets[_id] = { ...preset, variants: sanitisedVariants }
+			} else {
+				// An empty (or entirely-dropped) group would otherwise vanish with no feedback; surface it the
+				// same as a malformed non-array group so the author knows why the preset disappeared.
+				presetsFailedValidation.push(_id)
 			}
 			continue
 		}

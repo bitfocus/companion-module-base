@@ -996,7 +996,18 @@ describe('validatePresetDefinitions', () => {
 			const presets = {
 				p1: { type: 'alternatives', variants: [{ type: 'simple', name: 'Bad' }] },
 			} as unknown as CompanionPresetDefinitions<InstanceTypes>
-			const { result } = runSanitise(presets, {}, {}, structureFor('p1'))
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(result.presets).not.toHaveProperty('p1')
+			// The group vanishing should be surfaced, not silent
+			expect(msgs.some((m) => m.includes('could not be validated'))).toBe(true)
+		})
+
+		it('flags an alternatives entry whose variants array is empty', () => {
+			const presets = {
+				p1: { type: 'alternatives', name: 'Group', variants: [] },
+			} as unknown as CompanionPresetDefinitions<InstanceTypes>
+			const { result, msgs } = runSanitise(presets, {}, {}, structureFor('p1'))
+			expect(msgs.some((m) => m.includes('could not be validated'))).toBe(true)
 			expect(result.presets).not.toHaveProperty('p1')
 		})
 
