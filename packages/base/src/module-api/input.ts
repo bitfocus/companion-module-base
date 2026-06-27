@@ -371,6 +371,7 @@ export interface CompanionInputFieldNumber<TKey extends string = string> extends
  * 	label: 'Save result to variable',
  * }
  * ```
+ * @deprecated Use the action result flow instead of this
  */
 export interface CompanionInputFieldCustomVariable<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
 	type: 'custom-variable'

@@ -97,11 +97,7 @@ type _CompanionActionSchemaDoesntDistributeUnionResult = ExpectFalse<
  */
 export interface CompanionActionContext extends CompanionCommonCallbackContext {
 	/**
-	 * @deprecated Experimental: This method may change without notice. Do not use!
-	 * Set the value of a custom variable
-	 * @param variableName
-	 * @param value
-	 * @returns Promise which resolves upon success, or rejects if the variable no longer exists
+	 * @deprecated Experimental: This method may change without notice. Use the action result flow instead!
 	 */
 	setCustomVariableValue(variableName: string, value: CompanionVariableValue): void
 }
