@@ -441,4 +441,86 @@ describe('runThroughUpgradeScripts', () => {
 		expectedInput[0].upgradeIndex = 1
 		expect(actionsInput).toEqual(expectedInput)
 	})
+
+	it('storeResult set by a script is returned, and not passed into the input', () => {
+		const actionBefore: UpgradeActionInstance = {
+			id: 'act0',
+			upgradeIndex: null,
+			actionId: 'my-action',
+			options: {
+				destination: { value: 'my-var', isExpression: false },
+			},
+			controlId: 'control0',
+		}
+
+		const scripts = createMockScripts(1)
+		scripts[0].mockImplementation((_ctx, args) => {
+			// storeResult must never be passed into the script as input
+			expect(args.actions[0]).toEqual(stripActionInstance(actionBefore))
+			expect('storeResult' in args.actions[0]).toBe(false)
+
+			const action = args.actions[0]
+			delete action.options.destination
+			action.storeResult = {
+				type: 'custom-variable',
+				variableName: { value: 'my-var', isExpression: false },
+			}
+
+			return literal<CompanionStaticUpgradeResult<JsonObject, JsonObject>>({
+				updatedActions: [action],
+				updatedFeedbacks: [],
+				updatedConfig: null,
+			})
+		})
+
+		const actionsInput = makeActionsInput(actionBefore)
+		const result = runThroughUpgradeScripts(actionsInput, [], -1, scripts, {}, {}, true)
+
+		expect(result.updatedActions).toEqual([
+			{
+				...actionBefore,
+				options: {},
+				storeResult: {
+					type: 'custom-variable',
+					variableName: { value: 'my-var', isExpression: false },
+				},
+				upgradeIndex: 0,
+			},
+		])
+	})
+
+	it('storeResult set by an earlier script is preserved over a later one', () => {
+		const actionBefore: UpgradeActionInstance = {
+			id: 'act0',
+			upgradeIndex: -1,
+			actionId: 'my-action',
+			options: {},
+			controlId: 'control0',
+		}
+
+		const scripts = createMockScripts(2)
+		const setStoreResult = (variableName: string) => (_ctx: any, args: any) => {
+			// storeResult must never be passed into the script as input, even after an earlier script set it
+			expect('storeResult' in args.actions[0]).toBe(false)
+			args.actions[0].storeResult = {
+				type: 'custom-variable',
+				variableName: { value: variableName, isExpression: false },
+			}
+			return literal<CompanionStaticUpgradeResult<JsonObject, JsonObject>>({
+				updatedActions: [args.actions[0]],
+				updatedFeedbacks: [],
+				updatedConfig: null,
+			})
+		}
+		scripts[0].mockImplementation(setStoreResult('first'))
+		scripts[1].mockImplementation(setStoreResult('second'))
+
+		const result = runThroughUpgradeScripts(makeActionsInput(actionBefore), [], -1, scripts, {}, {}, true)
+
+		// The first generation wins, like feedback `style`
+		expect(result.updatedActions[0].storeResult).toEqual({
+			type: 'custom-variable',
+			variableName: { value: 'first', isExpression: false },
+		})
+	})
 })

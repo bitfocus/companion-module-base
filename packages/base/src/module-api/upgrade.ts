@@ -71,6 +71,17 @@ export type CompanionMigrationOptionValues = {
 }
 
 /**
+ * Where an action's result should be stored.
+ * Used by upgrade scripts to convert from the old `setCustomVariableValue` pattern to the
+ * new action-result flow.
+ */
+export interface CompanionMigrationActionStoreResult {
+	type: 'custom-variable'
+	/** Name of the custom variable to write the action's result into */
+	variableName: ExpressionOrValue<string>
+}
+
+/**
  * An action that could be upgraded
  */
 export interface CompanionMigrationAction {
@@ -83,6 +94,12 @@ export interface CompanionMigrationAction {
 	actionId: string
 	/** The user selected options for the action */
 	options: CompanionMigrationOptionValues
+
+	/**
+	 * If this action now returns a result (replacing an old `setCustomVariableValue` pattern),
+	 * set where that result should be stored.
+	 */
+	storeResult?: CompanionMigrationActionStoreResult
 }
 
 /**
@@ -226,6 +243,48 @@ export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig extends 
 			updatedSecrets: null,
 			updatedActions: [],
 			updatedFeedbacks: changedFeedbacks,
+		}
+	}
+}
+
+/**
+ * A helper script to convert actions from the old pattern of storing their result in a custom variable
+ * (via a `custom-variable` option field and `context.setCustomVariableValue`) to the new action-result flow.
+ * The action definitions must be updated manually to return a result, this can only help update existing usages.
+ * @param upgradeMap Map of action id to the id of the `custom-variable` option to convert
+ */
+export function CreateUseActionResultStoreUpgradeScript<TConfig extends JsonObject = JsonObject>(
+	upgradeMap: Record<string, string>,
+): CompanionStaticUpgradeScript<TConfig> {
+	// Warning: the unused parameters will often be null
+	return (_context, props) => {
+		const changedActions: CompanionStaticUpgradeResult<TConfig, undefined>['updatedActions'] = []
+
+		for (const action of props.actions) {
+			const optionKey = upgradeMap[action.actionId]
+			if (typeof optionKey !== 'string') continue
+
+			// Retrieve and delete the old custom-variable field value, which held the chosen variable name
+			const rawValue = action.options[optionKey]
+			if (rawValue === undefined) continue
+			delete action.options[optionKey]
+
+			action.storeResult = {
+				type: 'custom-variable',
+				variableName: rawValue.isExpression
+					? { isExpression: true, value: rawValue.value }
+					: // eslint-disable-next-line @typescript-eslint/no-base-to-string
+						{ isExpression: false, value: String(rawValue.value ?? '') },
+			}
+
+			changedActions.push(action)
+		}
+
+		return {
+			updatedConfig: null,
+			updatedSecrets: null,
+			updatedActions: changedActions,
+			updatedFeedbacks: [],
 		}
 	}
 }

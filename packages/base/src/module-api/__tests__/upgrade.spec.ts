@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { FixupBooleanOrVariablesValueToExpressions, FixupNumericOrVariablesValueToExpressions } from '../upgrade.js'
+import {
+	CreateUseActionResultStoreUpgradeScript,
+	FixupBooleanOrVariablesValueToExpressions,
+	FixupNumericOrVariablesValueToExpressions,
+	type CompanionMigrationAction,
+	type CompanionStaticUpgradeProps,
+} from '../upgrade.js'
 
 describe('FixupNumericOrVariablesValueToExpressions', () => {
 	it('returns undefined when given undefined', () => {
@@ -277,5 +283,55 @@ describe('FixupBooleanOrVariablesValueToExpressions', () => {
 	it('passes through a null value unchanged', () => {
 		const val = { isExpression: false as const, value: null }
 		expect(FixupBooleanOrVariablesValueToExpressions(val)).toBe(val)
+	})
+})
+
+describe('CreateUseActionResultStoreUpgradeScript', () => {
+	function makeAction(actionId: string, options: CompanionMigrationAction['options']): CompanionMigrationAction {
+		return { id: 'act0', controlId: 'control0', actionId, options }
+	}
+	function runScript(...actions: CompanionMigrationAction[]) {
+		const script = CreateUseActionResultStoreUpgradeScript({ 'my-action': 'destination' })
+		const props: CompanionStaticUpgradeProps<any, any> = { config: null, secrets: null, actions, feedbacks: [] }
+		return script({ currentConfig: {} }, props)
+	}
+
+	it('converts the chosen custom-variable option into storeResult', () => {
+		const action = makeAction('my-action', { destination: { value: 'my-var', isExpression: false } })
+		const result = runScript(action)
+
+		expect(result.updatedActions).toEqual([action])
+		expect(action.options).toEqual({})
+		expect(action.storeResult).toEqual({
+			type: 'custom-variable',
+			variableName: { value: 'my-var', isExpression: false },
+		})
+	})
+
+	it('preserves an expression value', () => {
+		const action = makeAction('my-action', { destination: { value: '$(internal:custom_x)', isExpression: true } })
+		runScript(action)
+
+		expect(action.storeResult).toEqual({
+			type: 'custom-variable',
+			variableName: { value: '$(internal:custom_x)', isExpression: true },
+		})
+	})
+
+	it('ignores actions not in the map', () => {
+		const action = makeAction('other-action', { destination: { value: 'my-var', isExpression: false } })
+		const result = runScript(action)
+
+		expect(result.updatedActions).toEqual([])
+		expect(action.options).toEqual({ destination: { value: 'my-var', isExpression: false } })
+		expect(action.storeResult).toBeUndefined()
+	})
+
+	it('ignores actions missing the option', () => {
+		const action = makeAction('my-action', {})
+		const result = runScript(action)
+
+		expect(result.updatedActions).toEqual([])
+		expect(action.storeResult).toBeUndefined()
 	})
 })

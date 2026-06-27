@@ -1,6 +1,7 @@
 import type {
 	CompanionFeedbackButtonStyleResult,
 	CompanionGraphicsCompositeElementDefinitions,
+	CompanionMigrationActionStoreResult,
 	CompanionOptionValues,
 	CompanionPresetDefinitions,
 	CompanionPresetSection,
@@ -128,6 +129,11 @@ export interface ActionInstance extends ActionInstanceBase {
 
 export interface UpgradeActionInstance extends Omit<ActionInstanceBase, 'options'> {
 	options: ExpressionOptionsObject
+
+	/**
+	 * Only used as an output from the module, when converting to the action-result store flow
+	 */
+	storeResult?: CompanionMigrationActionStoreResult
 
 	controlId: string
 

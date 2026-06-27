@@ -118,7 +118,9 @@ export function runThroughUpgradeScripts(
 						.map((id) => {
 							const inst = allActions[id]
 							if (inst) {
-								return literal<Complete<CompanionMigrationAction>>({
+								// Note: storeResult is output-only (like feedback `style`), the module must
+								// never see the user's chosen value, so it is omitted from the input.
+								return literal<Complete<Omit<CompanionMigrationAction, 'storeResult'>>>({
 									id: inst.id,
 									controlId: inst.controlId,
 
@@ -139,7 +141,6 @@ export function runThroughUpgradeScripts(
 
 									feedbackId: inst.feedbackId,
 									options: inst.options !== undefined ? structuredClone(inst.options) : {},
-									// TODO - style?
 
 									isInverted: inst.isInverted,
 								})
@@ -160,6 +161,8 @@ export function runThroughUpgradeScripts(
 						instance.actionId = action.actionId
 						instance.options = action.options
 						instance.upgradeIndex = i
+						// storeResult is output-only; preserve the first generation, like feedback `style`
+						instance.storeResult = instance.storeResult ?? action.storeResult
 
 						// Mark it as changed
 						updatedActions[action.id] = instance
