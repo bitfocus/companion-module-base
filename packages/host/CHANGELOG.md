@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.0...companion-module-host-v1.1.1) (2026-06-27)
+
+
+### Bug Fixes
+
+* allow upgrade scripts to convert setCustomVariable usages to new result flow ([d26c7c0](https://github.com/bitfocus/companion-module-base/commit/d26c7c090715e1df23d88b34a0412687bde789b8))
+
 ## [1.1.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.0.3...companion-module-host-v1.1.0) (2026-06-26)
 
 
