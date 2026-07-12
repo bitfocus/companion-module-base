@@ -7,7 +7,7 @@
 		"declarationMap": true,
 
 		"sourceMap": true,
-		"importHelpers": true,
+		"importHelpers": false, // there should be nothing here. inline so we can drop the dependency
 		"pretty": true,
 		"esModuleInterop": true,
 

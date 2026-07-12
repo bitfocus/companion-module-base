@@ -38,8 +38,7 @@
 		"lib"
 	],
 	"dependencies": {
-		"colord": "^2.9.3",
-		"tslib": "^2.8.1"
+		"colord": "^2.9.3"
 	},
 	"devDependencies": {
 		"ajv": "^8.20.0",
