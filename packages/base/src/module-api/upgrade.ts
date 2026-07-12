@@ -133,7 +133,7 @@ export interface CompanionMigrationFeedback {
  * A helper upgrade script, which does nothing.
  * Useful to replace a script which is no longer needed
  */
-export const EmptyUpgradeScript: CompanionStaticUpgradeScript<any> = () => ({
+export const EmptyUpgradeScript: CompanionStaticUpgradeScript<any, any> = () => ({
 	updatedConfig: null,
 	updatedSecrets: null,
 	updatedActions: [],
@@ -208,12 +208,13 @@ export function CreateConvertToBooleanFeedbackUpgradeScript<TConfig extends Json
  * The feedback definitions must be updated manually, this can only help update existing usages of the feedback.
  * @param upgradeMap The feedbacks to upgrade and the id of the option to convert
  */
-export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig extends JsonObject = JsonObject>(
-	upgradeMap: Record<string, string>,
-): CompanionStaticUpgradeScript<TConfig> {
+export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<
+	TConfig extends JsonObject,
+	TSecrets extends JsonObject | undefined = undefined,
+>(upgradeMap: Record<string, string>): CompanionStaticUpgradeScript<TConfig, TSecrets> {
 	// Warning: the unused parameters will often be null
 	return (_context, props) => {
-		const changedFeedbacks: CompanionStaticUpgradeResult<TConfig, undefined>['updatedFeedbacks'] = []
+		const changedFeedbacks: CompanionStaticUpgradeResult<TConfig, TSecrets>['updatedFeedbacks'] = []
 
 		for (const feedback of props.feedbacks) {
 			const propertyName = upgradeMap[feedback.feedbackId]
@@ -253,12 +254,13 @@ export function CreateUseBuiltinInvertForFeedbacksUpgradeScript<TConfig extends 
  * The action definitions must be updated manually to return a result, this can only help update existing usages.
  * @param upgradeMap Map of action id to the id of the `custom-variable` option to convert
  */
-export function CreateUseActionResultStoreUpgradeScript<TConfig extends JsonObject = JsonObject>(
-	upgradeMap: Record<string, string>,
-): CompanionStaticUpgradeScript<TConfig> {
+export function CreateUseActionResultStoreUpgradeScript<
+	TConfig extends JsonObject,
+	TSecrets extends JsonObject | undefined = undefined,
+>(upgradeMap: Record<string, string>): CompanionStaticUpgradeScript<TConfig, TSecrets> {
 	// Warning: the unused parameters will often be null
 	return (_context, props) => {
-		const changedActions: CompanionStaticUpgradeResult<TConfig, undefined>['updatedActions'] = []
+		const changedActions: CompanionStaticUpgradeResult<TConfig, TSecrets>['updatedActions'] = []
 
 		for (const action of props.actions) {
 			const optionKey = upgradeMap[action.actionId]
