@@ -1,6 +1,6 @@
 {
 	"name": "@companion-module/host",
-	"version": "1.1.1",
+	"version": "1.1.0",
 	"type": "module",
 	"license": "MIT",
 	"repository": "https://github.com/bitfocus/companion-module-base",
@@ -15,7 +15,7 @@
 		}
 	},
 	"engines": {
-		"node": "^22.20"
+		"node": "^22.20 || ^26.5"
 	},
 	"files": [
 		"README.md",
