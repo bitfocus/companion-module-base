@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.1.1...companion-module-base-v2.1.2) (2026-07-13)
+
+
+### Bug Fixes
+
+* handle secrets generics in CreateUseActionResultStoreUpgradeScript and other util ([5676104](https://github.com/bitfocus/companion-module-base/commit/5676104820035af9bc6ee84209f6c055ab4e395d))
+
 ## [2.1.1](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.1.0...companion-module-base-v2.1.1) (2026-06-27)
 
 
