@@ -230,7 +230,7 @@ export type CompanionActionDefinitionNoSubscribeHooks = {
  *
  *   * {@link CompanionActionDefinitionBase}: fields common to all actions
  *   * {@link CompanionActionDefinitionCallbackWithResult} or
- *     {@link CompanionActionDefinitionCallbackNoResult}: fields defining the
+ *     {@link CompanionActionDefinitionCallbackWithoutResult}: fields defining the
  *     function to implement the action (and optionally return a result)
  *   * {@link CompanionActionDefinitionSubscribeHooks} or
  *     {@link CompanionActionDefinitionNoSubscribeHooks}: fields to optionally
