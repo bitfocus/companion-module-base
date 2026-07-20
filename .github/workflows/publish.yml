@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       - name: Prepare Environment
@@ -143,7 +143,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Use Node.js 22.x
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22.x
       - name: Enable corepack
@@ -194,7 +194,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Use Node.js 22.x
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22.x
 
@@ -231,7 +231,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Use Node.js 22.x
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22.x
       - name: Enable corepack
