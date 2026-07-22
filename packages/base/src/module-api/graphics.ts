@@ -23,6 +23,13 @@ export type CompanionGraphicsElementOptionsObject<T extends CompanionOptionValue
 }
 
 /**
+ * A color value for a button graphics element property.
+ *
+ * Modules may provide either a number (e.g. `0xFF0000` for red) or a css string (e.g. `'#FF0000'` or `rgb(255, 0, 0)` for red).
+ */
+export type CompanionColorValue = number | string
+
+/**
  * A button graphics element, as used when defining presets and composite elements.
  *
  * Property values may be given as plain values or {@link ExpressionOrValue} wrappers, see
@@ -139,12 +146,12 @@ export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, Bu
 
 	font?: CompanionGraphicsElementValue<ButtonGraphicsFontFamily>
 
-	color?: CompanionGraphicsElementValue<number>
+	color?: CompanionGraphicsElementValue<CompanionColorValue>
 
 	halign?: CompanionGraphicsElementValue<HorizontalAlignment>
 	valign?: CompanionGraphicsElementValue<VerticalAlignment>
 
-	outlineColor?: CompanionGraphicsElementValue<number>
+	outlineColor?: CompanionGraphicsElementValue<CompanionColorValue>
 }
 
 export interface ButtonGraphicsImageElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
@@ -162,7 +169,7 @@ export interface ButtonGraphicsImageElement extends ButtonGraphicsElementBase, B
 
 export interface ButtonGraphicsBorderProperties {
 	borderWidth?: CompanionGraphicsElementValue<number> // 0 to disable
-	borderColor?: CompanionGraphicsElementValue<number>
+	borderColor?: CompanionGraphicsElementValue<CompanionColorValue>
 	borderPosition?: CompanionGraphicsElementValue<LineOrientation>
 }
 
@@ -172,7 +179,7 @@ export interface ButtonGraphicsBoxElement
 
 	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
 
-	color?: CompanionGraphicsElementValue<number>
+	color?: CompanionGraphicsElementValue<CompanionColorValue>
 }
 
 export interface ButtonGraphicsLineElement extends ButtonGraphicsElementBase, ButtonGraphicsBorderProperties {
@@ -192,7 +199,7 @@ export interface ButtonGraphicsCircleElement
 	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds, ButtonGraphicsBorderProperties {
 	type: 'circle'
 
-	color?: CompanionGraphicsElementValue<number>
+	color?: CompanionGraphicsElementValue<CompanionColorValue>
 
 	startAngle?: CompanionGraphicsElementValue<number> // degrees 0-359
 	endAngle?: CompanionGraphicsElementValue<number> // degrees 0-359
@@ -208,7 +215,7 @@ export type GaugeTrackStyle = 'transparent' | 'dimmed'
 export interface ButtonGraphicsGaugeStop {
 	/* The value at which this stop applies, in the Min..Max range */
 	value: CompanionGraphicsElementValue<number>
-	color: CompanionGraphicsElementValue<number>
+	color: CompanionGraphicsElementValue<CompanionColorValue>
 	/* Gradient to the next stop */
 	gradient: CompanionGraphicsElementValue<boolean>
 }
@@ -254,7 +261,7 @@ export interface ButtonGraphicsGaugeElement extends ButtonGraphicsElementBase, B
 	// Marker
 	/* Draw a marker line at the current value, across the full width of the fill */
 	markerEnabled?: CompanionGraphicsElementValue<boolean>
-	markerColor?: CompanionGraphicsElementValue<number>
+	markerColor?: CompanionGraphicsElementValue<CompanionColorValue>
 	/* Thickness of the marker line as a percentage of the fill width, 1-100 */
 	markerWidth?: CompanionGraphicsElementValue<number>
 

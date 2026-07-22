@@ -1,3 +1,5 @@
+import type { CompanionColorValue } from './graphics.js'
+
 export type CompanionAlignment =
 	| 'left:top'
 	| 'center:top'
@@ -21,8 +23,8 @@ export interface CompanionButtonStyleProps {
 	 */
 	textExpression?: boolean
 	size: CompanionTextSize
-	color: number
-	bgcolor: number
+	color: CompanionColorValue
+	bgcolor: CompanionColorValue
 	alignment?: CompanionAlignment
 	pngalignment?: CompanionAlignment
 	png64?: string
