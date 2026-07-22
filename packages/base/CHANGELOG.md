@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.1.2...companion-module-base-v2.2.0) (2026-07-22)
+
+
+### Features
+
+* allow modules to produce colours as css strings ([99d8e81](https://github.com/bitfocus/companion-module-base/commit/99d8e810ec504e050d81d19a4d8f09fd23afb8fe))
+
 ## [2.1.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.1.1...companion-module-base-v2.1.2) (2026-07-13)
 
 
