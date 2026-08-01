@@ -70,24 +70,10 @@ const compositeRefSchema = z.object({
 })
 // Key-coverage assertion for compositeRef (satisfies skipped – see above)
 type _CompositeRefSchemaKeys =
-	| keyof typeof elementBaseShape
-	| keyof typeof elementBoundsShape
-	| 'type'
-	| 'elementId'
-	| 'options'
+	keyof typeof elementBaseShape | keyof typeof elementBoundsShape | 'type' | 'elementId' | 'options'
 // ButtonGraphicsCompositeElement is a mapped generic — import the base fields manually
 type _ButtonGraphicsCompositeElementKeys =
-	| 'id'
-	| 'name'
-	| 'enabled'
-	| 'opacity'
-	| 'x'
-	| 'y'
-	| 'width'
-	| 'height'
-	| 'type'
-	| 'elementId'
-	| 'options'
+	'id' | 'name' | 'enabled' | 'opacity' | 'x' | 'y' | 'width' | 'height' | 'type' | 'elementId' | 'options'
 true satisfies [_ButtonGraphicsCompositeElementKeys] extends [_CompositeRefSchemaKeys] ? true : never
 
 const textElementSchema = z.object({
@@ -194,12 +180,7 @@ true satisfies AssertCoversKeys<typeof gaugeElementSchema, ButtonGraphicsGaugeEl
 
 // Key-coverage assertion for the group schema (defined inline inside z.lazy below)
 type _GroupSchemaKeys =
-	| keyof typeof elementBaseShape
-	| keyof typeof elementBoundsShape
-	| 'type'
-	| 'rotation'
-	| 'squareCoords'
-	| 'children'
+	keyof typeof elementBaseShape | keyof typeof elementBoundsShape | 'type' | 'rotation' | 'squareCoords' | 'children'
 true satisfies [keyof ButtonGraphicsGroupElement] extends [_GroupSchemaKeys] ? true : never
 
 // The outer elementSchema uses z.lazy for the recursive group case.

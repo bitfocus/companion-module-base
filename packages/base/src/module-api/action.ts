@@ -280,19 +280,17 @@ export type CompanionActionDefinitions<
 > = {
 	[K in keyof Tschemas]: Tschemas[K] extends infer Schema // just to abbreviate
 		? Schema extends CompanionActionSchemaWithResult<infer Options, infer Result>
-			?
-					| (CompanionActionDefinitionBase<Options> &
+			? | (CompanionActionDefinitionBase<Options> &
+						(CompanionActionDefinitionSubscribeHooks<Options> | CompanionActionDefinitionNoSubscribeHooks) &
+						CompanionActionDefinitionCallbackWithResult<Options, Result>)
+				| false
+				| undefined
+			: Schema extends CompanionActionSchemaWithoutResult<infer Options>
+				? | (CompanionActionDefinitionBase<Options> &
 							(CompanionActionDefinitionSubscribeHooks<Options> | CompanionActionDefinitionNoSubscribeHooks) &
-							CompanionActionDefinitionCallbackWithResult<Options, Result>)
+							CompanionActionDefinitionCallbackWithoutResult<Options>)
 					| false
 					| undefined
-			: Schema extends CompanionActionSchemaWithoutResult<infer Options>
-				?
-						| (CompanionActionDefinitionBase<Options> &
-								(CompanionActionDefinitionSubscribeHooks<Options> | CompanionActionDefinitionNoSubscribeHooks) &
-								CompanionActionDefinitionCallbackWithoutResult<Options>)
-						| false
-						| undefined
 				: never
 		: never
 }

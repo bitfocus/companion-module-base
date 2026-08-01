@@ -131,8 +131,7 @@ export type CompanionPresetConditionFeedback<
 
 /** An action entry in a preset: the module's own or internal flat actions, plus internal building blocks. */
 export type SomePresetActionEntry<TManifest extends InstanceTypes = InstanceTypes> =
-	| CompanionPresetAction<WithInternalActions<TManifest['actions']>>
-	| CompanionInternalLogicAction<TManifest>
+	CompanionPresetAction<WithInternalActions<TManifest['actions']>> | CompanionInternalLogicAction<TManifest>
 
 /** A condition entry (boolean feedback or nested logic operator) used inside a building block. */
 export type SomePresetConditionEntry<TManifest extends InstanceTypes = InstanceTypes> =
@@ -165,13 +164,11 @@ export type CompanionPresetDefinitions<TManifest extends InstanceTypes = Instanc
  * variants of the same logical preset (see {@link CompanionPresetAlternatives}).
  */
 export type CompanionSomePresetDefinition<TManifest extends InstanceTypes = InstanceTypes> =
-	| CompanionPresetDefinition<TManifest>
-	| CompanionPresetAlternatives<TManifest>
+	CompanionPresetDefinition<TManifest> | CompanionPresetAlternatives<TManifest>
 
 // Future: Additional types will be added, as part of the graphics overhaul
 export type CompanionPresetDefinition<TManifest extends InstanceTypes = InstanceTypes> =
-	| CompanionSimplePresetDefinition<TManifest>
-	| CompanionLayeredButtonPresetDefinition<TManifest>
+	CompanionSimplePresetDefinition<TManifest> | CompanionLayeredButtonPresetDefinition<TManifest>
 
 /**
  * A group of alternative variants of a single logical preset.

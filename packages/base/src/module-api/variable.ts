@@ -11,9 +11,9 @@ export interface CompanionVariableDefinition<_TManifest extends CompanionVariabl
  * The definition of a variable
  */
 export type CompanionVariableDefinitions<TManifest extends CompanionVariableValues = CompanionVariableValues> = {
-	[variableId in keyof TManifest as variableId extends string
-		? variableId
-		: never]: CompanionVariableDefinition<TManifest>
+	[
+		variableId in keyof TManifest as variableId extends string ? variableId : never
+	]: CompanionVariableDefinition<TManifest>
 }
 
 /**

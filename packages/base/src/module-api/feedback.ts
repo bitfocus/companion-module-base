@@ -206,8 +206,7 @@ export interface CompanionAdvancedFeedbackDefinition<
 	 * which will help users by avoiding a wall of unnecessary overrides
 	 */
 	affectedProperties:
-		| Array<'text' | 'size' | 'color' | 'bgcolor' | 'alignment' | 'pngalignment' | 'png64' | 'imageBuffer'>
-		| undefined
+		Array<'text' | 'size' | 'color' | 'bgcolor' | 'alignment' | 'pngalignment' | 'png64' | 'imageBuffer'> | undefined
 
 	/** Called to get the feedback value */
 	callback: (
@@ -247,9 +246,9 @@ export type CompanionFeedbackDefinition<
 				: TSchema['type'] extends 'advanced'
 					? CompanionAdvancedFeedbackDefinition<TOptions>
 					: // Unspecific, try anything
-							| CompanionBooleanFeedbackDefinition<TOptions>
-							| CompanionValueFeedbackDefinition<TOptions>
-							| CompanionAdvancedFeedbackDefinition<TOptions>
+						| CompanionBooleanFeedbackDefinition<TOptions>
+						| CompanionValueFeedbackDefinition<TOptions>
+						| CompanionAdvancedFeedbackDefinition<TOptions>
 		: never
 
 /**
