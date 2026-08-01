@@ -1,0 +1,16 @@
+{
+	"type": "connection",
+	"id": "companion-module-acme-broken",
+	"name": "acme-broken",
+	"shortname": "broken",
+	"description": "Missing the required runtime block",
+	"version": "1.0.0",
+	"license": "MIT",
+	"repository": "https://github.com/bitfocus/companion-module-acme-broken",
+	"bugs": "https://github.com/bitfocus/companion-module-acme-broken/issues",
+	"maintainers": [{ "name": "Jane Doe" }],
+	"legacyIds": [],
+	"manufacturer": "ACME",
+	"products": ["Broken"],
+	"keywords": []
+}
