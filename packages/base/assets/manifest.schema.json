@@ -77,7 +77,6 @@
 		"products",
 		"keywords"
 	],
-	"additionalProperties": false,
 	"$defs": {
 		"ModuleManifestMaintainer": {
 			"type": "object",
@@ -88,7 +87,6 @@
 				"url": { "type": "string" }
 			},
 			"required": ["name"],
-			"additionalProperties": false,
 			"title": "ModuleManifestMaintainer"
 		},
 		"ModuleManifestRuntime": {
@@ -121,12 +119,10 @@
 							"type": "boolean"
 						}
 					},
-					"additionalProperties": false,
 					"description": "Permissions required by the module. This is used to inform the user of the permissions required by the module."
 				}
 			},
 			"required": ["type", "api", "apiVersion", "entrypoint"],
-			"additionalProperties": false,
 			"description": "Information on how to execute the module",
 			"title": "ModuleManifestRuntime"
 		},
@@ -149,7 +145,6 @@
 				}
 			},
 			"required": ["type", "protocol"],
-			"additionalProperties": false,
 			"title": "ModuleBonjourQuery"
 		}
 	}

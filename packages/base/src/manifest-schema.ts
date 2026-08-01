@@ -66,7 +66,7 @@ function uniqueArray<T extends z.ZodType>(item: T, opts: { min?: number } = {}) 
 // ── Sub-schemas that do not depend on the strict/loose mode ────────────────────
 
 const permissionsSchema = z
-	.strictObject({
+	.object({
 		'worker-threads': z.boolean().optional().describe('Enable if the module uses worker threads'),
 		'child-process': z.boolean().optional().describe('Enable if the module uses child processes'),
 		'native-addons': z.boolean().optional().describe('Enable if the module uses native addons'),
@@ -113,7 +113,7 @@ const bonjourQuerySchema = z
 /** Build the maintainer sub-schema for the given strictness. */
 function buildMaintainerSchema(strict: boolean) {
 	return z
-		.strictObject({
+		.object({
 			name: forbidPlaceholder(z.string(), 'Your name', strict),
 			email: forbidPlaceholder(z.string(), 'Your email', strict).optional(),
 			github: z.string().optional(),

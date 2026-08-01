@@ -47,6 +47,48 @@ describe('validateManifest', () => {
 			expect(() => validateManifest(validManifest(), true)).not.toThrow()
 		})
 
+		it('accepts a valid manifest under strict checks', () => {
+			expect(() => validateManifest(validManifest(), false)).not.toThrow()
+		})
+
+		it('accepts the node26 runtime type', () => {
+			expect(() =>
+				validateManifest(validManifest({ runtime: { ...validManifest().runtime, type: 'node26' } }), true),
+			).not.toThrow()
+		})
+
+		it('accepts optional isPrerelease', () => {
+			expect(() => validateManifest(validManifest({ isPrerelease: true }), true)).not.toThrow()
+		})
+
+		it('accepts optional runtime permissions', () => {
+			expect(() =>
+				validateManifest(
+					validManifest({
+						runtime: { ...validManifest().runtime, permissions: { 'worker-threads': true, filesystem: true } },
+					}),
+					true,
+				),
+			).not.toThrow()
+		})
+
+		it('accepts bonjourQueries in both single and array form', () => {
+			expect(() =>
+				validateManifest(
+					validManifest({
+						bonjourQueries: {
+							single: { type: '_http._tcp', protocol: 'tcp' },
+							multiple: [
+								{ type: '_http._tcp', protocol: 'tcp' },
+								{ type: '_osc._udp', protocol: 'udp', addressFamily: 'ipv4+6' },
+							],
+						},
+					}),
+					true,
+				),
+			).not.toThrow()
+		})
+
 		it('throws when id is missing', () => {
 			const m = validManifest()
 			delete (m as any).id
@@ -166,6 +208,33 @@ describe('validateManifest', () => {
 
 		it('accepts unique items', () => {
 			expect(() => validateManifest(validManifest({ keywords: ['a', 'b'] }), true)).not.toThrow()
+		})
+	})
+
+	// Unknown properties must be tolerated so that a manifest produced by a newer
+	// tool (with fields this version doesn't know about yet) still validates.
+	describe('forwards compatibility (unknown properties)', () => {
+		it('accepts an unknown top-level property', () => {
+			const m = { ...validManifest(), someFutureField: 'hello' }
+			expect(() => validateManifest(m, true)).not.toThrow()
+			expect(() => validateManifest(m, false)).not.toThrow()
+		})
+
+		it('accepts an unknown property inside runtime', () => {
+			const m = validManifest({ runtime: { ...validManifest().runtime, someFutureField: 'hello' } as any })
+			expect(() => validateManifest(m, true)).not.toThrow()
+		})
+
+		it('accepts an unknown property inside a maintainer', () => {
+			const m = validManifest({ maintainers: [{ name: 'Test Author', someFutureField: 'hello' } as any] })
+			expect(() => validateManifest(m, true)).not.toThrow()
+		})
+
+		it('accepts an unknown property inside runtime permissions', () => {
+			const m = validManifest({
+				runtime: { ...validManifest().runtime, permissions: { 'future-permission': true } as any },
+			})
+			expect(() => validateManifest(m, true)).not.toThrow()
 		})
 	})
 })

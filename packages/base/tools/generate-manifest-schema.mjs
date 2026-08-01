@@ -13,6 +13,20 @@ const jsonSchema = z.toJSONSchema(buildManifestSchema(true), {
 	// `.refine()`-based constraints (eg uniqueItems) cannot be represented in JSON
 	// schema; emit what we can rather than throwing on them.
 	unrepresentable: 'any',
+	override: (ctx) => {
+		// Never emit `additionalProperties: false`. Closed objects have repeatedly
+		// caused forwards/backwards-compatibility problems, where an older schema
+		// rejects a manifest produced by a newer tool that added a field. Runtime
+		// validation stays lenient too: zod objects strip unknown keys rather than
+		// rejecting them, so extra properties are always tolerated.
+		//
+		// Only the boolean `false` form is removed; record types (eg `txt`,
+		// `bonjourQueries`) use `additionalProperties` to describe their value
+		// schema and must be left untouched.
+		if (ctx.jsonSchema.additionalProperties === false) {
+			delete ctx.jsonSchema.additionalProperties
+		}
+	},
 })
 
 // Prepend the identifying metadata that consumers reference the schema by.
