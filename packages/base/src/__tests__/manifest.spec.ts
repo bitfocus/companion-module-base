@@ -30,15 +30,15 @@ function validManifest(overrides: Partial<ModuleManifest> = {}): ModuleManifest 
 describe('validateManifest', () => {
 	describe('basic type guard', () => {
 		it('throws when passed null', () => {
-			expect(() => validateManifest(null as any, true)).toThrow('Manifest is not an object')
+			expect(() => validateManifest(null, true)).toThrow('Manifest validation failed')
 		})
 
 		it('throws when passed a string', () => {
-			expect(() => validateManifest('hello' as any, true)).toThrow('Manifest is not an object')
+			expect(() => validateManifest('hello', true)).toThrow('Manifest validation failed')
 		})
 
 		it('throws when passed a number', () => {
-			expect(() => validateManifest(42 as any, true)).toThrow('Manifest is not an object')
+			expect(() => validateManifest(42, true)).toThrow('Manifest validation failed')
 		})
 	})
 
@@ -104,49 +104,68 @@ describe('validateManifest', () => {
 	describe('template placeholder checks (looseChecks=false)', () => {
 		it('throws when id contains the template name', () => {
 			expect(() => validateManifest(validManifest({ id: 'companion-module-your-module-name' }), false)).toThrow(
-				`Manifest incorrectly references template module 'companion-module-your-module-name'`,
+				`/id must not contain the module template placeholder "companion-module-your-module-name"`,
 			)
 		})
 
 		it('throws when shortname contains the template shortname', () => {
 			expect(() => validateManifest(validManifest({ shortname: 'module-shortname' }), false)).toThrow(
-				`Manifest incorrectly references template module 'module-shortname'`,
+				`/shortname must not contain the module template placeholder "module-shortname"`,
 			)
 		})
 
 		it('throws when description contains the template description', () => {
 			const desc = 'A short one line description of your module'
 			expect(() => validateManifest(validManifest({ description: desc }), false)).toThrow(
-				`Manifest incorrectly references template module '${desc}'`,
+				`/description must not contain the module template placeholder "${desc}"`,
 			)
 		})
 
 		it('throws when a maintainer name contains the template name', () => {
 			expect(() => validateManifest(validManifest({ maintainers: [{ name: 'Your name' }] }), false)).toThrow(
-				`Manifest incorrectly references template module 'Your name'`,
+				`/maintainers/0/name must not contain the module template placeholder "Your name"`,
 			)
 		})
 
 		it('throws when a maintainer email contains the template email', () => {
 			expect(() =>
 				validateManifest(validManifest({ maintainers: [{ name: 'Test Author', email: 'Your email' }] }), false),
-			).toThrow(`Manifest incorrectly references template module 'Your email'`)
+			).toThrow(`/maintainers/0/email must not contain the module template placeholder "Your email"`)
 		})
 
 		it('throws when manufacturer contains the template company', () => {
 			expect(() => validateManifest(validManifest({ manufacturer: 'Your company' }), false)).toThrow(
-				`Manifest incorrectly references template module 'Your company'`,
+				`/manufacturer must not contain the module template placeholder "Your company"`,
 			)
 		})
 
 		it('throws when products contains the template product', () => {
 			expect(() => validateManifest(validManifest({ products: ['Your product'] }), false)).toThrow(
-				`Manifest incorrectly references template module 'Your product'`,
+				`/products/0 must not contain the module template placeholder "Your product"`,
 			)
 		})
 
 		it('does not throw for template placeholders when looseChecks=true', () => {
 			expect(() => validateManifest(validManifest({ manufacturer: 'Your company' }), true)).not.toThrow()
+		})
+	})
+
+	describe('unique items', () => {
+		it('throws when keywords contains duplicates', () => {
+			expect(() => validateManifest(validManifest({ keywords: ['a', 'a'] }), true)).toThrow(
+				'/keywords must not contain duplicate items',
+			)
+		})
+
+		it('throws when maintainers contains duplicates', () => {
+			const maintainer = { name: 'Test Author', email: 'test@example.com' }
+			expect(() => validateManifest(validManifest({ maintainers: [maintainer, { ...maintainer }] }), true)).toThrow(
+				'/maintainers must not contain duplicate items',
+			)
+		})
+
+		it('accepts unique items', () => {
+			expect(() => validateManifest(validManifest({ keywords: ['a', 'b'] }), true)).not.toThrow()
 		})
 	})
 })
