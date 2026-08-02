@@ -75,7 +75,7 @@ export interface CompanionInputFieldBase<TKey extends string = string> {
  * }
  * ```
  */
-export interface CompanionInputFieldStaticText<TKey extends string = string> extends CompanionInputFieldBase<TKey> {
+export interface CompanionInputFieldStaticText<_TKey extends string = string> extends CompanionInputFieldBase<string> {
 	type: 'static-text'
 	/** The text to show */
 	value: string
