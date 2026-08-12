@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.1...companion-module-host-v1.1.2) (2026-08-12)
+
+
+### Bug Fixes
+
+* expose additional graphics properties ([#262](https://github.com/bitfocus/companion-module-base/issues/262)) ([4e35a72](https://github.com/bitfocus/companion-module-base/commit/4e35a727316f6b78586db4af1ac0cfb5e107d0b1))
+
 ## [1.1.1](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.0...companion-module-host-v1.1.1) (2026-06-27)
 
 
