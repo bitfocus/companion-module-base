@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - v2.1.x
+      - base-v2.1.x
 
 permissions:
   contents: read
