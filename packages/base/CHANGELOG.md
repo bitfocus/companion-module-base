@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.3](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.1.2...companion-module-base-v2.1.3) (2026-08-12)
+
+
+### Bug Fixes
+
+* Don't require `CompanionInputFieldStaticText<TKey>` to have `id: TKey` but instead allow any string value ([#257](https://github.com/bitfocus/companion-module-base/issues/257)) ([0bbd50c](https://github.com/bitfocus/companion-module-base/commit/0bbd50cdef011e2ac25b8759b5ad0c8c62fca73c))
+* expose additional graphics properties ([#262](https://github.com/bitfocus/companion-module-base/issues/262)) ([4e35a72](https://github.com/bitfocus/companion-module-base/commit/4e35a727316f6b78586db4af1ac0cfb5e107d0b1))
+
 ## [2.1.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.1.1...companion-module-base-v2.1.2) (2026-07-13)
 
 
