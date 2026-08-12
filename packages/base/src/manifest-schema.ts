@@ -42,7 +42,7 @@ function forbidPlaceholder(base: z.ZodString, placeholder: string, strict: boole
 function hasDuplicates(arr: readonly unknown[]): boolean {
 	const seen = new Set<string>()
 	for (const item of arr) {
-		const key = typeof item === 'string' ? item : JSON.stringify(item)
+		const key = typeof item === 'string' ? item : JSON.stringify(item, Object.keys(item as object).sort())
 		if (seen.has(key)) return true
 		seen.add(key)
 	}
