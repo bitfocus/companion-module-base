@@ -20,10 +20,7 @@ import net from 'net'
 import { InstanceStatus } from '../module-api/enums.js'
 
 export type TCPStatuses =
-	| InstanceStatus.Ok
-	| InstanceStatus.Connecting
-	| InstanceStatus.Disconnected
-	| InstanceStatus.UnknownError
+	InstanceStatus.Ok | InstanceStatus.Connecting | InstanceStatus.Disconnected | InstanceStatus.UnknownError
 
 export interface TCPHelperEvents {
 	// when an error occurs

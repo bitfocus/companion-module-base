@@ -2,8 +2,7 @@ import type { InstanceTypes } from '../base.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '../variable.js'
 
 export type CompanionPresetGroup<TManifest extends InstanceTypes = InstanceTypes> =
-	| CompanionPresetGroupSimple<TManifest>
-	| CompanionPresetGroupTemplate<TManifest>
+	CompanionPresetGroupSimple<TManifest> | CompanionPresetGroupTemplate<TManifest>
 
 export type CompanionPresetReference = string
 

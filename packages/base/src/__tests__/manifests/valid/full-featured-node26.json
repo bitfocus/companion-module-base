@@ -1,0 +1,46 @@
+{
+	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
+	"type": "connection",
+	"id": "companion-module-acme-matrix",
+	"name": "acme-matrix",
+	"shortname": "matrix",
+	"description": "Control an ACME video matrix over the network",
+	"version": "3.4.1",
+	"isPrerelease": false,
+	"license": "MIT",
+	"repository": "https://github.com/bitfocus/companion-module-acme-matrix",
+	"bugs": "https://github.com/bitfocus/companion-module-acme-matrix/issues",
+	"maintainers": [
+		{ "name": "Jane Doe", "email": "jane@example.com", "github": "janedoe" },
+		{ "name": "John Roe", "url": "https://example.com/john" }
+	],
+	"legacyIds": ["acme-matrix", "acme-videomatrix"],
+	"runtime": {
+		"type": "node26",
+		"api": "nodejs-ipc",
+		"apiVersion": "1.2.0",
+		"entrypoint": "../dist/main.js",
+		"permissions": {
+			"worker-threads": true,
+			"child-process": false,
+			"native-addons": false,
+			"filesystem": true,
+			"insecure-algorithms": false
+		}
+	},
+	"manufacturer": "ACME",
+	"products": ["Matrix 16", "Matrix 32", "Matrix 64"],
+	"keywords": ["video", "matrix", "router"],
+	"bonjourQueries": {
+		"main": { "type": "_acme._tcp", "protocol": "tcp", "port": 9990 },
+		"discovery": [
+			{ "type": "_acme._tcp", "protocol": "tcp" },
+			{
+				"type": "_acme._udp",
+				"protocol": "udp",
+				"addressFamily": "ipv4+6",
+				"txt": { "model": "matrix" }
+			}
+		]
+	}
+}

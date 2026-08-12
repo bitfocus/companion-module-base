@@ -56,10 +56,7 @@ export type CompanionInternalFeedbackSchemas = {
  * definition.ts).
  */
 export type InternalPresetBuildingBlockId =
-	| 'internal:actionGroup'
-	| 'internal:logicIf'
-	| 'internal:logicWhile'
-	| 'internal:logicOperator'
+	'internal:actionGroup' | 'internal:logicIf' | 'internal:logicWhile' | 'internal:logicOperator'
 
 /**
  * The minimum module api version required to use each internal preset action/feedback id.

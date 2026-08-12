@@ -33,15 +33,14 @@
 		"README.md",
 		"CHANGELOG.md",
 		"dist",
-		"generated",
 		"assets",
 		"lib"
 	],
 	"dependencies": {
-		"colord": "^2.9.3"
+		"colord": "^2.9.3",
+		"zod": "^4.4.3"
 	},
 	"devDependencies": {
-		"ajv": "^8.20.0",
 		"type-testing": "^0.2.0"
 	}
 }

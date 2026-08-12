@@ -1,0 +1,25 @@
+{
+	"type": "connection",
+	"id": "companion-module-acme-legacy",
+	"name": "acme-legacy",
+	"shortname": "legacy",
+	"description": "A manifest carrying fields this schema version does not know about",
+	"version": "2.0.0",
+	"license": "MIT",
+	"repository": "https://github.com/bitfocus/companion-module-acme-legacy",
+	"bugs": "https://github.com/bitfocus/companion-module-acme-legacy/issues",
+	"maintainers": [{ "name": "Jane Doe", "email": "jane@example.com", "futureMaintainerField": "ignored" }],
+	"legacyIds": ["acme-legacy-old"],
+	"runtime": {
+		"type": "node22",
+		"api": "nodejs-ipc",
+		"apiVersion": "0.0.0",
+		"entrypoint": "../dist/main.js",
+		"futureRuntimeField": "ignored"
+	},
+	"manufacturer": "ACME",
+	"products": ["Legacy Device"],
+	"keywords": ["legacy"],
+	"aFutureTopLevelField": { "anything": true },
+	"anotherRemovedOrAddedField": [1, 2, 3]
+}

@@ -1,0 +1,22 @@
+{
+	"type": "connection",
+	"id": "companion-module-your-module-name",
+	"name": "companion-module-your-module-name",
+	"shortname": "module-shortname",
+	"description": "A short one line description of your module",
+	"version": "0.0.0",
+	"license": "MIT",
+	"repository": "https://github.com/bitfocus/companion-module-your-module-name",
+	"bugs": "https://github.com/bitfocus/companion-module-your-module-name/issues",
+	"maintainers": [{ "name": "Your name", "email": "Your email" }],
+	"legacyIds": [],
+	"runtime": {
+		"type": "node22",
+		"api": "nodejs-ipc",
+		"apiVersion": "0.0.0",
+		"entrypoint": "../dist/main.js"
+	},
+	"manufacturer": "Your company",
+	"products": ["Your product"],
+	"keywords": []
+}

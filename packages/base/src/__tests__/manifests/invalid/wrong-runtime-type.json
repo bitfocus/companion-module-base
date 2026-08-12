@@ -1,0 +1,22 @@
+{
+	"type": "connection",
+	"id": "companion-module-acme-badruntime",
+	"name": "acme-badruntime",
+	"shortname": "badruntime",
+	"description": "Uses a runtime type that is not supported",
+	"version": "1.0.0",
+	"license": "MIT",
+	"repository": "https://github.com/bitfocus/companion-module-acme-badruntime",
+	"bugs": "https://github.com/bitfocus/companion-module-acme-badruntime/issues",
+	"maintainers": [{ "name": "Jane Doe" }],
+	"legacyIds": [],
+	"runtime": {
+		"type": "node99",
+		"api": "nodejs-ipc",
+		"apiVersion": "0.0.0",
+		"entrypoint": "../dist/main.js"
+	},
+	"manufacturer": "ACME",
+	"products": ["Bad Runtime"],
+	"keywords": []
+}
