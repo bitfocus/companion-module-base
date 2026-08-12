@@ -51,6 +51,9 @@ export interface ButtonGraphicsElementBase {
 	id?: string
 	name?: string
 
+	/* How this element's value is intended to be used. Defaults to automatic. */
+	usage?: ButtonGraphicsElementUsage
+
 	enabled?: CompanionGraphicsElementValue<boolean>
 	/* 0-100 */
 	opacity?: CompanionGraphicsElementValue<number>
@@ -88,6 +91,15 @@ export enum ButtonGraphicsShowStatusIcons {
 	FollowDefault = 'default',
 	ShowAll = 'all',
 	None = 'none',
+}
+
+/** How a graphics element's value is intended to be used (e.g. to drive text, a colour, an image, or LEDs). */
+export enum ButtonGraphicsElementUsage {
+	Automatic = 'auto',
+	Text = 'text',
+	Color = 'color',
+	Image = 'image',
+	Leds = 'leds',
 }
 
 export interface ButtonGraphicsGroupElement<
@@ -132,6 +144,10 @@ export type ImageFillMode = 'crop' | 'fill' | 'fit'
 
 export type ButtonGraphicsFontFamily = 'companion-sans' | 'companion-mono'
 
+export type ButtonGraphicsFontWeight = 'normal' | 'bold'
+
+export type ButtonGraphicsTextStyle = 'italic' | 'underline' | 'strikethrough'
+
 export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
 	type: 'text'
 
@@ -145,6 +161,9 @@ export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, Bu
 	fontsizeAllowShrink?: CompanionGraphicsElementValue<boolean>
 
 	font?: CompanionGraphicsElementValue<ButtonGraphicsFontFamily>
+
+	weight?: CompanionGraphicsElementValue<ButtonGraphicsFontWeight>
+	styles?: CompanionGraphicsElementValue<ButtonGraphicsTextStyle[]>
 
 	color?: CompanionGraphicsElementValue<CompanionColorValue>
 
@@ -180,6 +199,9 @@ export interface ButtonGraphicsBoxElement
 	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
 
 	color?: CompanionGraphicsElementValue<CompanionColorValue>
+
+	/* Corner radius as a percentage of the shorter side, 0-50. 0 = square corners */
+	cornerRadius?: CompanionGraphicsElementValue<number>
 }
 
 export interface ButtonGraphicsLineElement extends ButtonGraphicsElementBase, ButtonGraphicsBorderProperties {

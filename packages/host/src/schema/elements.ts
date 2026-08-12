@@ -1,15 +1,16 @@
 // ── Shared primitives ─────────────────────────────────────────────────────────
 
 import z from 'zod'
-import type {
-	ButtonGraphicsBoxElement,
-	ButtonGraphicsCircleElement,
-	ButtonGraphicsGaugeElement,
-	ButtonGraphicsGroupElement,
-	ButtonGraphicsImageElement,
-	ButtonGraphicsLineElement,
-	ButtonGraphicsTextElement,
-	SomeButtonGraphicsElement,
+import {
+	ButtonGraphicsElementUsage,
+	type ButtonGraphicsBoxElement,
+	type ButtonGraphicsCircleElement,
+	type ButtonGraphicsGaugeElement,
+	type ButtonGraphicsGroupElement,
+	type ButtonGraphicsImageElement,
+	type ButtonGraphicsLineElement,
+	type ButtonGraphicsTextElement,
+	type SomeButtonGraphicsElement,
 } from '@companion-module/base'
 import { eov, type AssertCoversKeys } from './common.js'
 
@@ -22,6 +23,8 @@ const fontFamilyType = z.enum(['companion-sans', 'companion-mono'])
 const gaugeOrientationType = z.enum(['horizontal', 'vertical', 'ring'])
 const gaugeTrackStyleType = z.enum(['transparent', 'dimmed'])
 const gaugeValueType = z.number().min(-1000000).max(1000000)
+const fontWeightType = z.enum(['normal', 'bold'])
+const textStyleType = z.enum(['italic', 'underline', 'strikethrough'])
 
 // ── Shared element shape fragments ────────────────────────────────────────────
 // Plain shape objects (not ZodObject instances) so they can be spread into z.object()
@@ -31,6 +34,7 @@ const gaugeValueType = z.number().min(-1000000).max(1000000)
 const elementBaseShape = {
 	id: z.string().optional(),
 	name: z.string().optional(),
+	usage: z.enum(ButtonGraphicsElementUsage).optional(),
 	enabled: eov(z.boolean()).optional(),
 	opacity: eov(z.number().min(0).max(100)).optional(),
 }
@@ -79,6 +83,7 @@ type _CompositeRefSchemaKeys =
 type _ButtonGraphicsCompositeElementKeys =
 	| 'id'
 	| 'name'
+	| 'usage'
 	| 'enabled'
 	| 'opacity'
 	| 'x'
@@ -99,6 +104,8 @@ const textElementSchema = z.object({
 	fontsize: eov(z.number()).optional(),
 	fontsizeAllowShrink: eov(z.boolean()).optional(),
 	font: eov(fontFamilyType).optional(),
+	weight: eov(fontWeightType).optional(),
+	styles: eov(z.array(textStyleType)).optional(),
 	color: eov(colorType).optional(),
 	halign: eov(hAlignType).optional(),
 	valign: eov(vAlignType).optional(),
@@ -125,6 +132,7 @@ const boxElementSchema = z.object({
 	type: z.literal('box'),
 	rotation: eov(z.number().min(0).max(359)).optional(),
 	color: eov(colorType).optional(),
+	cornerRadius: eov(z.number().min(0).max(50)).optional(),
 }) satisfies z.ZodType<ButtonGraphicsBoxElement>
 true satisfies AssertCoversKeys<typeof boxElementSchema, ButtonGraphicsBoxElement>
 
