@@ -256,6 +256,8 @@ export interface ButtonGraphicsGaugeElement extends ButtonGraphicsElementBase, B
 	fillEnabled?: CompanionGraphicsElementValue<boolean>
 	/* When enabled, each colour stop is visible in the filled portion. When disabled, only the active stop colour is used for the entire filled area. */
 	multiColour?: CompanionGraphicsElementValue<boolean>
+	/* Width of the fill relative to the available space, centred. 0-100 */
+	fillWidth?: CompanionGraphicsElementValue<number>
 	stops?: ButtonGraphicsGaugeStop[]
 
 	// Marker

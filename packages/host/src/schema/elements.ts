@@ -180,6 +180,7 @@ const gaugeElementSchema = z.object({
 	// Fill
 	fillEnabled: eov(z.boolean()).optional(),
 	multiColour: eov(z.boolean()).optional(),
+	fillWidth: eov(z.number().min(0).max(100)).optional(),
 	stops: z.array(gaugeStopSchema).optional(),
 	// Marker
 	markerEnabled: eov(z.boolean()).optional(),
