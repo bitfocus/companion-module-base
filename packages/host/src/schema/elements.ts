@@ -1,16 +1,15 @@
 // ── Shared primitives ─────────────────────────────────────────────────────────
 
 import z from 'zod'
-import {
-	ButtonGraphicsElementUsage,
-	type ButtonGraphicsBoxElement,
-	type ButtonGraphicsCircleElement,
-	type ButtonGraphicsGaugeElement,
-	type ButtonGraphicsGroupElement,
-	type ButtonGraphicsImageElement,
-	type ButtonGraphicsLineElement,
-	type ButtonGraphicsTextElement,
-	type SomeButtonGraphicsElement,
+import type {
+	ButtonGraphicsBoxElement,
+	ButtonGraphicsCircleElement,
+	ButtonGraphicsGaugeElement,
+	ButtonGraphicsGroupElement,
+	ButtonGraphicsImageElement,
+	ButtonGraphicsLineElement,
+	ButtonGraphicsTextElement,
+	SomeButtonGraphicsElement,
 } from '@companion-module/base'
 import { eov, type AssertCoversKeys } from './common.js'
 
@@ -34,7 +33,6 @@ const textStyleType = z.enum(['italic', 'underline', 'strikethrough'])
 const elementBaseShape = {
 	id: z.string().optional(),
 	name: z.string().optional(),
-	usage: z.enum(ButtonGraphicsElementUsage).optional(),
 	enabled: eov(z.boolean()).optional(),
 	opacity: eov(z.number().min(0).max(100)).optional(),
 }
@@ -83,7 +81,6 @@ type _CompositeRefSchemaKeys =
 type _ButtonGraphicsCompositeElementKeys =
 	| 'id'
 	| 'name'
-	| 'usage'
 	| 'enabled'
 	| 'opacity'
 	| 'x'

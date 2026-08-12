@@ -51,9 +51,6 @@ export interface ButtonGraphicsElementBase {
 	id?: string
 	name?: string
 
-	/* How this element's value is intended to be used. Defaults to automatic. */
-	usage?: ButtonGraphicsElementUsage
-
 	enabled?: CompanionGraphicsElementValue<boolean>
 	/* 0-100 */
 	opacity?: CompanionGraphicsElementValue<number>
@@ -91,15 +88,6 @@ export enum ButtonGraphicsShowStatusIcons {
 	FollowDefault = 'default',
 	ShowAll = 'all',
 	None = 'none',
-}
-
-/** How a graphics element's value is intended to be used (e.g. to drive text, a colour, an image, or LEDs). */
-export enum ButtonGraphicsElementUsage {
-	Automatic = 'auto',
-	Text = 'text',
-	Color = 'color',
-	Image = 'image',
-	Leds = 'leds',
 }
 
 export interface ButtonGraphicsGroupElement<
