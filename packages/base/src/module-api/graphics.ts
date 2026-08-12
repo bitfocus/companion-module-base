@@ -125,6 +125,10 @@ export type ImageFillMode = 'crop' | 'fill' | 'fit'
 
 export type ButtonGraphicsFontFamily = 'companion-sans' | 'companion-mono'
 
+export type ButtonGraphicsFontWeight = 'normal' | 'bold'
+
+export type ButtonGraphicsTextStyle = 'italic' | 'underline' | 'strikethrough'
+
 export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
 	type: 'text'
 
@@ -138,6 +142,9 @@ export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, Bu
 	fontsizeAllowShrink?: CompanionGraphicsElementValue<boolean>
 
 	font?: CompanionGraphicsElementValue<ButtonGraphicsFontFamily>
+
+	weight?: CompanionGraphicsElementValue<ButtonGraphicsFontWeight>
+	styles?: CompanionGraphicsElementValue<ButtonGraphicsTextStyle[]>
 
 	color?: CompanionGraphicsElementValue<number>
 
@@ -173,6 +180,9 @@ export interface ButtonGraphicsBoxElement
 	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
 
 	color?: CompanionGraphicsElementValue<number>
+
+	/* Corner radius as a percentage of the shorter side, 0-50. 0 = square corners */
+	cornerRadius?: CompanionGraphicsElementValue<number>
 }
 
 export interface ButtonGraphicsLineElement extends ButtonGraphicsElementBase, ButtonGraphicsBorderProperties {
@@ -249,6 +259,8 @@ export interface ButtonGraphicsGaugeElement extends ButtonGraphicsElementBase, B
 	fillEnabled?: CompanionGraphicsElementValue<boolean>
 	/* When enabled, each colour stop is visible in the filled portion. When disabled, only the active stop colour is used for the entire filled area. */
 	multiColour?: CompanionGraphicsElementValue<boolean>
+	/* Width of the fill relative to the available space, centred. 0-100 */
+	fillWidth?: CompanionGraphicsElementValue<number>
 	stops?: ButtonGraphicsGaugeStop[]
 
 	// Marker
