@@ -430,3 +430,23 @@ export interface CompanionInputFieldSecret<TKey extends string = string> extends
 	 */
 	regex?: string
 }
+
+/**
+ * A union of every module-api input field type.
+ *
+ * The per-usage unions (`SomeCompanionActionInputField`, `SomeCompanionFeedbackInputField` and
+ * `SomeCompanionConfigField`) each expose the subset of field types valid in that context. This is
+ * the superset of all of them, which is useful when validating or processing a field of unknown
+ * origin.
+ */
+export type SomeCompanionInputField<TKey extends string = string> =
+	| CompanionInputFieldStaticText<TKey>
+	| CompanionInputFieldColor<TKey>
+	| CompanionInputFieldTextInput<TKey>
+	| CompanionInputFieldDropdown<TKey>
+	| CompanionInputFieldMultiDropdown<TKey>
+	| CompanionInputFieldNumber<TKey>
+	| CompanionInputFieldCheckbox<TKey>
+	| CompanionInputFieldCustomVariable<TKey>
+	| CompanionInputFieldBonjourDevice<TKey>
+	| CompanionInputFieldSecret<TKey>

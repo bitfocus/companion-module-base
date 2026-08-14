@@ -131,7 +131,9 @@ __metadata:
   resolution: "@companion-module/host@workspace:packages/host"
   dependencies:
     "@companion-module/base": "workspace:~"
+    colord: "npm:^2.9.3"
     debounce-fn: "npm:^6.0.0"
+    fast-deep-equal: "npm:^3.1.3"
     p-queue: "npm:^9.3.3"
     semver: "npm:^7.8.5"
     zod: "npm:^4.4.3"
