@@ -544,6 +544,13 @@ describe('validateMultiDropdownValue', () => {
 			})
 		})
 
+		it('should treat undefined the same as an empty array', () => {
+			expect(validateMultiDropdownValue(undefined, constrained)).toMatchObject({
+				validationError: 'Must select at least 1 items',
+				validity: false,
+			})
+		})
+
 		it('should error when above maxSelection', () => {
 			expect(validateMultiDropdownValue(['option1', 'option2', 'option3'], constrained)).toMatchObject({
 				validationError: 'Must select at most 2 items',

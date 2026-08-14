@@ -143,10 +143,10 @@ export function validateMultiDropdownValue(
 ): ValueValidationResult {
 	const warnings: string[] = []
 
-	if (value === undefined) return makeResult<JsonValue[]>([], undefined, warnings)
-
 	let arrayValue: JsonValue[]
-	if (Array.isArray(value)) {
+	if (value === undefined) {
+		arrayValue = []
+	} else if (Array.isArray(value)) {
 		arrayValue = value
 	} else if (
 		(typeof value === 'string' && value.trim() !== '') ||
