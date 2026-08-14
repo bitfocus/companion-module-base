@@ -615,7 +615,7 @@ describe('validateColorValue', () => {
 	const INVALID_ERROR = 'Value must be a color number or a css color string'
 
 	describe('returnType: number', () => {
-		const opts = { returnType: 'number' as const, encoding: undefined }
+		const opts = { returnType: 'number' as const, encoding: undefined, enableAlpha: true }
 
 		it('should accept color numbers unchanged', () => {
 			expect(validateColorValue(16777215, opts)).toMatchObject({ sanitisedValue: 16777215, validity: true })
@@ -652,7 +652,7 @@ describe('validateColorValue', () => {
 	})
 
 	describe('returnType: string', () => {
-		const opts = { returnType: 'string' as const, encoding: undefined }
+		const opts = { returnType: 'string' as const, encoding: undefined, enableAlpha: true }
 
 		it('should keep valid css color strings', () => {
 			expect(validateColorValue('#ffffff', opts)).toMatchObject({ sanitisedValue: '#ffffff', validity: true })
@@ -686,25 +686,51 @@ describe('validateColorValue', () => {
 	describe('input encoding', () => {
 		it('should default numeric inputs to companion-ttrrggbb', () => {
 			// top byte 0x80 read as transparency, re-encoded as companion transparency is unchanged
-			expect(validateColorValue(0x80ff0000, { returnType: 'number', encoding: undefined })).toMatchObject({
-				sanitisedValue: 0x80ff0000,
-				validity: true,
-			})
+			expect(
+				validateColorValue(0x80ff0000, { returnType: 'number', encoding: undefined, enableAlpha: true }),
+			).toMatchObject({ sanitisedValue: 0x80ff0000, validity: true })
 		})
 
 		it('should re-encode a standard-aarrggbb numeric input to a companion number', () => {
 			// 0x80 alpha => transparency 0x7f on output
-			expect(validateColorValue(0x80ff0000, { returnType: 'number', encoding: 'standard-aarrggbb' })).toMatchObject({
-				sanitisedValue: 0x7fff0000,
-				validity: true,
-			})
+			expect(
+				validateColorValue(0x80ff0000, { returnType: 'number', encoding: 'standard-aarrggbb', enableAlpha: true }),
+			).toMatchObject({ sanitisedValue: 0x7fff0000, validity: true })
 		})
 
 		it('should output a css string with normal alpha for a numeric input', () => {
-			expect(validateColorValue(0x80ff0000, { returnType: 'string', encoding: 'companion-ttrrggbb' })).toMatchObject({
-				sanitisedValue: `rgba(255, 0, 0, ${1 - 0x80 / 255})`,
+			expect(
+				validateColorValue(0x80ff0000, { returnType: 'string', encoding: 'companion-ttrrggbb', enableAlpha: true }),
+			).toMatchObject({ sanitisedValue: `rgba(255, 0, 0, ${1 - 0x80 / 255})`, validity: true })
+		})
+	})
+
+	describe('alpha disabled', () => {
+		it('should strip alpha from a numeric input, keeping only rgb', () => {
+			expect(
+				validateColorValue(0x80ff0000, { returnType: 'number', encoding: undefined, enableAlpha: undefined }),
+			).toMatchObject({
+				sanitisedValue: 0xff0000,
 				validity: true,
 			})
+			expect(
+				validateColorValue(0x80ff0000, { returnType: 'number', encoding: 'standard-aarrggbb', enableAlpha: false }),
+			).toMatchObject({ sanitisedValue: 0xff0000, validity: true })
+		})
+
+		it('should strip alpha from a translucent css string', () => {
+			expect(
+				validateColorValue('rgba(255, 0, 0, 0.5)', { returnType: 'number', encoding: undefined, enableAlpha: false }),
+			).toMatchObject({ sanitisedValue: 0xff0000, validity: true })
+			expect(
+				validateColorValue('rgba(255, 0, 0, 0.5)', { returnType: 'string', encoding: undefined, enableAlpha: false }),
+			).toMatchObject({ sanitisedValue: 'rgba(255, 0, 0, 1)', validity: true })
+		})
+
+		it('should still preserve an opaque css string as-is', () => {
+			expect(
+				validateColorValue('#ffffff', { returnType: 'string', encoding: undefined, enableAlpha: false }),
+			).toMatchObject({ sanitisedValue: '#ffffff', validity: true })
 		})
 	})
 })

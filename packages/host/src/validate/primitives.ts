@@ -207,6 +207,8 @@ export interface ColorValidationOptions {
 	returnType: 'string' | 'number' | undefined
 	/** How to interpret a numeric input's top byte. Defaults to `companion-ttrrggbb`. */
 	encoding: ColorInputEncoding | undefined
+	/** When falsy, alpha is dropped and only the rgb channels are kept. */
+	enableAlpha: boolean | undefined
 }
 
 // Output is always a companion-ttrrggbb number, or css with normal alpha - never the input encoding.
@@ -236,6 +238,11 @@ export function validateColorValue(
 		originalCss = value
 	} else {
 		return makeResult(value, 'Value must be a color number or a css color string', warnings)
+	}
+
+	if (!options.enableAlpha && rgba.a !== 1) {
+		rgba = { ...rgba, a: 1 }
+		originalCss = undefined
 	}
 
 	if (options.returnType === 'string') {
