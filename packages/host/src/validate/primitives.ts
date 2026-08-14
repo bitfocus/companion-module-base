@@ -1,7 +1,7 @@
-import { colord } from 'colord'
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from '@companion-module/base'
-import { colorToNumber, compileRegex, parseColor, stringifyValue } from './helpers.js'
+import { cssColorToRgba, decodeRgba, encodeRgba, rgbaToCssString, type ColorInputEncoding } from './color.js'
+import { compileRegex, stringifyValue } from './helpers.js'
 import type { ValueValidationResult } from './result.js'
 
 function makeResult<T>(
@@ -247,28 +247,54 @@ export function validateMultiDropdownValue(
 export interface ColorValidationOptions {
 	/** The format to return the sanitised color in. Defaults to a color number when `undefined`. */
 	returnType: 'string' | 'number' | undefined
+	/**
+	 * How to interpret the top byte of a numeric input. Defaults to `companion-ttrrggbb` when `undefined`.
+	 * This only affects numeric inputs; css string inputs always carry normal alpha.
+	 */
+	encoding: ColorInputEncoding | undefined
 }
 
 /**
- * Validate a color value (a color number or a css color string) and return it in the requested format.
+ * Validate a color value (a color number or a css color string).
+ *
+ * Numeric inputs are decoded per `options.encoding` (default `companion-ttrrggbb`); css string inputs
+ * are parsed with their normal alpha. The result is returned per `options.returnType`:
+ * - `number` (the default) — a Companion color number (`0xTTRRGGBB`, transparency in the top byte)
+ * - `string` — a css color string with normal alpha (a valid css string input is preserved as-is)
  */
 export function validateColorValue(
 	value: JsonValue | undefined,
 	options: ColorValidationOptions,
 ): ValueValidationResult {
 	const warnings: string[] = []
+	const encoding = options.encoding ?? 'companion-ttrrggbb'
 
-	const isColor =
-		typeof value === 'number' ||
-		(typeof value === 'string' && ((value.trim() !== '' && !isNaN(Number(value))) || colord(value).isValid()))
-	if (!isColor) {
+	// A numeric input, or a string that is entirely a number, is treated as a packed color number.
+	const asNumber =
+		typeof value === 'number'
+			? value
+			: typeof value === 'string' && value.trim() !== '' && !isNaN(Number(value))
+				? Number(value)
+				: undefined
+
+	let rgba
+	let originalCss: string | undefined
+	if (asNumber !== undefined && Number.isFinite(asNumber)) {
+		rgba = decodeRgba(asNumber, encoding)
+	} else if (typeof value === 'string') {
+		const parsed = cssColorToRgba(value)
+		if (!parsed) return makeResult(value, 'Value must be a color number or a css color string', warnings)
+		rgba = parsed
+		originalCss = value
+	} else {
 		return makeResult(value, 'Value must be a color number or a css color string', warnings)
 	}
 
-	const colorValue = value
-	return options.returnType === 'string'
-		? makeResult(parseColor(colorValue), undefined, warnings)
-		: makeResult(colorToNumber(colorValue), undefined, warnings)
+	if (options.returnType === 'string') {
+		// A valid css string already has normal alpha, so preserve it; numbers render as rgba(...).
+		return makeResult(originalCss ?? rgbaToCssString(rgba), undefined, warnings)
+	}
+	return makeResult(encodeRgba(rgba, 'companion-ttrrggbb'), undefined, warnings)
 }
 
 /**
