@@ -20,10 +20,6 @@ export interface Rgba {
 	a: number
 }
 
-/**
- * Decode a packed colour number into {@link Rgba}, interpreting the top byte per `encoding`.
- * A value that fits in 24 bits is treated as fully opaque.
- */
 export function decodeRgba(value: number, encoding: ColorInputEncoding): Rgba {
 	const dec = Math.floor(value)
 	const r = (dec >>> 16) & 0xff
@@ -38,10 +34,6 @@ export function decodeRgba(value: number, encoding: ColorInputEncoding): Rgba {
 	return { r, g, b, a }
 }
 
-/**
- * Encode {@link Rgba} into a packed colour number in the requested `encoding`.
- * Fully-opaque colours are returned as a 24-bit number (no top byte), matching {@link decodeRgba}.
- */
 export function encodeRgba({ r, g, b, a }: Rgba, encoding: ColorInputEncoding): number {
 	const rgb = ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff)
 	const topByte = encoding === 'companion-ttrrggbb' ? Math.round(255 * (1 - a)) : Math.round(255 * a)
@@ -51,10 +43,7 @@ export function encodeRgba({ r, g, b, a }: Rgba, encoding: ColorInputEncoding): 
 	return topByte * 0x1000000 + rgb
 }
 
-/**
- * Parse a css colour string into {@link Rgba}, or `null` if it is not a valid css colour.
- * The returned alpha is the css alpha (0-1, `1` = opaque).
- */
+/** Parse a css colour string into {@link Rgba}, or `null` if it is not a valid css colour. */
 export function cssColorToRgba(css: string): Rgba | null {
 	const parsed = colord(css)
 	if (!parsed.isValid()) return null
@@ -62,7 +51,6 @@ export function cssColorToRgba(css: string): Rgba | null {
 	return { r, g, b, a }
 }
 
-/** Render {@link Rgba} as a `rgba(r, g, b, a)` css string with normal alpha. */
 export function rgbaToCssString({ r, g, b, a }: Rgba): string {
 	return `rgba(${r}, ${g}, ${b}, ${a})`
 }

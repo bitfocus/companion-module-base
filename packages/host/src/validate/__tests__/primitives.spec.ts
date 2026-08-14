@@ -9,12 +9,9 @@ import {
 	validateTextValue,
 } from '../primitives.js'
 
-// These cases are ported from Companion's shared-lib validate-input-value.test.ts, retargeted at the
-// shared primitives (which take a plain options object rather than a field definition). Companion-only
-// field types (expression, internal:*, table, list) are intentionally omitted.
+// Ported from Companion's shared-lib validate-input-value.test.ts, retargeted at the primitives.
 
 describe('validateNumberValue', () => {
-	// A shared options object; spread with overrides per test.
 	const range = { min: 0, max: 100, asInteger: undefined, clampValues: undefined, allowInvalidValues: undefined }
 
 	describe('required validation', () => {

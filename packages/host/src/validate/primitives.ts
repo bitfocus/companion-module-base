@@ -18,29 +18,16 @@ function makeResult<T>(
 	}
 }
 
-/**
- * Options for {@link validateNumberValue}.
- *
- * Every field is required but may be `undefined` so that a caller cannot accidentally omit a
- * constraint (and silently skip it). Pass `undefined` to opt out of a specific check.
- */
 export interface NumberValidationOptions {
-	/** The minimum allowed value, or `undefined` for no minimum */
 	min: number | undefined
-	/** The maximum allowed value, or `undefined` for no maximum */
 	max: number | undefined
-	/** Whether to round the value to the nearest integer */
 	asInteger: boolean | undefined
-	/** When out of range, clamp to min/max (with a warning) instead of rejecting */
+	/** When out of range, clamp to min/max (with a warning) instead of rejecting. */
 	clampValues: boolean | undefined
-	/** When out of range, keep the value and raise a warning instead of rejecting */
+	/** When out of range, keep the value and warn instead of rejecting. Takes priority over clampValues. */
 	allowInvalidValues: boolean | undefined
 }
 
-/**
- * Validate and sanitise a numeric value.
- * Coerces strings to numbers, optionally rounds to an integer, and enforces min/max.
- */
 export function validateNumberValue(
 	value: JsonValue | undefined,
 	options: NumberValidationOptions,
@@ -85,22 +72,13 @@ export function validateNumberValue(
 	return makeResult(sanitisedValue, undefined, warnings)
 }
 
-/**
- * Options for {@link validateTextValue}.
- *
- * Every field is required but may be `undefined` to opt out of that check.
- */
 export interface TextValidationOptions {
-	/** Minimum required length of the (stringified) value, or `undefined` for no minimum */
 	minLength: number | undefined
-	/** A `/pattern/flags` regex string the value must match, or `undefined` for no regex check */
+	/** A `/pattern/flags` regex string the value must match. */
 	regex: string | undefined
 }
 
-/**
- * Validate and sanitise a text value. The value is always coerced to a string before validation.
- * This is also the primitive used for `secret-text` fields, which share `minLength`/`regex`.
- */
+// The value is coerced to a string before validation. Also used for `secret-text` fields.
 export function validateTextValue(
 	value: JsonValue | undefined,
 	options: TextValidationOptions,
@@ -121,24 +99,15 @@ export function validateTextValue(
 	return makeResult(sanitisedValue, undefined, warnings, hasValidation)
 }
 
-/**
- * Options for {@link validateDropdownValue}.
- *
- * `choices` only needs to expose an `id` on each entry, so an app can pass its own richer choice
- * objects without reshaping them.
- */
 export interface DropdownValidationOptions {
-	/** The allowed choices. Only the `id` of each is used. */
+	/** Only the `id` of each entry is used, so an app can pass its own richer choice objects. */
 	choices: readonly { id: JsonValue }[]
-	/** Whether values not present in `choices` are permitted (they come through as strings) */
+	/** Whether values not present in `choices` are permitted (they come through as strings). */
 	allowCustom: boolean | undefined
-	/** A `/pattern/flags` regex string a custom value must match, or `undefined` for no regex check */
+	/** A `/pattern/flags` regex string a custom value must match. */
 	regex: string | undefined
 }
 
-/**
- * Validate a single-select dropdown value against a list of choices, optionally allowing custom values.
- */
 export function validateDropdownValue(
 	value: JsonValue | undefined,
 	options: DropdownValidationOptions,
@@ -162,20 +131,12 @@ export function validateDropdownValue(
 	return makeResult(stringValue, undefined, warnings)
 }
 
-/**
- * Options for {@link validateMultiDropdownValue}.
- */
 export interface MultiDropdownValidationOptions extends DropdownValidationOptions {
-	/** The minimum number of selected values, or `undefined` for no minimum */
 	minSelection: number | undefined
-	/** The maximum number of selected values, or `undefined` for no maximum */
 	maxSelection: number | undefined
 }
 
-/**
- * Validate a multi-select dropdown value: an array of values each validated against the choices.
- * Non-array scalars are coerced into a single-element array (with a warning).
- */
+// A non-array scalar is coerced into a single-element array (with a warning).
 export function validateMultiDropdownValue(
 	value: JsonValue | undefined,
 	options: MultiDropdownValidationOptions,
@@ -241,27 +202,14 @@ export function validateMultiDropdownValue(
 	return makeResult(sanitisedValue, undefined, warnings)
 }
 
-/**
- * Options for {@link validateColorValue}.
- */
 export interface ColorValidationOptions {
-	/** The format to return the sanitised color in. Defaults to a color number when `undefined`. */
+	/** Defaults to `number` when `undefined`. */
 	returnType: 'string' | 'number' | undefined
-	/**
-	 * How to interpret the top byte of a numeric input. Defaults to `companion-ttrrggbb` when `undefined`.
-	 * This only affects numeric inputs; css string inputs always carry normal alpha.
-	 */
+	/** How to interpret a numeric input's top byte. Defaults to `companion-ttrrggbb`. */
 	encoding: ColorInputEncoding | undefined
 }
 
-/**
- * Validate a color value (a color number or a css color string).
- *
- * Numeric inputs are decoded per `options.encoding` (default `companion-ttrrggbb`); css string inputs
- * are parsed with their normal alpha. The result is returned per `options.returnType`:
- * - `number` (the default) — a Companion color number (`0xTTRRGGBB`, transparency in the top byte)
- * - `string` — a css color string with normal alpha (a valid css string input is preserved as-is)
- */
+// Output is always a companion-ttrrggbb number, or css with normal alpha - never the input encoding.
 export function validateColorValue(
 	value: JsonValue | undefined,
 	options: ColorValidationOptions,
@@ -297,9 +245,7 @@ export function validateColorValue(
 	return makeResult(encodeRgba(rgba, 'companion-ttrrggbb'), undefined, warnings)
 }
 
-/**
- * Validate a checkbox value. Any value is coerced to a boolean via truthiness, so this never fails.
- */
+// Coerced to a boolean via truthiness, so this never fails.
 export function validateCheckboxValue(value: JsonValue | undefined): ValueValidationResult<boolean> {
 	return makeResult(!!value, undefined, [], false)
 }
