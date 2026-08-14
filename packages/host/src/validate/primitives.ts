@@ -1,7 +1,7 @@
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from '@companion-module/base'
 import { cssColorToRgba, decodeRgba, encodeRgba, rgbaToCssString, type ColorInputEncoding } from './color.js'
-import { compileRegex, stringifyValue } from './helpers.js'
+import { compileRegex, stringifyVariableValue } from './helpers.js'
 import type { ValueValidationResult } from './result.js'
 
 function makeResult<T>(
@@ -106,7 +106,7 @@ export function validateTextValue(
 	options: TextValidationOptions,
 ): ValueValidationResult<string> {
 	const warnings: string[] = []
-	const sanitisedValue = stringifyValue(value ?? '')
+	const sanitisedValue = stringifyVariableValue(value ?? '') ?? ''
 
 	const compiledRegex = compileRegex(options.regex)
 	const hasValidation = options.minLength !== undefined || compiledRegex !== null
@@ -148,7 +148,7 @@ export function validateDropdownValue(
 	const isInChoices = options.choices.find((c) => isEqual(c.id, value) || c.id == value)
 	if (isInChoices) return makeResult(isInChoices.id, undefined, warnings)
 
-	const stringValue = stringifyValue(value)
+	const stringValue = stringifyVariableValue(value) ?? ''
 
 	if (!options.allowCustom) {
 		return makeResult(stringValue, 'Value is not in the list of choices', warnings)
@@ -213,7 +213,7 @@ export function validateMultiDropdownValue(
 			continue
 		}
 
-		const strVal = stringifyValue(val)
+		const strVal = stringifyVariableValue(val) ?? ''
 		const compiledRegex = compileRegex(options.regex)
 		if (compiledRegex && !compiledRegex.exec(strVal)) {
 			invalidValues.push(val)
@@ -226,7 +226,7 @@ export function validateMultiDropdownValue(
 	if (invalidValues.length > 0) {
 		return makeResult(
 			arrayValue,
-			`The following selected values are not valid: ${invalidValues.map(stringifyValue).join(', ')}`,
+			`The following selected values are not valid: ${invalidValues.map((v) => stringifyVariableValue(v) ?? '').join(', ')}`,
 			warnings,
 		)
 	}

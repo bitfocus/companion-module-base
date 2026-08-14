@@ -5,6 +5,7 @@ export * from './versions.js'
 export { runThroughUpgradeScripts } from './internal/upgrade.js'
 
 export * from './validate/color.js'
+export * from './validate/helpers.js'
 export * from './validate/primitives.js'
 export * from './validate/result.js'
 

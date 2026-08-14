@@ -20,16 +20,16 @@ export function compileRegex(regex: string | undefined): RegExp | null {
 }
 
 /**
- * Convert an arbitrary JSON value into a string representation.
+ * Convert an arbitrary value into its string representation.
  *
- * Strings are returned unchanged, numbers and booleans are stringified with `String()`, and anything
- * else (objects, arrays, `null`) is run through `JSON.stringify`. `undefined` becomes an empty string.
+ * Strings pass through unchanged, numbers and booleans use `toString()`, and everything else
+ * (objects, arrays, `null`) goes through `JSON.stringify` - which returns `undefined` for an
+ * `undefined` input. Callers that need a guaranteed string should coerce with `?? ''`.
  *
- * Note: this matches Companion's `stringifyVariableValue` behaviour so that validation is consistent
- * between Companion and other apps using these primitives.
+ * This is the canonical implementation intended to be shared across Companion and other apps that use
+ * these primitives, so a given value always stringifies the same way everywhere.
  */
-export function stringifyValue(value: JsonValue | undefined): string {
-	if (value === undefined) return ''
+export function stringifyVariableValue(value: JsonValue | undefined): string | null | undefined {
 	if (typeof value === 'string') return value
 	if (typeof value === 'number' || typeof value === 'boolean') return value.toString()
 	return JSON.stringify(value)
