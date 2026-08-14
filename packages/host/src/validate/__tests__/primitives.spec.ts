@@ -744,9 +744,9 @@ describe('validateColorValue', () => {
 
 describe('color encode/decode helpers', () => {
 	describe('decodeRgba', () => {
-		it('should treat a 24-bit value as fully opaque in both encodings', () => {
+		it('should treat a 24-bit value as opaque for companion, but transparent for standard', () => {
 			expect(decodeRgba(0x112233, 'companion-ttrrggbb')).toEqual({ r: 0x11, g: 0x22, b: 0x33, a: 1 })
-			expect(decodeRgba(0x112233, 'standard-aarrggbb')).toEqual({ r: 0x11, g: 0x22, b: 0x33, a: 1 })
+			expect(decodeRgba(0x112233, 'standard-aarrggbb')).toEqual({ r: 0x11, g: 0x22, b: 0x33, a: 0 })
 		})
 
 		it('should read the top byte as transparency for companion-ttrrggbb', () => {
@@ -757,6 +757,7 @@ describe('color encode/decode helpers', () => {
 		it('should read the top byte as alpha for standard-aarrggbb', () => {
 			expect(decodeRgba(0xff112233, 'standard-aarrggbb')).toEqual({ r: 0x11, g: 0x22, b: 0x33, a: 1 })
 			expect(decodeRgba(0x80112233, 'standard-aarrggbb')).toEqual({ r: 0x11, g: 0x22, b: 0x33, a: 128 / 255 })
+			expect(decodeRgba(0x00112233, 'standard-aarrggbb')).toEqual({ r: 0x11, g: 0x22, b: 0x33, a: 0 })
 		})
 	})
 
@@ -776,6 +777,11 @@ describe('color encode/decode helpers', () => {
 		it('should pack alpha in the top byte for standard-aarrggbb', () => {
 			expect(encodeRgba({ r: 0xff, g: 0, b: 0, a: 0.5 }, 'standard-aarrggbb')).toBe(0xff0000 + 0x80 * 0x1000000)
 		})
+
+		it('should encode a fully-transparent colour with a zero top byte', () => {
+			expect(encodeRgba({ r: 0x11, g: 0x22, b: 0x33, a: 0 }, 'standard-aarrggbb')).toBe(0x112233)
+			expect(encodeRgba({ r: 0x11, g: 0x22, b: 0x33, a: 0 }, 'companion-ttrrggbb')).toBe(0xff112233)
+		})
 	})
 
 	describe('round trips', () => {
@@ -789,6 +795,14 @@ describe('color encode/decode helpers', () => {
 
 		it('should round trip a 32-bit standard-aarrggbb color', () => {
 			expect(encodeRgba(decodeRgba(0x80123456, 'standard-aarrggbb'), 'standard-aarrggbb')).toBe(0x80123456)
+		})
+
+		it('should round trip a fully-transparent standard-aarrggbb color', () => {
+			expect(encodeRgba(decodeRgba(0x00123456, 'standard-aarrggbb'), 'standard-aarrggbb')).toBe(0x00123456)
+		})
+
+		it('should round trip a fully-transparent companion-ttrrggbb color', () => {
+			expect(encodeRgba(decodeRgba(0xff123456, 'companion-ttrrggbb'), 'companion-ttrrggbb')).toBe(0xff123456)
 		})
 
 		it('should convert between encodings via rgba', () => {
