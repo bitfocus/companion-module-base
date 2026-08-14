@@ -19,7 +19,9 @@ Each version of Companion supports a limited range of versions of this library l
 | v4.0      | v1.0 - v1.12              |
 | v4.1      | v1.0 - v1.13              |
 | v4.2      | v1.0 - v1.14              |
-| v4.3      | v1.0 - v2.0 (unconfirmed) |
+| v4.3      | v1.0 - v2.0               |
+| v5.0      | v1.0 - v2.1               |
+| v5.1      | v1.0 - v2.2 (unconfirmed) |
 
 ## Getting started with a new module
 
