@@ -29,7 +29,7 @@ import { sanitiseCompositeElementDefinitions } from './internal/composite-elemen
 import { FeedbackManager } from './internal/feedback.js'
 import { sanitisePresetDefinitions } from './internal/presets.js'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
-import { BANNED_PROPS, filterDuplicateOptionIds } from './internal/util.js'
+import { BANNED_PROPS, filterDuplicateOptionIds, isValidVariableId } from './internal/util.js'
 
 export class InstanceWrapper<TManifest extends InstanceTypes> {
 	readonly #logger = createModuleLogger('InstanceWrapper')
@@ -143,8 +143,18 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 
 				this.#variableDefinitions.clear()
 
+				const definitionsWithReservedIds: string[] = []
+				const definitionsWithInvalidIds: string[] = []
+
 				for (const [variableId, definition] of Object.entries(variables)) {
-					if (BANNED_PROPS.has(variableId)) throw new Error(`Variable id "${variableId}" is a reserved word`)
+					if (BANNED_PROPS.has(variableId)) {
+						definitionsWithReservedIds.push(variableId)
+						continue
+					}
+					if (!isValidVariableId(variableId)) {
+						definitionsWithInvalidIds.push(variableId)
+						continue
+					}
 					hostVariables.push({
 						id: variableId,
 						name: definition.name,
@@ -176,13 +186,34 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 					}
 				}
 
+				if (definitionsWithReservedIds.length > 0) {
+					this.#logger.warn(
+						`Ignoring variable definitions with reserved ids: ${definitionsWithReservedIds.sort().join(', ')}`,
+					)
+				}
+				if (definitionsWithInvalidIds.length > 0) {
+					this.#logger.warn(
+						`Ignoring variable definitions with invalid ids: ${definitionsWithInvalidIds.sort().join(', ')}`,
+					)
+				}
+
 				this.#host.setVariableDefinitions(hostVariables, hostValues)
 			},
 			setVariableValues: (values) => {
 				const hostValues: HostVariableValue[] = []
 
+				const valuesWithReservedIds: string[] = []
+				const valuesWithInvalidIds: string[] = []
+
 				for (const [variableId, value] of Object.entries(values)) {
-					if (BANNED_PROPS.has(variableId)) continue
+					if (BANNED_PROPS.has(variableId)) {
+						valuesWithReservedIds.push(variableId)
+						continue
+					}
+					if (!isValidVariableId(variableId)) {
+						valuesWithInvalidIds.push(variableId)
+						continue
+					}
 					if (this.#instance.instanceOptions.disableVariableValidation) {
 						// update the cached value
 						if (value === undefined) {
@@ -210,6 +241,13 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 							value: undefined,
 						})
 					}
+				}
+
+				if (valuesWithReservedIds.length > 0) {
+					this.#logger.warn(`Ignoring variable values with reserved ids: ${valuesWithReservedIds.sort().join(', ')}`)
+				}
+				if (valuesWithInvalidIds.length > 0) {
+					this.#logger.warn(`Ignoring variable values with invalid ids: ${valuesWithInvalidIds.sort().join(', ')}`)
 				}
 
 				this.#host.setVariableValues(hostValues)

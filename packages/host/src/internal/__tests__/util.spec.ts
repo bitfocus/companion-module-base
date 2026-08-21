@@ -1,5 +1,30 @@
 import { describe, expect, it } from 'vitest'
-import { filterDuplicateOptionIds } from '../util.js'
+import { filterDuplicateOptionIds, isValidVariableId } from '../util.js'
+
+describe('isValidVariableId', () => {
+	it('accepts ids using the permitted characters', () => {
+		expect(isValidVariableId('my_variable')).toBe(true)
+		expect(isValidVariableId('My-Variable.1')).toBe(true)
+		expect(isValidVariableId('ABCabc0123-_.')).toBe(true)
+	})
+
+	it('rejects an empty id', () => {
+		expect(isValidVariableId('')).toBe(false)
+	})
+
+	it('rejects ids containing disallowed characters', () => {
+		expect(isValidVariableId('has space')).toBe(false)
+		expect(isValidVariableId('has:colon')).toBe(false)
+		expect(isValidVariableId('has$dollar')).toBe(false)
+		expect(isValidVariableId('has/slash')).toBe(false)
+		expect(isValidVariableId('emoji😀')).toBe(false)
+	})
+
+	it('rejects ids with leading or trailing newlines', () => {
+		expect(isValidVariableId('valid\n')).toBe(false)
+		expect(isValidVariableId('\nvalid')).toBe(false)
+	})
+})
 
 describe('filterDuplicateOptionIds', () => {
 	it('returns an empty result for an empty array', () => {
