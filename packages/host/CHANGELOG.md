@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.14.1](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.2...companion-module-host-v1.14.1) (2026-08-21)
+
+
+### Features
+
+* Allow action callbacks to return a result value ([#217](https://github.com/bitfocus/companion-module-base/issues/217)) ([95c00ff](https://github.com/bitfocus/companion-module-base/commit/95c00ffc362c9bc405eef653e210ff35b8a0f7c3))
+* allow internal actions and feedbacks in presets ([#232](https://github.com/bitfocus/companion-module-base/issues/232)) ([a5e55f1](https://github.com/bitfocus/companion-module-base/commit/a5e55f121c1fb9658c0ed9bfad33b1a9f38101f9))
+* encourage modules to declare the properties produced by advanced feedbacks ([#229](https://github.com/bitfocus/companion-module-base/issues/229)) ([9ffd88e](https://github.com/bitfocus/companion-module-base/commit/9ffd88e5cc2b9f4c522e75079c59c962ed57efff))
+* filter out options/config with duplicate ids and produce warnings ([2fd11f6](https://github.com/bitfocus/companion-module-base/commit/2fd11f6b86f39388a0e648e51827d9c4296bf68e))
+* generate manifest schema and validators from a single zod definition ([#255](https://github.com/bitfocus/companion-module-base/issues/255)) ([528b674](https://github.com/bitfocus/companion-module-base/commit/528b674d2e983f99b4d01db29345f3448369511a))
+* graphics overhaul ([#171](https://github.com/bitfocus/companion-module-base/issues/171)) ([1341cbe](https://github.com/bitfocus/companion-module-base/commit/1341cbe3c78862f7c3ae3157edff5399dc3354ef))
+* make learn callbacks abortable ([#222](https://github.com/bitfocus/companion-module-base/issues/222)) ([6950513](https://github.com/bitfocus/companion-module-base/commit/6950513d60472ac886636a523cd9f7ce14a5a4db))
+* pass abort signal to action execution ([37741b4](https://github.com/bitfocus/companion-module-base/commit/37741b45d573219b63af88e25f8d9b133e957439))
+* pass abort signal to feedbacks ([661ee14](https://github.com/bitfocus/companion-module-base/commit/661ee14c1e695f3df99d845be7643d5d383cb25a))
+* port option validators from companion ([#266](https://github.com/bitfocus/companion-module-base/issues/266)) ([eedfd69](https://github.com/bitfocus/companion-module-base/commit/eedfd69586bcfdf6dc165ba70ff18256dcda9c26))
+* preset alternatives ([#240](https://github.com/bitfocus/companion-module-base/issues/240)) ([c45332b](https://github.com/bitfocus/companion-module-base/commit/c45332be507c49381f6c29694c50e5630b884a3f))
+* support gauges in presets ([8370e66](https://github.com/bitfocus/companion-module-base/commit/8370e66204c096321cae379822df58614e05b9eb))
+
+
+### Bug Fixes
+
+* add validate export ([9622721](https://github.com/bitfocus/companion-module-base/commit/9622721fc749fc905a4a7e0a779f0571a1d7f3fc))
+* allow upgrade scripts to convert setCustomVariable usages to new result flow ([d26c7c0](https://github.com/bitfocus/companion-module-base/commit/d26c7c090715e1df23d88b34a0412687bde789b8))
+* ensure modules dont use a few reserved words as ids ([cf22b69](https://github.com/bitfocus/companion-module-base/commit/cf22b6907581f85699b4b539c46a1f502ad4d4f5))
+* ensure variable ids match regex ([d9a8af7](https://github.com/bitfocus/companion-module-base/commit/d9a8af7a63da5b7ae729571dfd6bbe93b802ce40))
+* expose additional graphics properties ([#262](https://github.com/bitfocus/companion-module-base/issues/262)) ([783066b](https://github.com/bitfocus/companion-module-base/commit/783066b4019ac8bad7f7dfe3d9ac3abaccbadc4a))
+* expose runThroughUpgradeScripts for offline upgrade script execution ([5c49de0](https://github.com/bitfocus/companion-module-base/commit/5c49de0c7650debbe409d24006918f70e7a05f9f))
+* incorrect logging for optionsToMonitorForSubscribe ([03809e0](https://github.com/bitfocus/companion-module-base/commit/03809e023716d47acdde480bd63da88500b047fa))
+* update schema validation ([528508a](https://github.com/bitfocus/companion-module-base/commit/528508aab7cbf2e684750c2bf8962182770548aa))
+
+
+### Miscellaneous Chores
+
+* release 1.0.0 ([9dce09c](https://github.com/bitfocus/companion-module-base/commit/9dce09c2c186d268a1d5da7c5b647f1b046c334d))
+* release 1.14.1 ([7ba6482](https://github.com/bitfocus/companion-module-base/commit/7ba6482556660d55072ea784e59a246f9a0f2ed3))
+
 ## [1.1.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.1...companion-module-host-v1.1.2) (2026-08-12)
 
 
