@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.2...companion-module-host-v1.1.3) (2026-08-21)
+
+
+### Bug Fixes
+
+* ensure variable ids match regex ([e155e8f](https://github.com/bitfocus/companion-module-base/commit/e155e8fd1c44f112b8d3f938eaf529f2c368c0aa))
+
 ## [1.1.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.1...companion-module-host-v1.1.2) (2026-08-12)
 
 
