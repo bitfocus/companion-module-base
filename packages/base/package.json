@@ -32,6 +32,7 @@
 	"files": [
 		"README.md",
 		"CHANGELOG.md",
+		"LICENSE",
 		"dist",
 		"generated",
 		"assets",
