@@ -210,6 +210,12 @@ export interface CompanionPresetDefinitionBase<TType extends string> {
 	 * This is extra search terms to allow users to find the right preset
 	 */
 	keywords?: string[]
+
+	/**
+	 * The notes for this preset, this will be copied to the button
+	 * This can be used to describe the purpose of the button, or to provide additional setup information to the user
+	 */
+	notes?: string
 }
 
 export interface CompanionSimplePresetDefinition<
