@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.3...companion-module-host-v1.1.4) (2026-09-02)
+
+
+### Bug Fixes
+
+* allow ! in variable names ([f778ddc](https://github.com/bitfocus/companion-module-base/commit/f778ddc1f635cf749e51ec19bc84db4a74d6755d))
+
 ## [1.1.3](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.2...companion-module-host-v1.1.3) (2026-08-21)
 
 
