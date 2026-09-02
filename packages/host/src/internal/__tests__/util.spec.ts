@@ -6,6 +6,7 @@ describe('isValidVariableId', () => {
 		expect(isValidVariableId('my_variable')).toBe(true)
 		expect(isValidVariableId('My-Variable.1')).toBe(true)
 		expect(isValidVariableId('ABCabc0123-_.')).toBe(true)
+		expect(isValidVariableId('my_variable!')).toBe(true)
 	})
 
 	it('rejects an empty id', () => {
