@@ -1,7 +1,7 @@
 import type { SomeCompanionActionInputField, SomeCompanionFeedbackInputField } from '../main.js'
 
 /** Characters allowed in a variable id. Anything outside this set is rejected. */
-export const VARIABLE_ID_REGEX = /^([a-zA-Z0-9-_.]+)$/
+export const VARIABLE_ID_REGEX = /^([a-zA-Z0-9-_.!]+)$/
 
 /** Whether the given string is a valid variable id (only contains the permitted characters) */
 export function isValidVariableId(variableId: string): boolean {
