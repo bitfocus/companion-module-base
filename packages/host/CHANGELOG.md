@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.4...companion-module-host-v1.1.5) (2026-09-03)
+
+
+### Bug Fixes
+
+* disable validation of setVariableValues ids, for backwards compatibility ([dd6bf3d](https://github.com/bitfocus/companion-module-base/commit/dd6bf3d985c425d834861b79018735b1cdf509f7))
+
 ## [1.1.4](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.3...companion-module-host-v1.1.4) (2026-09-02)
 
 
