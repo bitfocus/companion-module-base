@@ -210,10 +210,10 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 						valuesWithReservedIds.push(variableId)
 						continue
 					}
-					if (!isValidVariableId(variableId)) {
-						valuesWithInvalidIds.push(variableId)
-						continue
-					}
+					// if (!isValidVariableId(variableId)) {
+					// 	valuesWithInvalidIds.push(variableId)
+					// 	continue
+					// }
 					if (this.#instance.instanceOptions.disableVariableValidation) {
 						// update the cached value
 						if (value === undefined) {
