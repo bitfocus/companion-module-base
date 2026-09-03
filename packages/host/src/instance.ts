@@ -1,4 +1,5 @@
 import PQueue from 'p-queue'
+import semver from 'semver'
 import {
 	createModuleLogger,
 	type CompanionHTTPRequest,
@@ -61,6 +62,12 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 	) {
 		this.#host = host
 		// this.#plugin = plugin
+
+		// Modules built against base >=2.2 have variable ids rejected when they don't match the valid pattern.
+		// Older modules only get a warning, and the value is still applied, to preserve backwards compatibility.
+		const validModuleApiVersion = semver.valid(moduleApiVersion, { loose: true })
+		const rejectInvalidVariableIds =
+			validModuleApiVersion !== null && semver.gte(validModuleApiVersion, '2.2.0-0', { loose: true })
 
 		this.#actionManager = new ActionManager(
 			(actions) => this.#host.setActionDefinitions(actions),
@@ -210,11 +217,14 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 						valuesWithReservedIds.push(variableId)
 						continue
 					}
-					if (!isValidVariableId(variableId)) {
-						valuesWithInvalidIds.push(variableId)
-						continue
-					}
 					if (this.#instance.instanceOptions.disableVariableValidation) {
+						if (!this.#variableDefinitions.has(variableId) && !isValidVariableId(variableId)) {
+							valuesWithInvalidIds.push(variableId)
+							// For modules built against base >=2.2 this is a hard failure and the value is dropped.
+							// Older modules only get the warning above, and the value is still applied below.
+							if (rejectInvalidVariableIds) continue
+						}
+
 						// update the cached value
 						if (value === undefined) {
 							this.#variableValues.delete(variableId)
@@ -247,7 +257,11 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 					this.#logger.warn(`Ignoring variable values with reserved ids: ${valuesWithReservedIds.sort().join(', ')}`)
 				}
 				if (valuesWithInvalidIds.length > 0) {
-					this.#logger.warn(`Ignoring variable values with invalid ids: ${valuesWithInvalidIds.sort().join(', ')}`)
+					this.#logger.warn(
+						rejectInvalidVariableIds
+							? `Ignoring variable values with invalid ids: ${valuesWithInvalidIds.sort().join(', ')}`
+							: `Setting variable values with invalid ids, this will be rejected in a future version: ${valuesWithInvalidIds.sort().join(', ')}`,
+					)
 				}
 
 				this.#host.setVariableValues(hostValues)
