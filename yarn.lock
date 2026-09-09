@@ -120,7 +120,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@companion-module/base@workspace:packages/base"
   dependencies:
-    colord: "npm:^2.9.3"
+    colord: "npm:^2.9.4"
     type-testing: "npm:^0.2.0"
     zod: "npm:^4.4.3"
   languageName: unknown
@@ -131,7 +131,7 @@ __metadata:
   resolution: "@companion-module/host@workspace:packages/host"
   dependencies:
     "@companion-module/base": "workspace:~"
-    colord: "npm:^2.9.3"
+    colord: "npm:^2.9.4"
     debounce-fn: "npm:^6.0.0"
     fast-deep-equal: "npm:^3.1.3"
     p-queue: "npm:^9.3.3"
@@ -1157,10 +1157,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"colord@npm:^2.9.3":
-  version: 2.9.3
-  resolution: "colord@npm:2.9.3"
-  checksum: 10c0/9699e956894d8996b28c686afe8988720785f476f59335c80ce852ded76ab3ebe252703aec53d9bef54f6219aea6b960fb3d9a8300058a1d0c0d4026460cd110
+"colord@npm:^2.9.4":
+  version: 2.9.4
+  resolution: "colord@npm:2.9.4"
+  checksum: 10c0/c8fb0d7ca4b3488c05d75c5e7b42b0ac84ca4b0a9f5538e74f063c083c1f57c319bcf02bee1b8ff691991c9610e875bafd2eafd5d050e383ad71910afadbf098
   languageName: node
   linkType: hard
 
