@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.2.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.4...companion-module-host-v1.2.0) (2026-09-09)
+
+
+### Features
+
+* generate manifest schema and validators from a single zod definition ([#255](https://github.com/bitfocus/companion-module-base/issues/255)) ([528b674](https://github.com/bitfocus/companion-module-base/commit/528b674d2e983f99b4d01db29345f3448369511a))
+* port option validators from companion ([#266](https://github.com/bitfocus/companion-module-base/issues/266)) ([eedfd69](https://github.com/bitfocus/companion-module-base/commit/eedfd69586bcfdf6dc165ba70ff18256dcda9c26))
+
+
+### Bug Fixes
+
+* add validate export ([9622721](https://github.com/bitfocus/companion-module-base/commit/9622721fc749fc905a4a7e0a779f0571a1d7f3fc))
+* allow ! in variable names ([c58d3d9](https://github.com/bitfocus/companion-module-base/commit/c58d3d9f460e5f4e157e65556e19f2e6a30c9c4a))
+* ensure variable ids match regex ([d9a8af7](https://github.com/bitfocus/companion-module-base/commit/d9a8af7a63da5b7ae729571dfd6bbe93b802ce40))
+* expose additional graphics properties ([#262](https://github.com/bitfocus/companion-module-base/issues/262)) ([783066b](https://github.com/bitfocus/companion-module-base/commit/783066b4019ac8bad7f7dfe3d9ac3abaccbadc4a))
+* only block invalid variable ids from disableVariableValidation when using api &gt;=2.2 ([d3ed195](https://github.com/bitfocus/companion-module-base/commit/d3ed195709ccf02f0a5cb09f6cfdc56afe626c7b))
+
 ## [1.1.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.1...companion-module-host-v1.1.2) (2026-08-12)
 
 
