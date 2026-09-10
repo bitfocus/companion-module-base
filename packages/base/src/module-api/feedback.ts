@@ -22,10 +22,35 @@ export type SomeCompanionFeedbackInputField<TKey extends string = string> =
 	| CompanionInputFieldNumber<TKey>
 	| CompanionInputFieldCheckbox<TKey>
 
-export interface CompanionFeedbackSchema<TOptions extends CompanionOptionValues> {
+export interface CompanionFeedbackSchemaBase<TOptions extends CompanionOptionValues> {
 	type: 'boolean' | 'value' | 'advanced'
 	options: TOptions
 }
+
+export interface CompanionBooleanFeedbackSchema<
+	TOptions extends CompanionOptionValues,
+> extends CompanionFeedbackSchemaBase<TOptions> {
+	type: 'boolean'
+}
+
+export interface CompanionValueFeedbackSchema<
+	TOptions extends CompanionOptionValues,
+	TResult extends JsonValue,
+> extends CompanionFeedbackSchemaBase<TOptions> {
+	type: 'value'
+	result: TResult
+}
+
+export interface CompanionAdvancedFeedbackSchema<
+	TOptions extends CompanionOptionValues,
+> extends CompanionFeedbackSchemaBase<TOptions> {
+	type: 'advanced'
+}
+
+export type CompanionFeedbackSchema<TOptions extends CompanionOptionValues, TResult extends JsonValue = JsonValue> =
+	| CompanionBooleanFeedbackSchema<TOptions>
+	| CompanionValueFeedbackSchema<TOptions, TResult>
+	| CompanionAdvancedFeedbackSchema<TOptions>
 
 /**
  * Basic information about an instance of a feedback
@@ -178,6 +203,7 @@ export interface CompanionBooleanFeedbackDefinition<
  */
 export interface CompanionValueFeedbackDefinition<
 	TOptions extends CompanionOptionValues = CompanionOptionValues,
+	TResult extends JsonValue = JsonValue,
 > extends CompanionFeedbackDefinitionBase<TOptions> {
 	/** The type of the feedback */
 	type: 'value'
@@ -185,7 +211,7 @@ export interface CompanionValueFeedbackDefinition<
 	callback: (
 		feedback: CompanionFeedbackValueEvent<TOptions>,
 		context: CompanionFeedbackCallbackContext,
-	) => JsonValue | Promise<JsonValue>
+	) => TResult | Promise<TResult>
 }
 
 /**
@@ -236,18 +262,21 @@ export interface CompanionFeedbackCallbackContext extends CompanionCommonCallbac
  * The definition of some feedback
  */
 export type CompanionFeedbackDefinition<
-	TSchema extends CompanionFeedbackSchema<CompanionOptionValues> = CompanionFeedbackSchema<CompanionOptionValues>,
+	TSchema extends CompanionFeedbackSchema<CompanionOptionValues, JsonValue> = CompanionFeedbackSchema<
+		CompanionOptionValues,
+		JsonValue
+	>,
 > =
-	TSchema extends CompanionFeedbackSchema<infer TOptions>
+	TSchema extends CompanionFeedbackSchema<infer TOptions, infer TResult>
 		? TSchema['type'] extends 'boolean'
 			? CompanionBooleanFeedbackDefinition<TOptions>
 			: TSchema['type'] extends 'value'
-				? CompanionValueFeedbackDefinition<TOptions>
+				? CompanionValueFeedbackDefinition<TOptions, TResult>
 				: TSchema['type'] extends 'advanced'
 					? CompanionAdvancedFeedbackDefinition<TOptions>
 					: // Unspecific, try anything
 						| CompanionBooleanFeedbackDefinition<TOptions>
-						| CompanionValueFeedbackDefinition<TOptions>
+						| CompanionValueFeedbackDefinition<TOptions, TResult>
 						| CompanionAdvancedFeedbackDefinition<TOptions>
 		: never
 
