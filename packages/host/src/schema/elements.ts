@@ -11,9 +11,26 @@ import type {
 	ButtonGraphicsTextElement,
 	SomeButtonGraphicsElement,
 } from '@companion-module/base'
+import { cssColorToRgba } from '../validate/color.js'
 import { eov, type AssertCoversKeys } from './common.js'
 
-const colorType = z.number().int().min(0).max(0xffffffff)
+/**
+ * A colour: Companion's packed `0xTTRRGGBB` number, or a css colour string. Modules may use either
+ * (`CompanionColorValue`), and Companion parses an all-numeric string as a packed number, so allow that too.
+ */
+const colorType = z.union([
+	z.number().int().min(0).max(0xffffffff),
+	z
+		.string()
+		.refine(
+			(value) => cssColorToRgba(value) !== null || (value.trim() !== '' && !isNaN(Number(value))),
+			'Must be a css color string or a color number',
+		),
+])
+/** Degrees, matching the range of Companion's own rotation property */
+const rotationType = z.number().min(-360).max(360)
+/** Degrees around a circle, matching the range of Companion's own start/end angle properties */
+const angleType = z.number().min(0).max(360)
 const hAlignType = z.enum(['left', 'center', 'right'])
 const vAlignType = z.enum(['top', 'center', 'bottom'])
 const lineOrientationType = z.enum(['inside', 'center', 'outside'])
@@ -38,10 +55,10 @@ const elementBaseShape = {
 }
 
 const elementBoundsShape = {
-	x: eov(z.number().min(0).max(100)).optional(),
-	y: eov(z.number().min(0).max(100)).optional(),
-	width: eov(z.number().min(0).max(100)).optional(),
-	height: eov(z.number().min(0).max(100)).optional(),
+	x: eov(z.number().min(-1000).max(1000)).optional(),
+	y: eov(z.number().min(-1000).max(1000)).optional(),
+	width: eov(z.number().min(0).max(1000)).optional(),
+	height: eov(z.number().min(0).max(1000)).optional(),
 }
 
 const elementBorderShape = {
@@ -82,7 +99,7 @@ const textElementSchema = z.object({
 	...elementBaseShape,
 	...elementBoundsShape,
 	type: z.literal('text'),
-	rotation: eov(z.number().min(0).max(359)).optional(),
+	rotation: eov(rotationType).optional(),
 	text: eov(z.string()),
 	fontsize: eov(z.number()).optional(),
 	fontsizeAllowShrink: eov(z.boolean()).optional(),
@@ -100,7 +117,7 @@ const imageElementSchema = z.object({
 	...elementBaseShape,
 	...elementBoundsShape,
 	type: z.literal('image'),
-	rotation: eov(z.number().min(0).max(359)).optional(),
+	rotation: eov(rotationType).optional(),
 	base64Image: eov(z.string().nullable()),
 	halign: eov(hAlignType).optional(),
 	valign: eov(vAlignType).optional(),
@@ -113,9 +130,9 @@ const boxElementSchema = z.object({
 	...elementBoundsShape,
 	...elementBorderShape,
 	type: z.literal('box'),
-	rotation: eov(z.number().min(0).max(359)).optional(),
+	rotation: eov(rotationType).optional(),
 	color: eov(colorType).optional(),
-	cornerRadius: eov(z.number().min(0).max(50)).optional(),
+	cornerRadius: eov(z.number().min(0).max(100)).optional(),
 }) satisfies z.ZodType<ButtonGraphicsBoxElement>
 true satisfies AssertCoversKeys<typeof boxElementSchema, ButtonGraphicsBoxElement>
 
@@ -136,8 +153,8 @@ const circleElementSchema = z.object({
 	...elementBorderShape,
 	type: z.literal('circle'),
 	color: eov(colorType).optional(),
-	startAngle: eov(z.number().min(0).max(359)).optional(),
-	endAngle: eov(z.number().min(0).max(359)).optional(),
+	startAngle: eov(angleType).optional(),
+	endAngle: eov(angleType).optional(),
 	drawSlice: eov(z.boolean()).optional(),
 	borderOnlyArc: eov(z.boolean()).optional(),
 }) satisfies z.ZodType<ButtonGraphicsCircleElement>
@@ -153,7 +170,7 @@ const gaugeElementSchema = z.object({
 	...elementBaseShape,
 	...elementBoundsShape,
 	type: z.literal('gauge'),
-	rotation: eov(z.number().min(0).max(359)).optional(),
+	rotation: eov(rotationType).optional(),
 	// Value
 	value: eov(gaugeValueType).optional(),
 	min: eov(gaugeValueType).optional(),
@@ -164,8 +181,8 @@ const gaugeElementSchema = z.object({
 	orientation: eov(gaugeOrientationType).optional(),
 	reverse: eov(z.boolean()).optional(),
 	// Circular styling
-	startAngle: eov(z.number().min(0).max(360)).optional(),
-	endAngle: eov(z.number().min(0).max(360)).optional(),
+	startAngle: eov(angleType).optional(),
+	endAngle: eov(angleType).optional(),
 	ringWidth: eov(z.number().min(1).max(50)).optional(),
 	roundedEnds: eov(z.boolean()).optional(),
 	// Fill
@@ -198,7 +215,7 @@ export const elementSchema: z.ZodType<SomeButtonGraphicsElement> = z.lazy(() =>
 			...elementBaseShape,
 			...elementBoundsShape,
 			type: z.literal('group'),
-			rotation: eov(z.number().min(0).max(359)).optional(),
+			rotation: eov(rotationType).optional(),
 			squareCoords: eov(z.boolean()).optional(),
 			children: z.array(elementSchema),
 		}),
