@@ -2,82 +2,86 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"$id": "/assets/manifest.schema.json",
 	"title": "ModuleManifest",
-	"type": "object",
-	"properties": {
-		"$schema": { "type": "string" },
-		"type": { "type": "string", "enum": ["connection"], "description": "Type of module. Must be: connection" },
-		"id": {
-			"type": "string",
-			"pattern": "^((?!companion-module-your-module-name)[\\s\\S])*$",
-			"description": "Unique identifier for the module"
-		},
-		"name": {
-			"type": "string",
-			"pattern": "^((?!companion-module-your-module-name)[\\s\\S])*$",
-			"description": "Name of the module"
-		},
-		"shortname": { "type": "string", "pattern": "^((?!module-shortname)[\\s\\S])*$" },
-		"description": {
-			"type": "string",
-			"pattern": "^((?!A short one line description of your module)[\\s\\S])*$",
-			"description": "Description of the module"
-		},
-		"version": { "type": "string", "description": "Current version of the module" },
-		"isPrerelease": { "description": "Is this a pre-release version", "type": "boolean" },
-		"license": { "type": "string", "description": "SPDX identifier for license of the module" },
-		"repository": { "type": "string", "description": "URL to the source repository" },
-		"bugs": { "type": "string", "description": "URL to bug tracker" },
-		"maintainers": {
-			"type": "array",
-			"items": { "$ref": "#/$defs/ModuleManifestMaintainer" },
-			"uniqueItems": true,
-			"description": "List of active maintainers"
-		},
-		"legacyIds": {
-			"type": "array",
-			"items": { "type": "string" },
-			"uniqueItems": true,
-			"description": "If the module had a different unique identifier previously, then specify it here"
-		},
-		"runtime": { "$ref": "#/$defs/ModuleManifestRuntime" },
-		"manufacturer": { "type": "string", "pattern": "^((?!Your company)[\\s\\S])*$" },
-		"products": {
-			"minItems": 1,
-			"type": "array",
-			"items": { "type": "string", "pattern": "^((?!Your product)[\\s\\S])*$" },
-			"uniqueItems": true
-		},
-		"keywords": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-		"bonjourQueries": {
-			"description": "If the device or software for your module supports bonjour announcements, Companion will offer an easy way to watch for these announcements.\nEach query you define must have a matching config field of type 'bonjour-device' with the same name",
-			"type": "object",
-			"propertyNames": { "type": "string" },
-			"additionalProperties": {
-				"anyOf": [
-					{ "$ref": "#/$defs/ModuleBonjourQuery" },
-					{ "type": "array", "items": { "$ref": "#/$defs/ModuleBonjourQuery" } }
-				]
-			}
-		}
-	},
-	"required": [
-		"type",
-		"id",
-		"name",
-		"shortname",
-		"description",
-		"version",
-		"license",
-		"repository",
-		"bugs",
-		"maintainers",
-		"legacyIds",
-		"runtime",
-		"manufacturer",
-		"products",
-		"keywords"
-	],
+	"$ref": "#/$defs/ModuleManifest",
 	"$defs": {
+		"ModuleManifest": {
+			"type": "object",
+			"properties": {
+				"$schema": { "type": "string" },
+				"type": { "type": "string", "enum": ["connection"], "description": "Type of module. Must be: connection" },
+				"id": {
+					"type": "string",
+					"pattern": "^((?!companion-module-your-module-name)[\\s\\S])*$",
+					"description": "Unique identifier for the module"
+				},
+				"name": {
+					"type": "string",
+					"pattern": "^((?!companion-module-your-module-name)[\\s\\S])*$",
+					"description": "Name of the module"
+				},
+				"shortname": { "type": "string", "pattern": "^((?!module-shortname)[\\s\\S])*$" },
+				"description": {
+					"type": "string",
+					"pattern": "^((?!A short one line description of your module)[\\s\\S])*$",
+					"description": "Description of the module"
+				},
+				"version": { "type": "string", "description": "Current version of the module" },
+				"isPrerelease": { "description": "Is this a pre-release version", "type": "boolean" },
+				"license": { "type": "string", "description": "SPDX identifier for license of the module" },
+				"repository": { "type": "string", "description": "URL to the source repository" },
+				"bugs": { "type": "string", "description": "URL to bug tracker" },
+				"maintainers": {
+					"type": "array",
+					"items": { "$ref": "#/$defs/ModuleManifestMaintainer" },
+					"uniqueItems": true,
+					"description": "List of active maintainers"
+				},
+				"legacyIds": {
+					"type": "array",
+					"items": { "type": "string" },
+					"uniqueItems": true,
+					"description": "If the module had a different unique identifier previously, then specify it here"
+				},
+				"runtime": { "$ref": "#/$defs/ModuleManifestRuntime" },
+				"manufacturer": { "type": "string", "pattern": "^((?!Your company)[\\s\\S])*$" },
+				"products": {
+					"minItems": 1,
+					"type": "array",
+					"items": { "type": "string", "pattern": "^((?!Your product)[\\s\\S])*$" },
+					"uniqueItems": true
+				},
+				"keywords": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+				"bonjourQueries": {
+					"description": "If the device or software for your module supports bonjour announcements, Companion will offer an easy way to watch for these announcements.\nEach query you define must have a matching config field of type 'bonjour-device' with the same name",
+					"type": "object",
+					"propertyNames": { "type": "string" },
+					"additionalProperties": {
+						"anyOf": [
+							{ "$ref": "#/$defs/ModuleBonjourQuery" },
+							{ "type": "array", "items": { "$ref": "#/$defs/ModuleBonjourQuery" } }
+						]
+					}
+				}
+			},
+			"required": [
+				"type",
+				"id",
+				"name",
+				"shortname",
+				"description",
+				"version",
+				"license",
+				"repository",
+				"bugs",
+				"maintainers",
+				"legacyIds",
+				"runtime",
+				"manufacturer",
+				"products",
+				"keywords"
+			],
+			"title": "ModuleManifest"
+		},
 		"ModuleManifestMaintainer": {
 			"type": "object",
 			"properties": {

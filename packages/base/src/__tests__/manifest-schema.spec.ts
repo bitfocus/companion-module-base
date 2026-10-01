@@ -35,8 +35,10 @@ describe('generated manifest.schema.json', () => {
 		expect($schema).toBe('https://json-schema.org/draft/2020-12/schema')
 		expect($id).toBe('/assets/manifest.schema.json')
 		expect(title).toBe('ModuleManifest')
+		// zod may emit the root as a `$ref` into `$defs`, since the schema has a meta id
+		const root = typeof rest.$ref === 'string' ? rest.$defs[rest.$ref.replace('#/$defs/', '')] : rest
 		// The zod-derived body must still describe the same required top-level keys.
-		expect(rest.required).toEqual(
+		expect(root.required).toEqual(
 			expect.arrayContaining(['type', 'id', 'name', 'runtime', 'manufacturer', 'products', 'keywords']),
 		)
 	})
