@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.2.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.1.3...companion-module-base-v2.2.0) (2026-10-01)
+
+
+### Features
+
+* Add the result type returned by a value feedback's callback to the value feedback's schema ([#258](https://github.com/bitfocus/companion-module-base/issues/258)) ([927d994](https://github.com/bitfocus/companion-module-base/commit/927d994922fec40460f1c58a3c2420a99279478c))
+* allow modules to produce colours as css strings ([99d8e81](https://github.com/bitfocus/companion-module-base/commit/99d8e810ec504e050d81d19a4d8f09fd23afb8fe))
+* allow presets to define button notes ([ac5c9a4](https://github.com/bitfocus/companion-module-base/commit/ac5c9a4167aa3fb5276740430f2e09cc2098dad3))
+* allow presets to store action results to local variables ([#275](https://github.com/bitfocus/companion-module-base/issues/275)) ([e469e64](https://github.com/bitfocus/companion-module-base/commit/e469e6424b7499a025ff5fcb20a23187475e606d))
+* generate manifest schema and validators from a single zod definition ([#255](https://github.com/bitfocus/companion-module-base/issues/255)) ([528b674](https://github.com/bitfocus/companion-module-base/commit/528b674d2e983f99b4d01db29345f3448369511a))
+
+
+### Bug Fixes
+
+* Don't require `CompanionInputFieldStaticText<TKey>` to have `id: TKey` but instead allow any string value ([#257](https://github.com/bitfocus/companion-module-base/issues/257)) ([a8d2ca6](https://github.com/bitfocus/companion-module-base/commit/a8d2ca62acdcabfbbfc5f2027fb0f18f2cf4bc3f))
+* expose additional graphics properties ([#262](https://github.com/bitfocus/companion-module-base/issues/262)) ([783066b](https://github.com/bitfocus/companion-module-base/commit/783066b4019ac8bad7f7dfe3d9ac3abaccbadc4a))
+
 ## [2.1.3](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.1.2...companion-module-base-v2.1.3) (2026-08-12)
 
 
