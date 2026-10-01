@@ -310,8 +310,32 @@ export type CompanionPresetAction<
 		 * Intended to describe the purpose/intent of the action.
 		 */
 		headline?: string
-	}
+	} & (TActionManifest[K] extends { result: JsonValue }
+		? {
+				/**
+				 * Store the result of this action into a local variable of the button
+				 * Only valid for actions which return a result
+				 */
+				storeResult?: CompanionPresetActionStoreResult
+			}
+		: string extends keyof TActionManifest
+			? // loosely typed manifest, so allow it
+				{ storeResult?: CompanionPresetActionStoreResult }
+			: // definitely has no result
+				{ storeResult?: never })
 }[keyof TActionManifest]
+
+/**
+ * Where the result of an action in a preset should be stored
+ */
+export interface CompanionPresetActionStoreResult {
+	type: 'local-variable'
+	/**
+	 * Name of the local variable to write the action's result into
+	 * This must match one of the `simple` `localVariables` defined on the same preset
+	 */
+	variableName: string
+}
 
 /**
  * The configuration of a feedback in a preset
