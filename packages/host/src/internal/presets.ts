@@ -35,6 +35,8 @@ interface PresetEntryView {
 	children?: unknown
 	/** Present on the object form of a numbered delay-group (`CompanionPresetActionsWithOptions`) */
 	actions?: unknown
+	/** Where to store the result of an action */
+	storeResult?: unknown
 }
 
 /** Collect all element IDs declared in a layered elements tree, recursing into group children */
@@ -86,23 +88,65 @@ export function sanitisePresetDefinitions(
 		return semver.gte(validModuleApiVersion, minApiVersion, { loose: true })
 	}
 
+	/** Whether the module is new enough to use `storeResult` on preset actions */
+	const isStoreResultAllowed =
+		validModuleApiVersion !== null && semver.gte(validModuleApiVersion, '2.2.0-0', { loose: true })
+
+	/**
+	 * Whether an action's `storeResult` is usable: it must target a simple local variable declared on the
+	 * preset, and the action must be one of the module's own actions which returns a result.
+	 */
+	function isStoreResultValid(actionId: unknown, storeResult: unknown, localVariableNames: Set<string>): boolean {
+		if (!isStoreResultAllowed) return false
+		if (!storeResult || typeof storeResult !== 'object') return false
+		const target = storeResult as Record<string, unknown>
+		if (target.type !== 'local-variable') return false
+		if (typeof target.variableName !== 'string' || !localVariableNames.has(target.variableName)) return false
+
+		if (typeof actionId !== 'string' || isInternalId(actionId)) return false
+		return !!actionsManager.getDefinition(actionId)?.hasResult
+	}
+
 	/**
 	 * Drop any `internal:*` action/feedback entries the module is not allowed to use (unknown ids, or
 	 * ids the module is too old for). Allowed internal entries and all module-own entries are kept as-is,
-	 * recursing into the child groups of building-block entries. Returns new feedbacks/steps arrays, and
-	 * whether anything was dropped.
+	 * recursing into the child groups of building-block entries.
+	 * Any invalid `storeResult` is also removed from the actions.
+	 * Returns new feedbacks/steps arrays, and whether anything was dropped.
 	 */
-	function dropDisallowedInternalEntries(preset: CompanionPresetDefinition<any>): {
+	function dropDisallowedEntries(preset: CompanionPresetDefinition<any>): {
 		feedbacks: typeof preset.feedbacks
 		steps: typeof preset.steps
-		dropped: boolean
+		droppedInternal: boolean
+		droppedStoreResult: boolean
 	} {
-		let dropped = false
+		let droppedInternal = false
+		let droppedStoreResult = false
 		const keep = (id: unknown): boolean => {
 			if (!isInternalId(id)) return true
 			if (isInternalIdAllowed(id)) return true
-			dropped = true
+			droppedInternal = true
 			return false
+		}
+
+		const localVariableNames = new Set<string>()
+		if (Array.isArray(preset.localVariables)) {
+			for (const localVariable of preset.localVariables) {
+				// Only simple variables can be written to, the others are driven by something else
+				if (localVariable?.variableType === 'simple' && typeof localVariable.variableName === 'string') {
+					localVariableNames.add(localVariable.variableName)
+				}
+			}
+		}
+
+		/** Remove the `storeResult` from an entry, if it is not valid */
+		const sanitiseStoreResult = <T extends PresetEntryView>(entry: T): T => {
+			if (!entry || entry.storeResult === undefined) return entry
+			if (isStoreResultValid(entry.actionId, entry.storeResult, localVariableNames)) return entry
+
+			droppedStoreResult = true
+			const { storeResult: _storeResult, ...rest } = entry
+			return rest as T
 		}
 
 		/**
@@ -113,8 +157,9 @@ export function sanitisePresetDefinitions(
 			if (!Array.isArray(entries)) return entries
 			if (depth > MAX_PRESET_NESTING_DEPTH) return entries
 			const out: T[] = []
-			for (const entry of entries) {
-				if (!keep(entry?.actionId ?? entry?.feedbackId)) continue
+			for (const rawEntry of entries) {
+				if (!keep(rawEntry?.actionId ?? rawEntry?.feedbackId)) continue
+				const entry = sanitiseStoreResult(rawEntry)
 				if (entry && entry.children && typeof entry.children === 'object') {
 					const children: Record<string, unknown> = {}
 					for (const [groupId, childEntries] of Object.entries(entry.children)) {
@@ -160,7 +205,7 @@ export function sanitisePresetDefinitions(
 				})
 			: preset.steps) as unknown as typeof preset.steps
 
-		return { feedbacks, steps, dropped }
+		return { feedbacks, steps, droppedInternal, droppedStoreResult }
 	}
 
 	const presetsWithInvalidActionIds: string[] = []
@@ -170,6 +215,7 @@ export function sanitisePresetDefinitions(
 	const presetsWithInvalidElements: string[] = []
 	const presetsWithInvalidStyleOverrideRefs: string[] = []
 	const presetsWithDisallowedInternalIds: string[] = []
+	const presetsWithInvalidStoreResults: string[] = []
 	const presetsFailedValidation: string[] = []
 
 	/**
@@ -229,14 +275,15 @@ export function sanitisePresetDefinitions(
 				if (hasInvalidRef) presetsWithInvalidStyleOverrideRefs.push(presetName)
 			}
 
-			// --- Drop internal:* entries the module is not allowed to reference ---
-			const internalFiltered = dropDisallowedInternalEntries(sanitisedPreset)
+			// --- Drop internal:* entries the module is not allowed to reference, and invalid storeResults ---
+			const filtered = dropDisallowedEntries(sanitisedPreset)
 			sanitisedPreset = {
 				...sanitisedPreset,
-				feedbacks: internalFiltered.feedbacks,
-				steps: internalFiltered.steps,
+				feedbacks: filtered.feedbacks,
+				steps: filtered.steps,
 			} as CompanionPresetDefinition<any>
-			if (internalFiltered.dropped) presetsWithDisallowedInternalIds.push(presetName)
+			if (filtered.droppedInternal) presetsWithDisallowedInternalIds.push(presetName)
+			if (filtered.droppedStoreResult) presetsWithInvalidStoreResults.push(presetName)
 
 			// --- Validate feedback/action IDs and option keys, recursing into building-block children ---
 			let hasInvalidFeedback = false
@@ -406,6 +453,13 @@ export function sanitisePresetDefinitions(
 	if (presetsWithDisallowedInternalIds.length > 0) {
 		logger.warn(
 			`The following preset definitions reference internal actions/feedbacks which are not available to this module (unknown id, or the module's api version is too old) and have been removed: ${presetsWithDisallowedInternalIds
+				.sort()
+				.join(', ')}`,
+		)
+	}
+	if (presetsWithInvalidStoreResults.length > 0) {
+		logger.warn(
+			`The following preset definitions have actions storing their result to an unknown or non-simple local variable, from an action which does not return a result, or the module's api version is too old. These have been removed: ${presetsWithInvalidStoreResults
 				.sort()
 				.join(', ')}`,
 		)

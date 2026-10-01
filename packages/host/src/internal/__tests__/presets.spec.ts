@@ -963,6 +963,107 @@ describe('validatePresetDefinitions', () => {
 		})
 	})
 
+	describe('action storeResult', () => {
+		const actions = {
+			'with-result': { ...makeActionDef(), hasResult: true },
+			'without-result': makeActionDef(),
+		} as Record<string, CompanionActionDefinition>
+
+		const storeOut = { type: 'local-variable', variableName: 'out' }
+
+		function presetWithActions(down: unknown[]): CompanionPresetDefinitions<InstanceTypes> {
+			return {
+				p1: {
+					...validSimple({ steps: [{ down: down as any, up: [] }] }),
+					localVariables: [
+						{ variableName: 'out', variableType: 'simple', startupValue: 0 },
+						{ variableName: 'fb', variableType: 'feedback', feedbackId: 'my-feedback', options: {} },
+					],
+				},
+			}
+		}
+
+		function returnedDown(result: ReturnType<typeof sanitisePresetDefinitions>): any[] {
+			return (result.presets['p1'] as CompanionSimplePresetDefinition<InstanceTypes>).steps[0].down
+		}
+
+		it('keeps a valid storeResult without warning', () => {
+			const { result, msgs } = runSanitise(
+				presetWithActions([{ actionId: 'with-result', options: {}, storeResult: storeOut }]),
+				actions,
+				{},
+				structureFor('p1'),
+				'2.2.0',
+			)
+			expect(msgs).toHaveLength(0)
+			expect(returnedDown(result)[0].storeResult).toEqual(storeOut)
+		})
+
+		it.each([
+			['an action without a result', { actionId: 'without-result', options: {}, storeResult: storeOut }],
+			['an internal action', { actionId: 'internal:wait', options: { time: 1 }, storeResult: storeOut }],
+			[
+				'an undeclared local variable',
+				{ actionId: 'with-result', options: {}, storeResult: { type: 'local-variable', variableName: 'other' } },
+			],
+			[
+				'a non-local variable',
+				{ actionId: 'with-result', options: {}, storeResult: { type: 'custom-variable', variableName: 'out' } },
+			],
+			[
+				'a feedback local variable',
+				{ actionId: 'with-result', options: {}, storeResult: { type: 'local-variable', variableName: 'fb' } },
+			],
+			['a malformed value', { actionId: 'with-result', options: {}, storeResult: 'out' }],
+		])('drops storeResult for %s, keeping the action, and warns', (_desc, action) => {
+			const { result, msgs } = runSanitise(presetWithActions([action]), actions, {}, structureFor('p1'), '2.2.0')
+			expect(msgs).toHaveLength(1)
+			expect(msgs[0]).toContain('storing their result')
+			expect(msgs[0]).toContain('My Preset')
+			const down = returnedDown(result)
+			expect(down).toHaveLength(1)
+			expect(down[0].actionId).toBe(action.actionId)
+			expect(down[0]).not.toHaveProperty('storeResult')
+		})
+
+		it('drops an otherwise valid storeResult when the module api version is too old, and warns', () => {
+			const { result, msgs } = runSanitise(
+				presetWithActions([{ actionId: 'with-result', options: {}, storeResult: storeOut }]),
+				actions,
+				{},
+				structureFor('p1'),
+				'2.1.0',
+			)
+			expect(msgs.some((m) => m.includes('storing their result'))).toBe(true)
+			expect(returnedDown(result)[0]).not.toHaveProperty('storeResult')
+		})
+
+		it('sanitises storeResult nested in building-block children', () => {
+			const { result, msgs } = runSanitise(
+				presetWithActions([
+					{
+						actionId: 'internal:actionGroup',
+						options: {},
+						children: {
+							default: [
+								{ actionId: 'with-result', options: {}, storeResult: storeOut },
+								{ actionId: 'without-result', options: {}, storeResult: storeOut },
+							],
+						},
+					},
+				]),
+				actions,
+				{},
+				structureFor('p1'),
+				'2.2.0',
+			)
+			expect(msgs.some((m) => m.includes('storing their result'))).toBe(true)
+			const children = returnedDown(result)[0].children.default
+			expect(children[0].storeResult).toEqual(storeOut)
+			expect(children[1]).not.toHaveProperty('storeResult')
+		})
+	})
+
 	describe('alternatives entries', () => {
 		it('keeps all valid variants of an alternatives entry, in order', () => {
 			const presets = {
