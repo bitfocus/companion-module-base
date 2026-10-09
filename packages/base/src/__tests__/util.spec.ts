@@ -4,6 +4,7 @@ import {
 	combineRgb,
 	literal,
 	parseEscapeCharacters,
+	sanitizeVariable,
 	splitHex,
 	splitHsl,
 	splitHsv,
@@ -170,5 +171,25 @@ describe('substituteEscapeCharacters', () => {
 	it('roundtrips hex control characters with parseEscapeCharacters', () => {
 		const input = 'a\x00b\x03c'
 		expect(parseEscapeCharacters(substituteEscapeCharacters(input))).toBe(input)
+	})
+})
+
+describe('sanitizeVariable', () => {
+	it('allows uppercase, lowercase, and numerical characters', () => {
+		expect(sanitizeVariable('abcDEF')).toBe('abcDEF')
+		expect(sanitizeVariable('123')).toBe('123')
+	})
+
+	it('allows hyphen, underscore, period, and exclamation mark', () => {
+		expect(sanitizeVariable('-_.!')).toBe('-_.!')
+	})
+
+	it('removes other symbols and spaces by default', () => {
+		expect(sanitizeVariable(`¬"£$%^&*()+={};:'@#~\\|,<>/? `)).toBe('')
+	})
+
+	it('performs character replacement prior to sanitization', () => {
+		expect(sanitizeVariable('variable with space', { ' ': '_' })).toBe('variable_with_space')
+		expect(sanitizeVariable('bad replacement', { ' ': '#' })).toBe('badreplacement')
 	})
 })
