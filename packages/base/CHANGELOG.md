@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.1](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.2.0...companion-module-base-v2.2.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* add sanitizeVariable util function ([#278](https://github.com/bitfocus/companion-module-base/issues/278)) ([3fb7bdb](https://github.com/bitfocus/companion-module-base/commit/3fb7bdbd99ad29ef4644d0701615ab2ccca5c178))
+* allow rotation on composite elements ([45ea03a](https://github.com/bitfocus/companion-module-base/commit/45ea03ae3173b5314fee1859eabb1f247c2075f6))
+
 ## [2.2.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.1.3...companion-module-base-v2.2.0) (2026-10-01)
 
 
