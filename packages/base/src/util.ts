@@ -191,3 +191,17 @@ export function substituteEscapeCharacters(msg: string): string {
 		.replaceAll('\x03', '\\x03')
 	return message
 }
+
+/**
+ * Sanitize an ID to ensure compliance with Companion ID constraints, and optionally provide module devs the capability to replace characters.
+ */
+
+export function sanitizeVariable(id: string, replacements: Record<string, string> = {}): string {
+	let result = id
+
+	for (const [character, replacement] of Object.entries(replacements)) {
+		result = result.split(character).join(replacement)
+	}
+
+	return result.replace(/[^a-zA-Z0-9-_.!]/g, '')
+}
