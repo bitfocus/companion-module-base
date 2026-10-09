@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.2.0...companion-module-host-v1.2.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* allow rotation on composite elements ([45ea03a](https://github.com/bitfocus/companion-module-base/commit/45ea03ae3173b5314fee1859eabb1f247c2075f6))
+
 ## [1.2.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.1.4...companion-module-host-v1.2.0) (2026-10-01)
 
 
