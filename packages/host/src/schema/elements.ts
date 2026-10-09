@@ -61,6 +61,10 @@ const elementBoundsShape = {
 	height: eov(z.number().min(0).max(1000)).optional(),
 }
 
+const elementRotationShape = {
+	rotation: eov(rotationType).optional(),
+}
+
 const elementBorderShape = {
 	borderWidth: eov(z.number().min(0)).optional(),
 	borderColor: eov(colorType).optional(),
@@ -83,23 +87,29 @@ const elementBorderShape = {
 const compositeRefSchema = z.object({
 	...elementBaseShape,
 	...elementBoundsShape,
+	...elementRotationShape,
 	type: z.literal('composite'),
 	elementId: z.string(),
 	options: z.record(z.string(), z.unknown()),
 })
 // Key-coverage assertion for compositeRef (satisfies skipped – see above)
 type _CompositeRefSchemaKeys =
-	keyof typeof elementBaseShape | keyof typeof elementBoundsShape | 'type' | 'elementId' | 'options'
+	| keyof typeof elementBaseShape
+	| keyof typeof elementBoundsShape
+	| keyof typeof elementRotationShape
+	| 'type'
+	| 'elementId'
+	| 'options'
 // ButtonGraphicsCompositeElement is a mapped generic — import the base fields manually
 type _ButtonGraphicsCompositeElementKeys =
-	'id' | 'name' | 'enabled' | 'opacity' | 'x' | 'y' | 'width' | 'height' | 'type' | 'elementId' | 'options'
+	'id' | 'name' | 'enabled' | 'opacity' | 'x' | 'y' | 'width' | 'height' | 'type' | 'rotation' | 'elementId' | 'options'
 true satisfies [_ButtonGraphicsCompositeElementKeys] extends [_CompositeRefSchemaKeys] ? true : never
 
 const textElementSchema = z.object({
 	...elementBaseShape,
 	...elementBoundsShape,
+	...elementRotationShape,
 	type: z.literal('text'),
-	rotation: eov(rotationType).optional(),
 	text: eov(z.string()),
 	fontsize: eov(z.number()).optional(),
 	fontsizeAllowShrink: eov(z.boolean()).optional(),
@@ -116,8 +126,8 @@ true satisfies AssertCoversKeys<typeof textElementSchema, ButtonGraphicsTextElem
 const imageElementSchema = z.object({
 	...elementBaseShape,
 	...elementBoundsShape,
+	...elementRotationShape,
 	type: z.literal('image'),
-	rotation: eov(rotationType).optional(),
 	base64Image: eov(z.string().nullable()),
 	halign: eov(hAlignType).optional(),
 	valign: eov(vAlignType).optional(),
@@ -128,9 +138,9 @@ true satisfies AssertCoversKeys<typeof imageElementSchema, ButtonGraphicsImageEl
 const boxElementSchema = z.object({
 	...elementBaseShape,
 	...elementBoundsShape,
+	...elementRotationShape,
 	...elementBorderShape,
 	type: z.literal('box'),
-	rotation: eov(rotationType).optional(),
 	color: eov(colorType).optional(),
 	cornerRadius: eov(z.number().min(0).max(100)).optional(),
 }) satisfies z.ZodType<ButtonGraphicsBoxElement>
@@ -169,8 +179,8 @@ const gaugeStopSchema = z.object({
 const gaugeElementSchema = z.object({
 	...elementBaseShape,
 	...elementBoundsShape,
+	...elementRotationShape,
 	type: z.literal('gauge'),
-	rotation: eov(rotationType).optional(),
 	// Value
 	value: eov(gaugeValueType).optional(),
 	min: eov(gaugeValueType).optional(),
@@ -203,7 +213,12 @@ true satisfies AssertCoversKeys<typeof gaugeElementSchema, ButtonGraphicsGaugeEl
 
 // Key-coverage assertion for the group schema (defined inline inside z.lazy below)
 type _GroupSchemaKeys =
-	keyof typeof elementBaseShape | keyof typeof elementBoundsShape | 'type' | 'rotation' | 'squareCoords' | 'children'
+	| keyof typeof elementBaseShape
+	| keyof typeof elementBoundsShape
+	| keyof typeof elementRotationShape
+	| 'type'
+	| 'squareCoords'
+	| 'children'
 true satisfies [keyof ButtonGraphicsGroupElement] extends [_GroupSchemaKeys] ? true : never
 
 // The outer elementSchema uses z.lazy for the recursive group case.
@@ -214,8 +229,8 @@ export const elementSchema: z.ZodType<SomeButtonGraphicsElement> = z.lazy(() =>
 		z.object({
 			...elementBaseShape,
 			...elementBoundsShape,
+			...elementRotationShape,
 			type: z.literal('group'),
-			rotation: eov(rotationType).optional(),
 			squareCoords: eov(z.boolean()).optional(),
 			children: z.array(elementSchema),
 		}),

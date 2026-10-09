@@ -67,6 +67,11 @@ export interface ButtonGraphicsDrawBounds {
 	height?: CompanionGraphicsElementValue<number>
 }
 
+export interface ButtonGraphicsRotationProperties {
+	/* Degrees, -360 to 360 */
+	rotation?: CompanionGraphicsElementValue<number>
+}
+
 export interface ButtonGraphicsCanvasElement {
 	// previewColor: number
 
@@ -93,10 +98,8 @@ export enum ButtonGraphicsShowStatusIcons {
 export interface ButtonGraphicsGroupElement<
 	TCompositeElements extends CompanionCompositeElementSchemas | undefined = CompanionCompositeElementSchemas,
 >
-	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
+	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds, ButtonGraphicsRotationProperties {
 	type: 'group'
-
-	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
 
 	/* When enabled, the coordinate space for child elements is constrained to a centred square (the shorter side) */
 	squareCoords?: CompanionGraphicsElementValue<boolean>
@@ -108,6 +111,7 @@ export type ButtonGraphicsCompositeElement<
 	TCompositeElements extends CompanionCompositeElementSchemas | undefined = CompanionCompositeElementSchemas,
 > = ButtonGraphicsElementBase &
 	ButtonGraphicsDrawBounds &
+	ButtonGraphicsRotationProperties &
 	{
 		[K in keyof Extract<TCompositeElements, CompanionCompositeElementSchemas>]: {
 			type: 'composite'
@@ -136,10 +140,9 @@ export type ButtonGraphicsFontWeight = 'normal' | 'bold'
 
 export type ButtonGraphicsTextStyle = 'italic' | 'underline' | 'strikethrough'
 
-export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
+export interface ButtonGraphicsTextElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds, ButtonGraphicsRotationProperties {
 	type: 'text'
-
-	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
 
 	text: CompanionGraphicsElementValue<string>
 
@@ -161,10 +164,9 @@ export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, Bu
 	outlineColor?: CompanionGraphicsElementValue<CompanionColorValue>
 }
 
-export interface ButtonGraphicsImageElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
+export interface ButtonGraphicsImageElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds, ButtonGraphicsRotationProperties {
 	type: 'image'
-
-	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
 
 	base64Image: CompanionGraphicsElementValue<string | null>
 
@@ -181,10 +183,12 @@ export interface ButtonGraphicsBorderProperties {
 }
 
 export interface ButtonGraphicsBoxElement
-	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds, ButtonGraphicsBorderProperties {
+	extends
+		ButtonGraphicsElementBase,
+		ButtonGraphicsDrawBounds,
+		ButtonGraphicsRotationProperties,
+		ButtonGraphicsBorderProperties {
 	type: 'box'
-
-	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
 
 	color?: CompanionGraphicsElementValue<CompanionColorValue>
 
@@ -230,10 +234,9 @@ export interface ButtonGraphicsGaugeStop {
 	gradient: CompanionGraphicsElementValue<boolean>
 }
 
-export interface ButtonGraphicsGaugeElement extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds {
+export interface ButtonGraphicsGaugeElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsDrawBounds, ButtonGraphicsRotationProperties {
 	type: 'gauge'
-
-	rotation?: CompanionGraphicsElementValue<number> // degrees 0-359
 
 	// Value
 	/* The current value of the gauge, in the Min..Max range */

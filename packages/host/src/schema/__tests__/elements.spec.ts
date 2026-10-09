@@ -99,6 +99,7 @@ describe('elementSchema', () => {
 			expect(accepts({ type: 'image', base64Image: null, rotation })).toBe(true)
 			expect(accepts({ type: 'gauge', rotation })).toBe(true)
 			expect(accepts({ type: 'group', children: [], rotation })).toBe(true)
+			expect(accepts({ type: 'composite', elementId: 'abc', options: {}, rotation })).toBe(true)
 		})
 
 		it.each([
