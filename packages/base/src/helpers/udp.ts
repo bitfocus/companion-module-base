@@ -48,14 +48,22 @@ export interface UDPHelperOptions {
 	/** default: 0.0.0.0 for udp4, :: for udp6 */
 	bind_ip?: string
 
-	/** default false */
+	/**
+	 * default false
+	 * Note: IPv6 has no broadcast, so this has no effect for udp6 sockets
+	 */
 	broadcast?: boolean
 	/** default 64 */
 	ttl?: number
 	/** default 1 */
 	multicast_ttl?: number
 
-	/** default undefined */
+	/**
+	 * default undefined
+	 * For udp4 this is the IPv4 address of the interface, e.g. '192.168.1.10'.
+	 * For udp6 this is the any address scoped to the interface, e.g. '::%eth0' (or '::%2' on Windows).
+	 * Note: an address of the wrong family may be silently ignored
+	 */
 	multicast_interface?: string
 }
 

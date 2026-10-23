@@ -64,6 +64,11 @@ export interface SharedUdpSocket extends EventEmitter<SharedUdpSocketEvents> {
 }
 
 export interface SharedUdpSocketOptions {
+	/**
+	 * The socket family to use.
+	 * A udp4 socket can only send to IPv4 addresses, and a udp6 socket can only send to IPv6 addresses.
+	 * If you need to communicate with both, create a socket of each type
+	 */
 	type: 'udp4' | 'udp6'
 }
 
