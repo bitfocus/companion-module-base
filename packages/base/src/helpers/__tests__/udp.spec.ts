@@ -94,7 +94,43 @@ describe('UDP', () => {
 			}
 		})
 
-		// TODO - options
+		describe('family', () => {
+			function createWithFamily(host: string, options?: ConstructorParameters<typeof UDPHelper>[2]) {
+				const rawSocket = new MinimalSocket()
+				createSocketMock.mockReturnValueOnce(rawSocket as any)
+				rawSocket.bind.mockImplementationOnce(() => rawSocket as any)
+
+				new UDPHelper(host, 852, options).destroy()
+				expect(createSocketMock).toHaveBeenCalledTimes(1)
+				return createSocketMock.mock.calls[0][0]
+			}
+
+			it.each([
+				['1.2.3.4', 'udp4'],
+				['example.com', 'udp4'],
+				['::1', 'udp6'],
+				['2001:db8::1', 'udp6'],
+				['fe80::1%eth0', 'udp6'],
+				['::ffff:192.168.0.1', 'udp6'],
+			])('infers family for %s', (host, family) => {
+				expect(createWithFamily(host)).toBe(family)
+			})
+
+			it('explicit family overrides inference', () => {
+				expect(createWithFamily('example.com', { family: 'udp6' })).toBe('udp6')
+			})
+
+			it('bind_ip does not affect inference', () => {
+				expect(createWithFamily('1.2.3.4', { bind_ip: '::' })).toBe('udp4')
+			})
+
+			it('bad bind reports udp6 default address', () => {
+				const rawSocket = new MinimalSocket()
+				createSocketMock.mockReturnValueOnce(rawSocket as any)
+
+				expect(() => new UDPHelper('::1', 852)).toThrow('Unable to bind to ip/port: :::0')
+			})
+		})
 	})
 
 	it('error propagation', async () => {
@@ -153,7 +189,43 @@ describe('UDP', () => {
 			}
 		})
 
-		// TODO - options
+		describe('family', () => {
+			function createWithFamily(host: string, options?: ConstructorParameters<typeof UDPHelper>[2]) {
+				const rawSocket = new MinimalSocket()
+				createSocketMock.mockReturnValueOnce(rawSocket as any)
+				rawSocket.bind.mockImplementationOnce(() => rawSocket as any)
+
+				new UDPHelper(host, 852, options).destroy()
+				expect(createSocketMock).toHaveBeenCalledTimes(1)
+				return createSocketMock.mock.calls[0][0]
+			}
+
+			it.each([
+				['1.2.3.4', 'udp4'],
+				['example.com', 'udp4'],
+				['::1', 'udp6'],
+				['2001:db8::1', 'udp6'],
+				['fe80::1%eth0', 'udp6'],
+				['::ffff:192.168.0.1', 'udp6'],
+			])('infers family for %s', (host, family) => {
+				expect(createWithFamily(host)).toBe(family)
+			})
+
+			it('explicit family overrides inference', () => {
+				expect(createWithFamily('example.com', { family: 'udp6' })).toBe('udp6')
+			})
+
+			it('bind_ip does not affect inference', () => {
+				expect(createWithFamily('1.2.3.4', { bind_ip: '::' })).toBe('udp4')
+			})
+
+			it('bad bind reports udp6 default address', () => {
+				const rawSocket = new MinimalSocket()
+				createSocketMock.mockReturnValueOnce(rawSocket as any)
+
+				expect(() => new UDPHelper('::1', 852)).toThrow('Unable to bind to ip/port: :::0')
+			})
+		})
 	})
 
 	// it('no error handler timeout', () => {

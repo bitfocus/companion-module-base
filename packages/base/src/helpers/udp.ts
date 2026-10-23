@@ -17,6 +17,7 @@
 
 import dgram from 'dgram'
 import { EventEmitter } from 'events'
+import { isIPv6 } from 'net'
 import { InstanceStatus } from '../module-api/enums.js'
 
 export type UDPStatuses = InstanceStatus.Ok | InstanceStatus.UnknownError
@@ -34,9 +35,16 @@ export interface UDPHelperEvents {
 }
 
 export interface UDPHelperOptions {
+	/**
+	 * The socket family to use.
+	 * default: 'udp6' if the host is an IPv6 address, otherwise 'udp4'.
+	 * Set this to 'udp6' if the host is a hostname which only resolves to IPv6 addresses
+	 */
+	family?: 'udp4' | 'udp6'
+
 	/** default: 0 */
 	bind_port?: number
-	/** default: 0.0.0.0 */
+	/** default: 0.0.0.0 for udp4, :: for udp6 */
 	bind_ip?: string
 
 	/** default false */
@@ -112,15 +120,14 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 		// this.bound = false
 		// this.pending_memberships = []
 
-		this.#socket = dgram.createSocket('udp4')
+		const family = this.#options.family ?? (isIPv6(host) ? 'udp6' : 'udp4')
+		this.#socket = dgram.createSocket(family)
 
 		try {
 			this.#socket.bind(this.#options.bind_port || 0, this.#options.bind_ip)
 		} catch (e) {
-			throw new Error(
-				`Unable to bind to ip/port: ${this.#options.bind_ip || '0.0.0.0'}:${this.#options.bind_port || 0}`,
-				{ cause: e },
-			)
+			const bindIp = this.#options.bind_ip || (family === 'udp6' ? '::' : '0.0.0.0')
+			throw new Error(`Unable to bind to ip/port: ${bindIp}:${this.#options.bind_port || 0}`, { cause: e })
 		}
 
 		if (this.#options.ttl !== undefined) {
