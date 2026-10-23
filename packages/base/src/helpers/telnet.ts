@@ -18,6 +18,7 @@
 import { EventEmitter } from 'events'
 import { Transform, type TransformCallback, type TransformOptions } from 'stream'
 import { TCPHelper, type TCPHelperEvents, type TCPHelperOptions } from './tcp.js'
+import { formatHostPort } from './util.js'
 
 // const NULL = 0
 const DATA = 0
@@ -122,7 +123,7 @@ export class TelnetHelper extends EventEmitter<TelnetHelperEvents> {
 			this.#missingErrorHandlerTimer = undefined
 			if (!this.isDestroyed && !this.listenerCount('error')) {
 				// The socket is active and has no listeners. Log an error for the module devs!
-				console.error(`Danger: Telnet client for ${host}:${port} is missing an error handler!`)
+				console.error(`Danger: Telnet client for ${formatHostPort(host, port)} is missing an error handler!`)
 			}
 		}, 5000)
 	}

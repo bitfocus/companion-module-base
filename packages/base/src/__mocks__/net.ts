@@ -1,4 +1,8 @@
 import { EventEmitter } from 'events'
+import { vi } from 'vitest'
+
+const actualNet = await vi.importActual<typeof import('net')>('net')
+export const isIPv6 = actualNet.isIPv6
 
 const sockets: Array<Socket> = []
 const onNextSocket: Array<(s: Socket) => void> = []
@@ -124,4 +128,4 @@ export class Socket extends EventEmitter {
 	}
 }
 
-export default { Socket }
+export default { Socket, isIPv6 }

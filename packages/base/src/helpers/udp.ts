@@ -19,6 +19,7 @@ import dgram from 'dgram'
 import { EventEmitter } from 'events'
 import { isIPv6 } from 'net'
 import { InstanceStatus } from '../module-api/enums.js'
+import { formatHostPort } from './util.js'
 
 export type UDPStatuses = InstanceStatus.Ok | InstanceStatus.UnknownError
 
@@ -171,7 +172,7 @@ export class UDPHelper extends EventEmitter<UDPHelperEvents> {
 		this.#missingErrorHandlerTimer = setTimeout(() => {
 			if (!this.#destroyed && !this.listenerCount('error')) {
 				// The socket is active and has no listeners. Log an error for the module devs!
-				console.error(`Danger: UDP socket for ${this.#host}:${this.#port} is missing an error handler!`)
+				console.error(`Danger: UDP socket for ${formatHostPort(this.#host, this.#port)} is missing an error handler!`)
 			}
 		}, 5000)
 	}

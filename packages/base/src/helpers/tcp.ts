@@ -18,6 +18,7 @@
 import { EventEmitter } from 'events'
 import net from 'net'
 import { InstanceStatus } from '../module-api/enums.js'
+import { formatHostPort } from './util.js'
 
 export type TCPStatuses =
 	InstanceStatus.Ok | InstanceStatus.Connecting | InstanceStatus.Disconnected | InstanceStatus.UnknownError
@@ -189,7 +190,7 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 			this.#missingErrorHandlerTimer = undefined
 			if (!this.#destroyed && !this.listenerCount('error')) {
 				// The socket is active and has no listeners. Log an error for the module devs!
-				console.error(`Danger: TCP client for ${this.#host}:${this.#port} is missing an error handler!`)
+				console.error(`Danger: TCP client for ${formatHostPort(this.#host, this.#port)} is missing an error handler!`)
 			}
 		}, 5000)
 	}
