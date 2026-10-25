@@ -1,5 +1,4 @@
 /// <reference types="vitest/config" />
-// eslint-disable-next-line n/no-extraneous-import
 import { defineConfig } from 'vite'
 
 export default defineConfig({
