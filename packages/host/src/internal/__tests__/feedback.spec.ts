@@ -1095,6 +1095,77 @@ describe('FeedbackManager', () => {
 		})
 	})
 
+	describe('feedback value debounce', () => {
+		// The debounce is configured with wait: 5, maxWait: 25
+
+		async function setupManager() {
+			const mockUpdateFeedbackValues = vi.fn((_values: HostFeedbackValue[]) => null)
+			const manager = new FeedbackManager(vi.fn(), mockUpdateFeedbackValues, latestModuleApiVersion)
+
+			let counter = 0
+			const callback = vi.fn<CompanionValueFeedbackDefinition['callback']>(() => ++counter)
+			manager.setFeedbackDefinitions({
+				[mockDefinitionId]: { type: 'value', name: 'Definition0', options: [], callback },
+			})
+			manager.handleUpdateFeedbacks({
+				[feedbackId]: feedback,
+				[feedbackId2]: { ...feedback2, feedbackId: mockDefinitionId },
+			})
+
+			// Flush the initial values
+			await runAllTimers()
+			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(1)
+			mockUpdateFeedbackValues.mockClear()
+
+			return { manager, mockUpdateFeedbackValues }
+		}
+
+		it('waits for the debounce, then sends the values together', async () => {
+			const { manager, mockUpdateFeedbackValues } = await setupManager()
+
+			manager.checkFeedbacksById([feedbackId])
+			await vi.advanceTimersByTimeAsync(2)
+			manager.checkFeedbacksById([feedbackId2])
+
+			// Still inside the debounce window of the second check
+			await vi.advanceTimersByTimeAsync(4)
+			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(0)
+
+			await vi.advanceTimersByTimeAsync(2)
+			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(1)
+			expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith([
+				{ id: feedbackId, controlId: feedback.controlId, feedbackType: 'value', value: 3 },
+				{ id: feedbackId2, controlId: feedback2.controlId, feedbackType: 'value', value: 4 },
+			] satisfies HostFeedbackValue[])
+
+			// Nothing further is sent
+			await runAllTimers()
+			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(1)
+		})
+
+		it('sends values after maxWait while checks keep arriving', async () => {
+			const { manager, mockUpdateFeedbackValues } = await setupManager()
+
+			// Recheck more often than the wait, so the debounce never settles by itself
+			for (let i = 0; i < 12; i++) {
+				manager.checkFeedbacksById([feedbackId])
+				await vi.advanceTimersByTimeAsync(3)
+			}
+			// 36ms have passed, so maxWait must have flushed once
+			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(1)
+			// The values sent are the latest at the time of the flush, not the first of the burst
+			const sentValue = mockUpdateFeedbackValues.mock.calls[0][0][0].value as number
+			expect(sentValue).toBeGreaterThan(3)
+
+			// Once the checks stop, the final value is sent
+			await runAllTimers()
+			expect(mockUpdateFeedbackValues).toHaveBeenCalledTimes(2)
+			expect(mockUpdateFeedbackValues).toHaveBeenLastCalledWith([
+				{ id: feedbackId, controlId: feedback.controlId, feedbackType: 'value', value: 14 },
+			] satisfies HostFeedbackValue[])
+		})
+	})
+
 	describe('duplicate option id validation', () => {
 		it('warns for options which reuse the same id and filters out the duplicates', () => {
 			const mockLogger = vi.fn()
