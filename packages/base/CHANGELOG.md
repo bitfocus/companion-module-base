@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.2.1...companion-module-base-v2.2.2) (2026-10-25)
+
+
+### Bug Fixes
+
+* allow UDPHelper to bind to udp6 ([4e3733a](https://github.com/bitfocus/companion-module-base/commit/4e3733ac4cff1321cb12b92fa318927f31f64967))
+* tidy up regexes. Other fields types handle these better ([2a472d1](https://github.com/bitfocus/companion-module-base/commit/2a472d1d42897c0d0bc189949bbafc321a07f450))
+* wrap IPv6 hosts in brackets in helper log messages ([5984694](https://github.com/bitfocus/companion-module-base/commit/5984694cf1e0074c99888a3c48eae943cd720334))
+
 ## [2.2.1](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.2.0...companion-module-base-v2.2.1) (2026-10-09)
 
 
