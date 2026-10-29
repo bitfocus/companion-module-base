@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.0](https://github.com/bitfocus/companion-module-base/compare/v1.14.1...v1.15.0) (2026-10-29)
+
+
+### Features
+
+* allow modules to use node26 ([9dc095c](https://github.com/bitfocus/companion-module-base/commit/9dc095c5dc143c343b9121ed5503daab6c4d3a95))
+
 ## [1.14.1](https://github.com/bitfocus/companion-module-base/compare/v1.14.0...v1.14.1) (2025-12-22)
 
 
