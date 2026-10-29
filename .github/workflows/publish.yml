@@ -82,24 +82,9 @@ jobs:
             echo "prerelease=${PRERELEASE_TAG}-${TIMESTAMP}-${HASH}" >> $GITHUB_OUTPUT
 
           else
-            # Otherwise (push by tag), keep the previous logic: compare published vs package.json
-            PUBLISHED_VERSION=$(yarn npm info --json . | jq -c '.version' -r)
-            THIS_VERSION=$(node -p "require('./package.json').version")
-            # Simple bash helper to compare version numbers
-            verlte() {
-              [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ]
-            }
-            verlt() {
-              [ "$1" = "$2" ] && return 1 || verlte $1 $2
-            }
-            if verlt $PUBLISHED_VERSION $THIS_VERSION
-            then
-              echo "Publishing latest"
-              echo "tag=latest" >> $GITHUB_OUTPUT
-            else
-              echo "Publishing hotfix"
-              echo "tag=hotfix" >> $GITHUB_OUTPUT
-            fi
+            # This is the v1.x maintenance branch, so never publish as latest
+            echo "Publishing legacy-v1"
+            echo "tag=legacy-v1" >> $GITHUB_OUTPUT
           fi
       - name: Prepare build
         run: |

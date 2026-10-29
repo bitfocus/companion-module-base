@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - main
+      - v1.x
 
 permissions:
   contents: read
@@ -15,9 +15,23 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      # GitHub marks every new release as 'latest', which would steal it from the current major
+      - name: Record current latest release
+        id: latest
+        run: echo "tag=$(gh release view --repo ${{ github.repository }} --json tagName -q .tagName)" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
       - uses: googleapis/release-please-action@v4
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           target-branch: ${{ github.ref_name }}
           config-file: .github/release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Restore latest release
+        if: ${{ steps.release.outputs.release_created && steps.latest.outputs.tag != '' }}
+        run: gh release edit "${{ steps.latest.outputs.tag }}" --repo ${{ github.repository }} --latest
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
