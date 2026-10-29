@@ -81,8 +81,8 @@
 			"properties": {
 				"type": {
 					"type": "string",
-					"description": "Type of the module. Must be: node18 or node22",
-					"enum": ["node18", "node22"]
+					"description": "Type of the module. Must be: node18, node22 or node26",
+					"enum": ["node18", "node22", "node26"]
 				},
 				"api": {
 					"type": "string",

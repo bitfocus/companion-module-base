@@ -17,7 +17,7 @@
 		"unit": "vitest"
 	},
 	"engines": {
-		"node": "^18.12 || ^22.8"
+		"node": "^18.12 || ^22.8 || ^26.5"
 	},
 	"files": [
 		"README.md",
