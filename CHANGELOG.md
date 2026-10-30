@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.1](https://github.com/bitfocus/companion-module-base/compare/v1.15.0...v1.15.1) (2026-10-30)
+
+
+### Bug Fixes
+
+* `parseVariablesInString` failing when fed non-string ([a4379bf](https://github.com/bitfocus/companion-module-base/commit/a4379bf367953d57901ad5d668bf9842d0fdf4ef))
+
 ## [1.15.0](https://github.com/bitfocus/companion-module-base/compare/v1.14.1...v1.15.0) (2026-10-29)
 
 
