@@ -155,7 +155,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 			msg: ParseVariablesInStringMessage,
 		): Promise<ParseVariablesInStringResponseMessage> => {
 			// Shortcut in case there is definitely nothing to parse
-			if (!msg.text.includes('$('))
+			if (typeof msg.text !== 'string' || !msg.text.includes('$('))
 				return {
 					text: msg.text,
 					variableIds: undefined,
@@ -552,7 +552,7 @@ export abstract class InstanceBase<TConfig, TSecrets = undefined> implements Ins
 		}
 
 		// If there are no variables, just return the text
-		if (!text.includes('$(')) return text
+		if (typeof text !== 'string' || !text.includes('$(')) return text
 
 		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', {
 			text: text,
