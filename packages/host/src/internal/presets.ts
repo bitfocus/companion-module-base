@@ -521,15 +521,34 @@ export function sanitisePresetDefinitions(
 	// Cross-reference validation between structure and presets
 	const referencedPresetIds = new Set<string>()
 
+	// Companion keys sections by id, and the definitions of a section by id, so any duplicates are lost
+	const seenSectionIds = new Set<string>()
+	const duplicateSectionIds = new Set<string>()
+	const duplicateDefinitionIds = new Set<string>()
+
 	for (const section of structure) {
+		if (typeof section.id === 'string') {
+			if (seenSectionIds.has(section.id)) duplicateSectionIds.add(section.id)
+			seenSectionIds.add(section.id)
+		}
+
 		if (!Array.isArray(section.definitions)) continue
+
+		const seenDefinitionIds = new Set<string>()
+		const checkDefinitionId = (id: unknown): void => {
+			if (typeof id !== 'string') return
+			if (seenDefinitionIds.has(id)) duplicateDefinitionIds.add(`${section.id}/${id}`)
+			seenDefinitionIds.add(id)
+		}
 
 		for (const def of section.definitions) {
 			if (typeof def === 'string') {
 				// Direct preset reference
 				referencedPresetIds.add(def)
+				checkDefinitionId(def)
 			} else if (def && typeof def === 'object') {
 				// Preset group
+				checkDefinitionId(def.id)
 				if (def.type === 'simple' && 'presets' in def && Array.isArray(def.presets)) {
 					for (const presetId of def.presets) {
 						if (typeof presetId === 'string') {
@@ -543,6 +562,26 @@ export function sanitisePresetDefinitions(
 		}
 
 		result.structure.push(section)
+	}
+
+	if (duplicateSectionIds.size > 0) {
+		logger.warn(
+			`The following preset section ids are used more than once, only one of each will be shown: ${Array.from(
+				duplicateSectionIds,
+			)
+				.sort()
+				.join(', ')}`,
+		)
+	}
+
+	if (duplicateDefinitionIds.size > 0) {
+		logger.warn(
+			`The following preset definition ids are used more than once within their section, only one of each will be shown: ${Array.from(
+				duplicateDefinitionIds,
+			)
+				.sort()
+				.join(', ')}`,
+		)
 	}
 
 	// Check for presets not referenced by structure

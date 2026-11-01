@@ -6,6 +6,7 @@ import type {
 	CompanionOptionValues,
 	CompanionPresetDefinition,
 	CompanionPresetDefinitions,
+	CompanionPresetGroup,
 	CompanionPresetSection,
 	CompanionSimplePresetDefinition,
 	InstanceTypes,
@@ -624,6 +625,58 @@ describe('validatePresetDefinitions', () => {
 				},
 			])
 			expect(msgs.some((m) => m.includes('not referenced by structure'))).toBe(false)
+		})
+	})
+
+	describe('duplicate structure ids', () => {
+		const presets = { p1: validSimple(), p2: validSimple() }
+
+		function templateGroup(id: string, presetId: string): CompanionPresetGroup<InstanceTypes> {
+			return { id, type: 'template', name: 'Template', presetId, templateVariableName: 'v', templateValues: [] }
+		}
+
+		it('does not warn when all ids are unique', () => {
+			const msgs = runCapture(presets, {}, {}, [
+				{ id: 's1', name: 'Section 1', definitions: [templateGroup('g1', 'p1'), templateGroup('g2', 'p2')] },
+				// Definition ids only need to be unique within their section
+				{ id: 's2', name: 'Section 2', definitions: [templateGroup('g1', 'p1')] },
+			])
+			expect(msgs).toHaveLength(0)
+		})
+
+		it('warns when a section id is used more than once', () => {
+			const msgs = runCapture(presets, {}, {}, [
+				{ id: 's1', name: 'Section 1', definitions: ['p1'] },
+				{ id: 's1', name: 'Section 2', definitions: ['p2'] },
+			])
+			expect(msgs).toHaveLength(1)
+			expect(msgs[0]).toContain('section ids are used more than once')
+			expect(msgs[0]).toContain('s1')
+		})
+
+		it('warns when a group id is used more than once within a section', () => {
+			const msgs = runCapture(presets, {}, {}, [
+				{
+					id: 's1',
+					name: 'Section',
+					definitions: [
+						templateGroup('g1', 'p1'),
+						{ id: 'g1', type: 'simple', name: 'Group', presets: ['p2'] },
+						templateGroup('g2', 'p1'),
+					],
+				},
+			])
+			expect(msgs).toHaveLength(1)
+			expect(msgs[0]).toContain('definition ids are used more than once')
+			expect(msgs[0]).toContain('s1/g1')
+			expect(msgs[0]).not.toContain('g2')
+		})
+
+		it('warns when a preset reference is used more than once within a section', () => {
+			const msgs = runCapture(presets, {}, {}, [{ id: 's1', name: 'Section', definitions: ['p1', 'p2', 'p1'] }])
+			expect(msgs).toHaveLength(1)
+			expect(msgs[0]).toContain('definition ids are used more than once')
+			expect(msgs[0]).toContain('s1/p1')
 		})
 	})
 
