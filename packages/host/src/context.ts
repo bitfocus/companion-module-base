@@ -24,16 +24,43 @@ import type {
 export interface ModuleHostContext<TConfig, TSecrets> {
 	/** The connection status has changed */
 	setStatus: (status: InstanceStatus, message: string | null) => void
-	/** The actions available in the connection have changed */
+	/** The actions available in the connection have changed. This is the complete set of actions */
 	setActionDefinitions: (actions: HostActionDefinition[]) => void
-	/** The feedbacks available in the connection have changed */
+	/**
+	 * Some of the actions available in the connection have changed.
+	 * When not provided, `setActionDefinitions` will be called with the complete set instead
+	 */
+	updateActionDefinitions?: (changed: HostActionDefinition[], removedIds: string[]) => void
+	/** The feedbacks available in the connection have changed. This is the complete set of feedbacks */
 	setFeedbackDefinitions: (feedbacks: HostFeedbackDefinition[]) => void
-	/** The variables available in the connection have changed */
+	/**
+	 * Some of the feedbacks available in the connection have changed.
+	 * When not provided, `setFeedbackDefinitions` will be called with the complete set instead
+	 */
+	updateFeedbackDefinitions?: (changed: HostFeedbackDefinition[], removedIds: string[]) => void
+	/** The variables available in the connection have changed. This is the complete set of variables */
 	setVariableDefinitions: (definitions: HostVariableDefinition[], values: HostVariableValue[]) => void
+	/**
+	 * Some of the variables available in the connection have changed.
+	 * When not provided, `setVariableDefinitions` will be called with the complete set instead
+	 */
+	updateVariableDefinitions?: (
+		changed: HostVariableDefinition[],
+		removedIds: string[],
+		values: HostVariableValue[],
+	) => void
 	/** The presets provided by the connection have changed */
 	setPresetDefinitions: (structure: CompanionPresetSection[], presets: CompanionPresetDefinitions) => void
-	/** The composite graphics elements provided by the connection have changed */
+	/** The composite graphics elements provided by the connection have changed. This is the complete set of elements */
 	setCompositeElementDefinitions: (compositeElements: CompanionGraphicsCompositeElementDefinitions) => void
+	/**
+	 * Some of the composite graphics elements provided by the connection have changed.
+	 * When not provided, `setCompositeElementDefinitions` will be called with the complete set instead
+	 */
+	updateCompositeElementDefinitions?: (
+		changed: CompanionGraphicsCompositeElementDefinitions,
+		removedIds: string[],
+	) => void
 	/** The connection has some new values for variables */
 	setVariableValues: (values: HostVariableValue[]) => void
 	/** The connection has some new values for feedbacks it is running */

@@ -2,6 +2,13 @@ export * from './action.js'
 export * from './base.js'
 export * from './common.js'
 export * from './config.js'
+export type {
+	CompanionActionDefinitionsApi,
+	CompanionCompositeElementDefinitionsApi,
+	CompanionDefinitionsApi,
+	CompanionFeedbackDefinitionsApi,
+	CompanionVariableDefinitionsApi,
+} from './definitions.js'
 export * from './enums.js'
 export * from './feedback.js'
 export * from './http.js'

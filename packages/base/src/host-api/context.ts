@@ -40,11 +40,29 @@ export interface InstanceContext<TManifest extends InstanceTypes> extends Instan
 
 	recordAction(action: CompanionRecordedAction, uniquenessId?: string): void
 
+	/** @deprecated Retained for modules built against older versions of base. Use `updateActionDefinitions` */
 	setActionDefinitions: (actions: CompanionActionDefinitions<TManifest['actions']>) => void
+	/**
+	 * Add, replace or remove some action definitions. Falsy values are removed
+	 * @param replaceAll Whether any definitions not included should be removed
+	 */
+	updateActionDefinitions: (
+		actions: Partial<CompanionActionDefinitions<TManifest['actions']>>,
+		replaceAll: boolean,
+	) => void
 	subscribeActions: (actionIds: string[]) => void
 	unsubscribeActions: (actionIds: string[]) => void
 
+	/** @deprecated Retained for modules built against older versions of base. Use `updateFeedbackDefinitions` */
 	setFeedbackDefinitions: (feedbacks: CompanionFeedbackDefinitions<TManifest['feedbacks']>) => void
+	/**
+	 * Add, replace or remove some feedback definitions. Falsy values are removed
+	 * @param replaceAll Whether any definitions not included should be removed
+	 */
+	updateFeedbackDefinitions: (
+		feedbacks: Partial<CompanionFeedbackDefinitions<TManifest['feedbacks']>>,
+		replaceAll: boolean,
+	) => void
 	unsubscribeFeedbacks: (feedbackIds: string[]) => void
 	checkFeedbacks: (feedbackTypes: StringKeys<TManifest['feedbacks']>[]) => void
 	checkAllFeedbacks: () => void
@@ -54,11 +72,29 @@ export interface InstanceContext<TManifest extends InstanceTypes> extends Instan
 		structure: CompanionPresetSection<TManifest>[],
 		presets: CompanionPresetDefinitions<TManifest>,
 	) => void
+	/** @deprecated Retained for modules built against older versions of base. Use `updateCompositeElementDefinitions` */
 	setCompositeElementDefinitions: (
 		compositeElements: CompanionGraphicsCompositeElementDefinitions<TManifest['compositeElements']>,
 	) => void
+	/**
+	 * Add, replace or remove some composite element definitions. Falsy values are removed
+	 * @param replaceAll Whether any definitions not included should be removed
+	 */
+	updateCompositeElementDefinitions: (
+		compositeElements: Partial<CompanionGraphicsCompositeElementDefinitions<TManifest['compositeElements']>>,
+		replaceAll: boolean,
+	) => void
 
+	/** @deprecated Retained for modules built against older versions of base. Use `updateVariableDefinitions` */
 	setVariableDefinitions: (variables: CompanionVariableDefinitions<TManifest['variables']>) => void
+	/**
+	 * Add, replace or remove some variable definitions. Falsy values are removed
+	 * @param replaceAll Whether any definitions not included should be removed
+	 */
+	updateVariableDefinitions: (
+		variables: Partial<CompanionVariableDefinitions<TManifest['variables']>>,
+		replaceAll: boolean,
+	) => void
 	setVariableValues: (values: Partial<TManifest['variables']>) => void
 	getVariableValue: <T extends string>(variableId: T) => TManifest['variables'][T] | undefined
 }

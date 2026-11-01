@@ -64,9 +64,10 @@ describe('FeedbackManager', () => {
 			callback: vi.fn<CompanionBooleanFeedbackDefinition['callback']>(() => false),
 		}
 
-		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+		manager.updateFeedbackDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 
 		expect(manager.getDefinitionIds()).toEqual([mockDefinitionId])
+		manager.flushDefinitions()
 		expect(mockSetFeedbackDefinitions).toHaveBeenCalledTimes(1)
 		expect(mockSetFeedbackDefinitions).lastCalledWith([
 			{
@@ -82,7 +83,8 @@ describe('FeedbackManager', () => {
 
 		// replace existing
 		const mockDefinitionId2 = 'definition0'
-		manager.setFeedbackDefinitions({ [mockDefinitionId2]: mockDefinition })
+		manager.updateFeedbackDefinitions({ [mockDefinitionId2]: mockDefinition }, true)
+		manager.flushDefinitions()
 
 		expect(manager.getDefinitionIds()).toEqual([mockDefinitionId2])
 		expect(manager.getInstanceIds()).toHaveLength(0)
@@ -106,9 +108,10 @@ describe('FeedbackManager', () => {
 		}
 
 		// setup definition
-		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+		manager.updateFeedbackDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 		expect(manager.getDefinitionIds()).toEqual([mockDefinitionId])
 		expect(manager.getInstanceIds()).toHaveLength(0)
+		manager.flushDefinitions()
 		expect(mockSetFeedbackDefinitions).toHaveBeenCalledTimes(1)
 
 		expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
@@ -164,7 +167,7 @@ describe('FeedbackManager', () => {
 		}
 
 		// setup definition
-		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+		manager.updateFeedbackDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 		// report a feedback
 		manager.handleUpdateFeedbacks({
 			[feedbackId]: feedback,
@@ -218,9 +221,10 @@ describe('FeedbackManager', () => {
 		}
 
 		// setup definition
-		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+		manager.updateFeedbackDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 		expect(manager.getDefinitionIds()).toEqual([mockDefinitionId])
 		expect(manager.getInstanceIds()).toHaveLength(0)
+		manager.flushDefinitions()
 		expect(mockSetFeedbackDefinitions).toHaveBeenCalledTimes(1)
 
 		expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
@@ -275,11 +279,15 @@ describe('FeedbackManager', () => {
 			expect(manager.getInstanceIds()).toHaveLength(0)
 
 			// setup definition
-			manager.setFeedbackDefinitions({
-				[mockDefinitionId]: mockDefinition,
-				[mockDefinitionId2]: mockDefinition2,
-			})
+			manager.updateFeedbackDefinitions(
+				{
+					[mockDefinitionId]: mockDefinition,
+					[mockDefinitionId2]: mockDefinition2,
+				},
+				true,
+			)
 			expect(manager.getDefinitionIds()).toEqual([mockDefinitionId, mockDefinitionId2])
+			manager.flushDefinitions()
 			expect(mockSetFeedbackDefinitions).toHaveBeenCalledTimes(1)
 
 			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
@@ -412,8 +420,9 @@ describe('FeedbackManager', () => {
 			expect(manager.getInstanceIds()).toHaveLength(0)
 
 			// setup definition
-			manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+			manager.updateFeedbackDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 			expect(manager.getDefinitionIds()).toEqual([mockDefinitionId])
+			manager.flushDefinitions()
 			expect(mockSetFeedbackDefinitions).toHaveBeenCalledTimes(1)
 
 			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
@@ -569,7 +578,7 @@ describe('FeedbackManager', () => {
 				callback,
 			}
 
-			manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+			manager.updateFeedbackDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 			manager.handleUpdateFeedbacks({ [feedbackId]: feedback })
 
 			// The first run starts and freezes
@@ -735,8 +744,9 @@ describe('FeedbackManager', () => {
 		}
 
 		// setup definition
-		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+		manager.updateFeedbackDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 		expect(manager.getDefinitionIds()).toEqual([mockDefinitionId])
+		manager.flushDefinitions()
 		expect(mockSetFeedbackDefinitions).toHaveBeenCalledTimes(1)
 		expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
 
@@ -760,8 +770,9 @@ describe('FeedbackManager', () => {
 		}
 
 		// setup definition
-		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+		manager.updateFeedbackDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 		expect(manager.getDefinitionIds()).toEqual([mockDefinitionId])
+		manager.flushDefinitions()
 		expect(mockSetFeedbackDefinitions).toHaveBeenCalledTimes(1)
 		expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
 
@@ -799,7 +810,7 @@ describe('FeedbackManager', () => {
 			}),
 		}
 
-		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+		manager.updateFeedbackDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 
 		const controller = new AbortController()
 		await manager.handleLearnFeedback(feedback, controller.signal)
@@ -824,7 +835,7 @@ describe('FeedbackManager', () => {
 			}),
 		}
 
-		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+		manager.updateFeedbackDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 
 		const controller = new AbortController()
 		controller.abort()
@@ -857,7 +868,7 @@ describe('FeedbackManager', () => {
 			}),
 		}
 
-		manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+		manager.updateFeedbackDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 
 		const learnPromise = manager.handleLearnFeedback(feedback, controller.signal)
 
@@ -889,8 +900,9 @@ describe('FeedbackManager', () => {
 			expect(manager.getInstanceIds()).toHaveLength(0)
 
 			// setup definition
-			manager.setFeedbackDefinitions({ [mockDefinitionId]: mockDefinition })
+			manager.updateFeedbackDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 			expect(manager.getDefinitionIds()).toEqual([mockDefinitionId])
+			manager.flushDefinitions()
 			expect(mockSetFeedbackDefinitions).toHaveBeenCalledTimes(1)
 
 			expect(mockDefinition.callback).toHaveBeenCalledTimes(0)
@@ -1017,11 +1029,14 @@ describe('FeedbackManager', () => {
 			global.COMPANION_LOGGER = mockLogger
 
 			const manager = new FeedbackManager(vi.fn(), vi.fn(), '2.1.0')
-			manager.setFeedbackDefinitions({
-				advancedWithArray,
-				advancedWithUndefined,
-				booleanFeedback,
-			})
+			manager.updateFeedbackDefinitions(
+				{
+					advancedWithArray,
+					advancedWithUndefined,
+					booleanFeedback,
+				},
+				true,
+			)
 
 			const warnCalls = mockLogger.mock.calls.filter(([, level]) => level === 'warn')
 			expect(warnCalls).toHaveLength(1)
@@ -1036,7 +1051,7 @@ describe('FeedbackManager', () => {
 			global.COMPANION_LOGGER = mockLogger
 
 			const manager = new FeedbackManager(vi.fn(), vi.fn(), '2.5.3')
-			manager.setFeedbackDefinitions({ advancedWithUndefined })
+			manager.updateFeedbackDefinitions({ advancedWithUndefined }, true)
 
 			const warnCalls = mockLogger.mock.calls.filter(([, level]) => level === 'warn')
 			expect(warnCalls).toHaveLength(1)
@@ -1048,7 +1063,7 @@ describe('FeedbackManager', () => {
 			global.COMPANION_LOGGER = mockLogger
 
 			const manager = new FeedbackManager(vi.fn(), vi.fn(), '2.1.0')
-			manager.setFeedbackDefinitions({ advancedWithArray })
+			manager.updateFeedbackDefinitions({ advancedWithArray }, true)
 
 			const warnCalls = mockLogger.mock.calls.filter(([, level]) => level === 'warn')
 			expect(warnCalls).toHaveLength(0)
@@ -1059,7 +1074,7 @@ describe('FeedbackManager', () => {
 			global.COMPANION_LOGGER = mockLogger
 
 			const manager = new FeedbackManager(vi.fn(), vi.fn(), '2.0.4')
-			manager.setFeedbackDefinitions({ advancedWithUndefined })
+			manager.updateFeedbackDefinitions({ advancedWithUndefined }, true)
 
 			const warnCalls = mockLogger.mock.calls.filter(([, level]) => level === 'warn')
 			expect(warnCalls).toHaveLength(0)
@@ -1070,7 +1085,7 @@ describe('FeedbackManager', () => {
 			global.COMPANION_LOGGER = mockLogger
 
 			const manager = new FeedbackManager(vi.fn(), vi.fn(), '2.1.0')
-			manager.setFeedbackDefinitions({ booleanFeedback })
+			manager.updateFeedbackDefinitions({ booleanFeedback }, true)
 
 			const warnCalls = mockLogger.mock.calls.filter(([, level]) => level === 'warn')
 			expect(warnCalls).toHaveLength(0)
@@ -1088,7 +1103,7 @@ describe('FeedbackManager', () => {
 			global.COMPANION_LOGGER = mockLogger
 
 			const manager = new FeedbackManager(vi.fn(), vi.fn(), '2.1.0')
-			manager.setFeedbackDefinitions({ valueFeedback })
+			manager.updateFeedbackDefinitions({ valueFeedback }, true)
 
 			const warnCalls = mockLogger.mock.calls.filter(([, level]) => level === 'warn')
 			expect(warnCalls).toHaveLength(0)
@@ -1104,9 +1119,12 @@ describe('FeedbackManager', () => {
 
 			let counter = 0
 			const callback = vi.fn<CompanionValueFeedbackDefinition['callback']>(() => ++counter)
-			manager.setFeedbackDefinitions({
-				[mockDefinitionId]: { type: 'value', name: 'Definition0', options: [], callback },
-			})
+			manager.updateFeedbackDefinitions(
+				{
+					[mockDefinitionId]: { type: 'value', name: 'Definition0', options: [], callback },
+				},
+				true,
+			)
 			manager.handleUpdateFeedbacks({
 				[feedbackId]: feedback,
 				[feedbackId2]: { ...feedback2, feedbackId: mockDefinitionId },
@@ -1173,19 +1191,22 @@ describe('FeedbackManager', () => {
 
 			const setFeedbackDefinitions = vi.fn()
 			const manager = new FeedbackManager(setFeedbackDefinitions, vi.fn(), '2.1.0')
-			manager.setFeedbackDefinitions({
-				duplicated: {
-					type: 'boolean',
-					name: 'Boolean feedback',
-					defaultStyle: {},
-					options: [
-						{ type: 'textinput', id: 'a', label: 'A' },
-						{ type: 'textinput', id: 'a', label: 'A again' },
-						{ type: 'textinput', id: 'b', label: 'B' },
-					],
-					callback: vi.fn(() => false),
-				},
-			} as unknown as CompanionFeedbackDefinitions)
+			manager.updateFeedbackDefinitions(
+				{
+					duplicated: {
+						type: 'boolean',
+						name: 'Boolean feedback',
+						defaultStyle: {},
+						options: [
+							{ type: 'textinput', id: 'a', label: 'A' },
+							{ type: 'textinput', id: 'a', label: 'A again' },
+							{ type: 'textinput', id: 'b', label: 'B' },
+						],
+						callback: vi.fn(() => false),
+					},
+				} as unknown as CompanionFeedbackDefinitions,
+				true,
+			)
 
 			const warnCalls = mockLogger.mock.calls.filter(([, level]) => level === 'warn')
 			expect(warnCalls).toHaveLength(1)
@@ -1193,6 +1214,7 @@ describe('FeedbackManager', () => {
 			expect(warnCalls[0][2]).toContain('duplicated (a)')
 
 			// Only the first usage of each id should be passed to the host
+			manager.flushDefinitions()
 			expect(setFeedbackDefinitions).toHaveBeenCalledTimes(1)
 			expect(setFeedbackDefinitions.mock.calls[0][0][0].options).toEqual([
 				{ type: 'textinput', id: 'a', label: 'A' },
@@ -1205,18 +1227,21 @@ describe('FeedbackManager', () => {
 			global.COMPANION_LOGGER = mockLogger
 
 			const manager = new FeedbackManager(vi.fn(), vi.fn(), '2.1.0')
-			manager.setFeedbackDefinitions({
-				unique: {
-					type: 'boolean',
-					name: 'Boolean feedback',
-					defaultStyle: {},
-					options: [
-						{ type: 'textinput', id: 'a', label: 'A' },
-						{ type: 'textinput', id: 'b', label: 'B' },
-					],
-					callback: vi.fn(() => false),
-				},
-			} as unknown as CompanionFeedbackDefinitions)
+			manager.updateFeedbackDefinitions(
+				{
+					unique: {
+						type: 'boolean',
+						name: 'Boolean feedback',
+						defaultStyle: {},
+						options: [
+							{ type: 'textinput', id: 'a', label: 'A' },
+							{ type: 'textinput', id: 'b', label: 'B' },
+						],
+						callback: vi.fn(() => false),
+					},
+				} as unknown as CompanionFeedbackDefinitions,
+				true,
+			)
 
 			const warnCalls = mockLogger.mock.calls.filter(([, level]) => level === 'warn')
 			expect(warnCalls).toHaveLength(0)

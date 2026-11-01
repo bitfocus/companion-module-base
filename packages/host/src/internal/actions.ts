@@ -14,6 +14,7 @@ import {
 } from '@companion-module/base'
 import type { ActionInstance, HostActionDefinition } from '../context.js'
 import type { ExecuteActionResult } from '../instance.js'
+import { DefinitionsBatcher } from './definitions-batcher.js'
 import {
 	BANNED_PROPS,
 	filterDuplicateOptionIds,
@@ -33,7 +34,7 @@ function convertActionInstanceToEvent(action: ActionInstance): CompanionActionIn
 export class ActionManager {
 	readonly #logger = createModuleLogger('ActionManager')
 
-	readonly #setActionDefinitions: (actions: HostActionDefinition[]) => void
+	readonly #hostDefinitions: DefinitionsBatcher<HostActionDefinition>
 	readonly #setCustomVariableValue: (
 		controlId: string,
 		variableId: string,
@@ -50,10 +51,16 @@ export class ActionManager {
 	readonly #actionInstances = new Map<string, ActionInstance>()
 
 	constructor(
-		setActionDefinitions: (msg: HostActionDefinition[]) => void,
+		setActionDefinitions: (actions: HostActionDefinition[]) => void,
 		setCustomVariableValue: (controlId: string, variableId: string, value: CompanionVariableValue | undefined) => void,
+		updateActionDefinitions?: (changed: HostActionDefinition[], removedIds: string[]) => void,
 	) {
-		this.#setActionDefinitions = setActionDefinitions
+		this.#hostDefinitions = new DefinitionsBatcher({
+			setAll: (actions) => setActionDefinitions(actions.values().toArray()),
+			update: updateActionDefinitions
+				? (changed, removedIds) => updateActionDefinitions(changed.values().toArray(), removedIds)
+				: undefined,
+		})
 		this.#setCustomVariableValue = setCustomVariableValue
 	}
 
@@ -236,10 +243,26 @@ export class ActionManager {
 		}
 	}
 
-	setActionDefinitions(actions: CompanionActionDefinitions): void {
-		const hostActions: HostActionDefinition[] = []
+	/** Send any pending definition changes to the host immediately */
+	flushDefinitions(): void {
+		this.#hostDefinitions.flush()
+	}
 
-		this.#actionDefinitions.clear()
+	/**
+	 * Add, replace or remove some action definitions. Falsy values are removed
+	 * @param replaceAll Whether any definitions not included should be removed
+	 */
+	updateActionDefinitions(actions: Partial<CompanionActionDefinitions>, replaceAll: boolean): void {
+		// Validate the ids before making any changes
+		for (const [actionId, action] of Object.entries(actions)) {
+			if (!action) continue
+			if (BANNED_PROPS.has(actionId)) throw new Error(`Action id "${actionId}" is a reserved word`)
+			if (actionId.startsWith('internal:'))
+				throw new Error(`Action id "${actionId}" uses the reserved "internal:" prefix`)
+		}
+
+		const newHostActions = replaceAll ? new Map<string, HostActionDefinition>() : null
+		if (replaceAll) this.#actionDefinitions.clear()
 
 		const definitionsWantingOptionsToMonitor: string[] = []
 		const definitionsWithOptionsToIgnore: string[] = []
@@ -248,10 +271,13 @@ export class ActionManager {
 		const definitionsWithDuplicateOptionIds: string[] = []
 
 		for (const [actionId, action] of Object.entries(actions)) {
-			if (!action) continue
-			if (BANNED_PROPS.has(actionId)) throw new Error(`Action id "${actionId}" is a reserved word`)
-			if (actionId.startsWith('internal:'))
-				throw new Error(`Action id "${actionId}" uses the reserved "internal:" prefix`)
+			if (!action) {
+				if (!replaceAll) {
+					this.#actionDefinitions.delete(actionId)
+					this.#hostDefinitions.delete(actionId)
+				}
+				continue
+			}
 
 			const hasSubscriptionMethods = !!action.subscribe || !!action.unsubscribe
 
@@ -260,7 +286,7 @@ export class ActionManager {
 			if (duplicateIds.length > 0)
 				definitionsWithDuplicateOptionIds.push(`${actionId} (${duplicateIds.sort().join(', ')})`)
 
-			hostActions.push({
+			const hostAction: HostActionDefinition = {
 				id: actionId,
 				name: action.name,
 				sortName: action.sortName,
@@ -272,7 +298,12 @@ export class ActionManager {
 				learnTimeout: action.learnTimeout,
 				executionTimeout: action.executionTimeout,
 				hasLifecycleFunctions: hasSubscriptionMethods,
-			})
+			}
+			if (newHostActions) {
+				newHostActions.set(actionId, hostAction)
+			} else {
+				this.#hostDefinitions.set(actionId, hostAction)
+			}
 
 			// Remember the definition locally
 			this.#actionDefinitions.set(actionId, action)
@@ -285,7 +316,7 @@ export class ActionManager {
 			if (hasAnyOldRequiredProperties(action.options)) definitionsWithOldRequiredProperties.push(actionId)
 		}
 
-		this.#setActionDefinitions(hostActions)
+		if (newHostActions) this.#hostDefinitions.replaceAll(newHostActions)
 
 		if (definitionsWantingOptionsToMonitor.length > 0) {
 			this.#logger.warn(

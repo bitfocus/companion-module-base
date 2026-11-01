@@ -10,6 +10,13 @@ import type {
 	CompanionRecordedAction,
 } from './action.js'
 import type { SomeCompanionConfigField } from './config.js'
+import {
+	CompanionDefinitionsApiImpl,
+	type CompanionActionDefinitionsApi,
+	type CompanionCompositeElementDefinitionsApi,
+	type CompanionFeedbackDefinitionsApi,
+	type CompanionVariableDefinitionsApi,
+} from './definitions.js'
 import type { InstanceStatus } from './enums.js'
 import type { CompanionFeedbackDefinitions, CompanionFeedbackSchema } from './feedback.js'
 import type {
@@ -72,6 +79,28 @@ export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTyp
 
 	readonly #options: InstanceBaseOptions
 
+	readonly #actionDefinitionsApi: CompanionActionDefinitionsApi<TManifest>
+	readonly #feedbackDefinitionsApi: CompanionFeedbackDefinitionsApi<TManifest>
+	readonly #variableDefinitionsApi: CompanionVariableDefinitionsApi<TManifest>
+	readonly #compositeElementDefinitionsApi: CompanionCompositeElementDefinitionsApi<TManifest>
+
+	/**
+	 * Manage the action definitions for this instance
+	 */
+	readonly actionDefinitions: CompanionActionDefinitionsApi<TManifest>
+	/**
+	 * Manage the feedback definitions for this instance
+	 */
+	readonly feedbackDefinitions: CompanionFeedbackDefinitionsApi<TManifest>
+	/**
+	 * Manage the variable definitions for this instance
+	 */
+	readonly variableDefinitions: CompanionVariableDefinitionsApi<TManifest>
+	/**
+	 * Manage the composite graphics element definitions for this instance
+	 */
+	readonly compositeElementDefinitions: CompanionCompositeElementDefinitionsApi<TManifest>
+
 	public get id(): string {
 		return this.#context.id
 	}
@@ -102,6 +131,30 @@ export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTyp
 		this.#logger = createModuleLogger()
 
 		this.createSharedUdpSocket = this.createSharedUdpSocket.bind(this)
+
+		this.#actionDefinitionsApi = new CompanionDefinitionsApiImpl<CompanionActionDefinitions<TManifest['actions']>>(
+			(actions, replaceAll) => this.#context.updateActionDefinitions(actions, replaceAll),
+		)
+		this.#feedbackDefinitionsApi = new CompanionDefinitionsApiImpl<
+			CompanionFeedbackDefinitions<TManifest['feedbacks']>
+		>((feedbacks, replaceAll) => this.#context.updateFeedbackDefinitions(feedbacks, replaceAll))
+		this.#variableDefinitionsApi = new CompanionDefinitionsApiImpl<
+			CompanionVariableDefinitions<TManifest['variables']>
+		>((variables, replaceAll) => {
+			if (Array.isArray(variables)) throw new Error('Variable definitions should be an object, not an array')
+
+			this.#context.updateVariableDefinitions(variables, replaceAll)
+		})
+		this.#compositeElementDefinitionsApi = new CompanionDefinitionsApiImpl<
+			CompanionGraphicsCompositeElementDefinitions<TManifest['compositeElements']>
+		>((compositeElements, replaceAll) => this.#context.updateCompositeElementDefinitions(compositeElements, replaceAll))
+
+		// Note: The deprecated set*Definitions methods use the private copies of these,
+		// so that they keep working if a module has assigned its own value to one of these properties
+		this.actionDefinitions = this.#actionDefinitionsApi
+		this.feedbackDefinitions = this.#feedbackDefinitionsApi
+		this.variableDefinitions = this.#variableDefinitionsApi
+		this.compositeElementDefinitions = this.#compositeElementDefinitionsApi
 
 		this.#options = {
 			disableVariableValidation: false,
@@ -164,17 +217,19 @@ export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTyp
 	/**
 	 * Set the action definitions for this instance
 	 * @param actions The action definitions
+	 * @deprecated Use `this.actionDefinitions.setAll(actions)` instead, or `this.actionDefinitions.set(...)` to update only some
 	 */
 	setActionDefinitions(actions: CompanionActionDefinitions<TManifest['actions']>): void {
-		this.#context.setActionDefinitions(actions)
+		this.#actionDefinitionsApi.setAll(actions)
 	}
 
 	/**
 	 * Set the feedback definitions for this instance
 	 * @param feedbacks The feedback definitions
+	 * @deprecated Use `this.feedbackDefinitions.setAll(feedbacks)` instead, or `this.feedbackDefinitions.set(...)` to update only some
 	 */
 	setFeedbackDefinitions(feedbacks: CompanionFeedbackDefinitions<TManifest['feedbacks']>): void {
-		this.#context.setFeedbackDefinitions(feedbacks)
+		this.#feedbackDefinitionsApi.setAll(feedbacks)
 	}
 
 	/**
@@ -192,21 +247,21 @@ export abstract class InstanceBase<TManifest extends InstanceTypes = InstanceTyp
 	/**
 	 * Set the composite graphics elements for this instance
 	 * @param compositeElements The composite element definitions
+	 * @deprecated Use `this.compositeElementDefinitions.setAll(compositeElements)` instead, or `this.compositeElementDefinitions.set(...)` to update only some
 	 */
 	setCompositeElementDefinitions(
 		compositeElements: CompanionGraphicsCompositeElementDefinitions<TManifest['compositeElements']>,
 	): void {
-		this.#context.setCompositeElementDefinitions(compositeElements)
+		this.#compositeElementDefinitionsApi.setAll(compositeElements)
 	}
 
 	/**
 	 * Set the variable definitions for this instance
 	 * @param variables The variable definitions
+	 * @deprecated Use `this.variableDefinitions.setAll(variables)` instead, or `this.variableDefinitions.set(...)` to update only some
 	 */
 	setVariableDefinitions(variables: CompanionVariableDefinitions<TManifest['variables']>): void {
-		if (Array.isArray(variables)) throw new Error('Variable definitions should be an object, not an array')
-
-		this.#context.setVariableDefinitions(variables)
+		this.#variableDefinitionsApi.setAll(variables)
 	}
 
 	/**
