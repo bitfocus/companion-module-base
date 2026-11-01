@@ -1,6 +1,7 @@
 import type { JsonValue } from '../common/json-value.js'
 import type { StringKeys } from '../util.js'
 import type { CompanionCommonCallbackContext, CompanionLearnCallbackContext } from './common.js'
+import type { ButtonGraphicsBoxElement, ButtonGraphicsImageElement, ButtonGraphicsTextElement } from './graphics.js'
 import type {
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldColor,
@@ -176,15 +177,90 @@ export interface CompanionFeedbackDefinitionBase<TOptions extends CompanionOptio
 }
 
 /**
- * The definition of a boolean feedback
+ * The elements of a button which a feedback default style override can target.
+ * When the feedback is added to a button, Companion picks the matching element of that button:
+ * - `text`: the main text element
+ * - `background`: the background element
+ * - `image`: the main image element
  */
-export interface CompanionBooleanFeedbackDefinition<
+export interface CompanionFeedbackStyleOverrideElements {
+	text: ButtonGraphicsTextElement
+	background: ButtonGraphicsBoxElement
+	image: ButtonGraphicsImageElement
+}
+
+type OverridableElementProperty<TElement> = Exclude<keyof TElement, 'type' | 'id' | 'name'>
+
+/**
+ * A default style override of a boolean feedback.
+ * When the feedback is true, `override` is applied to `property` of `element`.
+ */
+export type CompanionBooleanFeedbackDefaultStyleOverride = {
+	[TElement in keyof CompanionFeedbackStyleOverrideElements]: {
+		[TProperty in OverridableElementProperty<CompanionFeedbackStyleOverrideElements[TElement]>]-?: {
+			/** The element to override */
+			element: TElement
+			/** The property of the element to override */
+			property: TProperty
+			/** The value to apply, either a plain value or an expression */
+			override: Exclude<CompanionFeedbackStyleOverrideElements[TElement][TProperty], undefined>
+		}
+	}[OverridableElementProperty<CompanionFeedbackStyleOverrideElements[TElement]>]
+}[keyof CompanionFeedbackStyleOverrideElements]
+
+/**
+ * A default style override of a value feedback.
+ * The `override` expression is evaluated whenever the feedback value changes, with the value of the feedback available as `$(this:value)`.
+ * The result is applied to `property` of `element`. If the expression returns `undefined`, nothing is overridden.
+ */
+export type CompanionValueFeedbackDefaultStyleOverride = {
+	[TElement in keyof CompanionFeedbackStyleOverrideElements]: {
+		[TProperty in OverridableElementProperty<CompanionFeedbackStyleOverrideElements[TElement]>]-?: {
+			/** The element to override */
+			element: TElement
+			/** The property of the element to override */
+			property: TProperty
+			/** An expression to compute the value to apply, such as `$(this:value)` */
+			override: string
+		}
+	}[OverridableElementProperty<CompanionFeedbackStyleOverrideElements[TElement]>]
+}[keyof CompanionFeedbackStyleOverrideElements]
+
+/**
+ * The default style of a boolean feedback. Exactly one of `defaultStyle` or `defaultStyleOverrides` must be provided.
+ */
+export type CompanionBooleanFeedbackDefaultStyle =
+	| {
+			/**
+			 * The default style properties for this feedback
+			 * @deprecated This only translates to the old drawing abilities. Use `defaultStyleOverrides` instead
+			 */
+			defaultStyle: Partial<CompanionFeedbackButtonStyleResult>
+			defaultStyleOverrides?: never
+	  }
+	| {
+			defaultStyle?: never
+			/**
+			 * The style overrides to set up when a user adds this feedback to a button
+			 * @example
+			 * ```ts
+			 * defaultStyleOverrides: [
+			 * 	{ element: 'background', property: 'color', override: 0xff0000 },
+			 * 	{ element: 'text', property: 'color', override: 0xffffff },
+			 * ]
+			 * ```
+			 */
+			defaultStyleOverrides: CompanionBooleanFeedbackDefaultStyleOverride[]
+	  }
+
+/**
+ * The properties of a boolean feedback definition, excluding the default style
+ */
+export interface CompanionBooleanFeedbackDefinitionBase<
 	TOptions extends CompanionOptionValues = CompanionOptionValues,
 > extends CompanionFeedbackDefinitionBase<TOptions> {
 	/** The type of the feedback */
 	type: 'boolean'
-	/** The default style properties for this feedback */
-	defaultStyle: Partial<CompanionFeedbackButtonStyleResult>
 	/** Called to get the feedback value */
 	callback: (
 		feedback: CompanionFeedbackBooleanEvent<TOptions>,
@@ -199,6 +275,12 @@ export interface CompanionBooleanFeedbackDefinition<
 }
 
 /**
+ * The definition of a boolean feedback
+ */
+export type CompanionBooleanFeedbackDefinition<TOptions extends CompanionOptionValues = CompanionOptionValues> =
+	CompanionBooleanFeedbackDefinitionBase<TOptions> & CompanionBooleanFeedbackDefaultStyle
+
+/**
  * The definition of a value feedback
  */
 export interface CompanionValueFeedbackDefinition<
@@ -207,6 +289,14 @@ export interface CompanionValueFeedbackDefinition<
 > extends CompanionFeedbackDefinitionBase<TOptions> {
 	/** The type of the feedback */
 	type: 'value'
+	/**
+	 * The style overrides to set up when a user adds this feedback to a button
+	 * @example
+	 * ```ts
+	 * defaultStyleOverrides: [{ element: 'text', property: 'text', override: '$(this:value)' }]
+	 * ```
+	 */
+	defaultStyleOverrides: CompanionValueFeedbackDefaultStyleOverride[]
 	/** Called to get the feedback value */
 	callback: (
 		feedback: CompanionFeedbackValueEvent<TOptions>,

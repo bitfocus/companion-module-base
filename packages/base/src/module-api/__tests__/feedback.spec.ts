@@ -30,6 +30,7 @@ const _defsWithImplicitlyBadValueCallback: CompanionFeedbackDefinitions<Types['f
 		type: 'value',
 		name: 'Value feedback',
 		options: [],
+		defaultStyleOverrides: [],
 		// @ts-expect-error Callback must return string
 		callback: () => 42,
 	},
@@ -40,6 +41,7 @@ const _defsWithExplicitlyBadValueCallback: CompanionFeedbackDefinitions<Types['f
 		type: 'value',
 		name: 'Value feedback',
 		options: [],
+		defaultStyleOverrides: [],
 		// @ts-expect-error Callback must return string
 		callback: (): void => {},
 	},
@@ -50,6 +52,7 @@ const _defsWithUnspecifiedIdenticalValueCallback: CompanionFeedbackDefinitions<T
 		type: 'value',
 		name: 'Value feedback',
 		options: [],
+		defaultStyleOverrides: [],
 		callback: () => String(Math.random()),
 	},
 }
@@ -59,6 +62,7 @@ const _defsWithSpecifiedIdenticalValueCallback: CompanionFeedbackDefinitions<Typ
 		type: 'value',
 		name: 'Value feedback',
 		options: [],
+		defaultStyleOverrides: [],
 		callback: (): string => String(Math.random()),
 	},
 }
@@ -68,6 +72,7 @@ const _defsWithImplicitSubsetValueCallback: CompanionFeedbackDefinitions<Types['
 		type: 'value',
 		name: 'Value feedback',
 		options: [],
+		defaultStyleOverrides: [],
 		callback: () => 'one string to rule them all',
 	},
 }
