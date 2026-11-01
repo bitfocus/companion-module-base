@@ -75,6 +75,7 @@ describe('ActionManager', () => {
 					optionsToMonitorForSubscribe: undefined,
 					hasLearn: false,
 					learnTimeout: undefined,
+					executionTimeout: undefined,
 					hasLifecycleFunctions: false,
 				} satisfies HostActionDefinition,
 			])
@@ -92,6 +93,7 @@ describe('ActionManager', () => {
 				hasResult: true,
 				learn: vi.fn(() => ({})),
 				learnTimeout: 1000,
+				executionTimeout: 30000,
 				subscribe: vi.fn(),
 				unsubscribe: vi.fn(),
 				optionsToMonitorForSubscribe: ['a'],
@@ -111,6 +113,7 @@ describe('ActionManager', () => {
 					optionsToMonitorForSubscribe: ['a'],
 					hasLearn: true,
 					learnTimeout: 1000,
+					executionTimeout: 30000,
 					hasLifecycleFunctions: true,
 				} satisfies HostActionDefinition,
 			])

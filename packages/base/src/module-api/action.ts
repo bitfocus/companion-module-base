@@ -149,6 +149,21 @@ export interface CompanionActionDefinitionBase<TOptions extends CompanionOptionV
 	 * You can change this if this number does not work for you, but you should keep it to a sensible value
 	 */
 	learnTimeout?: number
+
+	/**
+	 * Timeout for the 'callback' function (in milliseconds)
+	 * Companion sets a default value of 5s, after which the execution is cancelled and `context.signal` is aborted.
+	 * Companion may also limit how high this can be set.
+	 *
+	 * Warning: Raise this with care. While an action is running, anything waiting on it is
+	 * blocked, such as the following actions in a sequence, so a slow action makes buttons feel unresponsive and
+	 * a stuck one stalls them until the timeout is reached.
+	 * Waiting for the device to finish is useful when the following actions depend on it, or when the action
+	 * returns a result. But if nothing depends on it, complete as soon as the command has been sent, and report
+	 * the progress through feedbacks or variables instead.
+	 * When you do raise this, keep it no longer than the operation can reasonably take.
+	 */
+	executionTimeout?: number
 }
 
 /**

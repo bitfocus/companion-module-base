@@ -65,6 +65,7 @@ export interface HostActionDefinition {
 	optionsToMonitorForSubscribe: string[] | undefined
 	hasLearn: boolean
 	learnTimeout: number | undefined
+	executionTimeout: number | undefined
 	hasLifecycleFunctions: boolean
 }
 

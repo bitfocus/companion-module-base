@@ -270,6 +270,7 @@ export class ActionManager {
 				optionsToMonitorForSubscribe: action.optionsToMonitorForSubscribe,
 				hasLearn: !!action.learn,
 				learnTimeout: action.learnTimeout,
+				executionTimeout: action.executionTimeout,
 				hasLifecycleFunctions: hasSubscriptionMethods,
 			})
 
