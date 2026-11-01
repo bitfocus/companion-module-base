@@ -78,10 +78,19 @@ export interface HostFeedbackDefinition {
 	options: SomeCompanionFeedbackInputField[] // TODO module-lib - versioned types?
 	type: HostFeedbackType
 	defaultStyle?: CompanionFeedbackButtonStyleResult
+	defaultStyleOverrides?: HostFeedbackDefaultStyleOverride[]
 	affectedProperties: string[] | undefined
 	hasLearn: boolean
 	showInvert: boolean | undefined
 	learnTimeout: number | undefined
+}
+
+export interface HostFeedbackDefaultStyleOverride {
+	/** The element to override: 'text', 'background' or 'image' */
+	element: string
+	property: string
+	/** For value feedbacks, this is always an expression */
+	override: ExpressionOrValue<JsonValue | undefined>
 }
 
 export interface HostVariableDefinition {
