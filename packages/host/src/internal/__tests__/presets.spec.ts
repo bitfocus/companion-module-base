@@ -1062,6 +1062,70 @@ describe('validatePresetDefinitions', () => {
 			expect(children[0].storeResult).toEqual(storeOut)
 			expect(children[1]).not.toHaveProperty('storeResult')
 		})
+
+		it('drops storeResult targeting an expression local variable, and warns', () => {
+			const presets = presetWithActions([
+				{ actionId: 'with-result', options: {}, storeResult: { type: 'local-variable', variableName: 'expr' } },
+			])
+			const preset = presets['p1'] as CompanionSimplePresetDefinition<InstanceTypes>
+			preset.localVariables!.push({ variableName: 'expr', variableType: 'expression', expression: '1 + 2' })
+
+			const { result, msgs } = runSanitise(presets, actions, {}, structureFor('p1'), '2.3.0')
+			expect(msgs.some((m) => m.includes('storing their result'))).toBe(true)
+			expect(returnedDown(result)[0]).not.toHaveProperty('storeResult')
+		})
+	})
+
+	describe('expression local variables', () => {
+		const exprVar = { variableName: 'expr', variableType: 'expression', expression: '$(this:a) + 1' } as const
+		const simpleVar = { variableName: 'a', variableType: 'simple', startupValue: 1 } as const
+
+		function presetWithLocalVariables(localVariables: unknown[]): CompanionPresetDefinitions<InstanceTypes> {
+			return { p1: { ...validSimple(), localVariables: localVariables as any } }
+		}
+
+		function returnedLocalVariables(result: ReturnType<typeof sanitisePresetDefinitions>): unknown[] | undefined {
+			return (result.presets['p1'] as CompanionSimplePresetDefinition<InstanceTypes>).localVariables
+		}
+
+		it('keeps an expression local variable without warning', () => {
+			const { result, msgs } = runSanitise(
+				presetWithLocalVariables([simpleVar, exprVar]),
+				{},
+				{},
+				structureFor('p1'),
+				'2.3.0',
+			)
+			expect(msgs).toHaveLength(0)
+			expect(returnedLocalVariables(result)).toEqual([simpleVar, exprVar])
+		})
+
+		it('drops expression local variables when the module api version is too old, and warns', () => {
+			const { result, msgs } = runSanitise(
+				presetWithLocalVariables([simpleVar, exprVar]),
+				{},
+				{},
+				structureFor('p1'),
+				'2.2.0',
+			)
+			expect(msgs).toHaveLength(1)
+			expect(msgs[0]).toContain('expression local variables')
+			expect(msgs[0]).toContain('My Preset')
+			expect(returnedLocalVariables(result)).toEqual([simpleVar])
+		})
+
+		it('drops a malformed expression local variable, and warns', () => {
+			const { result, msgs } = runSanitise(
+				presetWithLocalVariables([simpleVar, { variableName: 'expr', variableType: 'expression' }]),
+				{},
+				{},
+				structureFor('p1'),
+				'2.3.0',
+			)
+			expect(msgs).toHaveLength(1)
+			expect(msgs[0]).toContain('expression local variables')
+			expect(returnedLocalVariables(result)).toEqual([simpleVar])
+		})
 	})
 
 	describe('alternatives entries', () => {

@@ -412,6 +412,20 @@ export interface CompanionSimplePresetLocalVariable extends CompanionPresetLocal
 	startupValue: CompanionVariableValue
 }
 
+/**
+ * The configuration of an expression local variable in a preset
+ * The value of the variable is the result of evaluating the expression
+ */
+export interface CompanionExpressionPresetLocalVariable extends CompanionPresetLocalVariableBase {
+	variableType: 'expression'
+
+	/**
+	 * The expression to evaluate
+	 * This can reference other variables, including the other local variables of the button
+	 */
+	expression: string
+}
+
 export type CompanionFeedbackLocalVariable<
 	TFeedbackManifest extends Record<string, CompanionFeedbackSchema<CompanionOptionValues>> = Record<
 		string,
@@ -432,7 +446,10 @@ export type CompanionPresetLocalVariable<
 		string,
 		CompanionFeedbackSchema<CompanionOptionValues>
 	>,
-> = CompanionSimplePresetLocalVariable | CompanionFeedbackLocalVariable<TFeedbackManifest>
+> =
+	| CompanionSimplePresetLocalVariable
+	| CompanionExpressionPresetLocalVariable
+	| CompanionFeedbackLocalVariable<TFeedbackManifest>
 
 export type CompanionPresetValue<T extends JsonValue | undefined> = T | ExpressionOrValue<T>
 export type CompanionPresetOptionValues<T extends Record<string, JsonValue | undefined>> = {

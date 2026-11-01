@@ -92,6 +92,30 @@ export function sanitisePresetDefinitions(
 	const isStoreResultAllowed =
 		validModuleApiVersion !== null && semver.gte(validModuleApiVersion, '2.2.0-0', { loose: true })
 
+	/** Whether the module is new enough to use `expression` local variables */
+	const isExpressionLocalVariableAllowed =
+		validModuleApiVersion !== null && semver.gte(validModuleApiVersion, '2.3.0-0', { loose: true })
+
+	/**
+	 * Drop any `expression` local variables which are malformed, or which the module is too old to use.
+	 * Returns the new localVariables array, and whether anything was dropped.
+	 */
+	function dropDisallowedLocalVariables(preset: CompanionPresetDefinition<any>): {
+		localVariables: typeof preset.localVariables
+		dropped: boolean
+	} {
+		if (!Array.isArray(preset.localVariables)) return { localVariables: preset.localVariables, dropped: false }
+
+		let dropped = false
+		const localVariables = preset.localVariables.filter((localVariable) => {
+			if (localVariable?.variableType !== 'expression') return true
+			if (isExpressionLocalVariableAllowed && typeof localVariable.expression === 'string') return true
+			dropped = true
+			return false
+		})
+		return { localVariables, dropped }
+	}
+
 	/**
 	 * Whether an action's `storeResult` is usable: it must target a simple local variable declared on the
 	 * preset, and the action must be one of the module's own actions which returns a result.
@@ -216,6 +240,7 @@ export function sanitisePresetDefinitions(
 	const presetsWithInvalidStyleOverrideRefs: string[] = []
 	const presetsWithDisallowedInternalIds: string[] = []
 	const presetsWithInvalidStoreResults: string[] = []
+	const presetsWithInvalidLocalVariables: string[] = []
 	const presetsFailedValidation: string[] = []
 
 	/**
@@ -273,6 +298,13 @@ export function sanitisePresetDefinitions(
 					}
 				}
 				if (hasInvalidRef) presetsWithInvalidStyleOverrideRefs.push(presetName)
+			}
+
+			// --- Drop local variables the module is not allowed to use ---
+			const filteredLocalVariables = dropDisallowedLocalVariables(sanitisedPreset)
+			if (filteredLocalVariables.dropped) {
+				sanitisedPreset = { ...sanitisedPreset, localVariables: filteredLocalVariables.localVariables }
+				presetsWithInvalidLocalVariables.push(presetName)
 			}
 
 			// --- Drop internal:* entries the module is not allowed to reference, and invalid storeResults ---
@@ -460,6 +492,13 @@ export function sanitisePresetDefinitions(
 	if (presetsWithInvalidStoreResults.length > 0) {
 		logger.warn(
 			`The following preset definitions have actions storing their result to an unknown or non-simple local variable, from an action which does not return a result, or the module's api version is too old. These have been removed: ${presetsWithInvalidStoreResults
+				.sort()
+				.join(', ')}`,
+		)
+	}
+	if (presetsWithInvalidLocalVariables.length > 0) {
+		logger.warn(
+			`The following preset definitions have expression local variables which are malformed, or the module's api version is too old. These have been removed: ${presetsWithInvalidLocalVariables
 				.sort()
 				.join(', ')}`,
 		)
