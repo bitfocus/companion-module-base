@@ -45,6 +45,11 @@ export interface TCPHelperOptions {
 	reconnect_interval?: number
 	/** default true */
 	reconnect?: boolean
+	/**
+	 * Milliseconds of idle time before the first TCP keepalive probe is sent.
+	 * When unset, the operating system default is used (often 2 hours)
+	 */
+	keepalive_delay?: number
 }
 
 /**
@@ -80,7 +85,7 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 	readonly #host: string
 	readonly #port: number
 	readonly _socket: net.Socket
-	readonly #options: Required<TCPHelperOptions>
+	readonly #options: Required<Omit<TCPHelperOptions, 'keepalive_delay'>>
 
 	#connected = false
 	#connecting = false
@@ -119,7 +124,7 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 	 *
 	 * @param host - The destination host address
 	 * @param port - The destination port number
-	 * @param options - Optional configuration for reconnection behavior
+	 * @param options - Optional configuration for reconnection and keepalive behavior
 	 */
 	constructor(host: string, port: number, options?: TCPHelperOptions) {
 		super()
@@ -133,7 +138,7 @@ export class TCPHelper extends EventEmitter<TCPHelperEvents> {
 		}
 
 		this._socket = new net.Socket()
-		this._socket.setKeepAlive(true)
+		this._socket.setKeepAlive(true, options?.keepalive_delay)
 		this._socket.setNoDelay(true)
 
 		this._socket.on('error', (err) => {

@@ -35,6 +35,19 @@ describe('TCP', () => {
 				socket.destroy()
 			}
 		})
+
+		it('with keepalive_delay', () => {
+			const socket = new TCPHelper('1.2.3.4', 852, { keepalive_delay: 5000 })
+			try {
+				const rawSocket = MockSocket.mockSockets()[0]
+				expect(rawSocket.configOps).toEqual([
+					['setKeepAlive', true, 5000],
+					['setNoDelay', true],
+				])
+			} finally {
+				socket.destroy()
+			}
+		})
 	})
 
 	it('error propagation', async () => {
