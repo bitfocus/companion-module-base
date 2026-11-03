@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.2.1...companion-module-host-v1.3.0) (2026-11-03)
+
+
+### Features
+
+* add executionTimeout for actions ([8ffed90](https://github.com/bitfocus/companion-module-base/commit/8ffed90295e19ba121e436fe69ec0b156ee32083))
+* add expression local variables to presets ([1bfaff1](https://github.com/bitfocus/companion-module-base/commit/1bfaff156f8c6d65a73dbf257011412a065d82de))
+
+
+### Bug Fixes
+
+* warn about duplicate preset section and definition ids ([8ac438d](https://github.com/bitfocus/companion-module-base/commit/8ac438db56c4e49bbdb01bd37e5f8ac495095fa2))
+
 ## [1.2.1](https://github.com/bitfocus/companion-module-base/compare/companion-module-host-v1.2.0...companion-module-host-v1.2.1) (2026-10-09)
 
 
