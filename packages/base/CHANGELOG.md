@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.3.0](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.2.2...companion-module-base-v2.3.0) (2026-11-03)
+
+
+### Features
+
+* add executionTimeout for actions ([8ffed90](https://github.com/bitfocus/companion-module-base/commit/8ffed90295e19ba121e436fe69ec0b156ee32083))
+* add expression local variables to presets ([1bfaff1](https://github.com/bitfocus/companion-module-base/commit/1bfaff156f8c6d65a73dbf257011412a065d82de))
+* add keepalive_delay option to TCPHelper ([7315548](https://github.com/bitfocus/companion-module-base/commit/7315548604052c23888d3c1c3bf41335ce945ce2))
+
 ## [2.2.2](https://github.com/bitfocus/companion-module-base/compare/companion-module-base-v2.2.1...companion-module-base-v2.2.2) (2026-10-25)
 
 
