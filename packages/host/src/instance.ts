@@ -2,11 +2,14 @@ import PQueue from 'p-queue'
 import semver from 'semver'
 import {
 	createModuleLogger,
+	type CompanionGraphicsCompositeElementDefinition,
+	type CompanionGraphicsCompositeElementDefinitions,
 	type CompanionHTTPRequest,
 	type CompanionHTTPResponse,
 	type CompanionOptionValues,
 	type CompanionStaticUpgradeScript,
 	type CompanionVariableDefinition,
+	type CompanionVariableDefinitions,
 	type CompanionVariableValue,
 	type InstanceBase,
 	type InstanceConstructor,
@@ -27,6 +30,7 @@ import type {
 } from './context.js'
 import { ActionManager } from './internal/actions.js'
 import { sanitiseCompositeElementDefinitions } from './internal/composite-elements.js'
+import { DefinitionsBatcher } from './internal/definitions-batcher.js'
 import { FeedbackManager } from './internal/feedback.js'
 import { sanitisePresetDefinitions } from './internal/presets.js'
 import { runThroughUpgradeScripts } from './internal/upgrade.js'
@@ -43,6 +47,11 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 	#lastSecrets: TManifest['secrets'] = {}
 
 	readonly #variableDefinitions = new Map<string, CompanionVariableDefinition>()
+	readonly #hostVariableDefinitions: DefinitionsBatcher<HostVariableDefinition>
+	/** Values to be sent alongside the next variable definitions update */
+	#pendingVariableDefinitionValues = new Map<string, HostVariableValue>()
+
+	readonly #compositeElementDefinitions: DefinitionsBatcher<CompanionGraphicsCompositeElementDefinition>
 
 	readonly #variableValues = new Map<string, CompanionVariableValue>()
 
@@ -71,13 +80,44 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 
 		this.#actionManager = new ActionManager(
 			(actions) => this.#host.setActionDefinitions(actions),
-			(controlId, variableId, value) => this.#host.setCustomVariable(controlId, variableId, value),
+			(controlId, variableId, value) => {
+				this.#flushDefinitions()
+				this.#host.setCustomVariable(controlId, variableId, value)
+			},
+			this.#host.updateActionDefinitions
+				? (changed, removedIds) => this.#host.updateActionDefinitions!(changed, removedIds)
+				: undefined,
 		)
 		this.#feedbackManager = new FeedbackManager(
 			(feedbacks) => this.#host.setFeedbackDefinitions(feedbacks),
-			(values) => this.#host.updateFeedbackValues(values),
+			(values) => {
+				this.#flushDefinitions()
+				this.#host.updateFeedbackValues(values)
+			},
 			moduleApiVersion,
+			this.#host.updateFeedbackDefinitions
+				? (changed, removedIds) => this.#host.updateFeedbackDefinitions!(changed, removedIds)
+				: undefined,
 		)
+		this.#hostVariableDefinitions = new DefinitionsBatcher({
+			setAll: (definitions) =>
+				this.#host.setVariableDefinitions(definitions.values().toArray(), this.#takePendingVariableDefinitionValues()),
+			update: this.#host.updateVariableDefinitions
+				? (changed, removedIds) =>
+						this.#host.updateVariableDefinitions!(
+							changed.values().toArray(),
+							removedIds,
+							this.#takePendingVariableDefinitionValues(),
+						)
+				: undefined,
+		})
+		this.#compositeElementDefinitions = new DefinitionsBatcher({
+			setAll: (definitions) => this.#host.setCompositeElementDefinitions(Object.fromEntries(definitions)),
+			update: this.#host.updateCompositeElementDefinitions
+				? (changed, removedIds) =>
+						this.#host.updateCompositeElementDefinitions!(Object.fromEntries(changed), removedIds)
+				: undefined,
+		})
 
 		this.#instanceContext = {
 			_isInstanceContext: true,
@@ -100,11 +140,15 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 			recordAction: (action, uniquenessId) => {
 				if (!this.#recordingActions) throw new Error('Not currently recording actions')
 
+				this.#flushDefinitions()
 				this.#host.recordAction(action, uniquenessId)
 			},
 
 			setActionDefinitions: (actions) => {
-				this.#actionManager.setActionDefinitions(actions)
+				this.#actionManager.updateActionDefinitions(actions, true)
+			},
+			updateActionDefinitions: (actions, replaceAll) => {
+				this.#actionManager.updateActionDefinitions(actions, replaceAll)
 			},
 			subscribeActions: (actionIds) => {
 				this.#actionManager.subscribeActions(actionIds)
@@ -114,7 +158,10 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 			},
 
 			setFeedbackDefinitions: (feedbacks) => {
-				this.#feedbackManager.setFeedbackDefinitions(feedbacks)
+				this.#feedbackManager.updateFeedbackDefinitions(feedbacks, true)
+			},
+			updateFeedbackDefinitions: (feedbacks, replaceAll) => {
+				this.#feedbackManager.updateFeedbackDefinitions(feedbacks, replaceAll)
 			},
 			unsubscribeFeedbacks: (feedbackIds) => {
 				this.#feedbackManager.unsubscribeFeedbacks(feedbackIds)
@@ -137,74 +184,22 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 					presets,
 					moduleApiVersion,
 				)
+				// Ensure the definitions the presets reference reach the host first
+				this.#flushDefinitions()
 				this.#host.setPresetDefinitions(sanitised.structure, sanitised.presets)
 			},
 			setCompositeElementDefinitions: (compositeElements) => {
-				const sanitisedElements = sanitiseCompositeElementDefinitions(compositeElements)
-				this.#host.setCompositeElementDefinitions(sanitisedElements)
+				this.#updateCompositeElementDefinitions(compositeElements, true)
+			},
+			updateCompositeElementDefinitions: (compositeElements, replaceAll) => {
+				this.#updateCompositeElementDefinitions(compositeElements, replaceAll)
 			},
 
 			setVariableDefinitions: (variables) => {
-				const hostVariables: HostVariableDefinition[] = []
-				const hostValues: HostVariableValue[] = []
-
-				this.#variableDefinitions.clear()
-
-				const definitionsWithReservedIds: string[] = []
-				const definitionsWithInvalidIds: string[] = []
-
-				for (const [variableId, definition] of Object.entries(variables)) {
-					if (BANNED_PROPS.has(variableId)) {
-						definitionsWithReservedIds.push(variableId)
-						continue
-					}
-					if (!isValidVariableId(variableId)) {
-						definitionsWithInvalidIds.push(variableId)
-						continue
-					}
-					hostVariables.push({
-						id: variableId,
-						name: definition.name,
-					})
-
-					// Remember the definition locally
-					this.#variableDefinitions.set(variableId, definition)
-					if (!this.#variableValues.has(variableId)) {
-						// Give us a local cached value of something
-						this.#variableValues.set(variableId, '')
-						hostValues.push({
-							id: variableId,
-							value: '',
-						})
-					}
-				}
-
-				if (!this.#instance.instanceOptions.disableVariableValidation) {
-					const validIds = new Set(this.#variableDefinitions.keys())
-					for (const id of this.#variableValues.keys()) {
-						if (!validIds.has(id)) {
-							// Delete any local cached value
-							this.#variableValues.delete(id)
-							hostValues.push({
-								id: id,
-								value: undefined,
-							})
-						}
-					}
-				}
-
-				if (definitionsWithReservedIds.length > 0) {
-					this.#logger.warn(
-						`Ignoring variable definitions with reserved ids: ${definitionsWithReservedIds.sort().join(', ')}`,
-					)
-				}
-				if (definitionsWithInvalidIds.length > 0) {
-					this.#logger.warn(
-						`Ignoring variable definitions with invalid ids: ${definitionsWithInvalidIds.sort().join(', ')}`,
-					)
-				}
-
-				this.#host.setVariableDefinitions(hostVariables, hostValues)
+				this.#updateVariableDefinitions(variables, true)
+			},
+			updateVariableDefinitions: (variables, replaceAll) => {
+				this.#updateVariableDefinitions(variables, replaceAll)
 			},
 			setVariableValues: (values) => {
 				const hostValues: HostVariableValue[] = []
@@ -264,6 +259,8 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 					)
 				}
 
+				// Ensure any new definitions (and their initial values) reach the host first
+				this.#flushDefinitions()
 				this.#host.setVariableValues(hostValues)
 			},
 			getVariableValue: (variableId) => {
@@ -283,6 +280,135 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 			},
 		}
 		this.#instance = new instanceFactory(this.#instanceContext)
+	}
+
+	/**
+	 * Send any pending definition changes to the host immediately.
+	 * This must be called before sending anything to the host which could depend on the definitions
+	 */
+	#flushDefinitions(): void {
+		this.#actionManager.flushDefinitions()
+		this.#feedbackManager.flushDefinitions()
+		this.#compositeElementDefinitions.flush()
+		this.#hostVariableDefinitions.flush()
+	}
+
+	#takePendingVariableDefinitionValues(): HostVariableValue[] {
+		const values = this.#pendingVariableDefinitionValues.values().toArray()
+		this.#pendingVariableDefinitionValues = new Map()
+		return values
+	}
+
+	#updateVariableDefinitions(variables: Partial<CompanionVariableDefinitions>, replaceAll: boolean): void {
+		const validateVariables = !this.#instance.instanceOptions.disableVariableValidation
+
+		const clearValue = (variableId: string) => {
+			// Delete any local cached value
+			if (this.#variableValues.delete(variableId)) {
+				this.#pendingVariableDefinitionValues.set(variableId, { id: variableId, value: undefined })
+			}
+		}
+
+		const newHostVariables = replaceAll ? new Map<string, HostVariableDefinition>() : null
+		if (replaceAll) this.#variableDefinitions.clear()
+
+		const definitionsWithReservedIds: string[] = []
+		const definitionsWithInvalidIds: string[] = []
+
+		for (const [variableId, definition] of Object.entries(variables)) {
+			if (BANNED_PROPS.has(variableId)) {
+				definitionsWithReservedIds.push(variableId)
+				continue
+			}
+			if (!definition) {
+				if (!replaceAll && this.#variableDefinitions.delete(variableId)) {
+					this.#hostVariableDefinitions.delete(variableId)
+					if (validateVariables) clearValue(variableId)
+				}
+				continue
+			}
+			if (!isValidVariableId(variableId)) {
+				definitionsWithInvalidIds.push(variableId)
+				continue
+			}
+
+			const hostVariable: HostVariableDefinition = {
+				id: variableId,
+				name: definition.name,
+			}
+			if (newHostVariables) {
+				newHostVariables.set(variableId, hostVariable)
+			} else {
+				this.#hostVariableDefinitions.set(variableId, hostVariable)
+			}
+
+			// Remember the definition locally
+			this.#variableDefinitions.set(variableId, definition)
+			if (!this.#variableValues.has(variableId)) {
+				// Give us a local cached value of something
+				this.#variableValues.set(variableId, '')
+				this.#pendingVariableDefinitionValues.set(variableId, { id: variableId, value: '' })
+			}
+		}
+
+		if (newHostVariables) {
+			if (validateVariables) {
+				for (const id of this.#variableValues.keys()) {
+					if (!this.#variableDefinitions.has(id)) clearValue(id)
+				}
+			}
+
+			this.#hostVariableDefinitions.replaceAll(newHostVariables)
+		}
+
+		if (definitionsWithReservedIds.length > 0) {
+			this.#logger.warn(
+				`Ignoring variable definitions with reserved ids: ${definitionsWithReservedIds.sort().join(', ')}`,
+			)
+		}
+		if (definitionsWithInvalidIds.length > 0) {
+			this.#logger.warn(
+				`Ignoring variable definitions with invalid ids: ${definitionsWithInvalidIds.sort().join(', ')}`,
+			)
+		}
+	}
+
+	#updateCompositeElementDefinitions(
+		compositeElements: Partial<CompanionGraphicsCompositeElementDefinitions<any>>,
+		replaceAll: boolean,
+	): void {
+		const toSanitise: CompanionGraphicsCompositeElementDefinitions<any> = {}
+		const removedIds: string[] = []
+		for (const [id, definition] of Object.entries(compositeElements)) {
+			if (definition) {
+				toSanitise[id] = definition
+			} else {
+				removedIds.push(id)
+			}
+		}
+
+		const sanitised = sanitiseCompositeElementDefinitions(toSanitise)
+
+		if (replaceAll) {
+			const newDefinitions = new Map<string, CompanionGraphicsCompositeElementDefinition>()
+			for (const [id, definition] of Object.entries(sanitised)) {
+				if (definition) newDefinitions.set(id, definition)
+			}
+			this.#compositeElementDefinitions.replaceAll(newDefinitions)
+		} else {
+			for (const id of removedIds) {
+				this.#compositeElementDefinitions.delete(id)
+			}
+			for (const id of Object.keys(toSanitise)) {
+				const definition = sanitised[id]
+				if (definition) {
+					this.#compositeElementDefinitions.set(id, definition)
+				} else {
+					// Failed validation, so treat it as removed rather than leaving a stale definition
+					this.#compositeElementDefinitions.delete(id)
+				}
+			}
+		}
 	}
 
 	async init(msg: InitMessage): Promise<InitResponseMessage> {
@@ -336,6 +462,9 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 				await this.#instance.init(this.#lastConfig, !!msg.isFirstInit, this.#lastSecrets)
 
 				this.#initialized = true
+
+				// Ensure any definitions set during init reach the host before the init response
+				this.#flushDefinitions()
 			} catch (e) {
 				console.trace(`Init failed: ${e}`)
 				throw e
@@ -376,6 +505,8 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 			this.#lastSecrets = secrets
 
 			await this.#instance.configUpdated(this.#lastConfig, this.#lastSecrets)
+
+			this.#flushDefinitions()
 		})
 	}
 	/**

@@ -14,6 +14,7 @@ import {
 	type JsonValue,
 } from '@companion-module/base'
 import type { FeedbackInstance, HostFeedbackDefinition, HostFeedbackValue } from '../context.js'
+import { DefinitionsBatcher } from './definitions-batcher.js'
 import {
 	BANNED_PROPS,
 	filterDuplicateOptionIds,
@@ -53,7 +54,7 @@ interface FeedbackCheckInstance extends FeedbackInstance {
 export class FeedbackManager {
 	readonly #logger = createModuleLogger('FeedbackManager')
 
-	readonly #setFeedbackDefinitions: (feedbacks: HostFeedbackDefinition[]) => void
+	readonly #hostDefinitions: DefinitionsBatcher<HostFeedbackDefinition>
 	readonly #updateFeedbackValues: (values: HostFeedbackValue[]) => void
 	readonly #moduleApiVersion: string
 
@@ -69,8 +70,14 @@ export class FeedbackManager {
 		setFeedbackDefinitions: (feedbacks: HostFeedbackDefinition[]) => void,
 		updateFeedbackValues: (values: HostFeedbackValue[]) => void,
 		moduleApiVersion: string,
+		updateFeedbackDefinitions?: (changed: HostFeedbackDefinition[], removedIds: string[]) => void,
 	) {
-		this.#setFeedbackDefinitions = setFeedbackDefinitions
+		this.#hostDefinitions = new DefinitionsBatcher({
+			setAll: (feedbacks) => setFeedbackDefinitions(feedbacks.values().toArray()),
+			update: updateFeedbackDefinitions
+				? (changed, removedIds) => updateFeedbackDefinitions(changed.values().toArray(), removedIds)
+				: undefined,
+		})
 		this.#updateFeedbackValues = updateFeedbackValues
 		this.#moduleApiVersion = moduleApiVersion
 	}
@@ -332,10 +339,26 @@ export class FeedbackManager {
 		},
 	)
 
-	setFeedbackDefinitions(feedbacks: CompanionFeedbackDefinitions): void {
-		const hostFeedbacks: HostFeedbackDefinition[] = []
+	/** Send any pending definition changes to the host immediately */
+	flushDefinitions(): void {
+		this.#hostDefinitions.flush()
+	}
 
-		this.#feedbackDefinitions.clear()
+	/**
+	 * Add, replace or remove some feedback definitions. Falsy values are removed
+	 * @param replaceAll Whether any definitions not included should be removed
+	 */
+	updateFeedbackDefinitions(feedbacks: Partial<CompanionFeedbackDefinitions>, replaceAll: boolean): void {
+		// Validate the ids before making any changes
+		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
+			if (!feedback) continue
+			if (BANNED_PROPS.has(feedbackId)) throw new Error(`Feedback id "${feedbackId}" is a reserved word`)
+			if (feedbackId.startsWith('internal:'))
+				throw new Error(`Feedback id "${feedbackId}" uses the reserved "internal:" prefix`)
+		}
+
+		const newHostFeedbacks = replaceAll ? new Map<string, HostFeedbackDefinition>() : null
+		if (replaceAll) this.#feedbackDefinitions.clear()
 
 		const definitionsWithSubscribeMethod: string[] = []
 		const definitionsWithOldIsVisible: string[] = []
@@ -349,17 +372,20 @@ export class FeedbackManager {
 			validModuleApiVersion !== null && semver.gte(validModuleApiVersion, '2.1.0-0', { loose: true })
 
 		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
-			if (!feedback) continue
-			if (BANNED_PROPS.has(feedbackId)) throw new Error(`Feedback id "${feedbackId}" is a reserved word`)
-			if (feedbackId.startsWith('internal:'))
-				throw new Error(`Feedback id "${feedbackId}" uses the reserved "internal:" prefix`)
+			if (!feedback) {
+				if (!replaceAll) {
+					this.#feedbackDefinitions.delete(feedbackId)
+					this.#hostDefinitions.delete(feedbackId)
+				}
+				continue
+			}
 
 			// Remove any options which reuse the same id, keeping only the first usage of each
 			const { options: filteredOptions, duplicateIds } = filterDuplicateOptionIds(feedback.options ?? [])
 			if (duplicateIds.length > 0)
 				definitionsWithDuplicateOptionIds.push(`${feedbackId} (${duplicateIds.sort().join(', ')})`)
 
-			hostFeedbacks.push({
+			const hostFeedback: HostFeedbackDefinition = {
 				id: feedbackId,
 				name: feedback.name,
 				sortName: feedback.sortName,
@@ -371,7 +397,12 @@ export class FeedbackManager {
 				hasLearn: !!feedback.learn,
 				learnTimeout: feedback.learnTimeout,
 				showInvert: feedback.type === 'boolean' ? feedback.showInvert : false,
-			})
+			}
+			if (newHostFeedbacks) {
+				newHostFeedbacks.set(feedbackId, hostFeedback)
+			} else {
+				this.#hostDefinitions.set(feedbackId, hostFeedback)
+			}
 
 			// Remember the definition locally
 			this.#feedbackDefinitions.set(feedbackId, feedback)
@@ -387,7 +418,7 @@ export class FeedbackManager {
 				definitionsMissingAffectedProperties.push(feedbackId)
 		}
 
-		this.#setFeedbackDefinitions(hostFeedbacks)
+		if (newHostFeedbacks) this.#hostDefinitions.replaceAll(newHostFeedbacks)
 
 		if (definitionsWithSubscribeMethod.length > 0) {
 			this.#logger.warn(

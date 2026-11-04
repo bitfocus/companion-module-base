@@ -59,10 +59,11 @@ describe('ActionManager', () => {
 				callback: vi.fn(),
 			}
 
-			manager.setActionDefinitions({ [mockDefinitionId]: mockDefinition })
+			manager.updateActionDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 
 			expect(manager.getDefinitionIds()).toEqual([mockDefinitionId])
 			expect(manager.getDefinition(mockDefinitionId)).toBe(mockDefinition)
+			manager.flushDefinitions()
 			expect(setActionDefinitions).toHaveBeenCalledTimes(1)
 			expect(setActionDefinitions).lastCalledWith([
 				{
@@ -99,8 +100,9 @@ describe('ActionManager', () => {
 				optionsToMonitorForSubscribe: ['a'],
 			}
 
-			manager.setActionDefinitions({ [mockDefinitionId]: mockDefinition })
+			manager.updateActionDefinitions({ [mockDefinitionId]: mockDefinition }, true)
 
+			manager.flushDefinitions()
 			expect(setActionDefinitions).toHaveBeenCalledTimes(1)
 			expect(setActionDefinitions).lastCalledWith([
 				{
@@ -128,10 +130,12 @@ describe('ActionManager', () => {
 				callback: vi.fn(),
 			}
 
-			manager.setActionDefinitions({ [mockDefinitionId]: mockDefinition })
+			manager.updateActionDefinitions({ [mockDefinitionId]: mockDefinition }, true)
+			manager.flushDefinitions()
 			expect(manager.getDefinitionIds()).toEqual([mockDefinitionId])
 
-			manager.setActionDefinitions({ [mockDefinitionId2]: mockDefinition })
+			manager.updateActionDefinitions({ [mockDefinitionId2]: mockDefinition }, true)
+			manager.flushDefinitions()
 			expect(manager.getDefinitionIds()).toEqual([mockDefinitionId2])
 			expect(manager.getDefinition(mockDefinitionId)).toBeUndefined()
 			expect(setActionDefinitions).toHaveBeenCalledTimes(2)
@@ -146,12 +150,16 @@ describe('ActionManager', () => {
 				callback: vi.fn(),
 			}
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: mockDefinition,
-				[mockDefinitionId2]: undefined,
-			})
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: mockDefinition,
+					[mockDefinitionId2]: undefined,
+				},
+				true,
+			)
 
 			expect(manager.getDefinitionIds()).toEqual([mockDefinitionId])
+			manager.flushDefinitions()
 			expect(setActionDefinitions).toHaveBeenCalledTimes(1)
 			expect(setActionDefinitions.mock.calls[0][0]).toHaveLength(1)
 		})
@@ -165,7 +173,7 @@ describe('ActionManager', () => {
 				callback: vi.fn(),
 			}
 
-			expect(() => manager.setActionDefinitions({ ['__proto__']: mockDefinition })).toThrow(
+			expect(() => manager.updateActionDefinitions({ ['__proto__']: mockDefinition }, true)).toThrow(
 				'Action id "__proto__" is a reserved word',
 			)
 		})
@@ -179,7 +187,7 @@ describe('ActionManager', () => {
 				callback: vi.fn(),
 			}
 
-			expect(() => manager.setActionDefinitions({ 'internal:foo': mockDefinition })).toThrow(
+			expect(() => manager.updateActionDefinitions({ 'internal:foo': mockDefinition }, true)).toThrow(
 				'Action id "internal:foo" uses the reserved "internal:" prefix',
 			)
 		})
@@ -204,15 +212,18 @@ describe('ActionManager', () => {
 		it('no warnings for a well formed definition', () => {
 			const { manager } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [{ type: 'textinput', id: 'a', label: 'A' }],
-					callback: vi.fn(),
-					subscribe: vi.fn(),
-					optionsToMonitorForSubscribe: ['a'],
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [{ type: 'textinput', id: 'a', label: 'A' }],
+						callback: vi.fn(),
+						subscribe: vi.fn(),
+						optionsToMonitorForSubscribe: ['a'],
+					},
 				},
-			})
+				true,
+			)
 
 			expect(warnMessages()).toHaveLength(0)
 		})
@@ -220,14 +231,17 @@ describe('ActionManager', () => {
 		it('warns for subscribe without optionsToMonitorForSubscribe', () => {
 			const { manager } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(),
-					subscribe: vi.fn(),
-				},
-			} as unknown as CompanionActionDefinitions)
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(),
+						subscribe: vi.fn(),
+					},
+				} as unknown as CompanionActionDefinitions,
+				true,
+			)
 
 			const warns = warnMessages()
 			expect(warns).toHaveLength(1)
@@ -238,14 +252,17 @@ describe('ActionManager', () => {
 		it('warns for removed optionsToIgnoreForSubscribe property', () => {
 			const { manager } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(),
-					optionsToIgnoreForSubscribe: ['a'],
-				},
-			} as unknown as CompanionActionDefinitions)
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(),
+						optionsToIgnoreForSubscribe: ['a'],
+					},
+				} as unknown as CompanionActionDefinitions,
+				true,
+			)
 
 			const warns = warnMessages()
 			expect(warns).toHaveLength(1)
@@ -256,13 +273,16 @@ describe('ActionManager', () => {
 		it('warns for options with old isVisible functions', () => {
 			const { manager } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [{ type: 'textinput', id: 'a', label: 'A', isVisible: () => true }],
-					callback: vi.fn(),
-				},
-			} as unknown as CompanionActionDefinitions)
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [{ type: 'textinput', id: 'a', label: 'A', isVisible: () => true }],
+						callback: vi.fn(),
+					},
+				} as unknown as CompanionActionDefinitions,
+				true,
+			)
 
 			const warns = warnMessages()
 			expect(warns).toHaveLength(1)
@@ -273,13 +293,16 @@ describe('ActionManager', () => {
 		it('warns for options with old required properties', () => {
 			const { manager } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [{ type: 'textinput', id: 'a', label: 'A', required: true }],
-					callback: vi.fn(),
-				},
-			} as unknown as CompanionActionDefinitions)
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [{ type: 'textinput', id: 'a', label: 'A', required: true }],
+						callback: vi.fn(),
+					},
+				} as unknown as CompanionActionDefinitions,
+				true,
+			)
 
 			const warns = warnMessages()
 			expect(warns).toHaveLength(1)
@@ -290,17 +313,20 @@ describe('ActionManager', () => {
 		it('warns for options which reuse the same id and filters out the duplicates', () => {
 			const { manager, setActionDefinitions } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [
-						{ type: 'textinput', id: 'a', label: 'A' },
-						{ type: 'textinput', id: 'a', label: 'A again' },
-						{ type: 'textinput', id: 'b', label: 'B' },
-					],
-					callback: vi.fn(),
-				},
-			} as unknown as CompanionActionDefinitions)
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [
+							{ type: 'textinput', id: 'a', label: 'A' },
+							{ type: 'textinput', id: 'a', label: 'A again' },
+							{ type: 'textinput', id: 'b', label: 'B' },
+						],
+						callback: vi.fn(),
+					},
+				} as unknown as CompanionActionDefinitions,
+				true,
+			)
 
 			const warns = warnMessages()
 			expect(warns).toHaveLength(1)
@@ -308,6 +334,7 @@ describe('ActionManager', () => {
 			expect(warns[0]).toContain(`${mockDefinitionId} (a)`)
 
 			// Only the first usage of each id should be passed to the host
+			manager.flushDefinitions()
 			expect(setActionDefinitions).toHaveBeenCalledTimes(1)
 			expect(setActionDefinitions.mock.calls[0][0][0].options).toEqual([
 				{ type: 'textinput', id: 'a', label: 'A' },
@@ -318,16 +345,19 @@ describe('ActionManager', () => {
 		it('no warning for unique option ids', () => {
 			const { manager } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [
-						{ type: 'textinput', id: 'a', label: 'A' },
-						{ type: 'textinput', id: 'b', label: 'B' },
-					],
-					callback: vi.fn(),
-				},
-			} as unknown as CompanionActionDefinitions)
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [
+							{ type: 'textinput', id: 'a', label: 'A' },
+							{ type: 'textinput', id: 'b', label: 'B' },
+						],
+						callback: vi.fn(),
+					},
+				} as unknown as CompanionActionDefinitions,
+				true,
+			)
 
 			expect(warnMessages()).toHaveLength(0)
 		})
@@ -350,13 +380,16 @@ describe('ActionManager', () => {
 			const { manager } = createManager()
 
 			const callback = vi.fn(() => 'this value must be discarded')
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback,
-				} as unknown as CompanionActionDefinition,
-			})
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback,
+					} as unknown as CompanionActionDefinition,
+				},
+				true,
+			)
 
 			await expect(manager.handleExecuteAction(action, 'surface0', neverAbortSignal)).resolves.toEqual({
 				success: true,
@@ -379,14 +412,17 @@ describe('ActionManager', () => {
 		it('success with result', async () => {
 			const { manager } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(async () => ({ abc: 123 })),
-					hasResult: true,
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(async () => ({ abc: 123 })),
+						hasResult: true,
+					},
 				},
-			})
+				true,
+			)
 
 			await expect(manager.handleExecuteAction(action, undefined, neverAbortSignal)).resolves.toEqual({
 				success: true,
@@ -397,15 +433,18 @@ describe('ActionManager', () => {
 		it('callback throws an Error', async () => {
 			const { manager } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(() => {
-						throw new Error('something failed')
-					}),
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(() => {
+							throw new Error('something failed')
+						}),
+					},
 				},
-			})
+				true,
+			)
 
 			await expect(manager.handleExecuteAction(action, undefined, neverAbortSignal)).resolves.toEqual({
 				success: false,
@@ -416,16 +455,19 @@ describe('ActionManager', () => {
 		it('callback throws a non-Error', async () => {
 			const { manager } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(() => {
-						// eslint-disable-next-line @typescript-eslint/only-throw-error
-						throw 'a string error'
-					}),
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(() => {
+							// eslint-disable-next-line @typescript-eslint/only-throw-error
+							throw 'a string error'
+						}),
+					},
 				},
-			})
+				true,
+			)
 
 			await expect(manager.handleExecuteAction(action, undefined, neverAbortSignal)).resolves.toEqual({
 				success: false,
@@ -436,15 +478,18 @@ describe('ActionManager', () => {
 		it('setCustomVariableValue is forwarded with the controlId', async () => {
 			const { manager, setCustomVariableValue } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn((_event, context: CompanionActionContext) => {
-						context.setCustomVariableValue('my-var', 'value1')
-					}),
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn((_event, context: CompanionActionContext) => {
+							context.setCustomVariableValue('my-var', 'value1')
+						}),
+					},
 				},
-			})
+				true,
+			)
 
 			await expect(manager.handleExecuteAction(action, undefined, neverAbortSignal)).resolves.toEqual({
 				success: true,
@@ -461,13 +506,16 @@ describe('ActionManager', () => {
 			const callback = vi.fn((_event, context: CompanionActionCallbackContext) => {
 				expect(context.signal).toBe(neverAbortSignal)
 			})
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback,
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback,
+					},
 				},
-			})
+				true,
+			)
 
 			await expect(manager.handleExecuteAction(action, undefined, neverAbortSignal)).resolves.toEqual({
 				success: true,
@@ -481,13 +529,16 @@ describe('ActionManager', () => {
 			const { manager } = createManager()
 
 			const callback = vi.fn()
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback,
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback,
+					},
 				},
-			})
+				true,
+			)
 
 			const abortController = new AbortController()
 			abortController.abort()
@@ -509,13 +560,16 @@ describe('ActionManager', () => {
 					rejectCurrent = reject
 				})
 			})
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback,
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback,
+					},
 				},
-			})
+				true,
+			)
 
 			const abortController = new AbortController()
 			const execution = manager.handleExecuteAction(action, undefined, abortController.signal)
@@ -539,14 +593,17 @@ describe('ActionManager', () => {
 					resolveCurrent = resolve
 				})
 			})
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback,
-					hasResult: true,
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback,
+						hasResult: true,
+					},
 				},
-			})
+				true,
+			)
 
 			const abortController = new AbortController()
 			const execution = manager.handleExecuteAction(action, undefined, abortController.signal)
@@ -568,17 +625,20 @@ describe('ActionManager', () => {
 
 			const subscribe = vi.fn()
 			const unsubscribe = vi.fn()
-			created.manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(),
-					subscribe,
-					unsubscribe,
-					optionsToMonitorForSubscribe: [],
-					skipUnsubscribeOnOptionsChange,
+			created.manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(),
+						subscribe,
+						unsubscribe,
+						optionsToMonitorForSubscribe: [],
+						skipUnsubscribeOnOptionsChange,
+					},
 				},
-			})
+				true,
+			)
 
 			return { ...created, subscribe, unsubscribe }
 		}
@@ -686,17 +746,20 @@ describe('ActionManager', () => {
 			const { manager } = createManager()
 
 			let capturedContext: CompanionActionContext | undefined
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(),
-					subscribe: vi.fn((_action, context) => {
-						capturedContext = context
-					}),
-					optionsToMonitorForSubscribe: [],
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(),
+						subscribe: vi.fn((_action, context) => {
+							capturedContext = context
+						}),
+						optionsToMonitorForSubscribe: [],
+					},
 				},
-			})
+				true,
+			)
 
 			manager.handleUpdateActions({ [actionId]: action })
 
@@ -715,24 +778,27 @@ describe('ActionManager', () => {
 			const unsubscribe = vi.fn()
 			const subscribe2 = vi.fn()
 			const unsubscribe2 = vi.fn()
-			created.manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(),
-					subscribe,
-					unsubscribe,
-					optionsToMonitorForSubscribe: [],
+			created.manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(),
+						subscribe,
+						unsubscribe,
+						optionsToMonitorForSubscribe: [],
+					},
+					[mockDefinitionId2]: {
+						name: 'Definition1',
+						options: [],
+						callback: vi.fn(),
+						subscribe: subscribe2,
+						unsubscribe: unsubscribe2,
+						optionsToMonitorForSubscribe: [],
+					},
 				},
-				[mockDefinitionId2]: {
-					name: 'Definition1',
-					options: [],
-					callback: vi.fn(),
-					subscribe: subscribe2,
-					unsubscribe: unsubscribe2,
-					optionsToMonitorForSubscribe: [],
-				},
-			})
+				true,
+			)
 
 			created.manager.handleUpdateActions({
 				[actionId]: action,
@@ -784,13 +850,16 @@ describe('ActionManager', () => {
 		it('no implementation', async (ctx) => {
 			const { manager } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(),
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(),
+					},
 				},
-			})
+				true,
+			)
 
 			await expect(manager.handleLearnAction(action, ctx.signal)).resolves.toEqual({ options: undefined })
 		})
@@ -799,14 +868,17 @@ describe('ActionManager', () => {
 			const { manager } = createManager()
 
 			const learn = vi.fn(() => ({ abc: 123 }))
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(),
-					learn,
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(),
+						learn,
+					},
 				},
-			})
+				true,
+			)
 
 			await expect(manager.handleLearnAction(action, ctx.signal)).resolves.toEqual({ options: { abc: 123 } })
 			expect(learn).toHaveBeenCalledTimes(1)
@@ -826,17 +898,20 @@ describe('ActionManager', () => {
 			const { manager } = createManager()
 
 			let capturedSignal: AbortSignal | undefined
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(),
-					learn: vi.fn((_action, context) => {
-						capturedSignal = context.signal
-						return { abc: 123 }
-					}),
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(),
+						learn: vi.fn((_action, context) => {
+							capturedSignal = context.signal
+							return { abc: 123 }
+						}),
+					},
 				},
-			})
+				true,
+			)
 
 			const controller = new AbortController()
 			await manager.handleLearnAction(action, controller.signal)
@@ -849,14 +924,17 @@ describe('ActionManager', () => {
 			const { manager } = createManager()
 
 			const learn = vi.fn(() => ({ abc: 123 }))
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(),
-					learn,
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(),
+						learn,
+					},
 				},
-			})
+				true,
+			)
 
 			const controller = new AbortController()
 			controller.abort()
@@ -874,14 +952,17 @@ describe('ActionManager', () => {
 					context.signal.addEventListener('abort', () => resolve({ abc: 123 }))
 				})
 			})
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(),
-					learn,
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(),
+						learn,
+					},
 				},
-			})
+				true,
+			)
 
 			const learnPromise = manager.handleLearnAction(action, controller.signal)
 
@@ -894,16 +975,19 @@ describe('ActionManager', () => {
 		it('learn throwing rejects when not aborted', async (ctx) => {
 			const { manager } = createManager()
 
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(),
-					learn: vi.fn(() => {
-						throw new Error('learn failed')
-					}),
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(),
+						learn: vi.fn(() => {
+							throw new Error('learn failed')
+						}),
+					},
 				},
-			})
+				true,
+			)
 
 			await expect(manager.handleLearnAction(action, ctx.signal)).rejects.toThrow('learn failed')
 		})
@@ -912,17 +996,20 @@ describe('ActionManager', () => {
 			const { manager } = createManager()
 
 			const controller = new AbortController()
-			manager.setActionDefinitions({
-				[mockDefinitionId]: {
-					name: 'Definition0',
-					options: [],
-					callback: vi.fn(),
-					learn: vi.fn(async () => {
-						controller.abort()
-						throw new Error('learn failed')
-					}),
+			manager.updateActionDefinitions(
+				{
+					[mockDefinitionId]: {
+						name: 'Definition0',
+						options: [],
+						callback: vi.fn(),
+						learn: vi.fn(async () => {
+							controller.abort()
+							throw new Error('learn failed')
+						}),
+					},
 				},
-			})
+				true,
+			)
 
 			await expect(manager.handleLearnAction(action, controller.signal)).resolves.toEqual({ options: undefined })
 		})
