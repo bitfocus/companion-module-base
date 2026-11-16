@@ -1081,6 +1081,7 @@ describe('FeedbackManager', () => {
 				type: 'value',
 				name: 'Value feedback',
 				options: [],
+				defaultStyleOverrides: [],
 				callback: vi.fn<CompanionValueFeedbackDefinition['callback']>(() => 'someValue'),
 			}
 
@@ -1095,6 +1096,110 @@ describe('FeedbackManager', () => {
 		})
 	})
 
+	describe('defaultStyleOverrides', () => {
+		function setDefinitions(feedbacks: CompanionFeedbackDefinitions) {
+			const mockLogger = vi.fn()
+			global.COMPANION_LOGGER = mockLogger
+
+			const mockSetFeedbackDefinitions = vi.fn((_feedbacks: HostFeedbackDefinition[]) => null)
+			const manager = new FeedbackManager(mockSetFeedbackDefinitions, vi.fn(), latestModuleApiVersion)
+			manager.setFeedbackDefinitions(feedbacks)
+
+			expect(mockSetFeedbackDefinitions).toHaveBeenCalledTimes(1)
+			return {
+				definitions: mockSetFeedbackDefinitions.mock.calls[0][0],
+				warnCalls: mockLogger.mock.calls.filter(([, level]) => level === 'warn'),
+			}
+		}
+
+		it('normalises boolean overrides', () => {
+			const { definitions, warnCalls } = setDefinitions({
+				booleanFeedback: {
+					type: 'boolean',
+					name: 'Boolean feedback',
+					options: [],
+					defaultStyleOverrides: [
+						{ element: 'background', property: 'color', override: 0xff0000 },
+						{ element: 'text', property: 'color', override: { isExpression: false, value: 0xffffff } },
+						{ element: 'text', property: 'text', override: { isExpression: true, value: '1 + 2' } },
+						{ element: 'text', property: 'halign', override: 'left' },
+						{ element: 'text', property: 'fontsize', override: 30 },
+						{ element: 'image', property: 'valign', override: 'bottom' },
+					],
+					callback: () => false,
+				},
+			})
+
+			expect(warnCalls).toHaveLength(0)
+			expect(definitions[0].defaultStyleOverrides).toEqual([
+				{ element: 'background', property: 'color', override: { isExpression: false, value: 0xff0000 } },
+				{ element: 'text', property: 'color', override: { isExpression: false, value: 0xffffff } },
+				{ element: 'text', property: 'text', override: { isExpression: true, value: '1 + 2' } },
+				{ element: 'text', property: 'halign', override: { isExpression: false, value: 'left' } },
+				{ element: 'text', property: 'fontsize', override: { isExpression: false, value: 30 } },
+				{ element: 'image', property: 'valign', override: { isExpression: false, value: 'bottom' } },
+			])
+			expect(definitions[0].defaultStyle).toBeUndefined()
+		})
+
+		it('passes through a legacy defaultStyle', () => {
+			const { definitions, warnCalls } = setDefinitions({
+				booleanFeedback: {
+					type: 'boolean',
+					name: 'Boolean feedback',
+					options: [],
+					defaultStyle: { bgcolor: 0x00ff00 },
+					callback: () => false,
+				},
+			})
+
+			expect(warnCalls).toHaveLength(0)
+			expect(definitions[0].defaultStyle).toEqual({ bgcolor: 0x00ff00 })
+			expect(definitions[0].defaultStyleOverrides).toBeUndefined()
+		})
+
+		it('converts value overrides to expressions', () => {
+			const { definitions, warnCalls } = setDefinitions({
+				valueFeedback: {
+					type: 'value',
+					name: 'Value feedback',
+					options: [],
+					defaultStyleOverrides: [{ element: 'text', property: 'text', override: '$(this:value)' }],
+					callback: () => 'abc',
+				},
+			})
+
+			expect(warnCalls).toHaveLength(0)
+			expect(definitions[0].defaultStyle).toBeUndefined()
+			expect(definitions[0].defaultStyleOverrides).toEqual([
+				{ element: 'text', property: 'text', override: { isExpression: true, value: '$(this:value)' } },
+			])
+		})
+
+		it('drops invalid overrides with a warning', () => {
+			const { definitions, warnCalls } = setDefinitions({
+				valueFeedback: {
+					type: 'value',
+					name: 'Value feedback',
+					options: [],
+					defaultStyleOverrides: [
+						{ element: 'text', property: 'text', override: '$(this:value)' },
+						{ element: 'text', property: 'color', override: 0xff0000 as any },
+						{ element: 'canvas' as any, property: 'color', override: '$(this:value)' },
+					],
+					callback: () => 'abc',
+				},
+			})
+
+			expect(definitions[0].defaultStyleOverrides).toEqual([
+				{ element: 'text', property: 'text', override: { isExpression: true, value: '$(this:value)' } },
+			])
+			expect(warnCalls).toHaveLength(1)
+			expect(warnCalls[0][2]).toContain('defaultStyleOverrides')
+			expect(warnCalls[0][2]).toContain('valueFeedback')
+		})
+	})
+
 	describe('feedback value debounce', () => {
 		// The debounce is configured with wait: 5, maxWait: 25
 
@@ -1105,7 +1210,7 @@ describe('FeedbackManager', () => {
 			let counter = 0
 			const callback = vi.fn<CompanionValueFeedbackDefinition['callback']>(() => ++counter)
 			manager.setFeedbackDefinitions({
-				[mockDefinitionId]: { type: 'value', name: 'Definition0', options: [], callback },
+				[mockDefinitionId]: { type: 'value', name: 'Definition0', options: [], defaultStyleOverrides: [], callback },
 			})
 			manager.handleUpdateFeedbacks({
 				[feedbackId]: feedback,

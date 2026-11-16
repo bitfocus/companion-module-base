@@ -50,10 +50,10 @@ export interface RgbComponents {
  * ### Example
  *
  * ```js
- * defaultStyle: {
- *  bgcolor: combineRgb(255, 0, 0),
- *  color: combineRgb(255, 255, 255),
- * }
+ * defaultStyleOverrides: [
+ *  { element: 'background', property: 'color', override: combineRgb(255, 0, 0) },
+ *  { element: 'text', property: 'color', override: combineRgb(255, 255, 255) },
+ * ]
  * ```
  */
 export function combineRgb(r: number, g: number, b: number, a?: number): number {

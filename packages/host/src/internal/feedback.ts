@@ -13,7 +13,13 @@ import {
 	type CompanionOptionValues,
 	type JsonValue,
 } from '@companion-module/base'
-import type { FeedbackInstance, HostFeedbackDefinition, HostFeedbackValue } from '../context.js'
+import type {
+	FeedbackInstance,
+	HostFeedbackDefaultStyleOverride,
+	HostFeedbackDefinition,
+	HostFeedbackValue,
+} from '../context.js'
+import { convertFeedbackDefaultStyleOverrides } from './feedback-style.js'
 import {
 	BANNED_PROPS,
 	filterDuplicateOptionIds,
@@ -343,6 +349,7 @@ export class FeedbackManager {
 		const definitionSubscriptionMentionsChangeStyle: string[] = []
 		const definitionsMissingAffectedProperties: string[] = []
 		const definitionsWithDuplicateOptionIds: string[] = []
+		const definitionsWithInvalidDefaultStyleOverrides: string[] = []
 
 		const validModuleApiVersion = semver.valid(this.#moduleApiVersion, { loose: true })
 		const checkAffectedProperties =
@@ -359,6 +366,13 @@ export class FeedbackManager {
 			if (duplicateIds.length > 0)
 				definitionsWithDuplicateOptionIds.push(`${feedbackId} (${duplicateIds.sort().join(', ')})`)
 
+			let defaultStyleOverrides: HostFeedbackDefaultStyleOverride[] | undefined
+			if (feedback.type === 'boolean' || feedback.type === 'value') {
+				const converted = convertFeedbackDefaultStyleOverrides(feedback.type, feedback.defaultStyleOverrides)
+				if (converted.invalid) definitionsWithInvalidDefaultStyleOverrides.push(feedbackId)
+				defaultStyleOverrides = converted.overrides
+			}
+
 			hostFeedbacks.push({
 				id: feedbackId,
 				name: feedback.name,
@@ -367,6 +381,7 @@ export class FeedbackManager {
 				options: filteredOptions,
 				type: feedback.type,
 				defaultStyle: feedback.type === 'boolean' ? feedback.defaultStyle : undefined,
+				defaultStyleOverrides,
 				affectedProperties: feedback.type === 'advanced' ? feedback.affectedProperties : undefined,
 				hasLearn: !!feedback.learn,
 				learnTimeout: feedback.learnTimeout,
@@ -420,6 +435,13 @@ export class FeedbackManager {
 		if (definitionsMissingAffectedProperties.length > 0) {
 			this.#logger.warn(
 				`The following advanced feedback definitions are missing an array for affectedProperties. This should be set to the list of style properties the feedback will affect: ${definitionsMissingAffectedProperties
+					.sort()
+					.join(', ')}`,
+			)
+		}
+		if (definitionsWithInvalidDefaultStyleOverrides.length > 0) {
+			this.#logger.warn(
+				`The following feedback definitions have invalid defaultStyleOverrides. Each must have an element of 'text', 'background' or 'image', a property, and an override (an expression string for value feedbacks). The invalid entries have been ignored. The definitions: ${definitionsWithInvalidDefaultStyleOverrides
 					.sort()
 					.join(', ')}`,
 			)
