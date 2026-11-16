@@ -7,8 +7,9 @@ import type { JsonValue } from '../../common/json-value.js'
 import type { CompanionActionSchemaWithoutResult, CompanionActionSchemaWithResult } from '../action.js'
 import type { InstanceTypes } from '../base.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionFeedbackSchema } from '../feedback.js'
+import type { CompanionColorValue } from '../graphics.js'
 import type { CompanionOptionValues, ExpressionOrValue } from '../input.js'
-import type { CompanionButtonStyleProps } from '../style.js'
+import type { CompanionAlignment, CompanionButtonStyleProps, CompanionTextSize } from '../style.js'
 import type { CompanionVariableValue } from '../variable.js'
 import type { CompanionLayeredButtonPresetDefinition } from './definition-graphics.js'
 import type {
@@ -222,7 +223,7 @@ export interface CompanionSimplePresetDefinition<
 	TManifest extends InstanceTypes = InstanceTypes,
 > extends CompanionPresetDefinitionBase<'simple'> {
 	/** The base style of this preset, this will be copied to the button */
-	style: CompanionButtonStyleProps
+	style: CompanionPresetButtonStyle
 	/** Preview style for preset, will be used in GUI for preview */
 	previewStyle?: Partial<CompanionButtonStyleProps>
 
@@ -240,6 +241,36 @@ export interface CompanionSimplePresetDefinition<
 	/** Local variables on this button */
 	localVariables?: CompanionPresetLocalVariable[]
 }
+
+/**
+ * The base style of a simple preset
+ *
+ * Each property may be given as a plain value, or as an {@link ExpressionOrValue} wrapper to make it an expression.
+ * A plain value is equivalent to `{ isExpression: false, value }`.
+ */
+export interface CompanionPresetButtonStyle {
+	/**
+	 * The text to show on the button.
+	 * As a plain string, this may contain variables, e.g. `$(my-module:my-var)`
+	 */
+	text: CompanionPresetValue<string>
+	/**
+	 * Whether the text should be treated as an expression
+	 * @deprecated Use `text: { isExpression: true, value: '...' }` instead.
+	 * This is only respected when `text` is a plain string
+	 */
+	textExpression?: boolean
+	size: CompanionPresetValue<CompanionTextSize>
+	color: CompanionPresetValue<CompanionColorValue>
+	bgcolor: CompanionPresetValue<CompanionColorValue>
+	alignment?: CompanionPresetValue<CompanionAlignment>
+	pngalignment?: CompanionPresetValue<CompanionAlignment>
+	png64?: CompanionPresetValue<string>
+	show_topbar?: CompanionPresetValue<boolean>
+}
+
+// Drift guard: CompanionPresetButtonStyle must cover exactly the properties of CompanionButtonStyleProps
+type _AssertPresetButtonStyleKeys = Expect<Equal<keyof CompanionPresetButtonStyle, keyof CompanionButtonStyleProps>>
 
 /**
  * The options for a button preset
