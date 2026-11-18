@@ -38,7 +38,7 @@
 		"lib"
 	],
 	"dependencies": {
-		"colord": "^2.10.0",
+		"colord": "^2.13.0",
 		"zod": "^4.6.7"
 	},
 	"devDependencies": {
