@@ -29,6 +29,7 @@ export function getModuleApiFeatures(moduleApiVersion: string): ModuleApiFeature
 		presets: {
 			actionStoreResult: isAtLeast('2.2.0-0'),
 			expressionLocalVariables: isAtLeast('2.3.0-0'),
+			localVariableInputs: isAtLeast('2.3.0-0'),
 			internalIds: new Set(
 				Object.entries(INTERNAL_PRESET_MIN_API_VERSION as Record<string, string>)
 					.filter(([, minApiVersion]) => isAtLeast(minApiVersion))

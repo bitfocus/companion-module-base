@@ -3,9 +3,11 @@ import {
 	createModuleLogger,
 	type CompanionPresetDefinition,
 	type CompanionPresetDefinitions,
+	type CompanionPresetGroupTemplate,
 	type CompanionPresetSection,
 } from '@companion-module/base'
 import { elementSchema } from '../schema/elements.js'
+import { presetLocalVariableInputFieldSchema } from '../schema/options.js'
 import type { ActionManager } from './actions.js'
 import type { FeedbackManager } from './feedback.js'
 import { BANNED_PROPS } from './util.js'
@@ -58,6 +60,8 @@ export interface PresetApiFeatures {
 	actionStoreResult: boolean
 	/** Presets may use `expression` local variables */
 	expressionLocalVariables: boolean
+	/** Simple local variables may define an `input` */
+	localVariableInputs: boolean
 	/** The internal action/feedback ids which presets are allowed to reference */
 	internalIds: ReadonlySet<string>
 }
@@ -85,22 +89,43 @@ export function sanitisePresetDefinitions(
 
 	/**
 	 * Drop any `expression` local variables which are malformed, or which the module is too old to use.
+	 * Also strips the `input` from any simple local variables where it is malformed, or the module is too old to use it.
 	 * Returns the new localVariables array, and whether anything was dropped.
 	 */
 	function dropDisallowedLocalVariables(preset: CompanionPresetDefinition<any>): {
 		localVariables: typeof preset.localVariables
 		dropped: boolean
+		droppedInput: boolean
 	} {
-		if (!Array.isArray(preset.localVariables)) return { localVariables: preset.localVariables, dropped: false }
+		if (!Array.isArray(preset.localVariables))
+			return { localVariables: preset.localVariables, dropped: false, droppedInput: false }
 
 		let dropped = false
-		const localVariables = preset.localVariables.filter((localVariable) => {
-			if (localVariable?.variableType !== 'expression') return true
-			if (apiFeatures.expressionLocalVariables && typeof localVariable.expression === 'string') return true
-			dropped = true
-			return false
-		})
-		return { localVariables, dropped }
+		let droppedInput = false
+		const localVariables: NonNullable<typeof preset.localVariables> = []
+		for (const localVariable of preset.localVariables) {
+			if (localVariable?.variableType === 'expression') {
+				if (apiFeatures.expressionLocalVariables && typeof localVariable.expression === 'string') {
+					localVariables.push(localVariable)
+				} else {
+					dropped = true
+				}
+			} else if (localVariable?.variableType === 'simple' && localVariable.input !== undefined) {
+				const parsedInput = apiFeatures.localVariableInputs
+					? presetLocalVariableInputFieldSchema.safeParse(localVariable.input)
+					: undefined
+				if (parsedInput?.success) {
+					localVariables.push({ ...localVariable, input: parsedInput.data })
+				} else {
+					droppedInput = true
+					const { input: _input, ...rest } = localVariable
+					localVariables.push(rest)
+				}
+			} else {
+				localVariables.push(localVariable)
+			}
+		}
+		return { localVariables, dropped, droppedInput }
 	}
 
 	/**
@@ -228,6 +253,7 @@ export function sanitisePresetDefinitions(
 	const presetsWithDisallowedInternalIds: string[] = []
 	const presetsWithInvalidStoreResults: string[] = []
 	const presetsWithInvalidLocalVariables: string[] = []
+	const presetsWithInvalidLocalVariableInputs: string[] = []
 	const presetsFailedValidation: string[] = []
 
 	/**
@@ -289,10 +315,11 @@ export function sanitisePresetDefinitions(
 
 			// --- Drop local variables the module is not allowed to use ---
 			const filteredLocalVariables = dropDisallowedLocalVariables(sanitisedPreset)
-			if (filteredLocalVariables.dropped) {
+			if (filteredLocalVariables.localVariables !== sanitisedPreset.localVariables) {
 				sanitisedPreset = { ...sanitisedPreset, localVariables: filteredLocalVariables.localVariables }
-				presetsWithInvalidLocalVariables.push(presetName)
 			}
+			if (filteredLocalVariables.dropped) presetsWithInvalidLocalVariables.push(presetName)
+			if (filteredLocalVariables.droppedInput) presetsWithInvalidLocalVariableInputs.push(presetName)
 
 			// --- Drop internal:* entries the module is not allowed to reference, and invalid storeResults ---
 			const filtered = dropDisallowedEntries(sanitisedPreset)
@@ -490,6 +517,13 @@ export function sanitisePresetDefinitions(
 				.join(', ')}`,
 		)
 	}
+	if (presetsWithInvalidLocalVariableInputs.length > 0) {
+		logger.warn(
+			`The following preset definitions have local variables with an input field which is malformed, or the module's api version is too old. The input fields have been removed: ${presetsWithInvalidLocalVariableInputs
+				.sort()
+				.join(', ')}`,
+		)
+	}
 	if (presetsWithInvalidElements.length > 0) {
 		logger.warn(
 			`The following layered preset definitions contain invalid elements: ${presetsWithInvalidElements
@@ -507,6 +541,38 @@ export function sanitisePresetDefinitions(
 
 	// Cross-reference validation between structure and presets
 	const referencedPresetIds = new Set<string>()
+
+	/**
+	 * Find the names of the variables a template group sets, which are simple local variables of the preset
+	 * without an `input` defined. These will be shown to the user as a plain text input.
+	 */
+	function findTemplatedVariablesWithoutInput(group: CompanionPresetGroupTemplate<any>): string[] {
+		const preset = result.presets[group.presetId]
+		if (!preset) return []
+
+		const variableNames = new Set<string>()
+		if (typeof group.templateVariableName === 'string') variableNames.add(group.templateVariableName)
+		if (group.commonVariableValues && typeof group.commonVariableValues === 'object') {
+			for (const name of Object.keys(group.commonVariableValues)) variableNames.add(name)
+		}
+
+		const variants = preset.type === 'alternatives' ? preset.variants : [preset]
+		const missing = new Set<string>()
+		for (const variant of variants) {
+			if (!Array.isArray(variant.localVariables)) continue
+			for (const localVariable of variant.localVariables) {
+				if (
+					localVariable?.variableType === 'simple' &&
+					variableNames.has(localVariable.variableName) &&
+					!localVariable.input
+				) {
+					missing.add(localVariable.variableName)
+				}
+			}
+		}
+		return Array.from(missing)
+	}
+	const templatedVariablesWithoutInput = new Set<string>()
 
 	// Companion keys sections by id, and the definitions of a section by id, so any duplicates are lost
 	const seenSectionIds = new Set<string>()
@@ -544,6 +610,11 @@ export function sanitisePresetDefinitions(
 					}
 				} else if (def.type === 'template' && 'presetId' in def && typeof def.presetId === 'string') {
 					referencedPresetIds.add(def.presetId)
+					if (apiFeatures.localVariableInputs) {
+						for (const variableName of findTemplatedVariablesWithoutInput(def)) {
+							templatedVariablesWithoutInput.add(`${section.id}/${def.id}: ${variableName}`)
+						}
+					}
 				}
 			}
 		}
@@ -565,6 +636,16 @@ export function sanitisePresetDefinitions(
 		logger.warn(
 			`The following preset definition ids are used more than once within their section, only one of each will be shown: ${Array.from(
 				duplicateDefinitionIds,
+			)
+				.sort()
+				.join(', ')}`,
+		)
+	}
+
+	if (templatedVariablesWithoutInput.size > 0) {
+		logger.warn(
+			`The following preset template groups set local variables which have no input defined, these will be shown to the user as a plain text input: ${Array.from(
+				templatedVariablesWithoutInput,
 			)
 				.sort()
 				.join(', ')}`,

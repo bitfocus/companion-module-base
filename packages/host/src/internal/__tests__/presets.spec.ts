@@ -1188,6 +1188,195 @@ describe('validatePresetDefinitions', () => {
 		})
 	})
 
+	describe('local variable input fields', () => {
+		const dropdownInput = {
+			type: 'dropdown',
+			label: 'Channel',
+			choices: [
+				{ id: 1, label: 'One' },
+				{ id: 2, label: 'Two' },
+			],
+		} as const
+		const simpleVarWithInput = {
+			variableName: 'a',
+			variableType: 'simple',
+			startupValue: 1,
+			input: dropdownInput,
+		} as const
+		const otherVar = { variableName: 'b', variableType: 'simple', startupValue: 'x' } as const
+
+		function presetWithLocalVariables(localVariables: unknown[]): CompanionPresetDefinitions<InstanceTypes> {
+			return { p1: { ...validSimple(), localVariables: localVariables as any } }
+		}
+
+		function returnedLocalVariables(result: ReturnType<typeof sanitisePresetDefinitions>): unknown[] | undefined {
+			return (result.presets['p1'] as CompanionSimplePresetDefinition<InstanceTypes>).localVariables
+		}
+
+		it('keeps a valid input field without warning', () => {
+			const { result, msgs } = runSanitise(
+				presetWithLocalVariables([simpleVarWithInput, otherVar]),
+				{},
+				{},
+				structureFor('p1'),
+				'2.3.0',
+			)
+			expect(msgs).toHaveLength(0)
+			expect(returnedLocalVariables(result)).toEqual([simpleVarWithInput, otherVar])
+		})
+
+		it('strips an input field without a label, and warns', () => {
+			const variable = { ...otherVar, input: { type: 'checkbox' } }
+			const { result, msgs } = runSanitise(presetWithLocalVariables([variable]), {}, {}, structureFor('p1'), '2.3.0')
+			expect(msgs).toHaveLength(1)
+			expect(msgs[0]).toContain('input field')
+			expect(returnedLocalVariables(result)).toEqual([otherVar])
+		})
+
+		it('strips properties which do not apply to a local variable input', () => {
+			const variable = {
+				...otherVar,
+				input: {
+					type: 'textinput',
+					label: 'Name',
+					id: 'nope',
+					default: 'nope',
+					isVisibleExpression: 'true',
+					disableAutoExpression: true,
+					expressionDescription: 'nope',
+					useVariables: true,
+					multiline: true,
+				},
+			}
+			const { result, msgs } = runSanitise(presetWithLocalVariables([variable]), {}, {}, structureFor('p1'), '2.3.0')
+			expect(msgs).toHaveLength(0)
+			expect(returnedLocalVariables(result)).toEqual([
+				{ ...otherVar, input: { type: 'textinput', label: 'Name', multiline: true } },
+			])
+		})
+
+		it('strips the input field when the module api version is too old, and warns', () => {
+			const { result, msgs } = runSanitise(
+				presetWithLocalVariables([simpleVarWithInput, otherVar]),
+				{},
+				{},
+				structureFor('p1'),
+				'2.2.0',
+			)
+			expect(msgs).toHaveLength(1)
+			expect(msgs[0]).toContain('input field')
+			expect(msgs[0]).toContain('My Preset')
+			expect(returnedLocalVariables(result)).toEqual([
+				{ variableName: 'a', variableType: 'simple', startupValue: 1 },
+				otherVar,
+			])
+		})
+
+		it('strips a malformed input field, keeping the variable, and warns', () => {
+			const { result, msgs } = runSanitise(
+				presetWithLocalVariables([
+					{ ...otherVar, input: { type: 'static-text', value: 'hi' } },
+					{ ...simpleVarWithInput, input: { type: 'dropdown' } },
+				]),
+				{},
+				{},
+				structureFor('p1'),
+				'2.3.0',
+			)
+			expect(msgs).toHaveLength(1)
+			expect(msgs[0]).toContain('input field')
+			expect(returnedLocalVariables(result)).toEqual([
+				otherVar,
+				{ variableName: 'a', variableType: 'simple', startupValue: 1 },
+			])
+		})
+	})
+
+	describe('template variables without an input field', () => {
+		const withInput = {
+			variableName: 'a',
+			variableType: 'simple',
+			startupValue: 1,
+			input: { type: 'number', label: 'A', min: 0, max: 10 },
+		} as const
+		const withoutInput = { variableName: 'b', variableType: 'simple', startupValue: 'x' } as const
+		const notTemplated = { variableName: 'c', variableType: 'simple', startupValue: 'y' } as const
+
+		function templateStructure(group: Record<string, unknown>): CompanionPresetSection<InstanceTypes>[] {
+			return [
+				{
+					id: 's1',
+					name: 'Section',
+					definitions: [
+						{
+							id: 'g1',
+							type: 'template',
+							name: 'Group',
+							presetId: 'p1',
+							templateValues: [{ value: 1 }],
+							...group,
+						} as any,
+					],
+				},
+			]
+		}
+
+		function presets(localVariables: unknown[]): CompanionPresetDefinitions<InstanceTypes> {
+			return { p1: { ...validSimple(), localVariables: localVariables as any } }
+		}
+
+		it('warns for templated variables without an input', () => {
+			const msgs = runCapture(
+				presets([withInput, withoutInput, notTemplated]),
+				{},
+				{},
+				templateStructure({ templateVariableName: 'a', commonVariableValues: { b: 'z' } }),
+				'2.3.0',
+			)
+			expect(msgs).toHaveLength(1)
+			expect(msgs[0]).toContain('no input defined')
+			expect(msgs[0]).toContain('s1/g1: b')
+			expect(msgs[0]).not.toContain(': a')
+			expect(msgs[0]).not.toContain(': c')
+		})
+
+		it('checks each variant of an alternatives preset', () => {
+			const msgs = runCapture(
+				{
+					p1: {
+						type: 'alternatives',
+						variants: [
+							{ ...validSimple(), localVariables: [withInput] },
+							{ ...validSimple(), localVariables: [{ ...withInput, input: undefined }] },
+						],
+					},
+				} as unknown as CompanionPresetDefinitions<InstanceTypes>,
+				{},
+				{},
+				templateStructure({ templateVariableName: 'a' }),
+				'2.3.0',
+			)
+			expect(msgs).toHaveLength(1)
+			expect(msgs[0]).toContain('s1/g1: a')
+		})
+
+		it('does not warn when every templated variable has an input', () => {
+			const msgs = runCapture(presets([withInput]), {}, {}, templateStructure({ templateVariableName: 'a' }), '2.3.0')
+			expect(msgs).toHaveLength(0)
+		})
+
+		it('does not warn when the module api version is too old to define inputs', () => {
+			const msgs = runCapture(
+				presets([withoutInput]),
+				{},
+				{},
+				templateStructure({ templateVariableName: 'b' }),
+				'2.2.0',
+			)
+			expect(msgs).toHaveLength(0)
+		})
+	})
+
 	describe('alternatives entries', () => {
 		it('keeps all valid variants of an alternatives entry, in order', () => {
 			const presets = {

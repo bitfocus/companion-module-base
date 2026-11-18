@@ -7,7 +7,16 @@ import type { JsonValue } from '../../common/json-value.js'
 import type { CompanionActionSchemaWithoutResult, CompanionActionSchemaWithResult } from '../action.js'
 import type { InstanceTypes } from '../base.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionFeedbackSchema } from '../feedback.js'
-import type { CompanionOptionValues, ExpressionOrValue } from '../input.js'
+import type {
+	CompanionInputFieldCheckbox,
+	CompanionInputFieldColor,
+	CompanionInputFieldDropdown,
+	CompanionInputFieldMultiDropdown,
+	CompanionInputFieldNumber,
+	CompanionInputFieldTextInput,
+	CompanionOptionValues,
+	ExpressionOrValue,
+} from '../input.js'
 import type { CompanionButtonStyleProps } from '../style.js'
 import type { CompanionVariableValue } from '../variable.js'
 import type { CompanionLayeredButtonPresetDefinition } from './definition-graphics.js'
@@ -410,7 +419,48 @@ export interface CompanionSimplePresetLocalVariable extends CompanionPresetLocal
 	 * The value of the variable at Companion startup
 	 */
 	startupValue: CompanionVariableValue
+
+	/**
+	 * Expose this variable to the user as a 'preset variable', and how they should edit its value.
+	 *
+	 * This is only used when the preset is placed as a linked preset: the variable is shown prominently
+	 * in the editor of the linked button, using this input field. It does not become part of the button.
+	 * Variables set by a template group (its `templateVariableName` and `commonVariableValues`) are always
+	 * shown as preset variables, but should define this to avoid being shown as a plain text input.
+	 *
+	 * The value produced by the field is stored as the value of the variable, so make sure that
+	 * `startupValue` and any template values are valid for the field (eg an array for a `multidropdown`).
+	 * The field only sets the value of the variable, so there is no expression mode. For a value which follows
+	 * other variables, use an `expression` local variable instead.
+	 */
+	input?: CompanionPresetLocalVariableInputField
 }
+
+/** The properties of an input field which are not applicable to a preset local variable input */
+type PresetLocalVariableInputFieldOmittedKeys =
+	| 'id'
+	| 'default'
+	| 'isVisibleExpression'
+	| 'allowInvalidValues'
+	| 'disableAutoExpression'
+	| 'expressionDescription'
+	| 'useVariables'
+
+/** Flatten a type, so that editors show the resulting properties instead of the type expression */
+type Simplify<T> = { [K in keyof T]: T[K] } & {}
+
+/**
+ * The input field to use when the user is editing the value of a preset local variable.
+ * This is a subset of the input fields available to actions and feedbacks, without the `id` (the `variableName`
+ * is used) or `default` (the `startupValue` is used).
+ */
+export type CompanionPresetLocalVariableInputField =
+	| Simplify<Omit<CompanionInputFieldTextInput, PresetLocalVariableInputFieldOmittedKeys>>
+	| Simplify<Omit<CompanionInputFieldDropdown, PresetLocalVariableInputFieldOmittedKeys>>
+	| Simplify<Omit<CompanionInputFieldMultiDropdown, PresetLocalVariableInputFieldOmittedKeys>>
+	| Simplify<Omit<CompanionInputFieldNumber, PresetLocalVariableInputFieldOmittedKeys>>
+	| Simplify<Omit<CompanionInputFieldCheckbox, PresetLocalVariableInputFieldOmittedKeys>>
+	| Simplify<Omit<CompanionInputFieldColor, PresetLocalVariableInputFieldOmittedKeys>>
 
 /**
  * The configuration of an expression local variable in a preset

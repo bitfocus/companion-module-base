@@ -7,6 +7,7 @@ import type {
 	CompanionInputFieldNumber,
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
+	CompanionPresetLocalVariableInputField,
 	SomeCompanionFeedbackInputField,
 } from '@companion-module/base'
 import type { AssertCoversKeys } from './common.js'
@@ -111,3 +112,22 @@ export const inputFieldSchema = z.discriminatedUnion('type', [
 	numberFieldSchema,
 	checkboxFieldSchema,
 ]) satisfies z.ZodType<SomeCompanionFeedbackInputField>
+
+/** The keys of an input field which do not apply to the input field of a preset local variable */
+const presetLocalVariableInputOmitMask = {
+	id: true,
+	default: true,
+	isVisibleExpression: true,
+	allowInvalidValues: true,
+	disableAutoExpression: true,
+	expressionDescription: true,
+} as const
+
+export const presetLocalVariableInputFieldSchema = z.discriminatedUnion('type', [
+	textInputFieldSchema.omit(presetLocalVariableInputOmitMask).omit({ useVariables: true }),
+	dropdownFieldSchema.omit(presetLocalVariableInputOmitMask),
+	multiDropdownFieldSchema.omit(presetLocalVariableInputOmitMask),
+	numberFieldSchema.omit(presetLocalVariableInputOmitMask),
+	checkboxFieldSchema.omit(presetLocalVariableInputOmitMask),
+	colorFieldSchema.omit(presetLocalVariableInputOmitMask),
+]) satisfies z.ZodType<CompanionPresetLocalVariableInputField>
