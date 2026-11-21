@@ -33,7 +33,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # Include the dispatched package so base and host can be dispatched for the same ref at once
+  # (tag pushes already differ by ref, and have no inputs)
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.package }}
   cancel-in-progress: true
 
 jobs:
