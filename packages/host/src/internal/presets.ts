@@ -1,8 +1,6 @@
-import semver from 'semver'
 import { z } from 'zod'
 import {
 	createModuleLogger,
-	INTERNAL_PRESET_MIN_API_VERSION,
 	type CompanionPresetDefinition,
 	type CompanionPresetDefinitions,
 	type CompanionPresetSection,
@@ -54,12 +52,22 @@ function collectElementIds(elements: unknown[]): Set<string> {
 	return ids
 }
 
+/** The behaviours of preset sanitising which depend on the module's api version */
+export interface PresetApiFeatures {
+	/** Preset actions may use `storeResult` */
+	actionStoreResult: boolean
+	/** Presets may use `expression` local variables */
+	expressionLocalVariables: boolean
+	/** The internal action/feedback ids which presets are allowed to reference */
+	internalIds: ReadonlySet<string>
+}
+
 export function sanitisePresetDefinitions(
 	actionsManager: ActionManager,
 	feedbacksManager: FeedbackManager,
 	structure: CompanionPresetSection<any>[],
 	presets: CompanionPresetDefinitions<any>,
-	moduleApiVersion: string,
+	apiFeatures: PresetApiFeatures,
 ): {
 	structure: CompanionPresetSection<any>[]
 	presets: CompanionPresetDefinitions<any>
@@ -75,27 +83,6 @@ export function sanitisePresetDefinitions(
 	const validActionIds = new Set(actionsManager.getDefinitionIds())
 	const validFeedbackIds = new Set(feedbacksManager.getDefinitionIds())
 
-	const validModuleApiVersion = semver.valid(moduleApiVersion, { loose: true })
-
-	/**
-	 * Whether the module is allowed to reference the given internal action/feedback id.
-	 * Unknown internal ids, or ids the module is too old to use, are not allowed and will be dropped.
-	 */
-	function isInternalIdAllowed(id: string): boolean {
-		const minApiVersion = (INTERNAL_PRESET_MIN_API_VERSION as Record<string, string | undefined>)[id]
-		if (!minApiVersion) return false
-		if (!validModuleApiVersion) return false
-		return semver.gte(validModuleApiVersion, minApiVersion, { loose: true })
-	}
-
-	/** Whether the module is new enough to use `storeResult` on preset actions */
-	const isStoreResultAllowed =
-		validModuleApiVersion !== null && semver.gte(validModuleApiVersion, '2.2.0-0', { loose: true })
-
-	/** Whether the module is new enough to use `expression` local variables */
-	const isExpressionLocalVariableAllowed =
-		validModuleApiVersion !== null && semver.gte(validModuleApiVersion, '2.3.0-0', { loose: true })
-
 	/**
 	 * Drop any `expression` local variables which are malformed, or which the module is too old to use.
 	 * Returns the new localVariables array, and whether anything was dropped.
@@ -109,7 +96,7 @@ export function sanitisePresetDefinitions(
 		let dropped = false
 		const localVariables = preset.localVariables.filter((localVariable) => {
 			if (localVariable?.variableType !== 'expression') return true
-			if (isExpressionLocalVariableAllowed && typeof localVariable.expression === 'string') return true
+			if (apiFeatures.expressionLocalVariables && typeof localVariable.expression === 'string') return true
 			dropped = true
 			return false
 		})
@@ -121,7 +108,7 @@ export function sanitisePresetDefinitions(
 	 * preset, and the action must be one of the module's own actions which returns a result.
 	 */
 	function isStoreResultValid(actionId: unknown, storeResult: unknown, localVariableNames: Set<string>): boolean {
-		if (!isStoreResultAllowed) return false
+		if (!apiFeatures.actionStoreResult) return false
 		if (!storeResult || typeof storeResult !== 'object') return false
 		const target = storeResult as Record<string, unknown>
 		if (target.type !== 'local-variable') return false
@@ -148,7 +135,7 @@ export function sanitisePresetDefinitions(
 		let droppedStoreResult = false
 		const keep = (id: unknown): boolean => {
 			if (!isInternalId(id)) return true
-			if (isInternalIdAllowed(id)) return true
+			if (apiFeatures.internalIds.has(id)) return true
 			droppedInternal = true
 			return false
 		}

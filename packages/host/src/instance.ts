@@ -1,5 +1,4 @@
 import PQueue from 'p-queue'
-import semver from 'semver'
 import {
 	createModuleLogger,
 	type CompanionHTTPRequest,
@@ -26,6 +25,7 @@ import type {
 	UpgradeFeedbackInstance,
 } from './context.js'
 import { ActionManager } from './internal/actions.js'
+import { getModuleApiFeatures } from './internal/api-features.js'
 import { sanitiseCompositeElementDefinitions } from './internal/composite-elements.js'
 import { FeedbackManager } from './internal/feedback.js'
 import { sanitisePresetDefinitions } from './internal/presets.js'
@@ -65,9 +65,8 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 
 		// Modules built against base >=2.2 have variable ids rejected when they don't match the valid pattern.
 		// Older modules only get a warning, and the value is still applied, to preserve backwards compatibility.
-		const validModuleApiVersion = semver.valid(moduleApiVersion, { loose: true })
-		const rejectInvalidVariableIds =
-			validModuleApiVersion !== null && semver.gte(validModuleApiVersion, '2.2.0-0', { loose: true })
+		const apiFeatures = getModuleApiFeatures(moduleApiVersion)
+		const rejectInvalidVariableIds = apiFeatures.rejectInvalidVariableIds
 
 		this.#actionManager = new ActionManager(
 			(actions) => this.#host.setActionDefinitions(actions),
@@ -76,7 +75,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 		this.#feedbackManager = new FeedbackManager(
 			(feedbacks) => this.#host.setFeedbackDefinitions(feedbacks),
 			(values) => this.#host.updateFeedbackValues(values),
-			moduleApiVersion,
+			apiFeatures.feedbacks,
 		)
 
 		this.#instanceContext = {
@@ -135,7 +134,7 @@ export class InstanceWrapper<TManifest extends InstanceTypes> {
 					this.#feedbackManager,
 					structure,
 					presets,
-					moduleApiVersion,
+					apiFeatures.presets,
 				)
 				this.#host.setPresetDefinitions(sanitised.structure, sanitised.presets)
 			},

@@ -1,5 +1,4 @@
 import debounceFn from 'debounce-fn'
-import semver from 'semver'
 import {
 	assertNever,
 	createModuleLogger,
@@ -50,12 +49,18 @@ interface FeedbackCheckInstance extends FeedbackInstance {
 	previousOptions: CompanionOptionValues | null
 }
 
+/** The behaviours of the feedback manager which depend on the module's api version */
+export interface FeedbackApiFeatures {
+	/** Advanced feedbacks are expected to declare their `affectedProperties` */
+	checkAffectedProperties: boolean
+}
+
 export class FeedbackManager {
 	readonly #logger = createModuleLogger('FeedbackManager')
 
 	readonly #setFeedbackDefinitions: (feedbacks: HostFeedbackDefinition[]) => void
 	readonly #updateFeedbackValues: (values: HostFeedbackValue[]) => void
-	readonly #moduleApiVersion: string
+	readonly #apiFeatures: FeedbackApiFeatures
 
 	readonly #feedbackDefinitions = new Map<string, CompanionFeedbackDefinition>()
 	readonly #feedbackInstances = new Map<string, FeedbackCheckInstance>()
@@ -68,11 +73,11 @@ export class FeedbackManager {
 	constructor(
 		setFeedbackDefinitions: (feedbacks: HostFeedbackDefinition[]) => void,
 		updateFeedbackValues: (values: HostFeedbackValue[]) => void,
-		moduleApiVersion: string,
+		apiFeatures: FeedbackApiFeatures,
 	) {
 		this.#setFeedbackDefinitions = setFeedbackDefinitions
 		this.#updateFeedbackValues = updateFeedbackValues
-		this.#moduleApiVersion = moduleApiVersion
+		this.#apiFeatures = apiFeatures
 	}
 
 	public getDefinitionIds(): string[] {
@@ -344,10 +349,6 @@ export class FeedbackManager {
 		const definitionsMissingAffectedProperties: string[] = []
 		const definitionsWithDuplicateOptionIds: string[] = []
 
-		const validModuleApiVersion = semver.valid(this.#moduleApiVersion, { loose: true })
-		const checkAffectedProperties =
-			validModuleApiVersion !== null && semver.gte(validModuleApiVersion, '2.1.0-0', { loose: true })
-
 		for (const [feedbackId, feedback] of Object.entries(feedbacks)) {
 			if (!feedback) continue
 			if (BANNED_PROPS.has(feedbackId)) throw new Error(`Feedback id "${feedbackId}" is a reserved word`)
@@ -383,7 +384,11 @@ export class FeedbackManager {
 			if (hasAnyOldRequiredProperties(feedback.options)) definitionsWithOldRequiredProperties.push(feedbackId)
 			if (typeof feedback.description === 'string' && feedback.description.match(/change style/))
 				definitionSubscriptionMentionsChangeStyle.push(feedbackId)
-			if (checkAffectedProperties && feedback.type === 'advanced' && !Array.isArray(feedback.affectedProperties))
+			if (
+				this.#apiFeatures.checkAffectedProperties &&
+				feedback.type === 'advanced' &&
+				!Array.isArray(feedback.affectedProperties)
+			)
 				definitionsMissingAffectedProperties.push(feedbackId)
 		}
 

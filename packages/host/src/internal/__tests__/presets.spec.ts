@@ -13,6 +13,7 @@ import type {
 	SomeButtonGraphicsElement,
 } from '@companion-module/base'
 import type { ActionManager } from '../actions.js'
+import { getModuleApiFeatures } from '../api-features.js'
 import type { FeedbackManager } from '../feedback.js'
 import { sanitisePresetDefinitions } from '../presets.js'
 
@@ -66,7 +67,13 @@ function run(
 	moduleApiVersion = '2.1.0',
 ): ReturnType<typeof sanitisePresetDefinitions> {
 	const { actionsManager, feedbacksManager } = makeManagers(actions, feedbacks)
-	return sanitisePresetDefinitions(actionsManager, feedbacksManager, structure, presets, moduleApiVersion)
+	return sanitisePresetDefinitions(
+		actionsManager,
+		feedbacksManager,
+		structure,
+		presets,
+		getModuleApiFeatures(moduleApiVersion).presets,
+	)
 }
 
 function validSimple(
