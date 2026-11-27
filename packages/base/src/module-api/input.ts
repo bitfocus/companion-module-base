@@ -197,6 +197,14 @@ export interface DropdownChoice<TId extends JsonValue = string | number> {
 	id: TId
 	/** Label to show to users */
 	label: string
+	/**
+	 * An expression controlling whether this choice is offered in the action/feedback editor.
+	 * Read sibling literal values with `$(options:field_id)`. If a referenced field is in
+	 * expression mode, or evaluation fails, the choice remains visible. This only filters
+	 * the editor's suggestions; it does not clear saved values or affect runtime validation.
+	 * Requires Companion support for choice visibility; older hosts ignore this property.
+	 */
+	isVisibleExpression?: string
 }
 
 /**
