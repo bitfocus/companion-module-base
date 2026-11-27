@@ -25,6 +25,7 @@ const inputFieldBaseShape = {
 const dropdownChoiceSchema = z.object({
 	id: z.union([z.string(), z.number()]),
 	label: z.string(),
+	isVisibleExpression: z.string().optional(),
 })
 
 const colorPresetSchema = z.union([z.string(), z.object({ color: z.string(), title: z.string() })])
